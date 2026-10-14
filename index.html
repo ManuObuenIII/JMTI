@@ -2132,6 +2132,8 @@ $('logoutBtn').onclick = () => { call('logout').catch(()=>{}); signOut(''); };
 /* ===== Ask JMTI (MANU 2026-10-14 "integrate ai question and answer inside but only to get information inside the system") =====
  * Questions go to askJmti (Code.gs), which lets the AI read the app's data with this person's sign-in: it sees only what the role's
  * tabs show and can't change anything. The conversation lives on this page only and is forgotten on New, Sign out or reload. */
+// Hidden for now (MANU 2026-10-14 "hide it": each question costs money). Set to true to bring the Ask JMTI button back.
+let ASK_ON = false;
 const ASK = {list: [], busy: false};
 const ASK_SUGS = ['How many trips did we make this week, by account?', 'Which trucks had no trip yesterday?', 'Which completed trips are still waiting for POD documents?', 'Who are the top 5 drivers by trips this month?'];
 function askReset(){ ASK.list = []; ASK.busy = false; if($('askBody')) renderAsk(); }
@@ -2346,7 +2348,7 @@ function enterApp(me){
   document.body.classList.toggle('viewonly', may('viewAll'));   // BOSS: every tab, no edit buttons
   $('loginScreen').hidden = true; $('app').hidden = false; $('loadErr').hidden = true;
   $('meName').textContent = me.name; $('meRole').textContent = me.role;
-  $('askBtn').hidden = false;
+  $('askBtn').hidden = !ASK_ON;
   const tabs = me.tabs;
   $('tabs').innerHTML = tabs.filter(t => TAB_NAME[t]).map(t => `<button class="tab" role="tab" data-tab="${t}" type="button">${TAB_NAME[t]}</button>`).join('');   // a tab this page doesn't know is never shown as "undefined"
   $('tabs').onclick = e => { const b = e.target.closest('.tab'); if(b) showTab(b.dataset.tab); };
@@ -5048,8 +5050,9 @@ async function sendEsc(i){
   const note = m => { const n = box.querySelector('[data-escnote]'); if(n) n.textContent = m; };
   // Straight to Viber with the message (MANU 2026-10-14 "when this is clicked, go straight to viber app with the message"): Viber
   // opens its forward screen with the text filled in, to pick the chat. The text is also copied, in case Viber is not on this device.
+  // The link is built without two slashes in a row: Apps Script cut the page at 'viber:' + two slashes (MANU 2026-10-14 15:21).
   const copied = (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => true, () => false);
-  const a = document.createElement('a'); a.href = 'viber://forward?text=' + encodeURIComponent(t); a.target = '_top'; a.rel = 'noopener';
+  const a = document.createElement('a'); a.href = 'viber:' + '/'.repeat(2) + 'forward?text=' + encodeURIComponent(t); a.target = '_top'; a.rel = 'noopener';
   document.body.appendChild(a); a.click(); a.remove();
   note('Opening Viber…');
   const ok = await copied;
