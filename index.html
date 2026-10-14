@@ -999,6 +999,30 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .chd-body{flex:1;overflow:auto;padding:0;background:#fff}
 .chd-foot{padding:6px 10px 10px;border-top:1px solid #E4E6EB;display:flex;flex-wrap:wrap;gap:4px;background:#fff}
 .chd-foot:empty{display:none}
+/* Ask JMTI (MANU 2026-10-14): question box, right side on wide screens, full screen on phones */
+.userchip .askbtn{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(180deg,#2E5BFF,#0A27B5);color:#fff;border-color:#0A27B5}
+.userchip .askbtn[hidden]{display:none}
+.userchip .askbtn svg{width:15px;height:15px;flex:none}
+.askbox{position:fixed;right:18px;top:76px;width:400px;max-width:calc(100vw - 24px);height:min(620px,calc(100vh - 96px));z-index:38;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 18px 48px rgba(2,8,40,.35)}
+.askbox[hidden]{display:none}
+.askbox .ask-new{border-radius:999px!important;width:auto!important;padding:0 12px!important;font-size:12px!important}
+.ask-body{flex:1;overflow:auto;padding:12px;background:#F4F6FC;display:flex;flex-direction:column;gap:10px}
+.ask-q{align-self:flex-end;max-width:85%;background:#0A27B5;color:#fff;border-radius:16px 16px 4px 16px;padding:8px 12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+.ask-a{align-self:flex-start;max-width:92%;background:#fff;color:#0B1240;border:1px solid #DCE3F5;border-radius:16px 16px 16px 4px;padding:9px 12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.45}
+.ask-a.err{background:#FEF2F2;border-color:#FCA5A5;color:#991B1B}
+.ask-a small{display:block;margin-top:6px;color:#64748B;font-size:11.5px;white-space:normal}
+.ask-a.wait{color:#475569}
+.ask-a.wait i{display:inline-block;width:6px;height:6px;margin:0 2px;border-radius:50%;background:#2E5BFF;animation:askDot 1s infinite ease-in-out}
+.ask-a.wait i:nth-child(2){animation-delay:.15s}.ask-a.wait i:nth-child(3){animation-delay:.3s}
+@keyframes askDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.ask-hint{color:#475569;font-size:13px;line-height:1.45;white-space:normal}
+.ask-sugs{display:flex;flex-wrap:wrap;gap:6px}
+.ask-sugs button{border:1px solid #C7D2FE;background:#fff;color:#0A1F8F;border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;text-align:left;white-space:normal}
+.ask-foot{display:flex;gap:8px;align-items:flex-end;padding:8px 10px 10px;border-top:1px solid #E4E6EB;background:#fff}
+.ask-foot textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:12px;padding:8px 10px;font:inherit;font-size:14px;max-height:120px;min-height:40px}
+.ask-foot .btn{flex:none}
+@media (max-width:700px){ .askbox{left:0;right:0;top:0;bottom:0;width:auto;max-width:none;height:auto;border-radius:0;border:0} }
+@media print{ .askbox{display:none!important} }
 /* Phones: no zoom-in when typing (MANU 2026-10-14): iPhones zoom into any box with text under 16px */
 @media (pointer:coarse), (max-width:700px){
   input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]), select, textarea{font-size:16px !important}
@@ -1198,6 +1222,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
     <div class="userchip"><span class="nm"><b id="meName"></b></span><span class="role" id="meRole"></span>
       <button class="icon-btn obbtn" id="obBtn" type="button" hidden></button>
       <button class="icon-btn bellbtn" id="lwBtn" type="button" hidden aria-label="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v3.6L4.3 15.4A1 1 0 0 0 5.2 17h13.6a1 1 0 0 0 .9-1.6L18 12.6V9a6 6 0 0 0-6-6z" fill="currentColor"/><path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><b id="lwN" class="bell-n" hidden>0</b></button>
+      <button class="icon-btn askbtn" id="askBtn" type="button" hidden title="Ask a question about the app's data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l1.9 5.2 5.2 1.9-5.2 1.9L12 16.7l-1.9-5.2-5.2-1.9 5.2-1.9z" fill="currentColor"/><path d="M18.5 14.5l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z" fill="currentColor" opacity=".7"/></svg>Ask JMTI</button>
       <button class="icon-btn" id="pwChangeBtn" type="button">Password</button>
       <button class="icon-btn" id="logoutBtn" type="button">Sign out</button></div>
   </div>
@@ -1685,6 +1710,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 <datalist id="dlDest"></datalist><datalist id="dlClientDest"></datalist><datalist id="dlAllDest"></datalist><datalist id="dlDrivers"></datalist><datalist id="dlHelpers"></datalist>
 <datalist id="dlDoc"></datalist><datalist id="dlFinal"></datalist>
 <button class="chat-fab" id="chatBtn" type="button" hidden aria-label="Chat" title="Chat (drag to move)"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M11 14.5h22a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H19a4 4 0 0 1-4-4V20z" fill="#0B3FA8" opacity=".45"/><path d="M10 13h22a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V18.5z" fill="#fff"/><rect x="18" y="17.6" width="13.5" height="2.6" rx="1.3" fill="#8AB4F8"/><rect x="18" y="22.1" width="13.5" height="2.6" rx="1.3" fill="#8AB4F8"/><rect x="18" y="26.6" width="10" height="2.6" rx="1.3" fill="#8AB4F8"/></svg><b id="chatN" class="fab-n" hidden>0</b></button>
+<aside class="askbox" id="askBox" hidden aria-label="Ask JMTI"><div class="chd-head"><b>Ask JMTI<small>Answers only from this app's data, what your role can see</small></b><button type="button" id="askNew" class="ask-new" title="Start over">New</button><button type="button" id="askHide" title="Close" aria-label="Close">✕</button></div><div class="ask-body" id="askBody"></div><form class="ask-foot" id="askForm"><textarea id="askQ" rows="2" maxlength="1500" placeholder="Ask about trips, trucks, people…" aria-label="Your question"></textarea><button type="submit" id="askSend" class="btn">Ask</button></form></aside>
 <aside class="chdock" id="chatDock" hidden aria-label="Chat"><div class="chd-head"><b>Chats<small>Team, department groups and one-to-one</small></b><button type="button" id="chdHide" title="Close the chat" aria-label="Close">✕</button></div><div class="chd-body" id="chdBody"></div><div class="chd-foot" id="chdFoot"></div></aside>
 <div class="pop" id="pop" hidden>
   <div class="popbox" role="dialog" aria-modal="true" aria-labelledby="popTitle">
@@ -1862,15 +1888,23 @@ function roundTrips(trips){
   trips.filter(isTrip).forEach(t => { const u = t.truckNo || t.plateNo; if(u) (groups[u] = groups[u] || []).push(t); });
   Object.values(groups).forEach(list => {
     list.sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.row||0) - (b.row||0));
-    for(let i = 0; i + 1 < list.length; i++){
-      const a = list[i], b = list[i+1], from = place(a.customer);
-      if(!coke(a) || !coke(b)) continue;
-      if(!from || from !== place(b.destination)) continue;
-      const pick = w => Object.keys(w).sort((x,y) => w[y]-w[x])[0];
+    const back = (a, b) => coke(a) && coke(b) && !!place(a.customer) && place(a.customer) === place(b.destination);
+    const n = t => Object.values(tripAcctW(t)).reduce((x, v) => x + v, 0);
+    const pick = w => Object.keys(w).sort((x,y) => w[y]-w[x])[0];
+    const pair = (a, b) => {
       const acc = pick(tripAcctW(a)) || pick(tripAcctW(b));
       out[a.key] = {w: acc ? {[acc]: 0.5} : {}, pairAcc: acc || '', leg: 1, other: b.key};
       out[b.key] = {w: acc ? {[acc]: 0.5} : {}, pairAcc: acc || '', leg: 2, other: a.key};
-      i++;
+    };
+    // First a counted trip with its uncounted way back (Canlubang → San Fernando → Canlubang), so a way-back leg is not paired with
+    // the trip after it when the dates start in the middle of the truck's back-and-forth (MANU 2026-10-14); then the rest.
+    for(let i = 0; i + 1 < list.length; i++){
+      const a = list[i], b = list[i+1];
+      if(!out[a.key] && !out[b.key] && back(a, b) && n(a) > 0 && n(b) <= 0) pair(a, b);
+    }
+    for(let i = 0; i + 1 < list.length; i++){
+      const a = list[i], b = list[i+1];
+      if(!out[a.key] && !out[b.key] && back(a, b)) pair(a, b);
     }
   });
   return out;
@@ -2095,6 +2129,41 @@ $('pwForm').onsubmit = async e => {
 };
 $('pwChangeBtn').onclick = () => showPwForm(false);
 $('logoutBtn').onclick = () => { call('logout').catch(()=>{}); signOut(''); };
+/* ===== Ask JMTI (MANU 2026-10-14 "integrate ai question and answer inside but only to get information inside the system") =====
+ * Questions go to askJmti (Code.gs), which lets the AI read the app's data with this person's sign-in: it sees only what the role's
+ * tabs show and can't change anything. The conversation lives on this page only and is forgotten on New, Sign out or reload. */
+const ASK = {list: [], busy: false};
+const ASK_SUGS = ['How many trips did we make this week, by account?', 'Which trucks had no trip yesterday?', 'Which completed trips are still waiting for POD documents?', 'Who are the top 5 drivers by trips this month?'];
+function askReset(){ ASK.list = []; ASK.busy = false; if($('askBody')) renderAsk(); }
+function renderAsk(){
+  const b = $('askBody');
+  if(!ASK.list.length){
+    b.innerHTML = `<div class="ask-hint">Ask about trips, trucks, drivers and helpers, POD, billing and the other data in the app. Answers come only from the app's data and what your role can see. Ask JMTI can't change anything.</div>`
+      + `<div class="ask-sugs">${ASK_SUGS.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>`;
+    return;
+  }
+  b.innerHTML = ASK.list.map(x => `<div class="ask-q">${esc(x.q)}</div>` + (x.wait ? `<div class="ask-a wait">Looking it up <i></i><i></i><i></i></div>`
+    : `<div class="ask-a${x.err ? ' err' : ''}">${esc(x.err || x.a)}${x.looked && x.looked.length ? `<small>Looked at: ${esc(x.looked.join(', '))}</small>` : ''}</div>`)).join('');
+  b.scrollTop = b.scrollHeight;
+}
+function openAsk(){ $('askBox').hidden = false; renderAsk(); setTimeout(() => { try{ $('askQ').focus(); }catch(e){} }, 30); }
+function sendAsk(q){
+  q = String(q || '').trim();
+  if(!q || ASK.busy) return;
+  const history = ASK.list.filter(x => x.a && !x.err).slice(-6).map(x => ({q: x.q, a: x.a}));
+  const item = {q, wait: true};
+  ASK.list.push(item); ASK.busy = true; $('askQ').value = ''; $('askSend').disabled = true; renderAsk();
+  call('askJmti', q, history).then(r => { item.a = (r && r.answer) || ''; item.looked = (r && r.looked) || []; },
+    e => { item.err = e.net ? 'No signal. Ask again when the signal is back.' : (e.message || String(e)); })
+    .finally(() => { item.wait = false; ASK.busy = false; $('askSend').disabled = false; if(S.me) renderAsk(); });
+}
+$('askBtn').onclick = () => { if($('askBox').hidden) openAsk(); else $('askBox').hidden = true; };
+$('askHide').onclick = () => { $('askBox').hidden = true; };
+$('askNew').onclick = () => { if(!ASK.busy){ askReset(); $('askQ').focus(); } };
+$('askForm').onsubmit = e => { e.preventDefault(); sendAsk($('askQ').value); };
+$('askQ').onkeydown = e => { if(e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); sendAsk($('askQ').value); } else if(e.key==='Escape') $('askBox').hidden = true; };
+$('askBody').onclick = e => { const b = e.target.closest('[data-q]'); if(b) sendAsk(b.dataset.q); };
+
 function signOut(msg){
   TOKEN = ''; S.lwN = 0; try{ if('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {}); }catch(e){} document.title = TITLE0; updateAppBadge.last = 0;
   store('jmti_token', null); store('jmti_me', null); store('jmti_mnt', null); lsClearData(); rcClear();
@@ -2104,6 +2173,7 @@ function signOut(msg){
   location.hash = '';
   S.boot = null; S.me = null; S.bootOk = false;
   hideDock(); $('chatBtn').hidden = true;
+  askReset(); $('askBox').hidden = true; $('askBtn').hidden = true;
   showLogin(msg);
 }
 
@@ -2276,6 +2346,7 @@ function enterApp(me){
   document.body.classList.toggle('viewonly', may('viewAll'));   // BOSS: every tab, no edit buttons
   $('loginScreen').hidden = true; $('app').hidden = false; $('loadErr').hidden = true;
   $('meName').textContent = me.name; $('meRole').textContent = me.role;
+  $('askBtn').hidden = false;
   const tabs = me.tabs;
   $('tabs').innerHTML = tabs.filter(t => TAB_NAME[t]).map(t => `<button class="tab" role="tab" data-tab="${t}" type="button">${TAB_NAME[t]}</button>`).join('');   // a tab this page doesn't know is never shown as "undefined"
   $('tabs').onclick = e => { const b = e.target.closest('.tab'); if(b) showTab(b.dataset.tab); };
@@ -2954,14 +3025,15 @@ function dashSub(){
 }
 /**
  * Distance covered (MANU 2026-10-14 "add here average distance covered"): completed (and TUKOD) trips that have a route
- * distance (CLIENT LIST, else the trip's KMS, as in Truck Plan). A round trip to PTC Silangan counts as one trip with
- * both legs' km, as in every trip count. Per truck = total km / trucks with such trips.
+ * distance (CLIENT LIST, else the trip's KMS, as in Truck Plan). A round trip counts as one trip and one distance
+ * (MANU 2026-10-14): each leg adds half its km, as it adds 0.5 trip. Per truck = total km / trucks with such trips.
  */
 const kmTxt = n => Math.round(n).toLocaleString('en-PH') + ' km';
+const kmOf = t => numOf(tripKm(t)) * legW(t);
 function distOf(list){
   const done = list.filter(t => ['Completed','Tukod'].includes(stageOf(t))), l = done.filter(t => numOf(tripKm(t)) > 0);
   if(!l.length) return null;
-  const km = l.reduce((a, t) => a + numOf(tripKm(t)), 0), n = wsum(l, legW), trucks = new Set(l.map(t => t.truckNo || t.plateNo).filter(Boolean)).size;
+  const km = l.reduce((a, t) => a + kmOf(t), 0), n = wsum(l, legW), trucks = new Set(l.map(t => t.truckNo || t.plateNo).filter(Boolean)).size;
   return {km, n, avg: km / n, trucks, perTruck: trucks ? km / trucks : km, list: l, noKm: done.length - l.length};
 }
 function openKpiPop(k){
@@ -2969,10 +3041,10 @@ function openKpiPop(k){
   if(k==='km'){
     const d = distOf(trips);
     if(!d) return popTrips('Distance covered', dashSub() + ' · no completed trips with a route distance', []);
-    const per = {}; d.list.forEach(t => { const u = t.truckNo || t.plateNo; if(u) per[u] = (per[u] || 0) + numOf(tripKm(t)); });
+    const per = {}; d.list.forEach(t => { const u = t.truckNo || t.plateNo; if(u) per[u] = (per[u] || 0) + kmOf(t); });
     const top = Object.entries(per).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([u, v]) => `Truck ${u}: ${kmTxt(v)}`).join(' · ');
     return popTrips(`Distance covered · ${kmTxt(d.km)} on ${fmtN(d.n)} trips · ${kmTxt(d.avg)} average`, dashSub() + (top ? ' · most: ' + top : ''),
-      d.list.slice().sort((a, b) => numOf(tripKm(b)) - numOf(tripKm(a))), '', t => `<b>${kmTxt(numOf(tripKm(t)))}</b>`, true);
+      d.list.slice().sort((a, b) => kmOf(b) - kmOf(a)), '', t => `<b>${kmTxt(kmOf(t))}</b>${legW(t) < 1 ? ' · half of a round trip' : ''}`, true);
   }
   if(k==='done') return popTrips(`Completed trips · ${fmtN(wsum(trips.filter(t => stageOf(t)==='Completed'), legW))}`, dashSub(), trips.filter(t => stageOf(t)==='Completed'));
   if(k==='road') return popTrips(`On the road · ${fmtN(wsum(trips.filter(t => MOVING.includes(stageOf(t))), legW))}`, dashSub(), trips.filter(t => MOVING.includes(stageOf(t))));
@@ -4922,8 +4994,8 @@ async function savePerson(e){
 
 /* ===== Long waiting trips + ESCALATION text (MANU 2026-10-13) =====
  * The server lists trips of the last 14 days whose status hasn't changed for longer than its limit (at a site 6 h, on the
- * way 12 h, Clip Board 24 h). The top bar shows how many; the list has an ESCALATION button per trip that shares or copies
- * MANU's text for Messenger / Viber. Refreshed every 10 minutes; a status change in the app takes the trip off at once. */
+ * way 12 h, Clip Board 24 h). The top bar shows how many; the list has an ESCALATION button per trip that opens Viber with
+ * MANU's text (and copies it). Refreshed every 10 minutes; a status change in the app takes the trip off at once. */
 const mayLw = () => may('dispatch') || may('summary');
 function loadLw(){
   if(!S.me || !mayLw()) return;
@@ -4974,9 +5046,19 @@ async function sendEsc(i){
   const t = escText(x), box = document.querySelector(`[data-esc="${i}"]`).parentNode;
   let pre = box.querySelector('pre'); if(!pre){ pre = document.createElement('pre'); box.appendChild(pre); } pre.textContent = t;
   const note = m => { const n = box.querySelector('[data-escnote]'); if(n) n.textContent = m; };
-  if(navigator.share){ try{ await navigator.share({text: t}); note('Shared'); return; }catch(e){ if(e && e.name==='AbortError'){ note(''); return; } } }
-  try{ await navigator.clipboard.writeText(t); note('Copied. Paste it in Messenger or Viber.'); toast('Escalation copied'); }
-  catch(e){ const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); note('Selected. Press copy, then paste it in Messenger or Viber.'); }
+  // Straight to Viber with the message (MANU 2026-10-14 "when this is clicked, go straight to viber app with the message"): Viber
+  // opens its forward screen with the text filled in, to pick the chat. The text is also copied, in case Viber is not on this device.
+  const copied = (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => true, () => false);
+  const a = document.createElement('a'); a.href = 'viber://forward?text=' + encodeURIComponent(t); a.target = '_top'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  note('Opening Viber…');
+  const ok = await copied;
+  setTimeout(() => {
+    if(document.hidden) return note(ok ? 'Sent to Viber. The message is also copied.' : 'Sent to Viber.');
+    if(ok){ note("If Viber didn't open, the message is copied: paste it in Viber."); return; }
+    const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    note("If Viber didn't open: press copy, then paste it in Viber.");
+  }, 1500);
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-esc]'); if(b && $('pop').classList.contains('lwpop')) sendEsc(Number(b.dataset.esc));
@@ -7211,6 +7293,10 @@ const DEMO = (() => {
   return {
     login: (u,p) => { const x = users.find(y => y.username===String(u).trim().toLowerCase()); if(!x) throw new Error('Wrong username or password.'); sess = {token:'demo-'+x.username, u:x}; return {token:sess.token, me:meOf(x), mustChange:false}; },
     logout: () => { sess = null; return true; },
+    askJmti: (tok, q) => { auth(tok); const m = /truck\s*#?\s*(\w+)/i.exec(String(q)), live = trips.filter(t => !/^cancel/i.test(t.status));
+      if(m){ const l = live.filter(t => String(t.truckNo)===m[1]);
+        return {answer: l.length ? `Truck ${m[1]} has ${l.length} trip${l.length===1?'':'s'} in the demo data:\n` + l.slice(0, 5).map(t => `- ${fmtDay(t.date)}: ${t.customer || 'no route'} to ${t.destination || '—'} (${t.status})`).join('\n') : `I found no trips for truck ${m[1]} in the demo data.`, looked: ['trips']}; }
+      return {answer: `Demo answer (the preview has no AI): ${live.filter(t => t.date===today).length} trips today in the demo data. With the key set up, the real app answers this from your data.`, looked: ['trip counts']}; },
     changePassword: tok => { auth(tok); return true; },
     getAppUrl: () => '',
     personHistory: (tok, full) => { auth(tok); const k = nameKey(full); return trips.filter(t => [t.driver,t.helper1,t.helper2].some(n => nameKey(n)===k)).map(t => ({...t})).sort((a,b) => b.date.localeCompare(a.date)); },
