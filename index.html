@@ -936,6 +936,20 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 @keyframes chdot{0%,60%,100%{opacity:.45;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 .ch-send textarea{flex:1;min-width:0;resize:vertical;min-height:44px;max-height:160px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:14px;background:#fff}
 #pop.chatpop .popbody{min-height:min(52vh,460px)}
+/* Chat docked on the right on wide screens (MANU 2026-10-14 "for desktop version, add chatgroup fixed to the right side") */
+.chdock{position:fixed;top:0;right:0;bottom:0;width:360px;z-index:35;display:flex;flex-direction:column;background:rgba(255,255,255,.97);border-left:1px solid var(--line);box-shadow:-12px 0 32px rgba(2,8,40,.18)}
+.chdock[hidden]{display:none}
+.chd-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(180deg,#0A27B5,#020A35);color:#fff}
+.chd-head b{flex:1;font-size:15px}
+.chd-head small{display:block;font-weight:500;font-size:11px;color:#BFD0FF;white-space:normal}
+.chd-head button{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:10px;padding:6px 10px;font-weight:700;cursor:pointer}
+.chd-body{flex:1;overflow:auto;padding:12px 14px}
+.chd-foot{padding:8px 14px 14px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px}
+body.docked{padding-right:360px}
+/* Phones: no zoom-in when typing (MANU 2026-10-14): iPhones zoom into any box with text under 16px */
+@media (pointer:coarse), (max-width:700px){
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]), select, textarea{font-size:16px !important}
+}
 .hd-b{display:inline-block;min-width:22px;height:22px;line-height:22px;border-radius:11px;padding:0 6px;text-align:center;font-weight:800;font-size:12px;color:#fff;background:var(--c,#94A3B8)}
 .hd-rate .chip .hd-b{background:var(--c);min-width:20px;height:20px;line-height:20px;margin-right:2px}
 .hd-rate .chip[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff}
@@ -1618,6 +1632,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 <datalist id="dlTrucks"></datalist><datalist id="dlPlates"></datalist><datalist id="dlCustomers"></datalist>
 <datalist id="dlDest"></datalist><datalist id="dlClientDest"></datalist><datalist id="dlAllDest"></datalist><datalist id="dlDrivers"></datalist><datalist id="dlHelpers"></datalist>
 <datalist id="dlDoc"></datalist><datalist id="dlFinal"></datalist>
+<aside class="chdock" id="chatDock" hidden aria-label="Chat"><div class="chd-head"><b>Chat<small>Team, department groups and one-to-one</small></b><button type="button" id="chdHide" title="Hide the chat (the chat button brings it back)">Hide</button></div><div class="chd-body" id="chdBody"></div><div class="chd-foot" id="chdFoot"></div></aside>
 <div class="pop" id="pop" hidden>
   <div class="popbox" role="dialog" aria-modal="true" aria-labelledby="popTitle">
     <div class="pophead"><div><h3 id="popTitle"></h3><small id="popSub"></small></div><div class="popbtns"><button class="icon-btn" id="popPdf" type="button" hidden>Save PDF</button><button class="icon-btn" id="popClose" type="button">Close</button></div></div>
@@ -1941,12 +1956,14 @@ $('pwForm').onsubmit = async e => {
 $('pwChangeBtn').onclick = () => showPwForm(false);
 $('logoutBtn').onclick = () => { call('logout').catch(()=>{}); signOut(''); };
 function signOut(msg){
-  TOKEN = ''; store('jmti_token', null); store('jmti_me', null); store('jmti_mnt', null); lsClearData();
+  TOKEN = ''; S.lwN = 0; try{ if('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {}); }catch(e){} document.title = TITLE0; updateAppBadge.last = 0;
+  store('jmti_token', null); store('jmti_me', null); store('jmti_mnt', null); lsClearData();
   resetMaintenance();
   Object.keys(TC).forEach(k => delete TC[k]); S.overdueSeen = null; S.odLocked = false; S.assign = {}; S.routes = S.people = S.users = null; S.aEdits = {};
   closeDrawer();
   location.hash = '';
   S.boot = null; S.me = null; S.bootOk = false;
+  hideDock();
   showLogin(msg);
 }
 
@@ -4761,6 +4778,7 @@ function renderLw(){
   if(!b) return;
   // Notification bell (MANU 2026-10-13): red count of trips waiting too long; it rings when one appears that hasn't been seen
   b.hidden = !mayLw(); $('lwN').textContent = n > 99 ? '99+' : n; $('lwN').hidden = !n;
+  S.lwN = mayLw() ? n : 0; updateAppBadge();
   const seen = new Set(lsGet('jmti_lw_seen') || []);
   b.classList.toggle('ring', (S.lw || []).some(x => !seen.has(x.key)));
   b.title = n ? `${n} trip${n===1 ? '' : 's'} with no status change for too long. Tap to see them and send an escalation.` : 'No trip waiting too long';
@@ -4796,7 +4814,8 @@ async function sendEsc(i){
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-esc]'); if(b && $('pop').classList.contains('lwpop')) sendEsc(Number(b.dataset.esc));
   if(e.target.closest('#lwBtn')) openLw();
-  if(e.target.closest('#chatBtn')) openChat();
+  if(e.target.closest('#chatBtn')){ if(dockWide() && dockShown()){ setDockPref(false); hideDock(); } else openChat(); }
+  if(e.target.closest('#chdHide')){ setDockPref(false); hideDock(); }
   if(e.target.closest('#obBtn')) openOutbox();
 });
 
@@ -5417,26 +5436,48 @@ function openOutbox(){
    on screen (nothing while the phone is locked or the app is in the background; it catches up at once when it comes back).
    Each ask sends the chat version this phone has, so an ask with nothing new is cheap. After a failed ask it waits longer.
    A new message while the chat is closed shows a short notice. What you have read is kept on this phone. */
-const CH = {msgs:[], users:[], me:'', last:0, conv:'', loaded:false, busy:false, at:0, user:'', seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:''};
+const CH = {msgs:[], users:[], groups:[], me:'', last:0, conv:'', loaded:false, busy:false, at:0, user:'', seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:''};
 const CH_OPEN_MS = 2000, CH_SHUT_MS = 10000;
-const chatOpen = () => !$('pop').hidden && $('pop').classList.contains('chatpop');
+const chatOpen = () => dockShown() || (!$('pop').hidden && $('pop').classList.contains('chatpop'));
+/* Desktop dock: on screens 1200 px and wider the chat sits on the right side and stays open; Hide or the chat button closes it
+   (remembered on this computer as jmti_dock) and the chat button opens it again. Narrower screens use the pop-up. */
+const DOCK_MQ = window.matchMedia('(min-width:1200px)');
+const dockWide = () => DOCK_MQ.matches;
+const dockShown = () => !!$('chatDock') && !$('chatDock').hidden;
+const dockPref = () => { try{ return localStorage.getItem('jmti_dock')!=='off'; }catch(e){ return true; } };
+const setDockPref = on => { try{ localStorage.setItem('jmti_dock', on ? 'on' : 'off'); }catch(e){} };
+function showDock(){
+  if(!S.me || !TOKEN || dockShown()) return;
+  if($('pop').classList.contains('chatpop')){ closePop(true); $('pop').classList.remove('chatpop'); $('popBody').innerHTML = $('popFoot').innerHTML = ''; }   // the pop-up's chat moves here (one set of chat boxes)
+  $('chatDock').hidden = false; document.body.classList.add('docked');
+  chatBuild($('chdBody'), $('chdFoot'));
+  chatMarkRead(CH.conv); renderChat(); renderChatBtn();
+}
+function hideDock(){
+  if(!dockShown()) return;
+  chatTypingStop(); $('chatDock').hidden = true; document.body.classList.remove('docked'); $('chdBody').innerHTML = $('chdFoot').innerHTML = '';
+}
+function syncDock(){ const want = !!(S.me && TOKEN) && dockWide() && dockPref(); if(want) showDock(); else hideDock(); }
+if(DOCK_MQ.addEventListener) DOCK_MQ.addEventListener('change', syncDock); else if(DOCK_MQ.addListener) DOCK_MQ.addListener(syncDock);
 const chatReadKey = () => 'jmti_chatread_' + CH.user;
-const convOf = m => !m.to ? '#team' : (m.from===CH.me ? m.to : m.from);   // '#team' = team chat, else the other person
-const chatName = c => { if(c==='#team') return 'Team chat'; const x = CH.users.find(y => y.username===c); return x ? x.name : String(c).toUpperCase(); };
+const convOf = m => !m.to ? '#team' : m.to.charAt(0)==='#' ? m.to : (m.from===CH.me ? m.to : m.from);   // '#team' = team chat, '#ops' = a department group, else the other person
+const isGroup = c => c!=='#team' && String(c).charAt(0)==='#';
+const chatName = c => { if(c==='#team') return 'Team chat'; if(isGroup(c)){ const g = CH.groups.find(x => x.id===c); return (g ? g.name : c.slice(1).toUpperCase()) + ' group'; } const x = CH.users.find(y => y.username===c); return x ? x.name : String(c).toUpperCase(); };
 function chatUnread(conv){ const r = lsGet(chatReadKey()) || {}; return CH.msgs.filter(m => m.from!==CH.me && (!conv || convOf(m)===conv) && m.id > (r[convOf(m)] || 0)).length; }
 function chatMarkRead(conv){ const r = lsGet(chatReadKey()) || {}, l = CH.msgs.filter(m => convOf(m)===conv); if(!l.length) return; r[conv] = l[l.length - 1].id; lsSet(chatReadKey(), r); }
 function chatTick(){
   const b = $('chatBtn'); if(!b) return;
+  syncDock();
   if(!S.me || !TOKEN){ b.hidden = true; return; }
   if(CH.user !== S.me.username) setTimeout(flushOutbox, 2000);   // a new sign-in: send what waits from before
   if(CH.user !== S.me.username){
-    Object.assign(CH, {msgs:[], users:[], me:'', last:0, conv:'#team', loaded:false, busy:false, at:0, user:S.me.username, seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:''});
+    Object.assign(CH, {msgs:[], users:[], groups:[], me:'', last:0, conv:'#team', loaded:false, busy:false, at:0, user:S.me.username, seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:''});
     const kept = lsGet('jmti_chat_' + CH.user); if(kept && kept.msgs) chatMerge({...kept, kept:true});   // what this phone kept: shows without signal
   }
   b.hidden = false;
   if(chatOpen()) renderTyping();   // "… is typing" goes away on its own when the other person stops
-  if(document.hidden || CH.busy || navigator.onLine===false) return;
-  const wait = (chatOpen() ? CH_OPEN_MS : CH_SHUT_MS) * Math.min(8, 2 ** CH.fail);   // after failed asks: 2x, 4x, up to 8x longer
+  if((document.hidden && !('setAppBadge' in navigator)) || CH.busy || navigator.onLine===false) return;
+  const wait = (document.hidden ? 60000 : chatOpen() ? CH_OPEN_MS : CH_SHUT_MS) * Math.min(8, 2 ** CH.fail);   // in the background: once a minute, for the icon count   // after failed asks: 2x, 4x, up to 8x longer
   if(Date.now() - CH.at < wait) return;
   CH.at = Date.now(); chatPoll();
 }
@@ -5447,29 +5488,30 @@ function chatPoll(){
 }
 /** A short notice for messages that came in while the chat is closed (not for the first load or your own). */
 function chatNotice(fresh){
-  if(chatOpen() || !fresh.length) return;
-  const m = fresh[fresh.length - 1], who = m.fromName || chatName(m.from), where = m.to ? '' : ' (team)';
+  if(!fresh.length) return;
+  const m = fresh[fresh.length - 1], who = m.fromName || chatName(m.from), where = !m.to ? ' (team)' : isGroup(m.to) ? ` (${chatName(m.to)})` : '';
   toast(fresh.length > 1 ? `💬 ${fresh.length} new messages · ${who}${where}: ${m.text}`.slice(0, 160) : `💬 ${who}${where}: ${m.text}`.slice(0, 160), false, 5000);
 }
 function chatMerge(d){
   if(d.users) CH.users = d.users;
+  if(d.groups) CH.groups = d.groups;
   if(Array.isArray(d.typing)){ CH.typing = d.typing; CH.typAt = Date.now(); }
   CH.me = d.me || CH.me;
   const first = !CH.loaded, have = new Set(CH.msgs.map(m => m.id)), fresh = [];
-  CH.loaded = true;
-  (d.msgs || []).forEach(m => { if(!have.has(m.id)){ CH.msgs.push(m); if(m.from!==CH.me) fresh.push(m); } });
+  CH.loaded = true; let added = 0;
+  (d.msgs || []).forEach(m => { if(!have.has(m.id)){ CH.msgs.push(m); added++; if(m.from!==CH.me) fresh.push(m); } });
   CH.msgs.sort((a, b) => a.id - b.id); if(CH.msgs.length > 600) CH.msgs = CH.msgs.slice(-600);
   if(CH.msgs.length) CH.last = Math.max(CH.last, CH.msgs[CH.msgs.length - 1].id);
   if(first && lsGet(chatReadKey())===null){ const r = {}; CH.msgs.forEach(m => { r[convOf(m)] = m.id; }); lsSet(chatReadKey(), r); }   // first time on this phone: older messages count as read
-  if(chatOpen()){ chatMarkRead(CH.conv); renderChat(); }
-  else if(!first && !d.kept) chatNotice(fresh.filter(m => m.id > ((lsGet(chatReadKey()) || {})[convOf(m)] || 0)));
+  if(chatOpen()){ chatMarkRead(CH.conv); if(first || added || d.users || d.groups) renderChat(); else renderTyping(); }
+  if(!first && !d.kept) chatNotice(fresh.filter(m => m.id > ((lsGet(chatReadKey()) || {})[convOf(m)] || 0)));   // with the chat open: only other conversations
   renderChatBtn();
-  if(d.msgs && d.msgs.length || d.users) lsSet('jmti_chat_' + CH.user, {me:CH.me, users:CH.users, msgs:CH.msgs.slice(-300)});
+  if(d.msgs && d.msgs.length || d.users) lsSet('jmti_chat_' + CH.user, {me:CH.me, users:CH.users, groups:CH.groups, msgs:CH.msgs.slice(-300)});
 }
 /** "DISPATCHER is typing…" under the messages of the conversation shown: team typing in the team chat, one person's in theirs. */
 function renderTyping(){
   const el = $('chTyping'); if(!el) return;
-  const who = Date.now() - CH.typAt > 8000 ? [] : CH.typing.filter(t => CH.conv==='#team' ? !t.to : t.u===CH.conv && t.to===CH.me);
+  const who = Date.now() - CH.typAt > 8000 ? [] : CH.typing.filter(t => CH.conv==='#team' ? !t.to : isGroup(CH.conv) ? t.to===CH.conv : t.u===CH.conv && t.to===CH.me);
   const names = who.map(t => t.n || chatName(t.u));
   const txt = !names.length ? '' : names.length===1 ? `${names[0]} is typing…` : names.length===2 ? `${names[0]} and ${names[1]} are typing…` : `${names.length} people are typing…`;
   if(el.dataset.t===txt) return;
@@ -5491,21 +5533,51 @@ function renderChatBtn(){
   CH.seenN = n;
   b.title = n ? `${n} new message${n===1 ? '' : 's'}` : 'Chat';
   b.setAttribute('aria-label', n ? `Chat: ${n} new message${n===1 ? '' : 's'}` : 'Chat');
+  updateAppBadge();
 }
-function openChat(conv){
-  if(conv) CH.conv = conv;
-  openPop('Chat', 'Team chat is seen by everyone. A message to one person is seen only by the two of you in the app.', `
+/**
+ * Pending count on the app icon (MANU 2026-10-14 "in mobile icon, show how many pending notifications"): unread chat messages
+ * plus the bell's trips waiting too long. Shown with the Badging API on an installed app (Windows, Mac, Chromebook; iPhone and
+ * iPad home-screen apps once notifications are allowed) and in the tab title everywhere. Android shows icon counts only for
+ * push notifications, which Apps Script can't send.
+ */
+const TITLE0 = document.title;
+function updateAppBadge(){
+  const n = S.me ? chatUnread() + (S.lwN || 0) : 0;
+  document.title = n ? `(${n > 99 ? '99+' : n}) ${TITLE0}` : TITLE0;
+  if(updateAppBadge.last === n) return;
+  updateAppBadge.last = n;
+  try{ if('setAppBadge' in navigator) (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {}); }catch(e){}
+}
+const badgeAsk = () => 'setAppBadge' in navigator && window.Notification && Notification.permission==='default'
+  && /iPhone|iPad|iPod/.test(navigator.userAgent) && (navigator.standalone || matchMedia('(display-mode: standalone)').matches);
+const CHAT_SUB = 'Team chat is seen by everyone, a department group by that department plus Admin and Boss, and a message to one person only by the two of you.';
+/** Puts the chat (picker, messages, typing line, message box) into body and foot: the pop-up's, or the desktop dock's. */
+function chatBuild(body, foot){
+  body.innerHTML = `${badgeAsk() ? '<button class="btn alt" type="button" id="chBadge" style="margin-bottom:10px">Show the count on the app icon</button>' : ''}
     <label class="f ch-pick">Chat with<select id="chConv"></select></label>
-    <div class="ch-msgs" id="chMsgs"><p class="hint">Loading messages…</p></div>`,
-    `<div class="ch-typing" id="chTyping" aria-live="polite"></div><div class="ch-send"><textarea id="chText" rows="2" maxlength="1000" placeholder="Write a message"></textarea><button class="btn road" type="button" id="chSendBtn">Send</button></div>`);
-  $('pop').classList.add('chatpop');
-  $('chatBtn').classList.remove('ring');
+    <div class="ch-msgs" id="chMsgs"><p class="hint">Loading messages…</p></div>`;
+  foot.innerHTML = `<div class="ch-typing" id="chTyping" aria-live="polite"></div><div class="ch-send"><textarea id="chText" rows="2" maxlength="1000" placeholder="Write a message"></textarea><button class="btn road" type="button" id="chSendBtn">Send</button></div>`;
   $('chConv').onchange = () => { chatTypingStop(); CH.conv = $('chConv').value; chatMarkRead(CH.conv); renderChat(); renderChatBtn(); chatTypingPing(); $('chText').focus(); };
   $('chText').oninput = chatTypingPing;
+  if($('chBadge')) $('chBadge').onclick = () => Notification.requestPermission().then(() => { updateAppBadge.last = null; updateAppBadge(); $('chBadge').remove(); }).catch(() => {});
   $('chText').onblur = () => setTimeout(() => { if(!chatOpen()) chatTypingStop(); }, 300);
   $('chSendBtn').onclick = chatSendNow;
   $('chText').onkeydown = e => { if(e.key==='Enter' && !e.shiftKey && window.matchMedia('(pointer:fine)').matches){ e.preventDefault(); chatSendNow(); } };
-  chatMarkRead(CH.conv); renderChat(); renderChatBtn();
+}
+function openChat(conv){
+  if(conv) CH.conv = conv;
+  if(dockWide() && S.me){
+    setDockPref(true);
+    if(!dockShown()) showDock(); else { chatMarkRead(CH.conv); renderChat(); renderChatBtn(); }
+    $('chText').focus();
+  } else {
+    openPop('Chat', CHAT_SUB, '', '');
+    chatBuild($('popBody'), $('popFoot'));
+    $('pop').classList.add('chatpop');
+    chatMarkRead(CH.conv); renderChat(); renderChatBtn();
+  }
+  $('chatBtn').classList.remove('ring');
   if(!CH.loaded || Date.now() - CH.at > 5000){ CH.at = Date.now(); if(!CH.busy) chatPoll(); }
 }
 function renderChat(){
@@ -5513,9 +5585,10 @@ function renderChat(){
   const sel = $('chConv'), last = {};
   CH.msgs.forEach(m => { last[convOf(m)] = m.id; });
   const people = CH.users.map(u => u.username).sort((a, b) => (last[b] || 0) - (last[a] || 0) || chatName(a).localeCompare(chatName(b)));
-  if(CH.conv!=='#team' && !people.includes(CH.conv)) people.unshift(CH.conv);
-  const opt = c => { const n = chatUnread(c), u = CH.users.find(x => x.username===c); return `<option value="${esc(c)}" ${c===CH.conv ? 'selected' : ''}>${esc(chatName(c))}${u ? ' · ' + esc(titleCase(u.role)) : c==='#team' ? ' · everyone' : ''}${n ? ` (${n} new)` : ''}</option>`; };
-  sel.innerHTML = opt('#team') + people.map(opt).join('');
+  const groups = CH.groups.map(g => g.id);
+  if(CH.conv!=='#team' && !people.includes(CH.conv) && !groups.includes(CH.conv)) (isGroup(CH.conv) ? groups : people).unshift(CH.conv);
+  const opt = c => { const n = chatUnread(c), u = CH.users.find(x => x.username===c); return `<option value="${esc(c)}" ${c===CH.conv ? 'selected' : ''}>${esc(chatName(c))}${u ? ' · ' + esc(titleCase(u.role)) : c==='#team' ? ' · everyone' : isGroup(c) ? ' · department' : ''}${n ? ` (${n} new)` : ''}</option>`; };
+  sel.innerHTML = opt('#team') + (groups.length ? `<optgroup label="Department groups">${groups.map(opt).join('')}</optgroup>` : '') + (people.length ? `<optgroup label="One to one">${people.map(opt).join('')}</optgroup>` : '');
   const l = CH.msgs.filter(m => convOf(m)===CH.conv), box = $('chMsgs');
   const waitMsgs = outbox().filter(it => it.fn==='chatSend' && (it.args[0] || '#team')===CH.conv);   // typed without signal
   let day = '';
@@ -5523,9 +5596,9 @@ function renderChat(){
       return h + `<div class="ch-m${mine ? ' me' : ''}${m.from==='jmti-alerts' ? ' bot' : ''}"><div class="ch-h">${mine ? 'You' : esc(m.fromName || chatName(m.from))} · ${esc(String(m.at).slice(11, 16))}</div><div class="ch-t">${esc(m.text)}</div></div>`; }).join('')
       + waitMsgs.map(it => `<div class="ch-m me wait"><div class="ch-h">You · waiting to send</div><div class="ch-t">${esc(it.args[1])}</div></div>`).join('')
     : waitMsgs.length ? waitMsgs.map(it => `<div class="ch-m me wait"><div class="ch-h">You · waiting to send</div><div class="ch-t">${esc(it.args[1])}</div></div>`).join('')
-    : `<p class="hint">${CH.loaded ? (CH.conv==='#team' ? 'No messages yet. Say hello to the team.' : `No messages with ${esc(chatName(CH.conv))} yet.`) : 'Loading messages…'}</p>`;
+    : `<p class="hint">${CH.loaded ? (CH.conv==='#team' ? 'No messages yet. Say hello to the team.' : isGroup(CH.conv) ? `No messages in the ${esc(chatName(CH.conv))} yet. Only your department, Admin and Boss see it.` : `No messages with ${esc(chatName(CH.conv))} yet.`) : 'Loading messages…'}</p>`;
   renderTyping();
-  const pb = $('popBody'); pb.scrollTop = pb.scrollHeight;
+  const pb = dockShown() ? $('chdBody') : $('popBody'); pb.scrollTop = pb.scrollHeight;
 }
 async function chatSendNow(){
   const ta = $('chText'), text = ta.value.trim(); if(!text) return;
@@ -6712,6 +6785,7 @@ const DEMO = (() => {
   // CHAT (demo): a team message and one to the admin
   const demoInc = [];
   const demoTargets = {[today.slice(0,7)]: {'ALL TRIPS':900, 'COCA COLA CANLUBANG':420, 'COCA COLA SAN FERNANDO':150}, [addDays(today.slice(0,7) + '-01', -1).slice(0,7)]: {'ALL TRIPS':560, 'COCA COLA CANLUBANG':280, 'COCA COLA SAN FERNANDO':200, 'OTHER ACCOUNTS':150}};
+  const DEMO_GROUPS = [{id:'#ops', name:'Operations', roles:['SUPERVISOR','TEAM LEADER','DISPATCHER']}, {id:'#podbill', name:'POD & Billing', roles:['POD','BILLING']}, {id:'#acct', name:'Accounting & Payroll', roles:['ACCOUNTING','PAYROLL']}, {id:'#hr', name:'HR', roles:['HR']}, {id:'#mnt', name:'Maintenance', roles:['MAINTENANCE']}, {id:'#mgmt', name:'Management', roles:['ADMIN','BOSS']}];
   const chatMsgs = [{id:1, at:addDays(today, -1) + ' 17:40', from:'teamleader', fromName:'TEAM LEADER', to:'', text:'Good evening team. Please update the trip status before 8 PM.'},
     {id:2, at:today + ' 07:05', from:'dispatcher', fromName:'DISPATCHER', to:'admin', text:'Sir, truck 12 has a flat tire at Canlubang.'},
     {id:3, at:today + ' 07:30', from:'jmti-alerts', fromName:'JMTI ALERTS', to:'', text:'⏱ LONG WAITING: no status change for too long\n• Truck 12 · CBP7029 · Coca Cola Lucena · On Site Source · since ' + today + ' 1:00 AM (limit 6 h)'}];
@@ -6838,10 +6912,13 @@ const DEMO = (() => {
       return people.map((p,i) => ({...p, hired: i % 5 === 0 ? '2016-05-16' : p.hired, truck: tk(p.full), lastTrip: i % 7 === 3 ? '' : addDays(today, -((i*5) % 23))})); },
     saveManpower: (tok,p,isNew) => { auth(tok); const full = `${p.last.toUpperCase()} , ${p.first.toUpperCase()}`; if(isNew) people.push({row:people.length+100, id:p.id||String(4000+people.length), last:p.last.toUpperCase(), first:p.first.toUpperCase(), full, position:p.position, hired:p.hired, status:p.status, licExp:p.licExp||''}); else Object.assign(people.find(x => x.row===p.row), {last:p.last.toUpperCase(), first:p.first.toUpperCase(), full, position:p.position, hired:p.hired||'', status:p.status, licExp:p.licExp||''}); return people.map(x => ({...x})); },
     chatTyping: (tok, to, on) => { auth(tok); DEMO._typing = on===false ? null : {to:to || '', at:Date.now()}; return {ok:true}; },
-    chatList: (tok, since) => { const u = auth(tok), me = u.username, out = {me, msgs:chatMsgs.filter(m => (!m.to || m.to===me || m.from===me) && m.id > (Number(since) || 0)).map(m => ({...m}))};
+    chatList: (tok, since) => { const u = auth(tok), me = u.username, gs = DEMO_GROUPS.filter(g => ['ADMIN','BOSS'].includes(u.role) || g.roles.includes(u.role)).map(g => g.id);
+      const out = {me, msgs:chatMsgs.filter(m => (!m.to || m.to===me || m.from===me || gs.includes(m.to)) && m.id > (Number(since) || 0)).map(m => ({...m}))};
+      if(!Number(since)) out.groups = DEMO_GROUPS.filter(g => gs.includes(g.id)).map(g => ({id:g.id, name:g.name}));
       if(!Number(since)) out.users = users.filter(x => x.username!==me && x.status==='ACTIVE').map(x => ({username:x.username, name:x.name, role:x.role})).sort((a, b) => a.name.localeCompare(b.name)); return out; },
     chatSend: (tok, to, text) => { const u = auth(tok); text = String(text || '').trim(); if(!text) throw new Error('Type a message first.'); if(text.length > 1000) throw new Error('A message can be up to 1000 characters.');
-      if(to && !users.some(x => x.username===to)) throw new Error('That user is not active in the app.'); const m = {id:chatMsgs.length + 1, at:stampNow(), from:u.username, fromName:u.name, to:to || '', text}; chatMsgs.push(m); return {...m}; },
+      if(String(to).charAt(0)==='#'){ if(!DEMO_GROUPS.some(g => g.id===to && (['ADMIN','BOSS'].includes(u.role) || g.roles.includes(u.role)))) throw new Error('You are not in that group.'); }
+      else if(to && !users.some(x => x.username===to)) throw new Error('That user is not active in the app.'); const m = {id:chatMsgs.length + 1, at:stampNow(), from:u.username, fromName:u.name, to:to || '', text}; chatMsgs.push(m); return {...m}; },
     driverScores: (tok, f, t2) => { const u = auth(tok); const D = {}, hrs = (a, b) => { if(!a || !b) return null; const h = (new Date(b) - new Date(a)) / 36e5; return h >= 0 && h <= 72 ? h : null; };
       trips.filter(t => t.date >= f && t.date <= t2 && isTrip(t) && t.driver).forEach((t, i) => { const k = nameKey(t.driver), p = D[k] || (D[k] = {name:t.driver, trips:0, judged:0, on:0, wH:0, wN:0, km:0, L:0}); p.trips++;
         const km = Number(t.kms) || 60, tr = hrs(t.srcDepart, t.destArrive); if(tr!==null){ p.judged++; if(tr <= 2 + km / 40) p.on++; } else { p.judged++; if(i % 4) p.on++; }
@@ -7052,6 +7129,7 @@ window.__JMTI_READY = true;
 start();
 </script>
 <template id="mntTpl">
+<style>@media (pointer:coarse), (max-width:700px){ input:not([type=checkbox]):not([type=radio]), select, textarea{font-size:16px !important} }</style>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
