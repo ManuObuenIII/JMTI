@@ -936,6 +936,23 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .ms-av.sp{visibility:hidden}
 .ms-find{padding:4px 12px 8px}
 .ms-find input{width:100%;border-radius:999px;background:#F0F2F5;border:0;padding:9px 14px;box-shadow:none}
+.ms-find.row{display:flex;gap:8px;align-items:center}.ms-find.row input{flex:1;min-width:0}
+.ms-newg{flex:none;border:0;border-radius:999px;background:#E7EEFF;color:#0A27B5;font:inherit;font-weight:700;font-size:13px;padding:8px 12px;cursor:pointer;white-space:nowrap}
+.ms-newg:hover{background:#D6E2FF}
+/* Make a chat group (MANU 2026-10-14 "add create chatgroup") */
+.cg-form{padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px}
+.cg-form label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:#65676B}
+.cg-form label.f input{font-size:15px}
+.cg-picked{display:flex;flex-wrap:wrap;gap:6px}
+.cg-picked span{background:#E7EEFF;color:#0A27B5;border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:600;overflow-wrap:anywhere}
+.cg-list{display:flex;flex-direction:column}
+.cg-row{display:flex;gap:10px;align-items:center;padding:7px 4px;border-radius:10px;cursor:pointer}
+.cg-row:hover{background:#F0F2F5}
+.cg-row input{width:20px;height:20px;flex:none;accent-color:#2E5BFF}
+.cg-row .ms-mid small{font-size:12px}
+.cg-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%}
+.cg-foot .btn{flex:1 1 auto}
+.cg-foot .cg-warn{background:#fff;color:#B91C1C;border:1px solid #FCA5A5}
 .ms-list{padding:0 6px 8px}
 .ms-item{display:flex;gap:12px;align-items:center;width:100%;padding:8px 8px;border:0;background:transparent;text-align:left;cursor:pointer;border-radius:10px;font:inherit;color:#050505}
 .ms-item:hover{background:#F0F2F5}
@@ -1057,6 +1074,7 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 #clTbl td,#clPays td,#prTbl td{min-width:70px;overflow-wrap:break-word}
 .cl-rates input{width:100%;min-width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
 .cl-new span{display:block;font-size:10.5px;color:var(--muted);margin:4px 0 2px}
+.cl-hard td small.cl-hset{color:var(--accent,#2E5BFF);font-weight:700}
 #clBook .bar .f.grow{min-width:200px}
 @media (max-width:700px){ #clBook .bar .f.grow,#clProfit .bar .f.grow{flex:1 1 100%} }
 .form .f b{display:block;font-weight:600;color:var(--ink);overflow-wrap:break-word;margin-top:3px}
@@ -1938,7 +1956,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','savePayment','cancelPayment'];
+const WRITES = ['saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','savePayment','cancelPayment'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 function submitTick(){
@@ -2174,7 +2192,7 @@ function signOut(msg){
   closeDrawer();
   location.hash = '';
   S.boot = null; S.me = null; S.bootOk = false;
-  hideDock(); $('chatBtn').hidden = true;
+  hideDock(); $('chatBtn').hidden = true; if(!$('pop').hidden && $('pop').classList.contains('chatpop')) closePop(true);   // the chat pop-up closes too
   askReset(); $('askBox').hidden = true; $('askBtn').hidden = true;
   showLogin(msg);
 }
@@ -4283,7 +4301,6 @@ function openDispatch(t){
     ['driver','helper1','helper2'].forEach(k => { const i = body.querySelector(`input[data-k="${k}"]`); if(i) i.value = c[k] || ''; });
   };
   $('drSave').onclick = saveDispatch;
-  wireHard();
   if($('drCancelTrip')) $('drCancelTrip').onclick = () => {
     const reason = prompt('Reason for cancelling this trip:'); if(reason===null) return;
     closeDrawer();
@@ -5359,7 +5376,7 @@ async function showPersonHistory(p){
       cancel: () => [`Cancelled / no trip · ${cx.length}`, hsList(cx, 'person', null, 'None in these dates.')],
       all: () => [hsTitle('Trips on record, all dates', allOk), hsList(allOk, 'person')],
       first: () => ['First trip on record', hsList(allOk.slice(-1), 'person')],
-      hard: () => { const h = hardAvg(st.ok); return [`Hardship · ${h.n} rated trip${h.n===1 ? '' : 's'}, average ${hardAvgTxt(h)}`, hsList(h.rated, 'person', ['Hardship', hardCell], 'No rated trips in these dates. Trips are rated in Truck Plan.')]; }
+      hard: () => { const h = hardAvg(st.ok); return [`Hardship · ${h.n} rated trip${h.n===1 ? '' : 's'}, average ${hardAvgTxt(h)}`, hsList(h.rated, 'person', ['Hardship', hardCell], 'No rated trips in these dates. Admin rates each route in Clients.')]; }
     };
     const keep = hsOpen;
     hsScoreFill(p, f, to, det);
@@ -5414,7 +5431,7 @@ async function showTruckHistory(t, byPlate){
       jo: () => [`Job orders · ${repR.length}`, joTbl(repR, 'No job orders in these dates.')],
       cost: () => [`Maintenance cost · ${cost ? peso(cost) : '—'}`, joTbl(costly, 'No job orders with a cost in these dates.')],
       open: () => [`Open job orders · ${open.length}`, joTbl(open, 'No open job orders.')],
-      hard: () => { const h = hardAvg(st.ok); return [`Hardship · ${h.n} rated trip${h.n===1 ? '' : 's'}, average ${hardAvgTxt(h)}`, hsList(h.rated, 'truck', ['Hardship', hardCell], 'No rated trips in these dates. Trips are rated in Truck Plan.')]; }
+      hard: () => { const h = hardAvg(st.ok); return [`Hardship · ${h.n} rated trip${h.n===1 ? '' : 's'}, average ${hardAvgTxt(h)}`, hsList(h.rated, 'truck', ['Hardship', hardCell], 'No rated trips in these dates. Admin rates each route in Clients.')]; }
     });
   });
 }
@@ -5759,7 +5776,8 @@ if(DOCK_MQ.addEventListener) DOCK_MQ.addEventListener('change', syncDock); else 
 const chatReadKey = () => 'jmti_chatread_' + CH.user;
 const convOf = m => !m.to ? '#team' : m.to.charAt(0)==='#' ? m.to : (m.from===CH.me ? m.to : m.from);   // '#team' = team chat, '#ops' = a department group, else the other person
 const isGroup = c => c!=='#team' && String(c).charAt(0)==='#';
-const chatName = c => { if(c==='#team') return 'Team chat'; if(isGroup(c)){ const g = CH.groups.find(x => x.id===c); return (g ? g.name : c.slice(1).toUpperCase()) + ' group'; } const x = CH.users.find(y => y.username===c); return x ? x.name : String(c).toUpperCase(); };
+const madeGroup = c => CH.groups.find(x => x.id===c && x.made);   // a group someone made (not a department group)
+const chatName = c => { if(c==='#team') return 'Team chat'; if(isGroup(c)){ const g = CH.groups.find(x => x.id===c); return g ? (g.made ? g.name : g.name + ' group') : /^#g\d+$/.test(c) ? 'Group' : c.slice(1).toUpperCase() + ' group'; } const x = CH.users.find(y => y.username===c); return x ? x.name : String(c).toUpperCase(); };
 function chatUnread(conv){ const r = lsGet(chatReadKey()) || {}; return CH.msgs.filter(m => m.from!==CH.me && (!conv || convOf(m)===conv) && m.id > (r[convOf(m)] || 0)).length; }
 function chatMarkRead(conv){ const r = lsGet(chatReadKey()) || {}, l = CH.msgs.filter(m => convOf(m)===conv); if(!l.length) return; r[conv] = l[l.length - 1].id; lsSet(chatReadKey(), r); }
 function chatTick(){
@@ -5768,7 +5786,7 @@ function chatTick(){
   if(!S.me || !TOKEN){ b.hidden = true; return; }
   if(CH.user !== S.me.username) setTimeout(flushOutbox, 2000);   // a new sign-in: send what waits from before
   if(CH.user !== S.me.username){
-    Object.assign(CH, {view:'list', up:[], thumbs:{}, thumbWant:{}, typSig:'', msgs:[], users:[], groups:[], me:'', last:0, conv:'#team', loaded:false, busy:false, at:0, user:S.me.username, seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:''});
+    Object.assign(CH, {view:'list', full:false, g:null, up:[], thumbs:{}, thumbWant:{}, typSig:'', msgs:[], users:[], groups:[], me:'', last:0, conv:'#team', loaded:false, busy:false, at:0, user:S.me.username, seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:''});
     const kept = lsGet('jmti_chat_' + CH.user); if(kept && kept.msgs) chatMerge({...kept, kept:true});   // what this phone kept: shows without signal
   }
   b.hidden = false;
@@ -5780,7 +5798,8 @@ function chatTick(){
 }
 function chatPoll(){
   CH.busy = true; const u = CH.user;
-  return call('chatList', CH.last, CH.loaded ? CH.v : '').then(d => { CH.fail = 0; if(CH.user===u){ if(d.v) CH.v = String(d.v); chatMerge(d); } })
+  const full = !CH.full;   // the first ask after the page opens: the people and groups too (a kept copy may be from before groups)
+  return call('chatList', CH.last, CH.loaded && !full ? CH.v : '', full).then(d => { CH.fail = 0; if(CH.user===u){ if(full) CH.full = true; if(d.v) CH.v = String(d.v); chatMerge(d); } })
     .catch(() => { CH.fail = Math.min(3, CH.fail + 1); }).finally(() => { CH.busy = false; });
 }
 /** A short notice for messages that came in while the chat is closed (not for the first load or your own). */
@@ -5800,10 +5819,11 @@ function chatMerge(d){
   CH.msgs.sort((a, b) => a.id - b.id); if(CH.msgs.length > 600) CH.msgs = CH.msgs.slice(-600);
   if(CH.msgs.length) CH.last = Math.max(CH.last, CH.msgs[CH.msgs.length - 1].id);
   if(first && lsGet(chatReadKey())===null){ const r = {}; CH.msgs.forEach(m => { r[convOf(m)] = m.id; }); lsSet(chatReadKey(), r); }   // first time on this phone: older messages count as read
-  if(chatOpen()){ if(CH.view==='conv') chatMarkRead(CH.conv); if(first || added || d.users || d.groups) renderChat(); else renderTyping(); }
+  if(chatOpen() && CH.view!=='group'){ if(CH.view==='conv') chatMarkRead(CH.conv); if(first || added || d.users || d.groups) renderChat(); else renderTyping(); }
+  if(CH.view==='conv' && isGroup(CH.conv) && /^#g/.test(CH.conv) && CH.loaded && !d.kept && d.groups && !CH.groups.some(x => x.id===CH.conv)){ CH.view = 'list'; if(chatOpen()){ chatBuild(); renderChat(true); } }   // taken out of the group
   if(!first && !d.kept && !(chatOpen() && CH.view==='list')) chatNotice(fresh.filter(m => m.id > ((lsGet(chatReadKey()) || {})[convOf(m)] || 0)));   // with the chat open: only other conversations
   renderChatBtn();
-  if(d.msgs && d.msgs.length || d.users) lsSet('jmti_chat_' + CH.user, {me:CH.me, users:CH.users, groups:CH.groups, msgs:CH.msgs.slice(-300)});
+  if(d.msgs && d.msgs.length || d.users || d.groups) lsSet('jmti_chat_' + CH.user, {me:CH.me, users:CH.users, groups:CH.groups, msgs:CH.msgs.slice(-300)});
 }
 /** "DISPATCHER is typing…" under the messages of the conversation shown: team typing in the team chat, one person's in theirs. */
 function renderTyping(){
@@ -5851,6 +5871,7 @@ const badgeAsk = () => 'setAppBadge' in navigator && window.Notification && Noti
   && /iPhone|iPad|iPod/.test(navigator.userAgent) && (navigator.standalone || matchMedia('(display-mode: standalone)').matches);
 const CHAT_SUB = 'Team chat is seen by everyone, a department group by that department plus Admin and Boss, and a message to one person only by the two of you.';
 const MS_ICON = {
+  people: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.8 19.5c.7-3.4 3.2-5.3 6.2-5.3s5.5 1.9 6.2 5.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M15.5 4.9a3.2 3.2 0 0 1 0 6.2M17.6 14.6c1.9.6 3.2 2.3 3.6 4.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
   photo: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="1.8" fill="currentColor"/><path d="M4.5 17.5l5-5 4 4 3-3 3.5 3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
@@ -5872,7 +5893,7 @@ const atMin = at => { const t = String(at || ''); return Date.UTC(+t.slice(0, 4)
 const clock12 = at => { const h = +String(at).slice(11, 13), mi = String(at).slice(14, 16); return isNaN(h) ? '' : `${h % 12 || 12}:${mi} ${h < 12 ? 'AM' : 'PM'}`; };
 const shortWhen = at => String(at).slice(0, 10)===TODAY() ? clock12(at) : fmtDay(String(at).slice(0, 10)).replace(/, \d{4}$/, '');
 const sepWhen = at => (String(at).slice(0, 10)===TODAY() ? 'Today' : fmtDay(String(at).slice(0, 10))) + ' · ' + clock12(at);
-const convSub = c => c==='#team' ? 'Everyone in the app' : isGroup(c) ? 'Department group · your department, Admin and Boss' : titleCase((CH.users.find(u => u.username===c) || {}).role || '');
+const convSub = c => c==='#team' ? 'Everyone in the app' : madeGroup(c) ? `${madeGroup(c).members.length} members · only they see it` : isGroup(c) ? 'Department group · your department, Admin and Boss' : titleCase((CH.users.find(u => u.username===c) || {}).role || '');
 /** Round picture with initials (groups get rounded squares); the hue comes from the name so each person keeps a colour. */
 function chatAv(c, sm, name){
   const n = String(name || chatName(c)).replace(/ group$/, ''), grp = c==='#team' || isGroup(c);
@@ -5892,12 +5913,14 @@ function chatBuild(){
   if(CH.view==='list'){
     h.body.innerHTML = `${h.dock ? '' : `<div class="ms-top"><span class="ms-title">Chats</span>${close}</div>`}
       ${badgeAsk() ? '<div style="padding:8px 12px 0"><button class="btn alt" type="button" id="chBadge">Show the count on the app icon</button></div>' : ''}
-      <div class="ms-find"><input id="chFind" type="search" placeholder="Search people and groups" aria-label="Search people and groups" autocomplete="off"></div>
+      <div class="ms-find row"><input id="chFind" type="search" placeholder="Search people and groups" aria-label="Search people and groups" autocomplete="off"><button type="button" class="ms-newg" id="chNewG" title="Make a group chat">+ New group</button></div>
       <div class="ms-list" id="chList"></div>`;
     h.foot.innerHTML = '';
     $('chFind').oninput = renderChatList;
+  } else if(CH.view==='group'){
+    return groupBuild(h, close);
   } else {
-    h.body.innerHTML = `<div class="ms-top"><button type="button" class="ms-ib" data-chback="1" title="All chats" aria-label="All chats">${MS_ICON.back}</button>${chatAv(CH.conv)}<div class="ms-name"><b id="chName">${esc(chatName(CH.conv))}</b><small>${esc(convSub(CH.conv))}</small></div>${close}</div>
+    h.body.innerHTML = `<div class="ms-top"><button type="button" class="ms-ib" data-chback="1" title="All chats" aria-label="All chats">${MS_ICON.back}</button>${chatAv(CH.conv)}<div class="ms-name"><b id="chName">${esc(chatName(CH.conv))}</b><small>${esc(convSub(CH.conv))}</small></div>${madeGroup(CH.conv) ? `<button type="button" class="ms-ib" data-chgrp="1" title="Members" aria-label="Members">${MS_ICON.people}</button>` : ''}${close}</div>
       <div class="ch-msgs" id="chMsgs"><p class="hint">Loading messages…</p></div>`;
     h.foot.innerHTML = `<div class="ch-typing" id="chTyping" aria-live="polite"></div>
       <div class="ms-comp"><button type="button" class="ms-ib" id="chPhoto" title="Send a photo" aria-label="Send a photo">${MS_ICON.photo}</button><button type="button" class="ms-ib" id="chFile" title="Send a file" aria-label="Send a file">${MS_ICON.clip}</button>
@@ -5916,7 +5939,76 @@ function chatBuild(){
   if($('chBadge')) $('chBadge').onclick = () => Notification.requestPermission().then(() => { updateAppBadge.last = null; updateAppBadge(); $('chBadge').parentNode.remove(); }).catch(() => {});
   h.body.onclick = chatClick;
 }
+/**
+ * Make or change a group (MANU 2026-10-14 "add create chatgroup"): anyone names a group and ticks its members; the maker or an
+ * Admin can rename it, add or remove people, or delete it later; everyone else in it sees who is in it and can leave.
+ */
+function groupOpen(id){
+  const g = id ? madeGroup(id) : null; if(id && !g) return;
+  const can = !g || g.by===CH.me || (S.me && S.me.role==='ADMIN');
+  CH.g = {id: g ? g.id : '', name: g ? g.name : '', picked: new Set(g ? g.members.filter(u => u!==CH.me) : []), can, by: g ? g.by : CH.me, busy: false};
+  CH.view = 'group'; chatBuild();
+}
+function groupBuild(h, close){
+  const g = CH.g, who = u => u===CH.me ? 'You' : chatName(u);
+  h.body.innerHTML = `<div class="ms-top"><button type="button" class="ms-ib" data-cgback="1" title="Back" aria-label="Back">${MS_ICON.back}</button><div class="ms-name"><b>${g.id ? esc(g.name) : 'New group'}</b><small>${g.id ? (g.can ? 'Change the name or the people' : 'Made by ' + esc(who(g.by))) : 'Name it and pick the people'}</small></div>${close}</div>
+    <div class="cg-form">${g.can ? `<label class="f">Group name<input id="cgName" maxlength="40" value="${esc(g.name)}" placeholder="e.g. Canlubang night shift" autocomplete="off"></label>
+      <div class="cg-picked" id="cgPicked"></div>
+      <input id="cgFind" type="search" placeholder="Search people" aria-label="Search people" autocomplete="off">` : ''}
+      <div class="cg-list" id="cgList"></div></div>`;
+  h.foot.innerHTML = `<div class="cg-foot">${g.can ? `<button type="button" class="btn" id="cgSave">${g.id ? 'Save' : 'Create group'}</button>` : ''}${g.id ? `<button type="button" class="btn alt" id="cgLeave">Leave group</button>` : ''}${g.id && g.can ? `<button type="button" class="btn cg-warn" id="cgDel">Delete group</button>` : ''}</div>`;
+  h.body.onclick = chatClick;
+  if(g.can){
+    $('cgName').oninput = e => { g.name = e.target.value; };
+    $('cgFind').oninput = groupList;
+    $('cgList').onchange = e => { const b = e.target.closest('input[data-u]'); if(!b) return; if(b.checked) g.picked.add(b.dataset.u); else g.picked.delete(b.dataset.u); groupPicked(); };
+    $('cgSave').onclick = () => groupSave({id: g.id, name: (g.name || '').trim(), members: [...g.picked]}, g.id ? 'Group saved' : 'Group created');
+    if(!g.id) setTimeout(() => { try{ $('cgName').focus(); }catch(e){} }, 30);
+  }
+  if($('cgLeave')) $('cgLeave').onclick = () => { if(confirm(`Leave ${g.name}? You won't see its messages any more.`)) groupSave({id: g.id, leave: true}, 'You left the group'); };
+  if($('cgDel')) $('cgDel').onclick = () => { if(confirm(`Delete ${g.name} for everyone in it?`)) groupSave({id: g.id, remove: true}, 'Group deleted'); };
+  groupPicked(); groupList();
+}
+function groupPicked(){
+  const el = $('cgPicked'); if(!el) return;
+  const l = [...CH.g.picked].map(u => chatName(u));
+  el.innerHTML = l.length ? `<span>You</span>` + l.map(n => `<span>${esc(n)}</span>`).join('') : '<small class="dim">Tick at least one person below.</small>';
+}
+function groupList(){
+  const g = CH.g, el = $('cgList'); if(!el) return;
+  if(!g.can){   // not the maker: just who is in it
+    const m = (madeGroup(g.id) || {members: []}).members;
+    el.innerHTML = m.map(u => `<div class="cg-row">${chatAv(u, true)}<span class="ms-mid"><b>${esc(u===CH.me ? 'You' : chatName(u))}${u===g.by ? ' · made the group' : ''}</b><small>${esc(titleCase((CH.users.find(x => x.username===u) || {}).role || ''))}</small></span></div>`).join('');
+    return;
+  }
+  const q = ($('cgFind') ? $('cgFind').value : '').trim().toLowerCase();
+  const l = CH.users.filter(u => !q || (u.name + ' ' + u.role).toLowerCase().includes(q))
+    .sort((a, b) => (g.picked.has(b.username) - g.picked.has(a.username)) || a.name.localeCompare(b.name));
+  el.innerHTML = l.map(u => `<label class="cg-row"><input type="checkbox" data-u="${esc(u.username)}"${g.picked.has(u.username) ? ' checked' : ''}${g.id && u.username===g.by ? ' disabled' : ''}>${chatAv(u.username, true)}<span class="ms-mid"><b>${esc(u.name)}</b><small>${esc(titleCase(u.role))}</small></span></label>`).join('')
+    || `<p class="hint" style="padding:8px">${q ? 'No one found.' : 'Loading people…'}</p>`;
+}
+async function groupSave(arg, done){
+  const g = CH.g; if(g.busy) return;
+  if(!arg.leave && !arg.remove){
+    if(!arg.name) return toast('Give the group a name.', true);
+    if(!arg.members.length) return toast('Pick at least one other person.', true);
+  }
+  g.busy = true; document.querySelectorAll('.cg-foot .btn').forEach(b => { b.disabled = true; });
+  try{
+    const r = await call('chatGroupSave', arg);
+    CH.groups = r.groups || CH.groups;
+    toast(done);
+    if(arg.leave || arg.remove){ CH.view = 'list'; CH.conv = '#team'; chatBuild(); renderChat(true); }
+    else chatGo(r.id);
+    CH.at = 0; setTimeout(() => { if(!CH.busy){ CH.at = Date.now(); chatPoll(); } }, 300);
+  }catch(e){ toast(e.message, true); }
+  finally{ g.busy = false; document.querySelectorAll('.cg-foot .btn').forEach(b => { b.disabled = false; }); }
+}
 function chatClick(e){
+  if(e.target.closest('#chNewG')) return groupOpen('');
+  if(e.target.closest('[data-chgrp]')) return groupOpen(CH.conv);
+  if(e.target.closest('[data-cgback]')){ CH.view = CH.g && CH.g.id ? 'conv' : 'list'; chatBuild(); renderChat(true); return; }
+  if(CH.view==='group') return;
   const c = e.target.closest('[data-conv]'); if(c) return chatGo(c.dataset.conv);
   if(e.target.closest('[data-chback]')){ chatTypingStop(); CH.view = 'list'; chatBuild(); renderChat(true); return; }
   if(e.target.closest('[data-chclose]')){ chatTypingStop(); closePop(true); return; }
@@ -5956,7 +6048,7 @@ function openChat(conv){
   if(!CH.loaded || Date.now() - CH.at > 5000){ CH.at = Date.now(); if(!CH.busy) chatPoll(); }
 }
 function renderChat(force){
-  if(!chatOpen()) return;
+  if(!chatOpen() || CH.view==='group') return;
   if(CH.view==='list') return renderChatList();
   const box = $('chMsgs'); if(!box) return;
   const sc = chatHost().body, atEnd = force || sc.scrollHeight - sc.scrollTop - sc.clientHeight < 90;
@@ -5979,7 +6071,7 @@ function renderChat(force){
   });
   html += waitMsgs.map(it => `<div class="ch-row me"><div class="ch-m me wait solo"><div class="ch-t">${esc(it.args[1])}</div><div class="ch-st">Waiting for signal</div></div></div>`).join('');
   html += ups.map(u => `<div class="ch-row me"><div class="ch-m me wait has-file solo">${u.url ? `<img class="ch-img" src="${u.url}" alt="">` : `<span class="ch-file">${MS_ICON.doc}<span><b>${esc(u.name)}</b></span></span>`}<div class="ch-st">Sending…</div></div></div>`).join('');
-  box.innerHTML = html || `<p class="hint" style="text-align:center;margin:24px 8px">${CH.loaded ? (CH.conv==='#team' ? 'No messages yet. Say hello to the team.' : isGroup(CH.conv) ? `No messages in the ${esc(chatName(CH.conv))} yet. Only your department, Admin and Boss see it.` : `No messages with ${esc(chatName(CH.conv))} yet.`) : 'Loading messages…'}</p>`;
+  box.innerHTML = html || `<p class="hint" style="text-align:center;margin:24px 8px">${CH.loaded ? (CH.conv==='#team' ? 'No messages yet. Say hello to the team.' : madeGroup(CH.conv) ? `No messages in ${esc(chatName(CH.conv))} yet. Only its members see it.` : isGroup(CH.conv) ? `No messages in the ${esc(chatName(CH.conv))} yet. Only your department, Admin and Boss see it.` : `No messages with ${esc(chatName(CH.conv))} yet.`) : 'Loading messages…'}</p>`;
   renderTyping();
   chatLoadThumbs();
   if(atEnd) sc.scrollTop = sc.scrollHeight;
@@ -6071,42 +6163,26 @@ async function chatSendFile(file){
   finally{ CH.up = CH.up.filter(x => x!==up); if(up.url) URL.revokeObjectURL(up.url); renderChat(true); renderChatBtn(); }
 }
 /* ================= Trip hardship rating (MANU 2026-10-13 "add ratings on trip hardships") =================
-   Truck Plan roles rate a trip 1 (easy) to 5 (extreme) and tap what made it hard; saved in GENERAL HARDSHIP RATING / HARDSHIP REASON.
-   Averages show in the driver, helper and truck pop-ups and per route on the Dashboard. */
+   1 (easy) to 5 (extreme) plus what made it hard. MANU 2026-10-14 "move it to clients" + "only admin can set it": Admin rates each
+   route in Clients (Code.gs ROUTE HARDSHIP, boot.routeHard) and every trip on the route takes it. A trip rated one by one before
+   (GENERAL HARDSHIP RATING / REASON) keeps its own. Averages show in the driver, helper and truck pop-ups and per route on the Dashboard. */
 const HARD_LABEL = ['', 'Easy', 'Normal', 'Hard', 'Very hard', 'Extreme'];
 const HARD_WHY = ['LONG WAIT', 'BAD ROAD', 'HEAVY LOAD', 'LONG DISTANCE', 'HEAVY TRAFFIC', 'BAD WEATHER', 'NIGHT DRIVE', 'FLOODED ROAD'];
 const HARD_COLOR = ['#94A3B8', '#16A34A', '#65A30D', '#D97706', '#EA580C', '#DC2626'];
-const hardOf = t => { const n = Number(t && t.hardship); return n >= 1 && n <= 5 ? Math.round(n) : 0; };
-const hardWhyList = t => String((t && t.hardshipWhy) || '').split(/\s*,\s*/).map(x => x.trim()).filter(Boolean);
+const ownHard = t => { const n = Number(t && t.hardship); return n >= 1 && n <= 5 ? Math.round(n) : 0; };
+const routeHard = t => { const m = S.boot && S.boot.routeHard; return (m && t && m[nameKey(t.customer) + '|' + nameKey(t.destination)]) || null; };   // [rating, reason]
+const hardOf = t => ownHard(t) || (routeHard(t) || [0])[0];
+const hardWhy = t => ownHard(t) ? String(t.hardshipWhy || '') : ((routeHard(t) || [])[1] || (t && t.hardshipWhy) || '');
+const hardWhyList = t => String(hardWhy(t)).split(/\s*,\s*/).map(x => x.trim()).filter(Boolean);
 const hardTxt = t => hardOf(t) ? `${hardOf(t)} · ${HARD_LABEL[hardOf(t)]}` : '';
 const hardAvg = list => { const r = list.filter(hardOf); return {avg: r.length ? r.reduce((a, t) => a + hardOf(t), 0) / r.length : null, n: r.length, rated: r}; };
 const hardAvgTxt = h => h.n ? `${fmt1(h.avg)} / 5` : '—';
-const hardCell = t => hardOf(t) ? `<span class="hd-b" style="--c:${HARD_COLOR[hardOf(t)]}">${hardOf(t)}</span> ${esc(HARD_LABEL[hardOf(t)])}${t.hardshipWhy ? `<small>${esc(titleCase(t.hardshipWhy))}</small>` : ''}` : '<span class="dim">Not rated</span>';
+const hardBadge = (n, why) => n ? `<span class="hd-b" style="--c:${HARD_COLOR[n]}">${n}</span> ${esc(HARD_LABEL[n])}${why ? `<small>${esc(titleCase(why))}</small>` : ''}` : '<span class="dim">Not rated</span>';
+const hardCell = t => hardBadge(hardOf(t), hardWhy(t));
 function hardSection(t){
-  const cur = hardOf(t), why = hardWhyList(t), note = why.filter(w => !HARD_WHY.includes(w)).join(' ');
-  if(!may('dispatch')) return cur || why.length ? `<div class="sec">Trip hardship</div><p class="hint" style="margin:0">${hardCell(t)}</p>` : '';
-  return `<div class="sec">Trip hardship</div>
-    <div class="hd-box" id="hdBox">
-      <input type="hidden" data-k="hardship" value="${esc(t.hardship || '')}"><input type="hidden" data-k="hardshipWhy" value="${esc(t.hardshipWhy || '')}">
-      <div class="hint" style="margin:0 0 6px">How hard was this trip? Tap again to clear.</div>
-      <div class="chips hd-rate">${[1, 2, 3, 4, 5].map(n => `<button class="chip" type="button" data-hn="${n}" aria-pressed="${n===cur}" style="--c:${HARD_COLOR[n]}"><span class="hd-b">${n}</span> ${HARD_LABEL[n]}</button>`).join('')}</div>
-      <div class="hint" style="margin:10px 0 6px">What made it hard? Tap all that apply.</div>
-      <div class="chips hd-why">${HARD_WHY.map(w => `<button class="chip" type="button" data-hw="${esc(w)}" aria-pressed="${why.includes(w)}">${esc(titleCase(w))}</button>`).join('')}</div>
-      <label class="f full" style="margin-top:8px">Other reason<input id="hdOther" value="${esc(note)}" autocomplete="off" placeholder="e.g. checkpoint delay"></label>
-    </div>`;
-}
-function wireHard(){
-  const box = $('hdBox'); if(!box) return;
-  const sync = () => {
-    const ws = [...box.querySelectorAll('[data-hw][aria-pressed="true"]')].map(b => b.dataset.hw), n = $('hdOther').value.trim().toUpperCase().replace(/,/g, ' ');
-    box.querySelector('[data-k="hardshipWhy"]').value = ws.concat(n ? [n] : []).join(', ');
-  };
-  box.onclick = e => {
-    const r = e.target.closest('[data-hn]'), w = e.target.closest('[data-hw]');
-    if(r){ const on = r.getAttribute('aria-pressed')!=='true'; box.querySelectorAll('[data-hn]').forEach(b => b.setAttribute('aria-pressed', on && b===r)); box.querySelector('[data-k="hardship"]').value = on ? r.dataset.hn : ''; }
-    if(w){ w.setAttribute('aria-pressed', w.getAttribute('aria-pressed')!=='true'); sync(); }
-  };
-  $('hdOther').oninput = sync;
+  const n = hardOf(t);
+  if(!n) return may('hardship') ? `<div class="sec">Trip hardship</div><p class="hint" style="margin:0">This route has no hardship rating yet. Set it in Clients: open the client, then Trip hardship per route.</p>` : '';
+  return `<div class="sec">Trip hardship</div><p class="hint" style="margin:0">${hardCell(t)}<small style="display:block">${ownHard(t) ? 'Rated on this trip before ratings moved to Clients.' : 'Set for this route by Admin in Clients.'}</small></p>`;
 }
 /** Dashboard: trip hardship by route for the dates and filters shown (rated trips only). */
 function renderHardship(trips){
@@ -6121,7 +6197,7 @@ function renderHardship(trips){
   el.innerHTML = rows.length ? `<div class="tbl-wrap" style="max-height:420px"><table class="hd-tbl"><thead><tr><th>Route</th><th class="n">Rated trips</th><th class="n">Average</th><th>Hardest</th><th>Reasons given most</th></tr></thead><tbody>${rows.map((r, i) => {
       const top = Math.max(...r.trips.map(hardOf));
       return `<tr class="rowbtn" data-hd="${i}"><td>${esc(r.k)}</td><td class="n">${r.h.n}</td><td class="n"><span class="hd-b" style="--c:${HARD_COLOR[Math.round(r.h.avg)]}">${fmt1(r.h.avg)}</span></td><td>${esc(HARD_LABEL[top])}</td><td>${esc(r.why.join(' · ') || '—')}</td></tr>`; }).join('')}</tbody></table></div>`
-    : `<p class="hint" style="margin:0">No trip in these dates has a hardship rating yet. Rate a trip from Truck Plan: open the trip, then Trip hardship.</p>`;
+    : `<p class="hint" style="margin:0">No trip in these dates is on a route with a hardship rating yet. Admin rates each route in Clients: open the client, then Trip hardship per route.</p>`;
 }
 /* ================= CLIENTS: contacts, rates, payments, statements of account, profit (MANU 2026-10-13 "improve the system") =================
    Admin, Billing and Accounting keep each client's contact details, a rate per route (new rates start on a date, older trips keep the old rate)
@@ -6217,9 +6293,17 @@ function openClientCard(c){
     <h4 style="margin:14px 0 6px">Rate per trip</h4>
     ${ed ? '<p class="hint" style="margin:0 0 8px">Type a new rate only where it changes, and the date it starts. Trips before that date keep the old rate.</p>' : ''}
     ${c.routes.length ? `<div class="tbl-wrap"><table class="poptbl cl-rates"><thead><tr><th>Route</th><th class="n">KM</th><th class="n">Rate now</th>${ed ? '<th>New rate</th>' : ''}</tr></thead><tbody>${rows}</tbody></table></div>`
-      : '<p class="hint" style="margin:0">No route for this client in the CLIENT LIST yet. Billing adds routes in Billing → Source, destination &amp; distance.</p>'}`,
+      : '<p class="hint" style="margin:0">No route for this client in the CLIENT LIST yet. Billing adds routes in Billing → Source, destination &amp; distance.</p>'}
+    ${c.routes.length ? `<h4 style="margin:14px 0 6px">Trip hardship per route</h4>
+    <p class="hint" style="margin:0 0 8px">${d.canHard ? 'Tap a route to rate it 1 (easy) to 5 (extreme) and say what makes it hard. Every trip on the route takes it.' : 'Set by Admin. Every trip on the route takes it.'}</p>
+    <div class="tbl-wrap"><table class="poptbl cl-hard"><thead><tr><th>Route</th><th>Hardship</th></tr></thead><tbody>${c.routes.map((r, k) => `<tr${d.canHard ? ` class="rowbtn" data-hr="${k}" tabindex="0"` : ''}><td>${esc(r.source)}<small>→ ${esc(plainDest(r.destination))}</small></td><td>${hardBadge(r.hard ? r.hard[0] : 0, r.hard ? r.hard[1] : '')}${d.canHard ? '<small class="cl-hset">Tap to set</small>' : ''}</td></tr>`).join('')}</tbody></table></div>` : ''}`,
     `<button class="btn alt" type="button" onclick="closePop()">Close</button> <button class="btn alt" type="button" id="ciSoa">Statement</button>${ed ? ' <button class="btn alt" type="button" id="ciPay">Record payment</button> <button class="btn road" type="button" id="ciSave">Save</button>' : ''}`, !ed);
   $('ciSoa').onclick = () => { closePop(); $('soaClient').value = c.client; bookSub('soa'); };
+  const ht = document.querySelector('#popBody .cl-hard');
+  if(ht && d.canHard){
+    const go = e => { const tr = e.target.closest('tr[data-hr]'); if(tr) openRouteHard(c, c.routes[tr.dataset.hr]); };
+    ht.onclick = go; ht.onkeydown = e => { if(e.key==='Enter') go(e); };
+  }
   if(!ed) return;
   $('ciPay').onclick = () => openPayForm(c.client);
   $('ciSave').onclick = async () => {
@@ -6243,6 +6327,38 @@ function openClientCard(c){
       CL.soaKey = ''; CL.prKey = '';
       closePop(); afterBook();
       toast([infoChanged ? 'Contact details saved' : '', rates.length ? `${rates.length} rate${rates.length===1 ? '' : 's'} saved` : ''].filter(Boolean).join(' · '));
+    }catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Save'; }
+  };
+}
+/** Admin: trip hardship of one route (MANU 2026-10-14 "move it to clients", "only admin can set it"). Back returns to the client. */
+function openRouteHard(c, r){
+  const cur = r.hard ? r.hard[0] : 0, why = String(r.hard ? r.hard[1] : '').split(/\s*,\s*/).map(x => x.trim()).filter(Boolean), note = why.filter(w => !HARD_WHY.includes(w)).join(' ');
+  let n = cur;
+  openPop(`Trip hardship · ${r.source} → ${plainDest(r.destination)}`, `${esc(c.client)} · every trip on this route takes this rating`, `
+    <div class="hd-box" id="hdBox">
+      <div class="hint" style="margin:0 0 6px">How hard is this route? Tap again to clear.</div>
+      <div class="chips hd-rate">${[1, 2, 3, 4, 5].map(k => `<button class="chip" type="button" data-hn="${k}" aria-pressed="${k===cur}" style="--c:${HARD_COLOR[k]}"><span class="hd-b">${k}</span> ${HARD_LABEL[k]}</button>`).join('')}</div>
+      <div class="hint" style="margin:10px 0 6px">What makes it hard? Tap all that apply.</div>
+      <div class="chips hd-why">${HARD_WHY.map(w => `<button class="chip" type="button" data-hw="${esc(w)}" aria-pressed="${why.includes(w)}">${esc(titleCase(w))}</button>`).join('')}</div>
+      <label class="f full" style="margin-top:8px">Other reason<input id="hdOther" value="${esc(note)}" autocomplete="off" placeholder="e.g. checkpoint delay"></label>
+    </div>`, `<button class="btn alt" type="button" id="hdBack">Back</button> <button class="btn road" type="button" id="hdSave">Save</button>`);
+  const box = $('hdBox'), back = () => openClientCard((CL.data.clients || []).find(x => x.client===c.client) || c);
+  box.onclick = e => {
+    const b = e.target.closest('[data-hn]'), w = e.target.closest('[data-hw]');
+    if(b){ const on = b.getAttribute('aria-pressed')!=='true'; box.querySelectorAll('[data-hn]').forEach(x => x.setAttribute('aria-pressed', on && x===b)); n = on ? Number(b.dataset.hn) : 0; }
+    if(w) w.setAttribute('aria-pressed', w.getAttribute('aria-pressed')!=='true');
+  };
+  $('hdBack').onclick = back;
+  $('hdSave').onclick = async () => {
+    const ws = [...box.querySelectorAll('[data-hw][aria-pressed="true"]')].map(b => b.dataset.hw), o = $('hdOther').value.trim().toUpperCase().replace(/,/g, ' ');
+    const reason = ws.concat(o ? [o] : []).join(', ');
+    if(!n && reason) return toast('Pick the rating 1 to 5, or clear the reasons too.', true);
+    const btn = $('hdSave'); btn.disabled = true; btn.textContent = 'Saving…';
+    try{
+      CL.data = await call('routeHardshipSave', {source:r.source, destination:r.destination, rating:n || '', why:reason});
+      if(S.boot && CL.data.routeHard) S.boot.routeHard = CL.data.routeHard;   // this page shows it right away; others on their next sign-in or refresh
+      afterBook(); back();
+      toast(n ? `Hardship ${n} · ${HARD_LABEL[n]} saved for ${r.source} → ${plainDest(r.destination)}` : `Hardship cleared for ${r.source} → ${plainDest(r.destination)}`);
     }catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Save'; }
   };
 }
@@ -7228,7 +7344,7 @@ const DEMO = (() => {
   const DEMO_FEED = (() => { try { const r = Number(localStorage.getItem('jmti_demo_feed')); return r > 0 ? {row:r, width:11, keys:['date','truckNo','plateNo','customer','destination','kms','shipmentNo','status','driver','helper1','helper2']} : null; } catch(e){ return null; } })();
   const demoFed = t => !!DEMO_FEED && t.row >= DEMO_FEED.row;
   // same as CAN in Code.gs
-  const CAN = {viewTrips:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','BILLING','ACCOUNTING','PAYROLL'], disburse:['ADMIN','ACCOUNTING','PAYROLL'], accounting:['ADMIN','ACCOUNTING'], clients:['ADMIN','BILLING','ACCOUNTING'], profit:['ADMIN','ACCOUNTING'], payroll:['ADMIN','PAYROLL'], plan:['ADMIN','TEAM LEADER'], assign:['ADMIN','SUPERVISOR','TEAM LEADER'],
+  const CAN = {viewTrips:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','BILLING','ACCOUNTING','PAYROLL'], disburse:['ADMIN','ACCOUNTING','PAYROLL'], accounting:['ADMIN','ACCOUNTING'], clients:['ADMIN','BILLING','ACCOUNTING'], profit:['ADMIN','ACCOUNTING'], hardship:['ADMIN'], payroll:['ADMIN','PAYROLL'], plan:['ADMIN','TEAM LEADER'], assign:['ADMIN','SUPERVISOR','TEAM LEADER'],
     fleet:['ADMIN','BOSS','TEAM LEADER'], fleetEdit:['ADMIN'], dispatch:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER'], dispatchAll:['ADMIN','TEAM LEADER'], routeOnly:['SUPERVISOR'],
     cancel:['ADMIN','TEAM LEADER'], summary:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER'], tripStats:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER'], dispatchAdd:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER'], pod:['ADMIN','POD'], billing:['ADMIN','BILLING'], routes:['ADMIN','BILLING'], docs:['ADMIN','BOSS','POD','BILLING'],
     manpower:['ADMIN','HR'], maintenance:['ADMIN','MAINTENANCE'], users:['ADMIN','HR'], viewAll:['BOSS']};
@@ -7241,6 +7357,9 @@ const DEMO = (() => {
   const demoInc = [];
   const demoTargets = {[today.slice(0,7)]: {'ALL TRIPS':900, 'COCA COLA CANLUBANG':420, 'COCA COLA SAN FERNANDO':150}, [addDays(today.slice(0,7) + '-01', -1).slice(0,7)]: {'ALL TRIPS':560, 'COCA COLA CANLUBANG':280, 'COCA COLA SAN FERNANDO':200, 'OTHER ACCOUNTS':150}};
   const DEMO_FILES = {};
+  const demoMade = [];   // groups made in the preview
+  const demoGroupList = u => DEMO_GROUPS.filter(g => ['ADMIN','BOSS'].includes(u.role) || g.roles.includes(u.role)).map(g => ({id:g.id, name:g.name}))
+    .concat(demoMade.filter(g => !g.off && g.members.includes(u.username)).map(g => ({id:g.id, name:g.name, made:true, by:g.by, members:g.members.slice()})));
   const DEMO_GROUPS = [{id:'#ops', name:'Operations', roles:['SUPERVISOR','TEAM LEADER','DISPATCHER']}, {id:'#podbill', name:'POD & Billing', roles:['POD','BILLING']}, {id:'#acct', name:'Accounting & Payroll', roles:['ACCOUNTING','PAYROLL']}, {id:'#hr', name:'HR', roles:['HR']}, {id:'#mnt', name:'Maintenance', roles:['MAINTENANCE']}, {id:'#mgmt', name:'Management', roles:['ADMIN','BOSS']}];
   const chatMsgs = [{id:1, at:addDays(today, -1) + ' 17:40', from:'teamleader', fromName:'TEAM LEADER', to:'', text:'Good evening team. Please update the trip status before 8 PM.'},
     {id:2, at:today + ' 07:05', from:'dispatcher', fromName:'DISPATCHER', to:'admin', text:'Sir, truck 12 has a flat tire at Canlubang.'},
@@ -7260,20 +7379,21 @@ const DEMO = (() => {
   const bToBill = t => !/cancel/i.test(t.status || '') && !t.billAt && !!t.podAt;
   const bAll = () => pastBilled.concat(trips);
   const needBook = (tok, perm) => { const u = auth(tok); if(!perm.split('|').some(p => CAN[p].includes(u.role))) throw new Error(`Your role (${u.role}) cannot do this.`); return u; };
+  const demoHard = {}; if(kmRows[0]) demoHard[bk(kmRows[0].origin) + '|' + bk(kmRows[0].destination)] = [4, 'LONG WAIT, BAD ROAD'];   // trip hardship per route (demo)
   const bookOut = tok => {
     const u = auth(tok), all = {};
     clients.forEach(c => { all[bk(c.client)] = {client:c.client, account:c.account, info:bookInfo[bk(c.client)] || null, routes:[]}; });
     kmRows.forEach(r => { const c = clientOf(r.destination) || r.origin.toUpperCase(), k = bk(c), x = all[k] = all[k] || {client:c, account:'', info:bookInfo[k] || null, routes:[]};
       const h = bookRates.filter(y => bk(y.source)===bk(r.origin) && bk(y.destination)===bk(r.destination)).sort((a, b) => a.from < b.from ? 1 : -1);
       const cur = h.find(y => y.from <= today), nx = h.find(y => y.from > today);
-      x.routes.push({source:r.origin, destination:r.destination, km:Number(r.km) || '', rate:cur ? cur.rate : null, from:cur ? cur.from : '', next:nx ? {rate:nx.rate, from:nx.from} : null, history:h.slice(0, 6).map(y => ({rate:y.rate, from:y.from, by:y.by}))}); });
+      x.routes.push({source:r.origin, destination:r.destination, km:Number(r.km) || '', rate:cur ? cur.rate : null, from:cur ? cur.from : '', next:nx ? {rate:nx.rate, from:nx.from} : null, history:h.slice(0, 6).map(y => ({rate:y.rate, from:y.from, by:y.by})), hard:demoHard[bk(r.origin) + '|' + bk(r.destination)] || null}); });
     Object.values(all).forEach(x => { x.bal = {billed:0, billedTrips:0, toBill:0, toBillTrips:0, noRate:0, paid:0, owed:0}; });
     bAll().forEach(t => { const b = bBilled(t), tb = bToBill(t); if(!b && !tb) return; const x = all[bk(bTripClient(t))]; if(!x) return; const r = bRate(t);
       if(r===null){ x.bal.noRate++; return; } if(b){ x.bal.billed += r; x.bal.billedTrips++; } else { x.bal.toBill += r; x.bal.toBillTrips++; } });
     bookPays.forEach(p => { if(!p.status && all[bk(p.client)]) all[bk(p.client)].bal.paid += p.amount; });
     Object.values(all).forEach(x => { x.bal.owed = x.bal.billed - x.bal.paid; });
     return {clients:Object.values(all).sort((a, b) => a.client.localeCompare(b.client)), payments:bookPays.slice().reverse().map(p => ({...p})),
-      canEdit:CAN.clients.includes(u.role), canProfit:CAN.profit.includes(u.role) || CAN.viewAll.includes(u.role), today};
+      canEdit:CAN.clients.includes(u.role), canHard:u.role==='ADMIN', canProfit:CAN.profit.includes(u.role) || CAN.viewAll.includes(u.role), routeHard:JSON.parse(JSON.stringify(demoHard)), today};
   };
   const ledger = [];
   const demoEntry = (t, o) => { const e = {entryNo:'DISB-' + String(ledger.filter(x => x.type==='TRIP BUDGET').length + 1).padStart(5,'0'), date:today, type:'TRIP BUDGET', ref:t.tripId, tripDate:t.date, truckNo:t.truckNo, plateNo:t.plateNo,
@@ -7288,7 +7408,7 @@ const DEMO = (() => {
     {jo:'JO-2026-0015', done:addDays(today, -1), unit:'27', plate:'NBK4410', cls:'MAJOR', category:'Engine', description:'Overhaul injector pump', labor:8000, parts:21500, other:1200, total:30700}];
   const lastTrip = {}; trucks.forEach((t,i) => { lastTrip[t.truckNo] = addDays(today, -(i % 9)); });
   const lastCrew = {}; trucks.slice(10).forEach((t,i) => { lastCrew[t.truckNo] = {date: addDays(today, -2), driver: drivers[(10+i) % drivers.length], helper1: helpers[(10+i) % helpers.length], helper2: ''}; });
-  const boot = () => ({lastCrew, lastTrip, clientAccounts: Object.fromEntries(clients.filter(c => c.account).map(c => [nameKey(c.client), c.account])), placeAccounts:[{key:'BPSIPAMPANGA',account:'COCA COLA SAN FERNANDO',asTo:'CCBPIBPSIPAMPANGATOLLER'}], feed:DEMO_FEED, tripAccounts:[{account:'COCA COLA CANLUBANG',rules:[{from:['COCACOLACANLUBANGPLANT','COCACOLASTAROSAPLANT','COCACOLAPTCSILANGAN'],count:1}]},{account:'COCA COLA SAN FERNANDO',rules:[{from:['COCACOLASANFERNANDOPAMPANGA'],count:1},{from:['COCACOLASANFERNANDOPAMPANGA'],to:['CCBPICOCACOLAPAMPANGADC'],count:0.5}]},{account:'OTHER ACCOUNTS',rules:[{notFrom:['COCACOLACANLUBANGPLANT','COCACOLASANFERNANDOPAMPANGA','COCACOLASTAROSAPLANT','COCACOLAPTCSILANGAN','COCACOLAMEYCAUAYAN'],count:1}]}], headers, trucks: trucks.map(t => ({...t})), drivers, helpers, customers:[...new Set(routes.map(r=>r[0]))], destinations:dests, km, statuses, planned:'Clip Board', cancelled:'Cancelled Transaction', milestoneStatus:msStatus,
+  const boot = () => ({lastCrew, lastTrip, clientAccounts: Object.fromEntries(clients.filter(c => c.account).map(c => [nameKey(c.client), c.account])), placeAccounts:[{key:'BPSIPAMPANGA',account:'COCA COLA SAN FERNANDO',asTo:'CCBPIBPSIPAMPANGATOLLER'}], feed:DEMO_FEED, routeHard:JSON.parse(JSON.stringify(demoHard)), tripAccounts:[{account:'COCA COLA CANLUBANG',rules:[{from:['COCACOLACANLUBANGPLANT','COCACOLASTAROSAPLANT','COCACOLAPTCSILANGAN'],count:1}]},{account:'COCA COLA SAN FERNANDO',rules:[{from:['COCACOLASANFERNANDOPAMPANGA'],count:1},{from:['COCACOLASANFERNANDOPAMPANGA'],to:['CCBPICOCACOLAPAMPANGADC'],count:0.5}]},{account:'OTHER ACCOUNTS',rules:[{notFrom:['COCACOLACANLUBANGPLANT','COCACOLASANFERNANDOPAMPANGA','COCACOLASTAROSAPLANT','COCACOLAPTCSILANGAN','COCACOLAMEYCAUAYAN'],count:1}]}], headers, trucks: trucks.map(t => ({...t})), drivers, helpers, customers:[...new Set(routes.map(r=>r[0]))], destinations:dests, km, statuses, planned:'Clip Board', cancelled:'Cancelled Transaction', milestoneStatus:msStatus,
       repairs:{'CCS1973':{jo:'JO-00041',status:'Waiting Parts',priority:'Urgent',category:'Transmission',description:'Clutch slipping on uphill load',cls:'MAJOR',hold:true,since:addDays(today,-4),reported:addDays(today,-3),started:addDays(today,-4),open:1},
         'CBQ6868':{jo:'JO-00043',status:'In Progress',priority:'Normal',category:'Electrical',description:'Tail light',cls:'MINOR (ROADWORTHY)',hold:false,since:addDays(today,-1),reported:addDays(today,-1),started:'',open:1},
         'CCP8354':{jo:'JO-00044',status:'Open',priority:'High',category:'Brakes',description:'Brake lining worn',cls:'',hold:true,since:addDays(today,-2),reported:addDays(today,-2),started:'',open:1}}, docStatuses:['Transmitted to Billing'], finalStatuses:['COMPLETED','PENDING'],
@@ -7330,7 +7450,8 @@ const DEMO = (() => {
     addTrips: (tok,d) => { auth(tok); const n = Math.max(1, +d.copies||1); const out=[]; for(let i=0;i<n;i++){ const id=`JMTI-${d.date.slice(2).replace(/-/g,'')}-${String(trips.length+1).padStart(3,'0')}`; const t={...emptyMs(), shipmentNo:'', ...d, status:d.status||'Clip Board', tripId:id, key:id, row:rowN++, podFile:'', podAt:'', billAt:''}; delete t.copies; if(i>0){t.truckNo=t.plateNo=t.driver=t.helper1=t.helper2='';} trips.push(t); out.push({...t});} return out; },
     editTrip: (tok,ref,p) => { auth(tok); return {...Object.assign(find(ref), p)}; },
     cancelTrip: (tok,ref,reason) => { auth(tok); const t = find(ref); return {...Object.assign(t, {status:'Cancelled Transaction', remarks:(t.remarks?t.remarks+' | ':'')+'CANCELLED: '+reason})}; },
-    encodeTrip: (tok,ref,p) => { auth(tok); const t = find(ref); if(p.hardship!==undefined && p.hardship!=='' && !/^[1-5]$/.test(String(p.hardship))) throw new Error('The hardship rating must be 1 to 5.');
+    encodeTrip: (tok,ref,p) => { auth(tok); const t = find(ref); p = {...p}; delete p.hardship; delete p.hardshipWhy;   // set per route in Clients now
+      if(p.truckNo && !plateFor(p.truckNo)) throw new Error('Truck ' + p.truckNo + ' is not in PLATE.');
       if(demoFed(t)){ const bad = Object.keys(p).filter(k => DEMO_FEED.keys.includes(k) && String(p[k]) !== String(t[k] || '')); if(bad.length) throw new Error('This trip comes from GENERAL DATABASE 2.0, so change its ' + bad.join(', ') + ' there. Saving it in the app would break the formula that brings in the newest trips.');
         const was = t.status; Object.assign(t, p); let s = ''; MS_KEYS.forEach((k,i) => { if(t[k]) s = msStatus[i]; }); return {...t, ...(s && s !== was ? {note:'The status stays ' + was + ': this trip comes from GENERAL DATABASE 2.0, so change its status there.'} : {})}; }
       if(p.truckNo && p.truckNo!==t.truckNo){ p = {...p, plateNo: plateFor(p.truckNo)}; const c = (S.assign[t.date]||[]).find(x => String(x.truckNo)===String(p.truckNo)) || {}; ['driver','helper1','helper2'].forEach(k => { p[k] = c[k] || ''; }); } const ms = MS_KEYS.some(k => p[k]!==undefined); Object.assign(t, p); if(ms && !p.status){ let s=''; MS_KEYS.forEach((k,i)=>{ if(t[k]) s = msStatus[i]; }); if(s) t.status = s; } return {...t}; },
@@ -7371,19 +7492,29 @@ const DEMO = (() => {
     listManpower: tok => { auth(tok); const tk = n => { const a = assigns.find(x => [x.driver,x.helper1,x.helper2].includes(n)); return a ? a.truckNo : ''; };
       return people.map((p,i) => ({...p, hired: i % 5 === 0 ? '2016-05-16' : p.hired, truck: tk(p.full), lastTrip: i % 7 === 3 ? '' : addDays(today, -((i*5) % 23))})); },
     saveManpower: (tok,p,isNew) => { auth(tok); const full = `${p.last.toUpperCase()} , ${p.first.toUpperCase()}`; if(isNew) people.push({row:people.length+100, id:p.id||String(4000+people.length), last:p.last.toUpperCase(), first:p.first.toUpperCase(), full, position:p.position, hired:p.hired, status:p.status, licExp:p.licExp||''}); else Object.assign(people.find(x => x.row===p.row), {last:p.last.toUpperCase(), first:p.first.toUpperCase(), full, position:p.position, hired:p.hired||'', status:p.status, licExp:p.licExp||''}); return people.map(x => ({...x})); },
-    chatUpload: (tok, to, file, text) => { const u = auth(tok); if(String(to).charAt(0)==='#' && !DEMO_GROUPS.some(g => g.id===to && (['ADMIN','BOSS'].includes(u.role) || g.roles.includes(u.role)))) throw new Error('You are not in that group.');
+    chatUpload: (tok, to, file, text) => { const u = auth(tok); if(String(to).charAt(0)==='#' && !demoGroupList(u).some(g => g.id===to)) throw new Error('You are not in that group.');
       if(!file || !file.data) throw new Error('No file received.'); const id = 'F' + (Object.keys(DEMO_FILES).length + 1); DEMO_FILES[id] = {...file};
       const f = {id, n:file.name, m:file.type || 'application/octet-stream', s:Math.round(file.data.length * 0.75)}; if(file.w && file.h){ f.w = file.w; f.h = file.h; } if(file.thumb) f.p = 1;
       const m = {id:chatMsgs.length + 1, at:stampNow(), from:u.username, fromName:u.name, to:to || '', text:String(text || ''), file:f}; chatMsgs.push(m); return {...m}; },
     chatThumbs: (tok, ids) => { auth(tok); const o = {}; (ids || []).forEach(id => { if(DEMO_FILES[id] && DEMO_FILES[id].thumb) o[id] = DEMO_FILES[id].thumb; }); return o; },
     chatFile: (tok, id) => { auth(tok); const f = DEMO_FILES[id]; if(!f) throw new Error('That file is no longer in the chat.'); return {name:f.name, type:f.type, data:f.data}; },
     chatTyping: (tok, to, on) => { auth(tok); DEMO._typing = on===false ? null : {to:to || '', at:Date.now()}; return {ok:true}; },
-    chatList: (tok, since) => { const u = auth(tok), me = u.username, gs = DEMO_GROUPS.filter(g => ['ADMIN','BOSS'].includes(u.role) || g.roles.includes(u.role)).map(g => g.id);
+    chatGroupSave: (tok, g) => { const u = auth(tok), me = u.username, act = users.filter(x => x.status==='ACTIVE').map(x => x.username);
+      const pick = l => [...new Set((l || []).filter(x => act.includes(x)))], name = String(g.name || '').trim().slice(0, 40); let id = g.id, note = '';
+      if(!id){ if(!name) throw new Error('Give the group a name.'); const m = pick([me, ...(g.members || [])]); if(m.length < 2) throw new Error('Pick at least one other person.');
+        id = '#g' + (demoMade.length + 1); demoMade.push({id, name, members:m, by:me, off:false, made:true}); note = `made the group "${name}"`; }
+      else { const x = demoMade.find(y => y.id===id && !y.off); if(!x) throw new Error('That group no longer exists.'); const boss = x.by===me || u.role==='ADMIN';
+        if(g.leave){ x.members = x.members.filter(y => y!==me); if(!x.members.length) x.off = true; note = 'left the group'; }
+        else if(g.remove){ if(!boss) throw new Error('Only the person who made the group, or an Admin, can delete it.'); x.off = true; }
+        else { if(!boss) throw new Error('Only the person who made the group, or an Admin, can change it.'); const m = pick([x.by, ...(g.members || [])]); if(m.length < 2) throw new Error('A group needs at least two people.'); x.name = name || x.name; x.members = m; note = 'changed the group'; } }
+      if(note && !g.remove) chatMsgs.push({id:chatMsgs.length + 1, at:stampNow(), from:me, fromName:u.name, to:id, text:note});
+      return {id, groups:demoGroupList(u)}; },
+    chatList: (tok, since, ver, full) => { const u = auth(tok), me = u.username, gs = demoGroupList(u).map(g => g.id);
       const out = {me, msgs:chatMsgs.filter(m => (!m.to || m.to===me || m.from===me || gs.includes(m.to)) && m.id > (Number(since) || 0)).map(m => ({...m}))};
-      if(!Number(since)) out.groups = DEMO_GROUPS.filter(g => gs.includes(g.id)).map(g => ({id:g.id, name:g.name}));
-      if(!Number(since)) out.users = users.filter(x => x.username!==me && x.status==='ACTIVE').map(x => ({username:x.username, name:x.name, role:x.role})).sort((a, b) => a.name.localeCompare(b.name)); return out; },
+      out.groups = demoGroupList(u);
+      if(!Number(since) || full) out.users = users.filter(x => x.username!==me && x.status==='ACTIVE').map(x => ({username:x.username, name:x.name, role:x.role})).sort((a, b) => a.name.localeCompare(b.name)); return out; },
     chatSend: (tok, to, text) => { const u = auth(tok); text = String(text || '').trim(); if(!text) throw new Error('Type a message first.'); if(text.length > 1000) throw new Error('A message can be up to 1000 characters.');
-      if(String(to).charAt(0)==='#'){ if(!DEMO_GROUPS.some(g => g.id===to && (['ADMIN','BOSS'].includes(u.role) || g.roles.includes(u.role)))) throw new Error('You are not in that group.'); }
+      if(String(to).charAt(0)==='#'){ if(!demoGroupList(u).some(g => g.id===to)) throw new Error('You are not in that group.'); }
       else if(to && !users.some(x => x.username===to)) throw new Error('That user is not active in the app.'); const m = {id:chatMsgs.length + 1, at:stampNow(), from:u.username, fromName:u.name, to:to || '', text}; chatMsgs.push(m); return {...m}; },
     driverScores: (tok, f, t2) => { const u = auth(tok); const D = {}, hrs = (a, b) => { if(!a || !b) return null; const h = (new Date(b) - new Date(a)) / 36e5; return h >= 0 && h <= 72 ? h : null; };
       trips.filter(t => t.date >= f && t.date <= t2 && isTrip(t) && t.driver).forEach((t, i) => { const k = nameKey(t.driver), p = D[k] || (D[k] = {name:t.driver, trips:0, judged:0, on:0, wH:0, wN:0, km:0, L:0}); p.trips++;
@@ -7410,6 +7541,10 @@ const DEMO = (() => {
     clientBook: tok => { needBook(tok, 'clients|viewAll'); return bookOut(tok); },
     saveClientInfo: (tok, d) => { needBook(tok, 'clients'); const c = String(d.client).toUpperCase(); if(d.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) throw new Error('Check the email address.');
       bookInfo[bk(c)] = {client:c, contact:d.contact, phone:d.phone, email:d.email, address:d.address, tin:d.tin, terms:d.terms==='' ? '' : Number(d.terms)}; return bookOut(tok); },
+    routeHardshipSave: (tok, d) => { const u = auth(tok); if(u.role!=='ADMIN') throw new Error(`Your role (${u.role}) cannot do this.`);
+      const k = bk(d.source) + '|' + bk(d.destination); if(!kmRows.some(r => bk(r.origin) + '|' + bk(r.destination)===k)) throw new Error(d.source + ' → ' + d.destination + ' is not in the CLIENT LIST.');
+      const v = String(d.rating ?? '').trim(); if(v!=='' && !/^[1-5]$/.test(v)) throw new Error('The hardship rating must be 1 to 5.');
+      if(v==='') delete demoHard[k]; else demoHard[k] = [Number(v), String(d.why || '').toUpperCase().slice(0, 200)]; return bookOut(tok); },
     saveRates: (tok, client, rows) => { const u = needBook(tok, 'clients'); if(!rows || !rows.length) throw new Error('No rate changed.');
       rows.forEach(r => { if(!(Number(r.rate) > 0)) throw new Error('Enter a rate above 0 for ' + r.source + '.'); if(!r.from) throw new Error('Pick the date the rate starts.'); });
       rows.forEach(r => bookRates.push({source:r.source, destination:r.destination, rate:Number(r.rate), from:r.from, by:u.name})); return bookOut(tok); },
