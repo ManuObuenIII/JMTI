@@ -1,20 +1,22 @@
 // JMTI app on the phone (MANU 2026-10-13): the app page and its fonts and libraries are kept on the phone, so the app
-// opens at once even before the internet answers. Each open also checks GitHub for a newer page in the background;
-// when there is one, it is kept for the next open and the open page is told (it shows a Reload button).
+// opens with no signal. Each open asks GitHub for the page first (MANU 2026-10-14 "github link is still not updated"),
+// so a new version shows at once; when GitHub doesn't answer within 3 seconds or there is no signal, the kept page opens,
+// and if a newer page arrives after that, the open page is told (it shows a Reload button).
 // Data (script.google.com) is never kept here: the app asks the server for it every time.
-const CACHE = 'jmti-app-v1';
+const CACHE = 'jmti-app-v2';
 const SHELL = ['./', 'manifest.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 const LIBS = /^https:\/\/(fonts\.googleapis\.com|fonts\.gstatic\.com|cdnjs\.cloudflare\.com)\//;
+const WAIT_MS = 3000;
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'no-cache' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 
-// The page being opened may not exist yet when the check ends: wait for it (up to ~6 s), then tell it.
+// The page being opened may not exist yet: wait for it (up to ~6 s), then tell it.
 async function tell(id, msg) {
   for (let i = 0; i < 20; i++) {
     const c = id ? await self.clients.get(id) : null;
@@ -24,17 +26,10 @@ async function tell(id, msg) {
   (await self.clients.matchAll({ type: 'window' })).forEach(c => c.postMessage(msg));
 }
 
-// GitHub's copy of the app page; when it differs from the kept one, keep it and tell the page.
-async function check(kept, id) {   // kept: a copy of the kept page (the original goes to the page)
+// GitHub's copy of the app page (checked every time, never from the browser's own cache); a good answer is kept.
+async function fresh() {
   const res = await fetch('./', { cache: 'no-cache' });
-  if (!res.ok) return res;
-  const c = await caches.open(CACHE);
-  const text = await res.clone().text();
-  const old = kept ? await kept.text() : null;
-  if (old !== text) {
-    await c.put('./', res.clone());
-    if (old !== null) await tell(id, 'jmti-updated');
-  }
+  if (res.ok) await (await caches.open(CACHE)).put('./', res.clone());
   return res;
 }
 
@@ -43,15 +38,18 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (req.mode === 'navigate' && url.origin === self.location.origin) {
-    // The app page: answer from the phone at once, then check GitHub in the background.
     const id = e.resultingClientId || e.clientId;
-    const answer = caches.match('./').then(kept => {
-      const fresh = check(kept ? kept.clone() : null, id);
-      if (!kept) return fresh;
-      e.waitUntil(fresh.catch(() => {}));
+    e.respondWith((async () => {
+      const kept = await caches.match('./');
+      const net = fresh();
+      if (!kept) return net;
+      const first = await Promise.race([net.catch(() => null), new Promise(r => setTimeout(() => r(null), WAIT_MS))]);
+      if (first && first.ok) return first;
+      // slow or no signal: open the kept page now; if GitHub answers later with a different page, offer Reload
+      const old = await kept.clone().text();
+      e.waitUntil(net.then(async res => { if (res.ok && (await res.clone().text()) !== old) await tell(id, 'jmti-updated'); }).catch(() => {}));
       return kept;
-    });
-    e.respondWith(answer);
+    })());
     return;
   }
   if (url.origin === self.location.origin) { e.respondWith(caches.match(req).then(r => r || fetch(req))); return; }
