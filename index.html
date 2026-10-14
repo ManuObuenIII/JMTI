@@ -152,7 +152,7 @@ input[type=date],input[type=datetime-local]{cursor:pointer}
 .road .side b{display:block;font-size:19px;color:#fff;font-stretch:115%}
 
 /* ---------- KPIs ---------- */
-.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin-bottom:14px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-m);padding:10px 12px}
 .kpi .v{font-size:24.5px;font-weight:800;font-stretch:118%;color:var(--ink);line-height:1.1}
 .kpi .l{font-size:11.5px;color:var(--muted);font-weight:500}
@@ -2681,7 +2681,8 @@ function renderDashboard(){
   const ws = dur('srcArrive','loadStart'), wd = dur('destArrive','unloadStart');
   const lws = dur('srcArrive','loadStart',lyTrips), lwd = dur('destArrive','unloadStart',lyTrips);
   const lyTrucks = new Set(lyTrips.map(t => t.truckNo || t.plateNo).filter(Boolean)).size;
-  let kn = 0; const KK = ['trucks','done','road','wsrc','wdst','inactive'];
+  const km = distOf(trips), lkm = distOf(lyTrips);
+  let kn = 0; const KK = ['trucks','done','road','wsrc','wdst','inactive','km'];
   const kpi = (v,l,s,c) => `<button class="kpi" type="button" data-kpi="${KK[kn++]}"><div class="v">${v}</div><div class="l">${l}</div>${s?`<div class="s">${s}</div>`:''}${c||''}</button>`;
   $('kpis').onclick = e => { const b = e.target.closest('[data-kpi]'); if(b) openKpiPop(b.dataset.kpi); };
   $('kpis').innerHTML =
@@ -2690,7 +2691,8 @@ function renderDashboard(){
     kpi(moving.length, 'On the road', `${count('Loading')} loading · ${count('Unloading')} unloading`) +
     kpi(ws ? hrs(ws.avg) : '—', 'Average waiting at source', ws ? `time in → loading start · ${ws.n} trips` : 'Needs source time in and loading start', vs(ws ? ws.avg : null, lws ? lws.avg : null, hrs)) +
     kpi(wd ? hrs(wd.avg) : '—', 'Average waiting at destination', wd ? `time in → unloading start · ${wd.n} trips` : 'Needs destination time in and unloading start', vs(wd ? wd.avg : null, lwd ? lwd.avg : null, hrs)) +
-    kpi(inact.inactive + inact.idle, 'Inactive trucks', `${inact.inactive} set inactive · ${inact.idle} with no trip` + (inRepair ? ` · ${inRepair} under maintenance` : ''));
+    kpi(inact.inactive + inact.idle, 'Inactive trucks', `${inact.inactive} set inactive · ${inact.idle} with no trip` + (inRepair ? ` · ${inRepair} under maintenance` : '')) +
+    kpi(km ? kmTxt(km.avg) : '—', 'Average distance covered', km ? `per trip · ${kmTxt(km.km)} total · ${kmTxt(km.perTruck)} per truck (${km.trucks})` + (km.noKm ? ` · ${km.noKm} done without distance` : '') : 'Completed trips with a route distance', vs(km ? km.avg : null, lkm ? lkm.avg : null, kmTxt));
   renderAlerts(all);
 
   const acctSel = $('dAcct').value, ab = {};
@@ -2950,8 +2952,28 @@ function dashSub(){
   const range = S.range.from===S.range.to ? fmtDay(S.range.from) : `${fmtDay(S.range.from)} to ${fmtDay(S.range.to)}`;
   return `${esc(range)}${$('dAcct').value ? ' · ' + esc($('dAcct').value===NO_ACCT ? 'Not counted in an account' : titleCase($('dAcct').value)) : ''}${$('dCust').value ? ' · ' + esc($('dCust').value) : ''}${can('dispatcher') ? ' · tap a trip to open it' : ''}`;
 }
+/**
+ * Distance covered (MANU 2026-10-14 "add here average distance covered"): completed (and TUKOD) trips that have a route
+ * distance (CLIENT LIST, else the trip's KMS, as in Truck Plan). A round trip to PTC Silangan counts as one trip with
+ * both legs' km, as in every trip count. Per truck = total km / trucks with such trips.
+ */
+const kmTxt = n => Math.round(n).toLocaleString('en-PH') + ' km';
+function distOf(list){
+  const done = list.filter(t => ['Completed','Tukod'].includes(stageOf(t))), l = done.filter(t => numOf(tripKm(t)) > 0);
+  if(!l.length) return null;
+  const km = l.reduce((a, t) => a + numOf(tripKm(t)), 0), n = wsum(l, legW), trucks = new Set(l.map(t => t.truckNo || t.plateNo).filter(Boolean)).size;
+  return {km, n, avg: km / n, trucks, perTruck: trucks ? km / trucks : km, list: l, noKm: done.length - l.length};
+}
 function openKpiPop(k){
   const all = S.trips.filter(dashPass()), trips = all.filter(isTrip), now = Date.now();
+  if(k==='km'){
+    const d = distOf(trips);
+    if(!d) return popTrips('Distance covered', dashSub() + ' · no completed trips with a route distance', []);
+    const per = {}; d.list.forEach(t => { const u = t.truckNo || t.plateNo; if(u) per[u] = (per[u] || 0) + numOf(tripKm(t)); });
+    const top = Object.entries(per).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([u, v]) => `Truck ${u}: ${kmTxt(v)}`).join(' · ');
+    return popTrips(`Distance covered · ${kmTxt(d.km)} on ${fmtN(d.n)} trips · ${kmTxt(d.avg)} average`, dashSub() + (top ? ' · most: ' + top : ''),
+      d.list.slice().sort((a, b) => numOf(tripKm(b)) - numOf(tripKm(a))), '', t => `<b>${kmTxt(numOf(tripKm(t)))}</b>`, true);
+  }
   if(k==='done') return popTrips(`Completed trips · ${fmtN(wsum(trips.filter(t => stageOf(t)==='Completed'), legW))}`, dashSub(), trips.filter(t => stageOf(t)==='Completed'));
   if(k==='road') return popTrips(`On the road · ${fmtN(wsum(trips.filter(t => MOVING.includes(stageOf(t))), legW))}`, dashSub(), trips.filter(t => MOVING.includes(stageOf(t))));
   if(k==='wsrc' || k==='wdst'){
