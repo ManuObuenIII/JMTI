@@ -1111,6 +1111,18 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .popbtns{display:flex;gap:8px;flex:none;align-items:center}
 .popbox.pdfing .popbody,.popbox.pdfing .tbl-wrap{max-height:none!important;overflow:visible!important}
 .popbox.pdfing .popbtns,.popbox.pdfing .popfoot,.popbox.pdfing button,.popbox.pdfing .hs-range .chips{display:none!important}
+.popbox.pdfing .br-pick{display:none!important}
+/* html2canvas can't draw text filled with a gradient (the KPI numbers): plain ink in the PDF */
+.popbox.pdfing .kpi .v{background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;color:#0A1F8F!important;-webkit-text-fill-color:#0A1F8F!important}
+.br-head{margin:0 0 10px;font-size:14px;line-height:1.45}
+.br-tbl tfoot td{font-weight:700;border-top:2px solid #CBD5E1}
+.br-ph-h{margin:16px 0 8px}
+.br-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.br-ph{margin:0;border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff;break-inside:avoid}
+.br-img{min-height:80px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px}
+.br-img img{width:100%;height:auto;display:block;border-radius:6px}
+.br-ph figcaption{font-size:12px;line-height:1.35;margin-top:5px;overflow-wrap:anywhere}
+.popbox.pdfing .br-photos{grid-template-columns:repeat(3,1fr)}
 .popbox.pdfing .pdf-foot{padding:10px 18px 14px;font-size:11px;color:#64748B;border-top:1px solid #E7ECF2}
 /* ACCT-CSS-END */
 /* trips from GENERAL DATABASE 2.0 (feed guard): what the app can't change */
@@ -1700,6 +1712,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <div class="bar" style="margin:0 0 10px;flex-wrap:wrap">
         <button class="btn" type="button" id="opBudgetBtn" hidden>+ Send budget</button>
         <button class="btn" type="button" id="opDisbBtn" hidden>+ Disbursement</button>
+        <button class="btn alt" type="button" id="opRepBtn">Liquidation report (CSV / PDF)</button>
         <div class="chips" id="opChips"></div>
       </div>
       <div class="tbl-wrap" style="max-height:520px"><table id="opTbl"><thead><tr><th>Entry</th><th>Date</th><th>Kind</th><th>Employee</th><th>Purpose</th><th class="n">Amount</th><th>Receipt</th><th>Recorded by</th></tr></thead><tbody></tbody></table></div>
@@ -6900,6 +6913,7 @@ function initDisb(){
   $('lqTbl').onclick = e => { const tr = e.target.closest('tr[data-lqp]'); if(tr) openLiqPerson(tr.dataset.lqp); };
   $('opBudgetBtn').onclick = () => openOpsForm('BUDGET', {});
   $('opDisbBtn').onclick = () => openOpsForm('DISB', {});
+  $('opRepBtn').onclick = () => openBudgetReport();
   $('opTbl').onclick = e => {
     const ph = e.target.closest('[data-photo]'); if(ph) return viewFile(ph.dataset.photo, 'Receipt photo', 'getAcctFile');
     const tr = e.target.closest('tr[data-entry]'); if(!tr) return;
@@ -7217,7 +7231,7 @@ function renderOps(q){
   $('opBudgetBtn').hidden = !may('opsBudget'); $('opDisbBtn').hidden = !may('opsDisburse');
   if(f){ OPS.fund = Object.assign({}, OPS.fund, f); renderOpsFund(); }
   const all = opsEntries(), inD = e => e.date >= $('dbFrom').value && e.date <= $('dbTo').value;
-  const shown = all.filter(e => inD(e) && (!q || [e.entryNo, e.paidTo, e.details, e.truckNo, e.plateNo, e.ref, e.by].join(' ').toLowerCase().includes(q)));
+  const shown = all.filter(e => inD(e) && (!q || [e.entryNo, e.paidTo, e.details, e.truckNo, e.plateNo, e.ref, e.by, e.txnNo].join(' ').toLowerCase().includes(q)));
   const sum = xs => xs.filter(entryLive).reduce((x, e) => x + (Number(e.amount) || 0), 0);
   const got = shown.filter(e => e.type==='OPS BUDGET'), out = shown.filter(e => e.type==='OPS DISBURSEMENT');
   $('opKpi').innerHTML = !data ? '' : !f ? kpiHtml([['—', 'Operations fund', 'Paste the latest Code.gs to see it']]) : kpiHtml([
@@ -7235,7 +7249,7 @@ function renderOps(q){
     return `<tr class="rowbtn${live ? '' : ' db-cancel'}" data-entry="${esc(e.entryNo)}"><td><b>${esc(e.entryNo)}</b>${live ? '' : `<small class="tag-repair">Cancelled</small>`}</td><td>${esc(fmtDay(e.date))}</td>`
       + `<td>${e.type==='OPS BUDGET' ? '<span class="db-ok">Budget received</span>' : 'Disbursed'}${e.ref ? `<small>Truck ${e.truckNo ? tLink(e.truckNo) : '—'} · ${esc(fmtDay(e.tripDate))}</small>` : ''}</td>`
       + `<td>${e.type==='OPS BUDGET' ? esc(e.paidTo) : pLink(e.paidTo)}</td><td>${esc(titleCase(e.details || ''))}</td><td class="n">${e.type==='OPS BUDGET' ? '+' : '−'}${pesoTxt(e.amount)}</td>`
-      + `<td>${e.photo ? `<button class="icon-btn" type="button" data-photo="${esc(e.photo)}">Receipt</button>` : '<span class="dim">No receipt</span>'}</td><td>${esc(e.by || '')}<small>${esc(e.at || '')}</small></td></tr>`; }).join('')
+      + `<td>${e.photo ? `<button class="icon-btn" type="button" data-photo="${esc(e.photo)}">Receipt</button>` : '<span class="dim">No receipt</span>'}${e.txnNo ? `<small>#${esc(e.txnNo)}</small>` : ''}</td><td>${esc(e.by || '')}<small>${esc(e.at || '')}</small></td></tr>`; }).join('')
     : `<tr><td colspan="8" class="empty-cell">${data ? 'Nothing received or given out in these dates.' : 'Loading…'}</td></tr>`;
 }
 /**
@@ -7258,6 +7272,7 @@ function openOpsForm(kind, o){
       <label class="f full">Purpose<input id="opWhy" list="dlOpsWhy" autocomplete="off" value="${esc(en ? en.details : '')}" placeholder="${isB ? 'e.g. weekly operations budget' : 'e.g. toll, fuel, meals'}"></label>
       <label class="f">Amount (₱)<input id="opAmt" inputmode="decimal" autocomplete="off" value="${esc(en ? en.amount : '')}"></label>
       <div class="f full ds-f">Receipt<input id="opFile" type="file" accept="image/&#42;,application/pdf"><div class="ds-read" id="opRead"></div></div>
+      <label class="f">Transaction no<input id="opTxn" autocomplete="off" value="${esc(en ? en.txnNo || '' : '')}" placeholder="GCash or bank reference (none for cash)"></label>
       <label class="f full">Remarks<input id="opRem" autocomplete="off" value="${esc(en ? en.remarks : '')}"></label>
     </div>
     <datalist id="dlOpsPeople">${[...new Set([...document.querySelectorAll('#dlDrivers option, #dlHelpers option')].map(x => x.value).filter(Boolean))].map(v => `<option value="${esc(v)}">`).join('')}</datalist>
@@ -7280,11 +7295,13 @@ function openOpsForm(kind, o){
     try{
       const res = await call('acctReadPhoto', await fileToBase64(file), `${isB ? 'OPS BUDGET' : 'OPS DISBURSEMENT'} ${$('opWho').value.trim()}`.trim());
       st.photo = res.url; showPhoto();
+      // GCash: the transaction number is read from the receipt (MANU 2026-10-20 "when gcash transaction is uploaded, get the transaction number")
+      if(res.reading==='OK' && res.txnNo && !$('opTxn').value.trim()){ $('opTxn').value = res.txnNo; box.insertAdjacentHTML('beforeend', ` Transaction no <b>${esc(res.txnNo)}</b> read from the receipt; check it.`); }
       if(res.reading==='OK' && res.amount && !$('opAmt').value){ $('opAmt').value = res.amount; warn(); box.insertAdjacentHTML('beforeend', ` The receipt shows ${pesoTxt(res.amount)}; check the amount.`); }
     }catch(err){ box.className = 'ds-read err'; box.textContent = 'Receipt not saved: ' + err.message; $('opFile').value = ''; }
   };
   $('opSave').onclick = async () => {
-    const d = {kind, date: $('opDate').value || TODAY(), paidTo: $('opWho').value.trim(), purpose: $('opWhy').value.trim(), amount: amt(), photo: st.photo, remarks: $('opRem').value.trim()};
+    const d = {kind, date: $('opDate').value || TODAY(), paidTo: $('opWho').value.trim(), purpose: $('opWhy').value.trim(), amount: amt(), photo: st.photo, txnNo: $('opTxn').value.trim(), remarks: $('opRem').value.trim()};
     if(d.date > TODAY()) return toast('The date cannot be in the future.', true);
     if(!d.paidTo) return toast(isB ? 'Type who received the budget.' : 'Pick the employee who got the money.', true);
     if(!d.purpose) return toast('Type the purpose.', true);
@@ -7311,6 +7328,7 @@ function openOpsEntry(en){
       <dt>Amount</dt><dd><b>${pesoTxt(en.amount)}</b></dd>
       ${en.ref ? `<dt>Trip</dt><dd>${esc(fmtDay(en.tripDate))} · Truck ${esc(en.truckNo || '—')}${en.plateNo ? ' · ' + esc(en.plateNo) : ''}<br><span class="hint">${esc(en.ref)}</span></dd>` : ''}
       <dt>Receipt</dt><dd>${en.photo ? `<button class="icon-btn" type="button" data-photo="${esc(en.photo)}">View receipt</button>` : 'None yet'}</dd>
+      <dt>Transaction no</dt><dd>${esc(en.txnNo || '—')}</dd>
       <dt>Recorded by</dt><dd>${esc(en.by || '—')}${en.at ? ' · ' + esc(en.at) : ''}${en.updBy ? `<br>Changed by ${esc(en.updBy)} · ${esc(en.updAt)}` : ''}</dd>
       <dt>Remarks</dt><dd>${esc(en.remarks || '—')}</dd>
     </dl>
@@ -7335,8 +7353,89 @@ function opsCsv(){
   const rows = OPS.report || [];
   if(!rows.length) return toast('Nothing to put in the report with these filters.', true);
   saveCsvFile(repFile('Disbursement', `${$('dbFrom').value} to ${$('dbTo').value}`, 'csv'),
-    ['Entry no','Date','Kind','Employee / received by','Purpose','Amount','Trip date','Truck','Plate','Trip ID','Receipt','Status','Recorded by','Recorded at','Remarks'],
-    rows.map(e => [e.entryNo, e.date, opsKindTxt(e), e.paidTo, e.details, Number(e.amount) || 0, e.tripDate, e.truckNo, e.plateNo, e.ref, e.photo, e.status, e.by, e.at, e.remarks]));
+    ['Entry no','Date','Kind','Employee / received by','Purpose','Amount','Trip date','Truck','Plate','Trip ID','Receipt','Transaction no','Status','Recorded by','Recorded at','Remarks'],
+    rows.map(e => [e.entryNo, e.date, opsKindTxt(e), e.paidTo, e.details, Number(e.amount) || 0, e.tripDate, e.truckNo, e.plateNo, e.ref, e.photo, e.txnNo, e.status, e.by, e.at, e.remarks]));
+}
+/* ---- Liquidation report, first called Budget report (MANU 2026-10-20 "generate report in csv and pdf of disbursement in between budget received"): one report per
+   budget received, listing the disbursements made from it until the next budget came in. Entries go in the order they happened
+   (date, then the time recorded), so a disbursement on the same day as a new budget belongs to the budget recorded before it. An entry
+   recorded on a later day than its date has no usable time: a budget then counts from the start of its day, a disbursement at its end.
+   Carried over = what was left from earlier budgets; Left = carried over + this budget − disbursed. Cancelled entries are left out. */
+const BR = {all:null, pick:''};
+const brOrder = e => { const at = String(e.at || ''), t = at.slice(0, 10)===e.date && at.slice(11, 16) || (e.type==='OPS BUDGET' ? '00:00' : '99:99');
+  return `${e.date || ''} ${t} ${e.type==='OPS BUDGET' ? 0 : 1} ${e.entryNo || ''}`; };
+function budgetCycles(entries){
+  const live = entries.filter(e => OPS_KINDS.includes(e.type) && entryLive(e)).sort((a, b) => brOrder(a).localeCompare(brOrder(b)));
+  const out = []; let bal = 0, cur = null;
+  live.forEach(e => {
+    const amt = Number(e.amount) || 0;
+    if(e.type==='OPS BUDGET'){ cur = {budget:e, carried:bal, disb:[], spent:0}; out.push(cur); bal += amt; }
+    else { if(cur){ cur.disb.push(e); cur.spent += amt; } bal -= amt; }
+  });
+  out.forEach((c, i) => { c.next = out[i + 1] ? out[i + 1].budget : null; c.left = c.carried + (Number(c.budget.amount) || 0) - c.spent; });
+  return out.reverse();   // newest budget first
+}
+async function openBudgetReport(){
+  const draw = () => {
+    const cs = budgetCycles(BR.all || []);
+    if(!cs.length) return openPop('Liquidation report', '', '<div class="empty">No budget received yet. Send budget records one.</div>', '<button class="btn alt" type="button" onclick="closePop()">Close</button>');
+    const c = cs.find(x => x.budget.entryNo===BR.pick) || cs[0]; BR.pick = c.budget.entryNo; BR.cur = c;
+    const b = c.budget, amt = Number(b.amount) || 0;
+    const to = c.next ? `${fmtDay(c.next.date)} (next budget ${c.next.entryNo})` : 'today';
+    const rows = c.disb.map(e => `<tr><td>${esc(fmtDay(e.date))}<small>${esc(e.entryNo)}</small></td><td>${esc(e.paidTo)}<small>${esc(titleCase(e.details || ''))}</small></td>`
+      + `<td>${e.truckNo ? `<span style="white-space:nowrap">Truck ${esc(e.truckNo)}</span><small>${esc(fmtDay(e.tripDate))}</small>` : '<span class="dim">—</span>'}</td><td class="n">${pesoTxt(e.amount)}</td><td>${e.photo ? 'Yes' : '<span class="dim">None</span>'}${e.txnNo ? `<small>#${esc(e.txnNo)}</small>` : ''}</td></tr>`).join('');
+    const pics = [b, ...c.disb].filter(e => e.photo);
+    openPop(`Liquidation report · ${b.entryNo}`, `Disbursements from ${esc(fmtDay(b.date))} to ${esc(to)}`,
+      `<label class="f br-pick" style="margin:0 0 10px;display:block">Budget received<select id="brPick">${cs.map(x => `<option value="${esc(x.budget.entryNo)}"${x===c ? ' selected' : ''}>${esc(fmtDay(x.budget.date))} · ${esc(x.budget.entryNo)} · ${pesoTxt(x.budget.amount)}</option>`).join('')}</select></label>`
+      + `<p class="br-head"><b>${esc(b.entryNo)}</b> · ${pesoTxt(amt)} received ${esc(fmtDay(b.date))} by ${esc(b.paidTo || '—')}${b.details ? ' · ' + esc(titleCase(b.details)) : ''}</p>`
+      + `<div class="kpis kpis4">${kpiHtml([[pesoTxt(amt), 'Budget received', fmtDay(b.date)], [pesoTxt(c.carried), 'Carried over', 'left from earlier budgets'],
+          [pesoTxt(c.spent), 'Disbursed', `${c.disb.length} given out`], [pesoTxt(c.left), 'Left', c.left < 0 ? 'more given out than there was' : 'carried over + budget − disbursed']])}</div>`
+      + (c.disb.length ? `<div class="tbl-wrap" style="max-height:none"><table class="poptbl br-tbl"><thead><tr><th>Date</th><th>Employee · purpose</th><th>Trip</th><th class="n">Amount</th><th>Receipt · transaction no</th></tr></thead><tbody>${rows}</tbody>`
+        + `<tfoot><tr><td colspan="3">Total disbursed</td><td class="n">${pesoTxt(c.spent)}</td><td></td></tr></tfoot></table></div>` : '<div class="empty">Nothing disbursed from this budget yet.</div>')
+      // the receipt photos (MANU 2026-10-20 "also add in liquidation the photo of the receipts"): shown here and in the PDF
+      + (pics.length ? `<h4 class="br-ph-h">Receipt photos (${pics.length})</h4><div class="br-photos">${pics.map(e => `<figure class="br-ph" data-url="${esc(e.photo)}"><div class="br-img"><span class="dim">Loading…</span></div>`
+          + `<figcaption><b>${esc(e.entryNo)}</b> · ${esc(fmtDay(e.date))} · ${pesoTxt(e.amount)}<br>${esc(e.paidTo || '')}${e.txnNo ? ' · #' + esc(e.txnNo) : ''}</figcaption></figure>`).join('')}</div>` : ''),
+      `<button class="btn alt" type="button" onclick="closePop()">Close</button> <button class="btn alt" type="button" id="brCsv">Download CSV</button> <button class="btn" type="button" id="brPdf">Save PDF</button>`, true);
+    $('brPick').onchange = () => { BR.pick = $('brPick').value; BR.touched = true; draw(); };
+    $('brCsv').onclick = budgetCsv;
+    $('brPdf').onclick = async () => { $('brPdf').disabled = true; await brPhotos(); if($('brPdf')){ $('brPdf').disabled = false; popPdf(); } };
+    brPhotos();
+  };
+  BR.pick = ''; BR.touched = false;
+  if(!BR.all) openPop('Liquidation report', '', '<div class="empty">Loading…</div>', '');
+  else draw();
+  try{ const d = await call('acctData', '2000-01-01', TODAY()); BR.all = (d.entries || []).filter(e => OPS_KINDS.includes(e.type)); if(!BR.touched) BR.pick = ''; if(!$('pop').hidden && /^Liquidation report/.test($('popTitle').textContent)) draw(); }
+  catch(e){ if(!BR.all){ closePop(); toast(e.message, true); } }
+}
+/** Puts each receipt photo in the report as a small JPEG (fits the PDF); PDFs show a note. Resolves when all are in. */
+const BR_IMG = {};
+function brImg(url){
+  return BR_IMG[url] || (BR_IMG[url] = (async () => {
+    const f = FILE_CACHE[url] || (FILE_CACHE[url] = await call('getAcctFile', url));
+    if(String(f.type).indexOf('image/') !== 0) return {note:'PDF receipt: open it from the entry'};
+    const src = `data:${f.type};base64,${f.data}`;
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Not a picture')); i.src = src; });
+    const k = Math.min(1, 700 / Math.max(1, img.naturalWidth)), cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.round(img.naturalWidth * k)); cv.height = Math.max(1, Math.round(img.naturalHeight * k));
+    const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height); x.drawImage(img, 0, 0, cv.width, cv.height);
+    return {src: cv.toDataURL('image/jpeg', 0.82)};
+  })().catch(e => { delete BR_IMG[url]; return {note:'Photo not loaded: ' + e.message}; }));
+}
+function brPhotos(){
+  const figs = [...document.querySelectorAll('#popBody .br-ph')];
+  return Promise.all(figs.map(async fg => { const r = await brImg(fg.dataset.url), box = fg.querySelector('.br-img'); if(!box) return;
+    box.innerHTML = r.src ? `<img src="${r.src}" alt="Receipt">` : `<span class="dim">${esc(r.note)}</span>`; }));
+}
+function budgetCsv(){
+  const c = BR.cur; if(!c) return;
+  const b = c.budget, amt = Number(b.amount) || 0;
+  const rows = [
+    ['BUDGET', b.entryNo, b.date, 'Received by: ' + (b.paidTo || ''), b.details, amt, '', '', '', b.photo ? 'Yes' : 'No', b.txnNo, b.photo, b.by, b.at],
+    ...c.disb.map(e => ['DISBURSED', e.entryNo, e.date, e.paidTo, e.details, Number(e.amount) || 0, e.tripDate, e.truckNo, e.plateNo, e.photo ? 'Yes' : 'No', e.txnNo, e.photo, e.by, e.at]),
+    [], ['CARRIED OVER', '', '', '', 'Left from earlier budgets', c.carried], ['BUDGET RECEIVED', '', '', '', '', amt],
+    ['TOTAL DISBURSED', '', '', '', `${c.disb.length} given out`, c.spent], ['LEFT', '', '', '', c.next ? `Before next budget ${c.next.entryNo} (${c.next.date})` : 'As of today', c.left]];
+  saveCsvFile(repFile('Liquidation report', `${b.entryNo} ${b.date}`, 'csv'),
+    ['Kind','Entry no','Date','Employee','Purpose','Amount','Trip date','Truck','Plate','Receipt','Transaction no','Receipt photo','Recorded by','Recorded at'], rows);
 }
 /* DISB-END */
 /* ACCT-START */
@@ -7948,7 +8047,7 @@ const DEMO = (() => {
   // operations fund (MANU 2026-10-20): a budget from Accounting and two disbursements
   const opsRow = (no, type, o) => ledger.push({entryNo:no, type, ref:'', tripDate:'', truckNo:'', plateNo:'', payType:'', txnNo:'', budget:'', status:type==='OPS BUDGET' ? 'RECEIVED' : 'RELEASED', updBy:'', updAt:'', remarks:'', ...o});
   opsRow('OPB-00001', 'OPS BUDGET', {date:addDays(today, -2), paidTo:'OPS SUPERVISOR', details:'WEEKLY OPERATIONS BUDGET', amount:'20000', photo:'demo:receipt-ops', by:'ACCOUNTANT', at:addDays(today, -2) + ' 08:00'});
-  opsRow('OPD-00001', 'OPS DISBURSEMENT', {date:addDays(today, -1), paidTo:(trips[0] || {}).driver || 'DRIVER', details:'TOLL', amount:'850', photo:'demo:receipt-toll', by:'DISPATCHER', at:addDays(today, -1) + ' 06:40', ref:(trips[0] || {}).tripId || '', tripDate:(trips[0] || {}).date || '', truckNo:(trips[0] || {}).truckNo || '', plateNo:(trips[0] || {}).plateNo || ''});
+  opsRow('OPD-00001', 'OPS DISBURSEMENT', {date:addDays(today, -1), paidTo:(trips[0] || {}).driver || 'DRIVER', details:'TOLL', amount:'850', photo:'demo:receipt-toll', txnNo:'5023418867012', by:'DISPATCHER', at:addDays(today, -1) + ' 06:40', ref:(trips[0] || {}).tripId || '', tripDate:(trips[0] || {}).date || '', truckNo:(trips[0] || {}).truckNo || '', plateNo:(trips[0] || {}).plateNo || ''});
   opsRow('OPD-00002', 'OPS DISBURSEMENT', {date:today, paidTo:(trips[1] || {}).helper1 || 'HELPER', details:'MEALS', amount:'300', photo:'', by:'DISPATCHER', at:today + ' 07:10'});
   const demoLiq = {};
   if(ledger[0]) demoLiq[ledger[0].entryNo] = {entryNo:ledger[0].entryNo, ref:ledger[0].ref, date:today, spent:Number(ledger[0].amount) - 300, returned:0, spentOn:'TOLL, PARKING', photo:'', balance:300, status:'OWES', by:'ACCOUNTANT', at:today + ' 17:10', remarks:''};
@@ -8175,7 +8274,9 @@ const DEMO = (() => {
       const paidTo = String(d.paidTo || '').trim().toUpperCase(); if(!paidTo) throw new Error(B ? 'Type who received the budget.' : 'Pick the employee who got the money.');
       const purpose = String(d.purpose || '').trim().toUpperCase(); if(!purpose) throw new Error('Type the purpose.');
       if((d.date || today) > today) throw new Error('The date cannot be in the future.');
-      const f = {date:d.date || today, paidTo, details:purpose, amount:String(amount), photo:d.photo || '', remarks:d.remarks || ''};
+      const txnNo = String(d.txnNo || '').toUpperCase().replace(/\s+/g, '').slice(0, 60);
+      if(txnNo){ const dup = ledger.find(x => String(x.txnNo || '').toUpperCase()===txnNo && x.status!=='CANCELLED' && x.entryNo!==d.entryNo); if(dup) throw new Error(`Transaction number ${txnNo} is already recorded in ${dup.entryNo}.`); }
+      const f = {date:d.date || today, paidTo, details:purpose, amount:String(amount), photo:d.photo || '', txnNo, remarks:d.remarks || ''};
       if(d.entryNo){ const cur = ledger.find(x => x.entryNo===d.entryNo); if(!cur || cur.type!==type) throw new Error(`Entry ${d.entryNo} not found. Refresh.`); if(cur.status==='CANCELLED') throw new Error(`${cur.entryNo} is cancelled.`);
         Object.assign(cur, f, {updBy:me.name, updAt:stampNow()}); return {entry:{...cur}, fund:demoFund()}; }
       if(d.ref && demoSent[d.ref]) return demoSent[d.ref];
