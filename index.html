@@ -1698,9 +1698,8 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <h3 style="margin-top:0">Operations fund <small id="opNote"></small></h3>
       <div class="kpis kpis4" id="opKpi"></div>
       <div class="bar" style="margin:0 0 10px;flex-wrap:wrap">
-        <button class="btn" type="button" id="opBudgetBtn" hidden>+ Add budget</button>
+        <button class="btn" type="button" id="opBudgetBtn" hidden>+ Send budget</button>
         <button class="btn" type="button" id="opDisbBtn" hidden>+ Disbursement</button>
-        <button class="btn alt" type="button" id="opSendBtn" hidden>+ Send trip budget</button>
         <div class="chips" id="opChips"></div>
       </div>
       <div class="tbl-wrap" style="max-height:520px"><table id="opTbl"><thead><tr><th>Entry</th><th>Date</th><th>Kind</th><th>Employee</th><th>Purpose</th><th class="n">Amount</th><th>Receipt</th><th>Recorded by</th></tr></thead><tbody></tbody></table></div>
@@ -1736,7 +1735,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
         <div class="chips" id="acRange"></div>
         <label class="f">From<input type="date" id="acFrom"></label>
         <label class="f">To<input type="date" id="acTo"></label>
-        <button class="btn road" type="button" id="acSend" hidden>+ Send trip budget</button>
+        <button class="btn road" type="button" id="acSend" hidden>+ Send budget</button>
         <button class="btn alt" type="button" id="acReport">Generate report (CSV)</button>
       </div>
       <div class="hint-line" id="acNote" style="margin:0 0 10px"></div>
@@ -5874,8 +5873,12 @@ function fabPlace(){
    open the Viber or Messenger app at the chat Admin set (Code.gs socialLinks / socialSave). Admin sees a faded button with + until it
    is set; others see only the buttons that are set. They follow the chat button when it is dragged and hide while the chat window is open.
    Not on phones (700 px or less): MANU 2026-10-20 "no need to add viber and messenger button on mobile view". */
+// Switched off (MANU 2026-10-20 "removeboth", after Viber on a computer could only show the group's QR page): the buttons and the
+// Users tab setting stay hidden; set SOC_ON = true to bring them back (Code.gs socialLinks / socialSave are kept).
+const SOC_ON = false;
 const SOC = {viber:'', messenger:'', canEdit:false, user:''};
 function loadSoc(){
+  if(!SOC_ON) return renderSoc();
   const u = S.me.username, kept = lsGet('jmti_soc_' + u);
   Object.assign(SOC, {viber:'', messenger:'', canEdit:false}, kept || {}, {user:u}); renderSoc();
   call('socialLinks').then(d => { if(SOC.user===u){ Object.assign(SOC, d); lsSet('jmti_soc_' + u, d); renderSoc(); } }).catch(() => {});
@@ -5887,10 +5890,11 @@ function renderSoc(){
   v.hidden = !(SOC.viber || edit); m.hidden = !(SOC.messenger || edit);
   v.classList.toggle('unset', !SOC.viber); m.classList.toggle('unset', !SOC.messenger);
   if(SOC.viber) v.href = viberHref(SOC.viber); else v.removeAttribute('href');
+  v.target = /^https?:/i.test(v.getAttribute('href') || '') ? '_blank' : '_top';   // a web link opens beside the app, never in its place (MANU 2026-10-20)
   if(SOC.messenger) m.href = SOC.messenger; else m.removeAttribute('href');
   v.title = SOC.viber ? 'Open the JMTI chat in Viber' : 'Set the Viber chat (Admin)'; m.title = SOC.messenger ? 'Open the JMTI chat in Messenger' : 'Set the Messenger chat (Admin)';
-  w.hidden = !(S.me && TOKEN) || $('chatBtn').hidden || (v.hidden && m.hidden);
-  if($('socEdit')) $('socEdit').hidden = !edit;
+  w.hidden = !SOC_ON || !(S.me && TOKEN) || $('chatBtn').hidden || (v.hidden && m.hidden);
+  if($('socEdit')) $('socEdit').hidden = !SOC_ON || !edit;
   placeSoc();
 }
 /** Above the chat button (below it when the button is in the top half of the screen), centred on it. */
@@ -6873,7 +6877,7 @@ function tripFromEntry(en){
 }
 /** Puts a saved or cancelled entry in the lists already loaded (Disbursement and Accounting). */
 function putEntry(e){
-  [DB.data, AC.data, SB.data].forEach(d => { if(!d) return; const i = d.entries.findIndex(x => x.entryNo===e.entryNo); if(i >= 0) d.entries[i] = e; else d.entries.push(e); });
+  [DB.data, AC.data].forEach(d => { if(!d) return; const i = d.entries.findIndex(x => x.entryNo===e.entryNo); if(i >= 0) d.entries[i] = e; else d.entries.push(e); });
 }
 function saveCsvFile(name, head, rows){
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
@@ -6896,7 +6900,6 @@ function initDisb(){
   $('lqTbl').onclick = e => { const tr = e.target.closest('tr[data-lqp]'); if(tr) openLiqPerson(tr.dataset.lqp); };
   $('opBudgetBtn').onclick = () => openOpsForm('BUDGET', {});
   $('opDisbBtn').onclick = () => openOpsForm('DISB', {});
-  $('opSendBtn').onclick = openSendBudget;
   $('opTbl').onclick = e => {
     const ph = e.target.closest('[data-photo]'); if(ph) return viewFile(ph.dataset.photo, 'Receipt photo', 'getAcctFile');
     const tr = e.target.closest('tr[data-entry]'); if(!tr) return;
@@ -7212,7 +7215,6 @@ function renderOps(q){
   if(!$('opTbl')) return;
   const data = DB.data, f = data && data.fund;
   $('opBudgetBtn').hidden = !may('opsBudget'); $('opDisbBtn').hidden = !may('opsDisburse');
-  $('opSendBtn').hidden = !may('disburse') || may('viewAll') || can('accounting');   // Payroll sends trip budgets here (no Accounting tab)
   if(f){ OPS.fund = Object.assign({}, OPS.fund, f); renderOpsFund(); }
   const all = opsEntries(), inD = e => e.date >= $('dbFrom').value && e.date <= $('dbTo').value;
   const shown = all.filter(e => inD(e) && (!q || [e.entryNo, e.paidTo, e.details, e.truckNo, e.plateNo, e.ref, e.by].join(' ').toLowerCase().includes(q)));
@@ -7223,7 +7225,7 @@ function renderOps(q){
     [pesoTxt(f.disbursed), 'Disbursed', 'all dates, to employees'],
     [pesoTxt(f.left), 'Budget left', f.left < 0 ? 'more given out than received' : 'received minus disbursed'],
     [pesoTxt(sum(out)), 'Disbursed in these dates', `${out.filter(entryLive).length} given out · ${pesoTxt(sum(got))} received`]]);
-  const who = [may('opsBudget') && 'Add budget records cash Operations received', may('opsDisburse') && 'Disbursement records money given to an employee (also from a trip in Truck Plan)'].filter(Boolean);
+  const who = [may('opsBudget') && 'Send budget records the budget Accounting gives Operations', may('opsDisburse') && 'Disbursement records money given to an employee (also from a trip in Truck Plan)'].filter(Boolean);
   $('opNote').textContent = data ? (who.length ? '· ' + who.join('. ') + '.' : '· Accounting adds the budget; dispatchers record what they give out. View only.') : '';
   const F = {all: () => true, got: e => e.type==='OPS BUDGET', out: e => e.type==='OPS DISBURSEMENT', norec: e => entryLive(e) && e.type==='OPS DISBURSEMENT' && !e.photo};
   counterChips($('opChips'), [['all','All'],['got','Budget received'],['out','Disbursed'],['norec','No receipt']].map(([k, l]) => [k, l, shown.filter(F[k]).length]), OPS.filter, v => { OPS.filter = v; renderDisb(); });
@@ -7237,7 +7239,7 @@ function renderOps(q){
     : `<tr><td colspan="8" class="empty-cell">${data ? 'Nothing received or given out in these dates.' : 'Loading…'}</td></tr>`;
 }
 /**
- * Add budget (kind 'BUDGET', Accounting) or a disbursement (kind 'DISB', from the Disbursement tab, the Truck Plan button or a trip).
+ * Send budget (kind 'BUDGET', Accounting) or a disbursement (kind 'DISB', from the Disbursement tab, the Truck Plan button or a trip).
  * o = {trip, en}: en changes an entry. Same fields for both: date, employee (who received it, for a budget), purpose, amount, receipt.
  */
 function openOpsForm(kind, o){
@@ -7246,8 +7248,8 @@ function openOpsForm(kind, o){
   const st = {photo: en ? en.photo : '', ref: 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)};
   const crew = t ? [['Driver', t.driver], ['Helper', t.helper1], ['Helper 2', t.helper2]].filter(c => c[1]) : [];
   const fund = OPS.fund;
-  openPop(en ? `Change ${en.entryNo}` : isB ? 'Add budget' : 'Disbursement',
-    t ? `Truck ${esc(t.truckNo || '—')} · ${esc(fmtDay(t.date))} · ${esc(t.customer || '')} → ${esc(t.destination || '—')}` : isB ? 'Cash Operations received from Accounting' : 'Money given to an employee from the operations fund', `
+  openPop(en ? `Change ${en.entryNo}` : isB ? 'Send budget' : 'Disbursement',
+    t ? `Truck ${esc(t.truckNo || '—')} · ${esc(fmtDay(t.date))} · ${esc(t.customer || '')} → ${esc(t.destination || '—')}` : isB ? 'Budget Accounting sends to Operations; it shows as Budget received in Disbursement' : 'Money given to an employee from the operations fund', `
     ${fund ? `<div class="ds-sum"><span>Budget received <b>${pesoTxt(fund.received)}</b></span><span>Disbursed <b>${pesoTxt(fund.disbursed)}</b></span><span>Budget left <b class="${fund.left < 0 ? 'db-over' : ''}">${pesoTxt(fund.left)}</b></span></div>` : ''}
     <div class="form">
       <label class="f">Date<input id="opDate" type="date" max="${TODAY()}" value="${esc(en ? en.date : TODAY())}"></label>
@@ -7294,7 +7296,7 @@ function openOpsForm(kind, o){
       putEntry(r.entry); OPS.fund = Object.assign({}, OPS.fund, r.fund); lsSet('jmti_opsfund', OPS.fund);
       if(DB.data) DB.data.fund = r.fund;
       closePop(); renderOpsFund(); renderDisb(); renderAcct();
-      toast(en ? `${r.entry.entryNo} saved` : isB ? `${r.entry.entryNo}: ${pesoTxt(r.entry.amount)} budget received · left ${pesoTxt(r.fund.left)}` : `${r.entry.entryNo}: ${pesoTxt(r.entry.amount)} to ${r.entry.paidTo} · left ${pesoTxt(r.fund.left)}`, false, 4000);
+      toast(en ? `${r.entry.entryNo} saved` : isB ? `${r.entry.entryNo}: ${pesoTxt(r.entry.amount)} budget sent to Operations · left ${pesoTxt(r.fund.left)}` : `${r.entry.entryNo}: ${pesoTxt(r.entry.amount)} to ${r.entry.paidTo} · left ${pesoTxt(r.fund.left)}`, false, 4000);
     }catch(err){ toast(err.message, true); $('opSave').disabled = false; }
   };
 }
@@ -7348,7 +7350,9 @@ function initAcct(){
   $('acFrom').value = today.slice(0, 8) + '01'; $('acTo').value = today;   // this month
   $('acFrom').onchange = $('acTo').onchange = loadAcct;
   $('acReport').onclick = acctCsv;
-  $('acSend').hidden = !may('disburse') || may('viewAll'); $('acSend').onclick = openSendBudget;
+  // Send budget (MANU 2026-10-20 "the sent trip budget will go to the received budget on disbursement, so its not send trip budget, its just
+  // send budget"): the operations fund budget (OPS BUDGET), Accounting only as before ("only accounting can add budget")
+  $('acSend').hidden = !may('opsBudget'); $('acSend').onclick = () => { if(AC.data && AC.data.fund) OPS.fund = Object.assign({}, OPS.fund, AC.data.fund); openOpsForm('BUDGET', {}); };
   $('acTabs').onclick = e => { const b = e.target.closest('.chip'); if(!b) return; AC.sub = b.dataset.sub;
     $('acTabs').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c===b));
     $('acSum').hidden = AC.sub!=='sum'; $('acInv').hidden = AC.sub!=='inv';
@@ -7358,57 +7362,6 @@ function initAcct(){
     const tr = e.target.closest('tr[data-entry]'); if(!tr) return;
     const en = ((AC.data && AC.data.entries) || []).find(x => x.entryNo===tr.dataset.entry); if(en) openAcctEntry(en);
   };
-}
-/* ---- Send trip budget from Accounting (MANU 2026-10-20 "in accounting, add button to send trip budget"). The trip budget list is no
-   longer in Disbursement, so this pop-up lists the trips of the dates picked whose budget is not fully sent (or all with a budget),
-   and a tap opens the same send form as before (amount, sent to, Cash / E-wallet / Bank transfer, receipt). Admin, Accounting, Payroll
-   (Payroll has no Accounting tab: its button is in Disbursement, by the operations fund buttons). */
-const SB = {from:'', to:'', q:'', all:false, trips:null, data:null, key:''};
-function openSendBudget(){
-  const today = TODAY();
-  if(!SB.from){ SB.from = addDays(today, -6); SB.to = today; }
-  openPop('Send trip budget', 'Pick the trip, then record the money sent for it', `
-    <div class="bar" style="flex-wrap:wrap;margin:0 0 8px">
-      <label class="f">From<input type="date" id="sbFrom" value="${esc(SB.from)}"></label>
-      <label class="f">To<input type="date" id="sbTo" value="${esc(SB.to)}"></label>
-      <label class="f grow">Find<input id="sbFind" value="${esc(SB.q)}" autocomplete="off" placeholder="Truck, plate, crew, place or trip ID"></label>
-    </div>
-    <div class="chips" id="sbChips" style="margin:0 0 8px"></div>
-    <div class="tbl-wrap" id="sbWrap"><table id="sbTbl"><thead><tr><th>Trip date</th><th>Truck</th><th>Route</th><th>Crew</th><th class="n">Budget</th><th class="n">Still to send</th></tr></thead><tbody></tbody></table></div>`,
-    `<button class="btn alt" type="button" onclick="closePop()">Close</button>`);
-  $('sbFrom').onchange = $('sbTo').onchange = sbLoad;
-  $('sbFind').oninput = () => { SB.q = $('sbFind').value; sbDraw(); };
-  $('sbTbl').onclick = e => {
-    const tr = e.target.closest('tr[data-key]'); if(!tr) return;
-    const t = (SB.trips || []).find(x => x.key===tr.dataset.key); if(!t) return;
-    if(t._pending) return toast('Still saving this trip. Try again in a moment.');
-    if(!SB.data) return toast('Still getting what was sent. Try again in a moment.');
-    openDisbForm(t, null, sbEnts());
-  };
-  sbLoad();
-}
-const sbEnts = () => ((SB.data && SB.data.entries) || []).filter(e => e.type==='TRIP BUDGET');
-function sbLoad(){
-  if(!$('sbFrom')) return;
-  let f = $('sbFrom').value, t = $('sbTo').value;
-  if(!f || !t) return;
-  if(f > t){ [f, t] = [t, f]; $('sbFrom').value = f; $('sbTo').value = t; }
-  const k = f + '|' + t;
-  if(SB.key !== k){ SB.key = k; SB.trips = null; SB.data = null; }
-  SB.from = f; SB.to = t; sbDraw();
-  call('acctData', f, t).then(d => { if(SB.key===k){ SB.data = d; sbDraw(); } }).catch(e => toast(e.message, true));   // what was already sent
-  withTrips(f, t, list => { if(SB.key===k){ SB.trips = list; sbDraw(); } }, $('sbWrap'));
-}
-function sbDraw(){
-  const body = $('sbTbl') && $('sbTbl').tBodies[0]; if(!body) return;
-  if(!SB.trips || !SB.data){ body.innerHTML = '<tr><td colspan="6" class="empty-cell">Loading trips and what was sent…</td></tr>'; $('sbChips').innerHTML = ''; return; }
-  const q = SB.q.toLowerCase().trim(), ents = sbEnts();
-  const rows = SB.trips.map(t => dbRow(t, ents)).filter(r => isTrip(r.t) && r.budget > 0 && (!q || [r.t.truckNo, r.t.plateNo, r.t.customer, r.t.destination, crewText(r.t), r.t.tripId].join(' ').toLowerCase().includes(q)));
-  const left = rows.filter(r => r.left > 0);
-  counterChips($('sbChips'), [['left', 'Still to send', left.length], ['all', 'All with a budget', rows.length]], SB.all ? 'all' : 'left', f => { SB.all = f==='all'; sbDraw(); });
-  const list = (SB.all ? rows : left).sort((a, b) => a.t.date.localeCompare(b.t.date) || String(a.t.truckNo).localeCompare(String(b.t.truckNo), undefined, {numeric:true}));
-  body.innerHTML = list.length ? list.map(r => `<tr class="rowbtn" data-key="${esc(r.t.key)}"><td>${esc(fmtDay(r.t.date))}</td><td><b>${esc(r.t.truckNo || '—')}</b><small>${esc(r.t.plateNo || '')}</small></td><td>${esc(r.t.customer)}<small>→ ${esc(r.t.destination || '—')}</small></td><td>${esc(crewText(r.t) || '—')}</td><td class="n">${pesoTxt(r.budget)}</td><td class="n">${r.left ? `<b class="db-left">${pesoTxt(r.left)}</b>` : r.over ? `<span class="db-over">${pesoTxt(r.over)} over</span>` : '<span class="db-ok">Sent</span>'}</td></tr>`).join('')
-    : `<tr><td colspan="6" class="empty-cell">${SB.all ? 'No trip with a budget in these dates.' : 'Every trip budget in these dates is sent.'}</td></tr>`;
 }
 function loadAcct(){
   if(AC.sub==='inv') return loadAcctInv();
