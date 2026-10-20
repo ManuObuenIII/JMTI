@@ -312,9 +312,10 @@ input.clash{border-color:var(--cancel);background:#FDF1F0}
 .docstate.ok{color:var(--done);border-color:#bfe3d2;background:#effaf4}
 .docstate.wait{color:#7A5200;border-color:#F3D69C;background:#FFF6E5}
 .pstat{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;border:1px solid transparent;white-space:normal;line-height:1.3}
-.pstat.s-completed{background:#E5E7EB;color:#374151}
+.pstat.s-completed,.pstat.s-endorsed-to-billing{background:#E5E7EB;color:#374151}
 .pstat.s-pending{background:#B91C1C;color:#fff}
 .pstat.s-waiting-docs{background:#CDE4EC;color:#1E3A5F}
+.pstat.s-received-documents{background:#BBF7D0;color:#14532D}
 .pstat.s-tukod{background:#E9D5FF;color:#4C1D95}
 .pstat.s-none{background:#fff;color:var(--muted);border-color:var(--line)}
 button.pstat{cursor:pointer;font-family:inherit}
@@ -1006,7 +1007,19 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .chat-fab.ring{animation:fabring 1.2s ease-in-out 4}
 @keyframes fabring{0%,100%{transform:scale(1)}15%{transform:scale(1.14) rotate(-8deg)}30%{transform:scale(1.08) rotate(7deg)}45%{transform:scale(1.1) rotate(-4deg)}60%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){ .chat-fab.ring{animation:none} }
-@media print{ .chat-fab,.chdock{display:none!important} }
+/* Viber and Messenger buttons beside the chat button (MANU 2026-10-20, "Separate buttons") */
+.soc-fab{position:fixed;right:24px;bottom:88px;z-index:36;display:flex;flex-direction:column;gap:10px;width:46px}
+.soc-fab[hidden],.soc-fab a[hidden]{display:none}
+.soc-fab a{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;box-shadow:0 8px 18px rgba(2,8,40,.35),inset 0 1px 0 rgba(255,255,255,.35);text-decoration:none;position:relative}
+.soc-fab a:active{transform:scale(.94)}
+.soc-fab a.vb{background:#7360F2}
+.soc-fab a.ms{background:linear-gradient(135deg,#00B2FF 0%,#7A5CFF 55%,#FF5C87 100%)}
+.soc-fab a.unset{opacity:.5;filter:grayscale(.4)}
+.soc-fab a.unset::after{content:'+';position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:#fff;color:#0A1F8F;font:800 14px/18px sans-serif;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.soc-fab svg{width:26px;height:26px;display:block;pointer-events:none}
+.soc-fab.off{visibility:hidden}
+@media (max-width:700px){ .soc-fab{display:none!important} }   /* MANU 2026-10-20 "no need to add viber and messenger button on mobile view" */
+@media print{ .chat-fab,.chdock,.soc-fab{display:none!important} }
 .chdock{position:fixed;right:18px;bottom:88px;width:360px;max-width:calc(100vw - 24px);height:min(560px,calc(100vh - 110px));z-index:37;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 18px 48px rgba(2,8,40,.35)}
 .chdock[hidden]{display:none}
 .chd-head{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(180deg,#0A27B5,#020A35);color:#fff}
@@ -1602,7 +1615,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
   <section class="view" id="v-users">
     <div class="cols2">
       <div>
-        <div class="bar"><label class="f grow">Find<input id="uFind" placeholder="Username, name or role"></label></div>
+        <div class="bar"><label class="f grow">Find<input id="uFind" placeholder="Username, name or role"></label><button class="btn alt" type="button" id="socEdit" hidden>Viber and Messenger buttons</button></div>
         <div class="tbl-wrap"><table id="uTbl"><thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Status</th><th>Last sign-in</th></tr></thead><tbody></tbody></table></div>
       </div>
       <div class="panel">
@@ -1687,6 +1700,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <div class="bar" style="margin:0 0 10px;flex-wrap:wrap">
         <button class="btn" type="button" id="opBudgetBtn" hidden>+ Add budget</button>
         <button class="btn" type="button" id="opDisbBtn" hidden>+ Disbursement</button>
+        <button class="btn alt" type="button" id="opSendBtn" hidden>+ Send trip budget</button>
         <div class="chips" id="opChips"></div>
       </div>
       <div class="tbl-wrap" style="max-height:520px"><table id="opTbl"><thead><tr><th>Entry</th><th>Date</th><th>Kind</th><th>Employee</th><th>Purpose</th><th class="n">Amount</th><th>Receipt</th><th>Recorded by</th></tr></thead><tbody></tbody></table></div>
@@ -1722,6 +1736,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
         <div class="chips" id="acRange"></div>
         <label class="f">From<input type="date" id="acFrom"></label>
         <label class="f">To<input type="date" id="acTo"></label>
+        <button class="btn road" type="button" id="acSend" hidden>+ Send trip budget</button>
         <button class="btn alt" type="button" id="acReport">Generate report (CSV)</button>
       </div>
       <div class="hint-line" id="acNote" style="margin:0 0 10px"></div>
@@ -1783,6 +1798,10 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 <datalist id="dlDest"></datalist><datalist id="dlClientDest"></datalist><datalist id="dlAllDest"></datalist><datalist id="dlDrivers"></datalist><datalist id="dlHelpers"></datalist>
 <datalist id="dlDoc"></datalist><datalist id="dlFinal"></datalist>
 <button class="chat-fab" id="chatBtn" type="button" hidden aria-label="Chat" title="Chat (drag to move)"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M11 14.5h22a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H19a4 4 0 0 1-4-4V20z" fill="#0B3FA8" opacity=".45"/><path d="M10 13h22a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V18.5z" fill="#fff"/><rect x="18" y="17.6" width="13.5" height="2.6" rx="1.3" fill="#8AB4F8"/><rect x="18" y="22.1" width="13.5" height="2.6" rx="1.3" fill="#8AB4F8"/><rect x="18" y="26.6" width="10" height="2.6" rx="1.3" fill="#8AB4F8"/></svg><b id="chatN" class="fab-n" hidden>0</b></button>
+<div class="soc-fab" id="socFab" hidden>
+  <a class="vb" id="vbBtn" data-soc="viber" target="_top" rel="noopener" hidden aria-label="Viber" title="Viber"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C7 3 4 5.6 4 10.2c0 2.6 1 4.5 2.7 5.6V20l3-2.2c.7.1 1.5.2 2.3.2 5 0 8-2.6 8-7.8S17 3 12 3z" fill="#fff"/><path d="M9.3 7.6c.3-.2.7-.2.9.1l.9 1.3c.2.3.1.7-.1.9l-.5.4c.3.8 1.1 1.7 2 2.1l.4-.5c.2-.3.6-.3.9-.1l1.3.9c.3.2.4.6.1.9l-.5.6c-.4.5-1.1.6-1.7.4-2-.8-3.6-2.4-4.3-4.4-.2-.6 0-1.2.4-1.6z" fill="#7360F2"/></svg></a>
+  <a class="ms" id="msBtn" data-soc="messenger" target="_blank" rel="noopener" hidden aria-label="Messenger" title="Messenger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C7 3 3.5 6.6 3.5 11.2c0 2.5 1.1 4.6 2.9 6.1V21l3.1-1.7c.8.2 1.6.3 2.5.3 5 0 8.5-3.6 8.5-8.3S17 3 12 3z" fill="#fff"/><path d="M6.8 13.9l3-4.7 2.6 2 2.9-2-3 4.7-2.6-2z" fill="#3B6BFF"/></svg></a>
+</div>
 <aside class="askbox" id="askBox" hidden aria-label="Ask JMTI"><div class="chd-head"><b>Ask JMTI<small>Answers only from this app's data, what your role can see</small></b><button type="button" id="askNew" class="ask-new" title="Start over">New</button><button type="button" id="askHide" title="Close" aria-label="Close">✕</button></div><div class="ask-body" id="askBody"></div><form class="ask-foot" id="askForm"><textarea id="askQ" rows="2" maxlength="1500" placeholder="Ask about trips, trucks, people…" aria-label="Your question"></textarea><button type="submit" id="askSend" class="btn">Ask</button></form></aside>
 <aside class="chdock" id="chatDock" hidden aria-label="Chat"><div class="chd-head"><b>Chats<small>Team, department groups and one-to-one</small></b><button type="button" id="chdHide" title="Close the chat" aria-label="Close">✕</button></div><div class="chd-body" id="chdBody"></div><div class="chd-foot" id="chdFoot"></div></aside>
 <div class="pop" id="pop" hidden>
@@ -1890,11 +1909,14 @@ function feedAddPop(){
 const NO_ACCT = '__none';
 /** Billing shows the destination without its account prefix: "CENTURY | Century Pasig" → "Century Pasig" (MANU). */
 const plainDest = v => String(v || '').replace(/^[^|]*\|\s*/, '').trim();
-/** POD status (GENERAL column AA, MANU): COMPLETED sends the trip to billing and takes it off POD. A blank AA counts as WAITING DOCS (MANU). */
-const POD_ST = ['COMPLETED','PENDING','WAITING DOCS','TUKOD'];
+/** POD status (GENERAL column AA, MANU): ENDORSED TO BILLING sends the trip to billing and takes it off POD. A blank AA counts as WAITING DOCS (MANU).
+ *  ENDORSED TO BILLING was called COMPLETED until MANU 2026-10-20 "change completed to Endorsed to Billing": older rows that say
+ *  COMPLETED (or COMPLETE) read as ENDORSED TO BILLING everywhere; new picks save ENDORSED TO BILLING. */
+const POD_DONE = 'ENDORSED TO BILLING';
+const POD_ST = [POD_DONE,'PENDING','WAITING DOCS','RECEIVED DOCUMENTS','TUKOD'];   // RECEIVED DOCUMENTS: papers are with POD, not yet endorsed (MANU 2026-10-20 "add received documents")
 const POD_BLANK = 'WAITING DOCS';
-const podSt = t => { const v = String(t.finalStatus || '').trim().toUpperCase(); return v==='COMPLETE' ? 'COMPLETED' : v || POD_BLANK; };
-const podSent = t => !!t.podAt || podSt(t)==='COMPLETED';
+const podSt = t => { const v = String(t.finalStatus || '').trim().toUpperCase().replace(/\s+/g, ' '); return /^(COMPLETED?|ENDORSED TO BILLING)$/.test(v) ? POD_DONE : v || POD_BLANK; };
+const podSent = t => !!t.podAt || podSt(t)===POD_DONE;
 const podChip = st => `<span class="pstat s-${st ? st.toLowerCase().replace(/[^a-z]+/g,'-') : 'none'}">${esc(st || 'No status')}</span>`;
 /** Fuel log (GENERAL column W, header MANO): liters as a number; older rows hold typed text like "47.6 LTRS", shown as is. */
 const fuelText = v => { const x = String(v ?? '').trim(); return x && /^-?[0-9.,]+$/.test(x) ? x.replace(/,/g,'') + ' L' : x; };
@@ -2011,7 +2033,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','savePayment','cancelPayment','opsSave','truckDocSave'];
+const WRITES = ['saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 function submitTick(){
@@ -2247,7 +2269,7 @@ function signOut(msg){
   closeDrawer();
   location.hash = '';
   S.boot = null; S.me = null; S.bootOk = false;
-  hideDock(); $('chatBtn').hidden = true; if(!$('pop').hidden && $('pop').classList.contains('chatpop')) closePop(true);   // the chat pop-up closes too
+  hideDock(); $('chatBtn').hidden = true; $('socFab').hidden = true; SOC.user = ''; if(!$('pop').hidden && $('pop').classList.contains('chatpop')) closePop(true);   // the chat pop-up closes too
   askReset(); $('askBox').hidden = true; $('askBtn').hidden = true;
   showLogin(msg);
 }
@@ -2647,7 +2669,7 @@ function fillLists(){
   $('dlDrivers').innerHTML = crewOpts('driver');
   $('dlHelpers').innerHTML = crewOpts('helper');
   $('dlDoc').innerHTML = opt(b.docStatuses||[]);
-  $('dlFinal').innerHTML = opt([...new Set(['COMPLETED','PENDING'].concat(b.finalStatuses||[]))]);
+  $('dlFinal').innerHTML = opt([...new Set([POD_DONE,'PENDING'].concat((b.finalStatuses||[]).filter(v => !/^(COMPLETED?|ENDORSED TO BILLING)$/i.test(v))))]);
   const ca = $('dAcct').value;
   $('dAcct').innerHTML = '<option value="">All accounts</option>' + acctNames().map(a => `<option value="${esc(a)}" ${a===ca?'selected':''}>${esc(titleCase(a))}</option>`).join('')
     + `<option value="${NO_ACCT}" ${ca===NO_ACCT?'selected':''}>Not counted in an account</option>`;
@@ -4126,12 +4148,12 @@ function truckPlanLayout(rows, acc){
 
 /**
  * POD report (MANU): trips for an account, a date range and the ticked POD statuses (several at once).
- * COMPLETED = already sent to billing, not ticked at first. Any other value in AA counts as pending.
+ * ENDORSED TO BILLING = already sent to billing, not ticked at first. Any other value in AA counts as pending.
  */
-const POD_REP_ST = [['PENDING','Pending'],['WAITING DOCS','Waiting docs'],['TUKOD','Tukod'],['COMPLETED','Completed, sent to billing']];
-const podRepSt = t => podSent(t) ? 'COMPLETED' : POD_ST.includes(podSt(t)) ? podSt(t) : 'PENDING';
+const POD_REP_ST = [['PENDING','Pending'],['WAITING DOCS','Waiting docs'],['RECEIVED DOCUMENTS','Received documents'],['TUKOD','Tukod'],[POD_DONE,'Endorsed to Billing']];
+const podRepSt = t => podSent(t) ? POD_DONE : POD_ST.includes(podSt(t)) ? podSt(t) : 'PENDING';
 function openPodReport(){
-  const on = S.podRepSt || ['PENDING','WAITING DOCS','TUKOD'];
+  const on = S.podRepSt || ['PENDING','WAITING DOCS','RECEIVED DOCUMENTS','TUKOD'];
   openPop('Generate report · POD', 'Pick the account, the dates and the statuses to include.',
     `<div class="repform"><label class="f">Account<select id="repAcct"></select></label>
      <label class="f">From<input type="date" id="repFrom" value="${esc($('podFrom').value)}"></label>
@@ -4155,8 +4177,8 @@ function openPodReport(){
         .map(x => {
           const st = podRepSt(x);
           const r = [fmtDay(x.date), String(x.truckNo || ''), x.plateNo || '', x.customer || '', x.destination || '', x.shipmentNo || '',
-            st === 'COMPLETED' ? 'COMPLETED' : podSt(x), x.pod || ''];
-          r._color = cssColor(st==='PENDING' ? '#B91C1C' : st==='TUKOD' ? '#7C3AED' : st==='WAITING DOCS' ? '#0E7490' : '#64748B');
+            podSt(x), x.pod || ''];
+          r._color = cssColor(st==='PENDING' ? '#B91C1C' : st==='TUKOD' ? '#7C3AED' : st==='WAITING DOCS' ? '#0E7490' : st==='RECEIVED DOCUMENTS' ? '#15803D' : '#64748B');
           return r;
         });
       if(!rows.length) return toast('No trips with those statuses in those dates.', true);
@@ -4516,16 +4538,16 @@ function renderPod(){
   const inAcc = done.filter(t => tripInAcct(t, acc));
   const cust = fillCustFilter($('podCust'), inAcc);
   const shown = inAcc.filter(t => (!cust || t.customer===cust) && (!q || [t.truckNo,t.plateNo,t.customer,t.destination,t.shipmentNo,t.driver].join(' ').toLowerCase().includes(q)));
-  const base = shown.filter(t => !podSent(t));   // COMPLETED trips have moved to Billing and leave POD (MANU)
-  const POD_F = {tocheck: () => true, pending: t => podSt(t)==='PENDING', waitdocs: t => podSt(t)==='WAITING DOCS', tukod: t => podSt(t)==='TUKOD'};
-  const sent = shown.filter(podSent);   // Completed chip: trips already sent to billing stay viewable in POD (MANU 2026-10-08)
+  const base = shown.filter(t => !podSent(t));   // ENDORSED TO BILLING trips have moved to Billing and leave POD (MANU)
+  const POD_F = {tocheck: () => true, pending: t => podSt(t)==='PENDING', waitdocs: t => podSt(t)==='WAITING DOCS', recvdocs: t => podSt(t)==='RECEIVED DOCUMENTS', tukod: t => podSt(t)==='TUKOD'};
+  const sent = shown.filter(podSent);   // Endorsed to Billing chip: trips already sent to billing stay viewable in POD (MANU 2026-10-08)
   if(!POD_F[S.podFilter] && S.podFilter!=='completed') S.podFilter = 'tocheck';
   const podPending = base;
-  kpiCards($('podKpi'), {total: shown.length, done: shown.filter(podSent), doneLabel: 'Completed, sent to billing',
+  kpiCards($('podKpi'), {total: shown.length, done: shown.filter(podSent), doneLabel: 'Endorsed to Billing',
     pending: podPending, pendingLabel: 'POD pending', pendingNote: `${base.filter(t => files(t).length).length} with scans · ${base.filter(t => !files(t).length).length} no documents`,
     turnLabel: 'Average time to POD', turnNote: 'trip completed → sent to billing', from: doneTime, to: t => stampDate(t.podAt),
     since: t => doneTime(t) || new Date(t.date + 'T23:59')});
-  counterChips($('podChips'), [['tocheck','All to check'],['pending','Pending'],['waitdocs','Waiting docs'],['tukod','Tukod']].map(([k,l]) => [k, l, base.filter(POD_F[k]).length]).concat([['completed','Completed', sent.length]]),
+  counterChips($('podChips'), [['tocheck','All to check'],['pending','Pending'],['waitdocs','Waiting docs'],['recvdocs','Received documents'],['tukod','Tukod']].map(([k,l]) => [k, l, base.filter(POD_F[k]).length]).concat([['completed','Endorsed to Billing', sent.length]]),
     S.podFilter, f => { S.podFilter = f; renderPod(); });
   const list = S.podFilter==='completed' ? sent : base.filter(POD_F[S.podFilter]);
   // same order as Truck Plan: by route; inside a route "to check" first (scans ready before no scans), then waiting longest
@@ -4536,12 +4558,12 @@ function renderPod(){
   const head = groupRoutes(list, byTrip, () => false, 12);   // no route header rows on POD (MANU)
   const ready = ['tocheck','waitdocs'].includes(S.podFilter) ? list.filter(t => !t._pending && files(t).length && podSt(t)==='WAITING DOCS') : [];
   S.podReady = ready;
-  const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips in Waiting docs have scanned documents.</span><button class="btn road" type="button" id="podBulk">Mark all ${ready.length} COMPLETED</button></div>` : '';
+  const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips in Waiting docs have scanned documents.</span><button class="btn road" type="button" id="podBulk">Mark all ${ready.length} ENDORSED TO BILLING</button></div>` : '';
   const docCell = t => t.podAt ? `<span class="docstate ok">Sent ${esc(t.podAt.slice(0,10))}</span>` : `<span class="docstate wait">${files(t).length ? files(t).length+' file(s) · to check' : 'No documents'}</span>`;
   $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th>Driver</th><th>Helpers</th><th>Status</th><th>Documents</th><th>POD remarks</th></tr></thead><tbody>` +
     list.map((t,i) => {
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td></tr>`; }).join('') + `</tbody></table></div>`
-    : `<div class="empty">${S.podFilter==='completed' ? 'No completed POD in these dates.' : 'Nothing left to check here.'}</div>`;
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td></tr>`; }).join('') + `</tbody></table></div>`
+    : `<div class="empty">${S.podFilter==='completed' ? 'No trip endorsed to billing in these dates.' : 'Nothing left to check here.'}</div>`;
   freezeCols($('podList'));
 }
 function openPod(t){
@@ -4556,28 +4578,28 @@ function openPod(t){
     <div id="podUp" class="hint" style="margin-top:6px"></div>
     <div class="sec">Check</div>
     <div class="f">Status<div class="pst-pick" id="podStPick">${POD_ST.map(st => `<button type="button" class="pstat s-${st.toLowerCase().replace(/[^a-z]+/g,'-')}" data-st="${st}" aria-pressed="${podSt(t)===st}">${st}</button>`).join('')}</div>
-      <span class="hint">COMPLETED sends the trip to billing. It then shows under the Completed chip.</span></div>
+      <span class="hint">ENDORSED TO BILLING sends the trip to billing. It then shows under the Endorsed to Billing chip.</span></div>
     <label class="f">${esc(hdr(24,'POD REMARKS'))}<textarea id="podRemarks">${esc(t.pod||'')}</textarea></label>
     ${t.podAt ? `<p class="hint">Checked by ${esc(t.podBy)} on ${esc(t.podAt)} · ${esc(t.docStatus||'')}</p>` : ''}`,
     t.podAt ? `<button class="btn alt" id="podUndo" type="button" style="margin-right:auto">Undo check</button><button class="btn" id="podSaveBtn" type="button">Save remarks</button>`
-            : `<button class="btn alt" id="podSaveBtn" type="button" style="margin-right:auto">Save remarks</button><button class="btn road" id="podCheck" type="button">COMPLETED — send to billing</button>`);
+            : `<button class="btn alt" id="podSaveBtn" type="button" style="margin-right:auto">Save remarks</button><button class="btn road" id="podCheck" type="button">ENDORSED TO BILLING — send to billing</button>`);
   $('podFile').onchange = e => uploadFiles(t, [...e.target.files]);
   const send = (checked, status) => {
     const pod = $('podRemarks').value.trim().toUpperCase();
-    if(checked===true) status = 'COMPLETED';
+    if(checked===true) status = POD_DONE;
     const next = {...t, pod};
     if(status!==undefined) next.finalStatus = status;
-    if(status==='COMPLETED'){ next.podAt = 'saving'; next.podBy = S.me.name; }
+    if(status===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; }
     if(checked===false){ next.podAt = ''; next.podBy = ''; next.finalStatus = ''; }
     closeDrawer();
     const data = {pod}; if(status!==undefined) data.status = status; if(checked===false) data.checked = false;
-    saveOptimistic(next, t, () => callQ('podSave', refOf(t), data), () => status==='COMPLETED' ? 'COMPLETED — moved to billing' : checked===false ? 'Check removed' : status ? 'Status: ' + status : 'Saved');
+    saveOptimistic(next, t, () => callQ('podSave', refOf(t), data), () => status===POD_DONE ? 'ENDORSED TO BILLING — moved to billing' : checked===false ? 'Check removed' : status ? 'Status: ' + status : 'Saved');
   };
   $('podStPick').onclick = e => { const b = e.target.closest('[data-st]'); if(!b || !may('pod')) return;
-    if(b.dataset.st==='COMPLETED' && !files(t).length && !confirm('No scanned document is uploaded for this trip. Mark COMPLETED and send to billing anyway?')) return;
+    if(b.dataset.st===POD_DONE && !files(t).length && !confirm('No scanned document is uploaded for this trip. Mark ENDORSED TO BILLING and send to billing anyway?')) return;
     send(undefined, b.dataset.st); };
   $('podSaveBtn').onclick = () => send(undefined);
-  if($('podCheck')) $('podCheck').onclick = () => { if(!files(t).length && !confirm('No scanned document is uploaded for this trip. Mark COMPLETED and send to billing anyway?')) return; send(true); };
+  if($('podCheck')) $('podCheck').onclick = () => { if(!files(t).length && !confirm('No scanned document is uploaded for this trip. Mark ENDORSED TO BILLING and send to billing anyway?')) return; send(true); };
 }
 /** Small pop-up next to a POD table cell (same look as Truck Plan's cell editor). */
 function podPop(td, html, wide){
@@ -4625,17 +4647,17 @@ function openPodRemarks(t, td){
     saveOptimistic({...t, pod}, t, () => callQ('podSave', refOf(t), {pod}), () => 'Remarks saved');
   };
 }
-/** POD table: tap the Status cell to pick a status; COMPLETED moves the trip to Billing. */
+/** POD table: tap the Status cell to pick a status; ENDORSED TO BILLING moves the trip to Billing. */
 function openPodStatus(t, td){
   if(!t || !may('pod')) return;
   if(t._pending) return toast('Still saving — try again in a moment.');
-  const p = podPop(td, `<div class="ce-h"><b>Status</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div><div class="pst-pick">${POD_ST.map(st => `<button type="button" class="pstat s-${st.toLowerCase().replace(/[^a-z]+/g,'-')}" data-st="${st}" aria-pressed="${podSt(t)===st}">${st}</button>`).join('')}</div><div class="hint">COMPLETED sends the trip to billing.</div>`);
+  const p = podPop(td, `<div class="ce-h"><b>Status</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div><div class="pst-pick">${POD_ST.map(st => `<button type="button" class="pstat s-${st.toLowerCase().replace(/[^a-z]+/g,'-')}" data-st="${st}" aria-pressed="${podSt(t)===st}">${st}</button>`).join('')}</div><div class="hint">ENDORSED TO BILLING sends the trip to billing.</div>`);
   p.onclick = e => { const b = e.target.closest('[data-st]'); if(!b) return;
     const st = b.dataset.st; closeCellEditor();
     if(st===podSt(t)) return toast('Nothing changed');
-    if(st==='COMPLETED' && !files(t).length && !confirm('No scanned document is uploaded for this trip. Mark COMPLETED and send to billing anyway?')) return;
-    const next = {...t, finalStatus: st}; if(st==='COMPLETED'){ next.podAt = 'saving'; next.podBy = S.me.name; }
-    saveOptimistic(next, t, () => callQ('podSave', refOf(t), {status: st}), () => st==='COMPLETED' ? 'COMPLETED — moved to billing' : 'Status: ' + st);
+    if(st===POD_DONE && !files(t).length && !confirm('No scanned document is uploaded for this trip. Mark ENDORSED TO BILLING and send to billing anyway?')) return;
+    const next = {...t, finalStatus: st}; if(st===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; }
+    saveOptimistic(next, t, () => callQ('podSave', refOf(t), {status: st}), () => st===POD_DONE ? 'ENDORSED TO BILLING — moved to billing' : 'Status: ' + st);
   };
   if($('podUndo')) $('podUndo').onclick = () => send(false);
 }
@@ -4656,14 +4678,14 @@ async function uploadFiles(t, list){
 async function bulkCheck(kind){
   const list = (kind==='pod' ? S.podReady : S.billReady) || [];
   if(!list.length) return;
-  const what = kind==='pod' ? `Mark ${list.length} trips COMPLETED and send them to billing?` : `Mark ${list.length} trips checked by billing?`;
+  const what = kind==='pod' ? `Mark ${list.length} trips ENDORSED TO BILLING and send them to billing?` : `Mark ${list.length} trips checked by billing?`;
   if(!confirm(what)) return;
   const refs = list.map(refOf);
   try{
     const r = await call(kind==='pod' ? 'podCheckMany' : 'billingCheckMany', refs);
     r.ok.forEach(up => { const old = list.find(t => (t.tripId && t.tripId===up.tripId) || t.row===up.row); applyLocal(up, old ? old.key : up.key); });
     if(r.failed.length) toast(`${r.ok.length} done. ${r.failed.length} not saved: ${r.failed.map(f => f.key + ' (' + f.error + ')').join('; ')}`, true);
-    else toast(kind==='pod' ? `${r.ok.length} trips COMPLETED, moved to billing` : `${r.ok.length} trips checked`);
+    else toast(kind==='pod' ? `${r.ok.length} trips ENDORSED TO BILLING, moved to billing` : `${r.ok.length} trips checked`);
   }catch(e){ toast(e.message, true); }
 }
 
@@ -4720,7 +4742,7 @@ function renderBilling(){
   const inAcc = done.filter(t => tripInAcct(t, acc));
   const cust = fillCustFilter($('billCust'), inAcc);
   const base = inAcc.filter(t => (!cust || t.customer===cust) && (!q || [t.truckNo,t.plateNo,t.customer,t.destination,t.shipmentNo].join(' ').toLowerCase().includes(q)));
-  const BILL_F = {tocheck: t => t.podAt && !t.billAt, waiting: t => !podSent(t), checked: t => !!t.billAt || (!t.podAt && podSt(t)==='COMPLETED'), all: () => true};   // AA COMPLETED with no POD stamp = older trip already done
+  const BILL_F = {tocheck: t => t.podAt && !t.billAt, waiting: t => !podSent(t), checked: t => !!t.billAt || (!t.podAt && podSt(t)===POD_DONE), all: () => true};   // AA ENDORSED TO BILLING (or the older COMPLETED) with no POD stamp = older trip already done
   if(!BILL_F[S.billFilter]) S.billFilter = 'tocheck';
   const billPending = base.filter(BILL_F.tocheck), fromPod = base.filter(t => !!t.podAt);
   kpiCards($('billKpi'), {total: fromPod.length, done: base.filter(BILL_F.checked), doneLabel: 'Checked by billing',
@@ -5699,7 +5721,7 @@ const OB = {sending:false};
    every tab opens from what this phone kept (trips per date, lists, summary, chat) and the actions above wait in the
    outbox. Everything else (users, fleet, manpower, maintenance, accounting, clients, uploads) needs signal and says so. */
 const NET = {down:false};
-const READ_FNS = /^(get|list|routeHardList|fleetUnitsView|opsFund|truckDocs|truckDocFile|chatList|reminders|truckHistory|personHistory|acctData|payrollData|clientBook|statementOfAccount|profitReport|manpowerTripCounts|fleetWorkDays|longWaiting|overdue|idle)/;
+const READ_FNS = /^(get|list|routeHardList|fleetUnitsView|opsFund|truckDocs|truckDocFile|socialLinks|chatList|reminders|truckHistory|personHistory|acctData|payrollData|clientBook|statementOfAccount|profitReport|manpowerTripCounts|fleetWorkDays|longWaiting|overdue|idle)/;
 const syncAgo = () => { const t = Number(store('jmti_sync')); if(!t) return ''; const d = new Date(t); return ` (last updated ${fmtDay(ymdOf(d))} ${d.toTimeString().slice(0,5)})`; };
 const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const obKey = () => 'jmti_outbox_' + (S.me ? S.me.username : '');
@@ -5791,14 +5813,14 @@ const dockShown = () => !!$('chatDock') && !$('chatDock').hidden;
 function showDock(){
   if(!S.me || !TOKEN || dockShown()) return;
   if($('pop').classList.contains('chatpop')){ closePop(true); $('pop').classList.remove('chatpop'); $('popBody').innerHTML = $('popFoot').innerHTML = ''; }   // the pop-up's chat moves here (one set of chat boxes)
-  $('chatDock').hidden = false; placeDock();
+  $('chatDock').hidden = false; placeDock(); placeSoc();
   chatBuild();
   if(CH.view==='conv') chatMarkRead(CH.conv);
   renderChat(true); renderChatBtn();
 }
 function hideDock(){
   if(!dockShown()) return;
-  chatTypingStop(); $('chatDock').hidden = true; $('chdBody').innerHTML = $('chdFoot').innerHTML = '';
+  chatTypingStop(); $('chatDock').hidden = true; $('chdBody').innerHTML = $('chdFoot').innerHTML = ''; placeSoc();
 }
 function syncDock(){ if(dockShown() && !(S.me && TOKEN && dockWide())) hideDock(); }
 /** Puts the chat window beside the floating button: on the button's side of the screen, above it or below it, whichever has room. */
@@ -5834,7 +5856,7 @@ function fabPlace(){
     b.style.right = b.style.bottom = 'auto';
     b.style.left = Math.min(Math.max(6, e.clientX - st.dx), innerWidth - sz - 6) + 'px';
     b.style.top = Math.min(Math.max(6, e.clientY - st.dy), innerHeight - sz - 6) + 'px';
-    if(dockShown()) placeDock();
+    if(dockShown()) placeDock(); placeSoc();
   });
   const end = () => {
     if(!st) return; st = null; b.classList.remove('drag');
@@ -5844,9 +5866,67 @@ function fabPlace(){
     setTimeout(() => { FAB.moved = false; }, 0);   // the click that ends a drag doesn't open the chat
   };
   b.addEventListener('pointerup', end); b.addEventListener('pointercancel', end);
-  addEventListener('resize', () => { fabPlace(); if(dockShown()) placeDock(); });
+  addEventListener('resize', () => { fabPlace(); if(dockShown()) placeDock(); placeSoc(); });
   fabPlace();
 })();
+/* ---- Viber and Messenger buttons (MANU 2026-10-20 "it it possible to integrate viber inside the system like this" + "both viber and
+   facebook messenger"; picked "Separate buttons"). Neither app can run inside a web page, so two round buttons beside the chat button
+   open the Viber or Messenger app at the chat Admin set (Code.gs socialLinks / socialSave). Admin sees a faded button with + until it
+   is set; others see only the buttons that are set. They follow the chat button when it is dragged and hide while the chat window is open.
+   Not on phones (700 px or less): MANU 2026-10-20 "no need to add viber and messenger button on mobile view". */
+const SOC = {viber:'', messenger:'', canEdit:false, user:''};
+function loadSoc(){
+  const u = S.me.username, kept = lsGet('jmti_soc_' + u);
+  Object.assign(SOC, {viber:'', messenger:'', canEdit:false}, kept || {}, {user:u}); renderSoc();
+  call('socialLinks').then(d => { if(SOC.user===u){ Object.assign(SOC, d); lsSet('jmti_soc_' + u, d); renderSoc(); } }).catch(() => {});
+}
+const viberHref = v => /^\+/.test(v) ? 'viber:' + '/'.repeat(2) + 'chat?number=' + encodeURIComponent(v) : v;   // a number opens a chat with that person
+function renderSoc(){
+  const w = $('socFab'); if(!w) return;
+  const edit = may('social'), v = $('vbBtn'), m = $('msBtn');
+  v.hidden = !(SOC.viber || edit); m.hidden = !(SOC.messenger || edit);
+  v.classList.toggle('unset', !SOC.viber); m.classList.toggle('unset', !SOC.messenger);
+  if(SOC.viber) v.href = viberHref(SOC.viber); else v.removeAttribute('href');
+  if(SOC.messenger) m.href = SOC.messenger; else m.removeAttribute('href');
+  v.title = SOC.viber ? 'Open the JMTI chat in Viber' : 'Set the Viber chat (Admin)'; m.title = SOC.messenger ? 'Open the JMTI chat in Messenger' : 'Set the Messenger chat (Admin)';
+  w.hidden = !(S.me && TOKEN) || $('chatBtn').hidden || (v.hidden && m.hidden);
+  if($('socEdit')) $('socEdit').hidden = !edit;
+  placeSoc();
+}
+/** Above the chat button (below it when the button is in the top half of the screen), centred on it. */
+function placeSoc(){
+  const w = $('socFab'), b = $('chatBtn'); if(!w || w.hidden) return;
+  w.classList.toggle('off', dockShown());
+  const r = b.getBoundingClientRect(); if(!r.width) return;
+  const h = w.offsetHeight || 102, up = r.top + r.height / 2 > innerHeight / 2;
+  w.style.right = w.style.bottom = 'auto';
+  w.style.left = Math.round(r.left + r.width / 2 - 23) + 'px';
+  w.style.top = Math.round(up ? r.top - 12 - h : r.bottom + 12) + 'px';
+}
+$('socFab').addEventListener('click', e => {
+  const a = e.target.closest('[data-soc]'); if(!a) return;
+  if(!SOC[a.dataset.soc]){ e.preventDefault(); if(may('social')) openSocForm(); }
+});
+$('socEdit').onclick = () => openSocForm();
+function openSocForm(){
+  openPop('Viber and Messenger buttons', 'Two round buttons beside the chat button open these chats, for everyone who signs in', `
+    <div class="form" id="socForm">
+      <label class="f full">Viber: group invite link or mobile number<input id="socVb" value="${esc(SOC.viber)}" autocomplete="off" inputmode="url" placeholder="invite.viber.com/… link or 0917 123 4567"></label>
+      <p class="hint" style="margin:0 0 10px">In Viber, open the group, tap its name, then Invite link and Copy link. A mobile number opens a chat with that person.</p>
+      <label class="f full">Messenger link<input id="socMs" value="${esc(SOC.messenger)}" autocomplete="off" inputmode="url" placeholder="m.me/yourpage or a group chat link"></label>
+      <p class="hint" style="margin:0 0 10px">For a Facebook Page, type m.me/ and the page's username. For a group chat, open it in Messenger, tap its name, then Invite link and Copy.</p>
+      <p class="hint" style="margin:0">Leave a box empty to remove that button. People see the change the next time they open the app.</p>
+    </div>`, `<button class="btn alt" type="button" id="socBack">Back</button> <button class="btn road" type="button" id="socSave">Save</button>`);
+  $('socBack').onclick = () => closePop();
+  $('socSave').onclick = async () => {
+    const btn = $('socSave'); btn.disabled = true; btn.textContent = 'Saving…';
+    try{
+      const d = await call('socialSave', {viber:$('socVb').value, messenger:$('socMs').value});
+      Object.assign(SOC, d); lsSet('jmti_soc_' + SOC.user, d); renderSoc(); closePop();
+      toast(d.viber || d.messenger ? 'Saved. The buttons are beside the chat button.' : 'Saved. Both buttons are removed for everyone else.');
+    }catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Save'; }
+  };
+}
 if(DOCK_MQ.addEventListener) DOCK_MQ.addEventListener('change', syncDock); else if(DOCK_MQ.addListener) DOCK_MQ.addListener(syncDock);
 const chatReadKey = () => 'jmti_chatread_' + CH.user;
 const convOf = m => !m.to ? '#team' : m.to.charAt(0)==='#' ? m.to : (m.from===CH.me ? m.to : m.from);   // '#team' = team chat, '#ops' = a department group, else the other person
@@ -5858,13 +5938,14 @@ function chatMarkRead(conv){ const r = lsGet(chatReadKey()) || {}, l = CH.msgs.f
 function chatTick(){
   const b = $('chatBtn'); if(!b) return;
   syncDock();
-  if(!S.me || !TOKEN){ b.hidden = true; return; }
+  if(!S.me || !TOKEN){ b.hidden = true; $('socFab').hidden = true; return; }
+  if(CH.user !== S.me.username) loadSoc();   // Viber and Messenger buttons: once per sign-in or page load
   if(CH.user !== S.me.username) setTimeout(flushOutbox, 2000);   // a new sign-in: send what waits from before
   if(CH.user !== S.me.username){
     Object.assign(CH, {view:'list', full:false, g:null, out:[], sendQ:null, up:[], thumbs:{}, thumbWant:{}, typSig:'', msgs:[], users:[], groups:[], me:'', last:0, conv:'#team', loaded:false, busy:false, at:0, user:S.me.username, seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:''});
     const kept = lsGet('jmti_chat_' + CH.user); if(kept && kept.msgs) chatMerge({...kept, kept:true});   // what this phone kept: shows without signal
   }
-  b.hidden = false;
+  b.hidden = false; renderSoc();
   if(chatOpen()) renderTyping();   // "… is typing" goes away on its own when the other person stops
   if((document.hidden && !('setAppBadge' in navigator)) || CH.busy || navigator.onLine===false) return;
   const wait = (document.hidden ? 60000 : chatOpen() ? CH_OPEN_MS : CH_SHUT_MS) * Math.min(8, 2 ** CH.fail);   // in the background: once a minute, for the icon count   // after failed asks: 2x, 4x, up to 8x longer
@@ -6780,8 +6861,8 @@ function bookCsv(){
 const DB = {filter:'tosend', data:null, key:''};
 const dbEntries = () => ((DB.data && DB.data.entries) || []).filter(e => e.type==='TRIP BUDGET');
 /** A trip with what was sent for it: budget, sent (cancelled entries left out), still to send, over budget. */
-function dbRow(t){
-  const es = t.tripId ? dbEntries().filter(e => e.ref===t.tripId) : [], live = es.filter(entryLive);
+function dbRow(t, ents){   // ents: the trip budget entries to use (default: Disbursement's)
+  const es = t.tripId ? (ents || dbEntries()).filter(e => e.ref===t.tripId) : [], live = es.filter(entryLive);
   const sent = live.reduce((x, e) => x + (Number(e.amount) || 0), 0), budget = budgetNum(t);
   return {t, es, live, sent, budget, left: Math.max(0, budget - sent), over: Math.max(0, sent - budget)};
 }
@@ -6792,7 +6873,7 @@ function tripFromEntry(en){
 }
 /** Puts a saved or cancelled entry in the lists already loaded (Disbursement and Accounting). */
 function putEntry(e){
-  [DB.data, AC.data].forEach(d => { if(!d) return; const i = d.entries.findIndex(x => x.entryNo===e.entryNo); if(i >= 0) d.entries[i] = e; else d.entries.push(e); });
+  [DB.data, AC.data, SB.data].forEach(d => { if(!d) return; const i = d.entries.findIndex(x => x.entryNo===e.entryNo); if(i >= 0) d.entries[i] = e; else d.entries.push(e); });
 }
 function saveCsvFile(name, head, rows){
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
@@ -6815,6 +6896,7 @@ function initDisb(){
   $('lqTbl').onclick = e => { const tr = e.target.closest('tr[data-lqp]'); if(tr) openLiqPerson(tr.dataset.lqp); };
   $('opBudgetBtn').onclick = () => openOpsForm('BUDGET', {});
   $('opDisbBtn').onclick = () => openOpsForm('DISB', {});
+  $('opSendBtn').onclick = openSendBudget;
   $('opTbl').onclick = e => {
     const ph = e.target.closest('[data-photo]'); if(ph) return viewFile(ph.dataset.photo, 'Receipt photo', 'getAcctFile');
     const tr = e.target.closest('tr[data-entry]'); if(!tr) return;
@@ -6984,8 +7066,8 @@ const dsSum = r => `<div class="ds-sum"><span>Budget <b>${r.budget ? pesoTxt(r.b
  * Record money sent for a trip (en = null) or change an entry (en).
  * Amount starts at what is still to send; Sent to lists the trip's crew, or a typed name; Cash needs no photo.
  */
-function openDisbForm(t, en){
-  const r = dbRow(t);
+function openDisbForm(t, en, ents){
+  const r = dbRow(t, ents);
   const crew = [['Driver', t.driver], ['Helper', t.helper1], ['Helper 2', t.helper2]].filter(c => c[1]);
   const cur = en ? en.paidTo : (t.driver || '');
   const inCrew = crew.some(c => nameKey(c[1])===nameKey(cur));
@@ -7130,6 +7212,7 @@ function renderOps(q){
   if(!$('opTbl')) return;
   const data = DB.data, f = data && data.fund;
   $('opBudgetBtn').hidden = !may('opsBudget'); $('opDisbBtn').hidden = !may('opsDisburse');
+  $('opSendBtn').hidden = !may('disburse') || may('viewAll') || can('accounting');   // Payroll sends trip budgets here (no Accounting tab)
   if(f){ OPS.fund = Object.assign({}, OPS.fund, f); renderOpsFund(); }
   const all = opsEntries(), inD = e => e.date >= $('dbFrom').value && e.date <= $('dbTo').value;
   const shown = all.filter(e => inD(e) && (!q || [e.entryNo, e.paidTo, e.details, e.truckNo, e.plateNo, e.ref, e.by].join(' ').toLowerCase().includes(q)));
@@ -7265,6 +7348,7 @@ function initAcct(){
   $('acFrom').value = today.slice(0, 8) + '01'; $('acTo').value = today;   // this month
   $('acFrom').onchange = $('acTo').onchange = loadAcct;
   $('acReport').onclick = acctCsv;
+  $('acSend').hidden = !may('disburse') || may('viewAll'); $('acSend').onclick = openSendBudget;
   $('acTabs').onclick = e => { const b = e.target.closest('.chip'); if(!b) return; AC.sub = b.dataset.sub;
     $('acTabs').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c===b));
     $('acSum').hidden = AC.sub!=='sum'; $('acInv').hidden = AC.sub!=='inv';
@@ -7274,6 +7358,57 @@ function initAcct(){
     const tr = e.target.closest('tr[data-entry]'); if(!tr) return;
     const en = ((AC.data && AC.data.entries) || []).find(x => x.entryNo===tr.dataset.entry); if(en) openAcctEntry(en);
   };
+}
+/* ---- Send trip budget from Accounting (MANU 2026-10-20 "in accounting, add button to send trip budget"). The trip budget list is no
+   longer in Disbursement, so this pop-up lists the trips of the dates picked whose budget is not fully sent (or all with a budget),
+   and a tap opens the same send form as before (amount, sent to, Cash / E-wallet / Bank transfer, receipt). Admin, Accounting, Payroll
+   (Payroll has no Accounting tab: its button is in Disbursement, by the operations fund buttons). */
+const SB = {from:'', to:'', q:'', all:false, trips:null, data:null, key:''};
+function openSendBudget(){
+  const today = TODAY();
+  if(!SB.from){ SB.from = addDays(today, -6); SB.to = today; }
+  openPop('Send trip budget', 'Pick the trip, then record the money sent for it', `
+    <div class="bar" style="flex-wrap:wrap;margin:0 0 8px">
+      <label class="f">From<input type="date" id="sbFrom" value="${esc(SB.from)}"></label>
+      <label class="f">To<input type="date" id="sbTo" value="${esc(SB.to)}"></label>
+      <label class="f grow">Find<input id="sbFind" value="${esc(SB.q)}" autocomplete="off" placeholder="Truck, plate, crew, place or trip ID"></label>
+    </div>
+    <div class="chips" id="sbChips" style="margin:0 0 8px"></div>
+    <div class="tbl-wrap" id="sbWrap"><table id="sbTbl"><thead><tr><th>Trip date</th><th>Truck</th><th>Route</th><th>Crew</th><th class="n">Budget</th><th class="n">Still to send</th></tr></thead><tbody></tbody></table></div>`,
+    `<button class="btn alt" type="button" onclick="closePop()">Close</button>`);
+  $('sbFrom').onchange = $('sbTo').onchange = sbLoad;
+  $('sbFind').oninput = () => { SB.q = $('sbFind').value; sbDraw(); };
+  $('sbTbl').onclick = e => {
+    const tr = e.target.closest('tr[data-key]'); if(!tr) return;
+    const t = (SB.trips || []).find(x => x.key===tr.dataset.key); if(!t) return;
+    if(t._pending) return toast('Still saving this trip. Try again in a moment.');
+    if(!SB.data) return toast('Still getting what was sent. Try again in a moment.');
+    openDisbForm(t, null, sbEnts());
+  };
+  sbLoad();
+}
+const sbEnts = () => ((SB.data && SB.data.entries) || []).filter(e => e.type==='TRIP BUDGET');
+function sbLoad(){
+  if(!$('sbFrom')) return;
+  let f = $('sbFrom').value, t = $('sbTo').value;
+  if(!f || !t) return;
+  if(f > t){ [f, t] = [t, f]; $('sbFrom').value = f; $('sbTo').value = t; }
+  const k = f + '|' + t;
+  if(SB.key !== k){ SB.key = k; SB.trips = null; SB.data = null; }
+  SB.from = f; SB.to = t; sbDraw();
+  call('acctData', f, t).then(d => { if(SB.key===k){ SB.data = d; sbDraw(); } }).catch(e => toast(e.message, true));   // what was already sent
+  withTrips(f, t, list => { if(SB.key===k){ SB.trips = list; sbDraw(); } }, $('sbWrap'));
+}
+function sbDraw(){
+  const body = $('sbTbl') && $('sbTbl').tBodies[0]; if(!body) return;
+  if(!SB.trips || !SB.data){ body.innerHTML = '<tr><td colspan="6" class="empty-cell">Loading trips and what was sent…</td></tr>'; $('sbChips').innerHTML = ''; return; }
+  const q = SB.q.toLowerCase().trim(), ents = sbEnts();
+  const rows = SB.trips.map(t => dbRow(t, ents)).filter(r => isTrip(r.t) && r.budget > 0 && (!q || [r.t.truckNo, r.t.plateNo, r.t.customer, r.t.destination, crewText(r.t), r.t.tripId].join(' ').toLowerCase().includes(q)));
+  const left = rows.filter(r => r.left > 0);
+  counterChips($('sbChips'), [['left', 'Still to send', left.length], ['all', 'All with a budget', rows.length]], SB.all ? 'all' : 'left', f => { SB.all = f==='all'; sbDraw(); });
+  const list = (SB.all ? rows : left).sort((a, b) => a.t.date.localeCompare(b.t.date) || String(a.t.truckNo).localeCompare(String(b.t.truckNo), undefined, {numeric:true}));
+  body.innerHTML = list.length ? list.map(r => `<tr class="rowbtn" data-key="${esc(r.t.key)}"><td>${esc(fmtDay(r.t.date))}</td><td><b>${esc(r.t.truckNo || '—')}</b><small>${esc(r.t.plateNo || '')}</small></td><td>${esc(r.t.customer)}<small>→ ${esc(r.t.destination || '—')}</small></td><td>${esc(crewText(r.t) || '—')}</td><td class="n">${pesoTxt(r.budget)}</td><td class="n">${r.left ? `<b class="db-left">${pesoTxt(r.left)}</b>` : r.over ? `<span class="db-over">${pesoTxt(r.over)} over</span>` : '<span class="db-ok">Sent</span>'}</td></tr>`).join('')
+    : `<tr><td colspan="6" class="empty-cell">${SB.all ? 'No trip with a budget in these dates.' : 'Every trip budget in these dates is sent.'}</td></tr>`;
 }
 function loadAcct(){
   if(AC.sub==='inv') return loadAcctInv();
@@ -7785,7 +7920,7 @@ const DEMO = (() => {
   const DEMO_FEED = (() => { try { const r = Number(localStorage.getItem('jmti_demo_feed')); return r > 0 ? {row:r, width:11, keys:['date','truckNo','plateNo','customer','destination','kms','shipmentNo','status','driver','helper1','helper2']} : null; } catch(e){ return null; } })();
   const demoFed = t => !!DEMO_FEED && t.row >= DEMO_FEED.row;
   // same as CAN in Code.gs
-  const CAN = {viewTrips:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','BILLING','ACCOUNTING','PAYROLL'], disburse:['ADMIN','ACCOUNTING','PAYROLL'], opsView:['SUPERVISOR','TEAM LEADER','DISPATCHER'], opsBudget:['ACCOUNTING'], opsDisburse:['ADMIN','DISPATCHER'], accounting:['ADMIN','ACCOUNTING'], clients:['ADMIN','BILLING','ACCOUNTING'], profit:['ADMIN','ACCOUNTING'], hardship:['ADMIN','SUPERVISOR','TEAM LEADER'], payroll:['ADMIN','PAYROLL'], plan:['ADMIN','TEAM LEADER'], assign:['ADMIN','SUPERVISOR','TEAM LEADER'],
+  const CAN = {viewTrips:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','BILLING','ACCOUNTING','PAYROLL'], disburse:['ADMIN','ACCOUNTING','PAYROLL'], opsView:['SUPERVISOR','TEAM LEADER','DISPATCHER'], opsBudget:['ACCOUNTING'], opsDisburse:['ADMIN','DISPATCHER'], social:['ADMIN'], accounting:['ADMIN','ACCOUNTING'], clients:['ADMIN','BILLING','ACCOUNTING'], profit:['ADMIN','ACCOUNTING'], hardship:['ADMIN','SUPERVISOR','TEAM LEADER'], payroll:['ADMIN','PAYROLL'], plan:['ADMIN','TEAM LEADER'], assign:['ADMIN','SUPERVISOR','TEAM LEADER'],
     fleet:['ADMIN','BOSS','TEAM LEADER'], fleetEdit:['ADMIN'], fleetUnits:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER','MAINTENANCE'], dispatch:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER'], dispatchAll:['ADMIN','TEAM LEADER'], routeOnly:['SUPERVISOR'],
     cancel:['ADMIN','TEAM LEADER'], summary:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER'], tripStats:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER'], dispatchAdd:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER'], pod:['ADMIN','POD'], billing:['ADMIN','BILLING'], routes:['ADMIN','BILLING'], docs:['ADMIN','BOSS','POD','BILLING'],
     manpower:['ADMIN','HR'], maintenance:['ADMIN','MAINTENANCE'], users:['ADMIN','HR'], viewAll:['BOSS']};
@@ -7816,7 +7951,7 @@ const DEMO = (() => {
   const bookJo = [{truckNo:trucks[0].truckNo, plateNo:trucks[0].plateNo, date:addDays(today, -1), cost:4200}];
   const bTripClient = t => clientOf(t.destination) || String(t.customer || '').toUpperCase();
   const bRate = t => { const l = bookRates.filter(r => bk(r.source)===bk(t.customer) && bk(r.destination)===bk(t.destination) && r.from <= t.date).sort((a, b) => a.from < b.from ? 1 : -1); return l.length ? l[0].rate : null; };
-  const bBilled = t => !/cancel/i.test(t.status || '') && (!!t.billAt || (!t.podAt && /^COMPLETED?$/i.test(t.finalStatus || '')));
+  const bBilled = t => !/cancel/i.test(t.status || '') && (!!t.billAt || (!t.podAt && /^(COMPLETED?|ENDORSED TO BILLING)$/i.test(t.finalStatus || '')));
   const bToBill = t => !/cancel/i.test(t.status || '') && !t.billAt && !!t.podAt;
   const bAll = () => pastBilled.concat(trips);
   const needBook = (tok, perm) => { const u = auth(tok); if(!perm.split('|').some(p => CAN[p].includes(u.role))) throw new Error(`Your role (${u.role}) cannot do this.`); return u; };
@@ -7840,6 +7975,7 @@ const DEMO = (() => {
   const demoSent = {};
   // Fleet units and truck documents (MANU 2026-10-20)
   const demoDocs = [];
+  const demoSoc = {viber:'', messenger:''};   // Viber and Messenger buttons (socialLinks)
   const demoUnits = () => trucks.slice(0, 8).map((t, i) => ({UnitID:t.truckNo, PlateNo:t.plateNo, Make:['ISUZU','HINO','FUSO'][i % 3], Model:'FORWARD', Year:String(2015 + i % 8), OrExp:addDays(today, [120, 12, -5, 200, 40, 300, 25, 90][i]), FrExp:addDays(today, [400, 300, 60, 15, -30, 500, 200, 100][i]),
         OrUrl:i % 2 ? '' : 'https://example.com/or', CrUrl:'', FrUrl:'', InRecord:i!==7, Status:i===6 ? 'Inactive' : 'Active', PmsState:['ok','soon','overdue','ok','none','ok','ok','soon'][i], PmsLast:addDays(today, -40 - i * 10), PmsKm:4200 + i * 900, PmsDays:40 + i * 10,
         jobs:i % 4, cost:(i % 4) * 4200, lastRepair:i % 4 ? addDays(today, -i - 1) : '', open:i===0 ? [{jo:'JO-00041', cls:'MAJOR', off:true, days:4}] : i===3 ? [{jo:'JO-00052', cls:'MINOR (ROADWORTHY)', off:false, days:1}] : []})).map(u => { const mine = demoDocs.filter(d => d.plate===u.PlateNo && d.status!=='REMOVED'), nw = t => mine.filter(d => d.type===t).pop();
@@ -7915,7 +8051,7 @@ const DEMO = (() => {
       if(demoFed(t)){ const bad = Object.keys(p).filter(k => DEMO_FEED.keys.includes(k) && String(p[k]) !== String(t[k] || '')); if(bad.length) throw new Error('This trip comes from GENERAL DATABASE 2.0, so change its ' + bad.join(', ') + ' there. Saving it in the app would break the formula that brings in the newest trips.');
         const was = t.status; Object.assign(t, p); let s = ''; MS_KEYS.forEach((k,i) => { if(t[k]) s = msStatus[i]; }); return {...t, ...(s && s !== was ? {note:'The status stays ' + was + ': this trip comes from GENERAL DATABASE 2.0, so change its status there.'} : {})}; }
       if(p.truckNo && p.truckNo!==t.truckNo){ p = {...p, plateNo: plateFor(p.truckNo)}; const c = (S.assign[t.date]||[]).find(x => String(x.truckNo)===String(p.truckNo)) || {}; ['driver','helper1','helper2'].forEach(k => { p[k] = c[k] || ''; }); } const ms = MS_KEYS.some(k => p[k]!==undefined); Object.assign(t, p); if(ms && !p.status){ let s=''; MS_KEYS.forEach((k,i)=>{ if(t[k]) s = msStatus[i]; }); if(s) t.status = s; } return {...t}; },
-    podSave: (tok,ref,d) => { const u = auth(tok); const t = find(ref); if(d.pod!==undefined) t.pod = d.pod; if(d.status!==undefined){ t.finalStatus = d.status; if(d.status==='COMPLETED') d.checked = true; } if(d.checked===true) t.finalStatus = 'COMPLETED'; if(d.checked===false && d.status===undefined) t.finalStatus = ''; if(d.checked===true){ t.podAt = today+' '+new Date().toTimeString().slice(0,5); t.podBy = u.name; t.docStatus = 'Transmitted to Billing as of '+today+'.'; } if(d.checked===false){ t.podAt=''; t.podBy=''; } return {...t}; },
+    podSave: (tok,ref,d) => { const u = auth(tok); const t = find(ref); if(d.pod!==undefined) t.pod = d.pod; if(d.status!==undefined){ if(/^COMPLETED?$/i.test(d.status)) d.status = 'ENDORSED TO BILLING'; t.finalStatus = d.status; if(d.status==='ENDORSED TO BILLING') d.checked = true; } if(d.checked===true) t.finalStatus = 'ENDORSED TO BILLING'; if(d.checked===false && d.status===undefined) t.finalStatus = ''; if(d.checked===true){ t.podAt = today+' '+new Date().toTimeString().slice(0,5); t.podBy = u.name; t.docStatus = 'Transmitted to Billing as of '+today+'.'; } if(d.checked===false){ t.podAt=''; t.podBy=''; } return {...t}; },
     uploadPod: (tok,ref,f) => { auth(tok); const t = find(ref); t.podFile = (t.podFile ? t.podFile+'\n' : '') + 'demo:'+f.name; return {...t}; },
     getPodFile: (tok,url) => { auth(tok); const SVGNS = ['http:', '', 'www.w3.org', '2000', 'svg'].join('/'); const svg = `<svg xmlns="${SVGNS}" width="600" height="800"><rect width="100%" height="100%" fill="#fff"/><text x="40" y="80" font-size="28" font-family="sans-serif">Sample scanned POD</text><text x="40" y="130" font-size="18" font-family="sans-serif" fill="#555">${url}</text></svg>`; return {name:url.replace('demo:',''), type:'image/svg+xml', data:btoa(svg)}; },
     podCheckMany: (tok,refs) => ({ok: refs.map(r => DEMO.podSave(tok, r, {checked:true})), failed: []}),
@@ -8070,6 +8206,14 @@ const DEMO = (() => {
       const x = {id:cur ? cur.id : 'TD-' + String(demoDocs.length + 1).padStart(5, '0'), plate:u.PlateNo, truckNo:String(u.UnitID), type, name:String(d.name || '').toUpperCase(), docNo:String(d.docNo || '').toUpperCase(), expires:d.expires || '', file, status:'ACTIVE', remarks:d.remarks || '', by:me.name, at:stampNow()};
       if(cur) Object.assign(cur, x); else demoDocs.push(x); return DEMO.truckDocs(tok, u.UnitID, u.PlateNo); },
     truckDocFile: (tok, url) => DEMO.getAcctFile(tok, url),
+    socialLinks: tok => { const me = auth(tok); return {...demoSoc, canEdit: CAN.social.includes(me.role)}; },
+    socialSave: (tok, d) => { const me = auth(tok); if(!CAN.social.includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
+      const vb = String(d.viber || '').trim(), ms = String(d.messenger || '').trim(), num = vb.replace(/[\s()-]/g, '');
+      const v = !vb ? '' : /^(\+?63|0)9\d{9}$/.test(num) ? '+63' + num.replace(/^\+?63|^0/, '') : /^(https:\/\/)?(invite\.viber\.com|vb\.me)\/\S+$/i.test(vb) ? vb.replace(/^(?!https:)/, 'https:' + '/'.repeat(2)) : null;
+      if(v===null) throw new Error('For Viber, paste the group invite link or type a mobile number like 0917 123 4567.');
+      const m = !ms ? '' : /^(https:\/\/)?(www\.)?(m\.me|messenger\.com)\/\S+$/i.test(ms) ? ms.replace(/^(?!https:)/, 'https:' + '/'.repeat(2)) : null;
+      if(m===null) throw new Error('For Messenger, paste a link like m.me/yourpage or a group chat link from messenger.com.');
+      Object.assign(demoSoc, {viber:v, messenger:m}); return DEMO.socialLinks(tok); },
     opsFund: tok => { const me = auth(tok); if(![...CAN.disburse, ...CAN.accounting, ...CAN.viewAll, ...CAN.opsView, ...CAN.opsBudget, ...CAN.opsDisburse].includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
       return {...demoFund(), canBudget: CAN.opsBudget.includes(me.role), canDisburse: CAN.opsDisburse.includes(me.role)}; },
     opsSave: (tok, d) => { const me = auth(tok), B = String(d.kind).toUpperCase()==='BUDGET', type = B ? 'OPS BUDGET' : 'OPS DISBURSEMENT';
