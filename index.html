@@ -7351,7 +7351,7 @@ function initAcct(){
   $('acFrom').onchange = $('acTo').onchange = loadAcct;
   $('acReport').onclick = acctCsv;
   // Send budget (MANU 2026-10-20 "the sent trip budget will go to the received budget on disbursement, so its not send trip budget, its just
-  // send budget"): the operations fund budget (OPS BUDGET), Accounting only as before ("only accounting can add budget")
+  // send budget"): the operations fund budget (OPS BUDGET), Accounting and Admin ("add admin can also send budget")
   $('acSend').hidden = !may('opsBudget'); $('acSend').onclick = () => { if(AC.data && AC.data.fund) OPS.fund = Object.assign({}, OPS.fund, AC.data.fund); openOpsForm('BUDGET', {}); };
   $('acTabs').onclick = e => { const b = e.target.closest('.chip'); if(!b) return; AC.sub = b.dataset.sub;
     $('acTabs').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c===b));
@@ -7873,7 +7873,7 @@ const DEMO = (() => {
   const DEMO_FEED = (() => { try { const r = Number(localStorage.getItem('jmti_demo_feed')); return r > 0 ? {row:r, width:11, keys:['date','truckNo','plateNo','customer','destination','kms','shipmentNo','status','driver','helper1','helper2']} : null; } catch(e){ return null; } })();
   const demoFed = t => !!DEMO_FEED && t.row >= DEMO_FEED.row;
   // same as CAN in Code.gs
-  const CAN = {viewTrips:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','BILLING','ACCOUNTING','PAYROLL'], disburse:['ADMIN','ACCOUNTING','PAYROLL'], opsView:['SUPERVISOR','TEAM LEADER','DISPATCHER'], opsBudget:['ACCOUNTING'], opsDisburse:['ADMIN','DISPATCHER'], social:['ADMIN'], accounting:['ADMIN','ACCOUNTING'], clients:['ADMIN','BILLING','ACCOUNTING'], profit:['ADMIN','ACCOUNTING'], hardship:['ADMIN','SUPERVISOR','TEAM LEADER'], payroll:['ADMIN','PAYROLL'], plan:['ADMIN','TEAM LEADER'], assign:['ADMIN','SUPERVISOR','TEAM LEADER'],
+  const CAN = {viewTrips:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','BILLING','ACCOUNTING','PAYROLL'], disburse:['ADMIN','ACCOUNTING','PAYROLL'], opsView:['SUPERVISOR','TEAM LEADER','DISPATCHER'], opsBudget:['ACCOUNTING','ADMIN'], opsDisburse:['ADMIN','DISPATCHER'], social:['ADMIN'], accounting:['ADMIN','ACCOUNTING'], clients:['ADMIN','BILLING','ACCOUNTING'], profit:['ADMIN','ACCOUNTING'], hardship:['ADMIN','SUPERVISOR','TEAM LEADER'], payroll:['ADMIN','PAYROLL'], plan:['ADMIN','TEAM LEADER'], assign:['ADMIN','SUPERVISOR','TEAM LEADER'],
     fleet:['ADMIN','BOSS','TEAM LEADER'], fleetEdit:['ADMIN'], fleetUnits:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER','MAINTENANCE'], dispatch:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER'], dispatchAll:['ADMIN','TEAM LEADER'], routeOnly:['SUPERVISOR'],
     cancel:['ADMIN','TEAM LEADER'], summary:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER'], tripStats:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER'], dispatchAdd:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER'], pod:['ADMIN','POD'], billing:['ADMIN','BILLING'], routes:['ADMIN','BILLING'], docs:['ADMIN','BOSS','POD','BILLING'],
     manpower:['ADMIN','HR'], maintenance:['ADMIN','MAINTENANCE'], users:['ADMIN','HR'], viewAll:['BOSS']};
