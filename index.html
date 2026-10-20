@@ -1171,6 +1171,12 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 /* PAYROLL-CSS-END */
   .x-fund{align-self:center;font-size:13px;color:var(--muted);white-space:normal}
   .x-fund b{color:var(--ink)}
+  .td-box{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 12px;background:rgba(255,255,255,.55)}
+  .td-head{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:4px}
+  .td-row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)}
+  .td-main{min-width:0;flex:1 1 200px}.td-main small{display:block;color:var(--muted)}
+  .td-btns{display:flex;gap:6px;flex-wrap:wrap}
+  .td-tag{font-weight:700}.td-tag.ok{color:#16A34A}.td-tag.soon{color:#D97706}.td-tag.bad{color:#DC2626}
 </style>
 </head>
 <body>
@@ -1671,8 +1677,8 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <div class="chips" id="dbRange"></div>
       <label class="f">From<input type="date" id="dbFrom"></label>
       <label class="f">To<input type="date" id="dbTo"></label>
-      <label class="f">Account<select id="dbAcct"><option value="">All accounts</option></select></label>
-      <label class="f grow">Find<input id="dbFind" placeholder="Truck, plate, driver, helper, route or transaction no"></label>
+      <label class="f" hidden>Account<select id="dbAcct"><option value="">All accounts</option></select></label>
+      <label class="f grow">Find<input id="dbFind" placeholder="Employee, purpose, truck or entry no"></label>
       <button class="btn alt" type="button" id="dbReport">Generate report (CSV)</button>
     </div>
     <div class="panel" id="opPanel" style="margin-bottom:14px">
@@ -1685,6 +1691,9 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       </div>
       <div class="tbl-wrap" style="max-height:520px"><table id="opTbl"><thead><tr><th>Entry</th><th>Date</th><th>Kind</th><th>Employee</th><th>Purpose</th><th class="n">Amount</th><th>Receipt</th><th>Recorded by</th></tr></thead><tbody></tbody></table></div>
     </div>
+    <!-- MANU 2026-10-20 "no need for this, show only the disbursement record": the trip budget list, liquidation and money sent are
+         hidden here (kept in the page, not loaded); trip budget entries still show in Accounting, which can liquidate them there -->
+    <div id="dbTripPart" hidden>
     <h3 style="margin:4px 0 10px">Trip budgets</h3>
     <div class="kpis kpis4" id="dbKpi"></div>
     <div class="chips" id="dbChips" style="margin:-6px 0 10px"></div>
@@ -1697,6 +1706,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
     <div class="panel" style="margin-top:14px">
       <h3 style="margin-top:0">Money sent <small id="dbEntNote"></small></h3>
       <div class="tbl-wrap" style="max-height:520px"><table id="dbEnt"><thead><tr><th>Entry</th><th>Date sent</th><th>Trip</th><th>Sent to</th><th class="n">Amount</th><th>How</th><th>Transaction no</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+    </div>
     </div>
   </section>
   <!-- DISB-SECTION-END -->
@@ -2001,7 +2011,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','savePayment','cancelPayment','opsSave'];
+const WRITES = ['saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','savePayment','cancelPayment','opsSave','truckDocSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 function submitTick(){
@@ -5454,6 +5464,7 @@ async function showTruckHistory(t, byPlate){
     may('fleetEdit') && t.row ? `<button class="btn alt" type="button" id="hsEdit">Edit truck</button>` : '', true);
   if($('hsEdit')) $('hsEdit').onclick = () => { closePop(); S.fleetSub = 'trucks'; showTab('fleet'); editTruck(t); };
   let r;
+  const docsP = mayDocs() ? call('truckDocs', byPlate ? '' : t.truckNo, t.plateNo).catch(e => ({error:e.message})) : null;
   try{ r = await call('truckHistory', byPlate ? '' : t.truckNo, t.plateNo); }catch(e){ $('popBody').innerHTML = `<p class="hint">${esc(e.message)}</p>`; return; }
   if($('popTitle').textContent !== title) return;
   const trips = setLegW(r.trips), rep = r.repairs || [];   // round trips: 0.5 per leg (MANU 2026-10-13)
@@ -5461,7 +5472,8 @@ async function showTruckHistory(t, byPlate){
   const isOpen = x => !/complete|done|closed|released|cancel/i.test(x.status || '');
   const day10 = v => String(v || '').slice(0, 10);
   const joTbl = (list, none) => list.length ? `<table class="hs-tbl"><thead><tr><th>Reported</th><th>Job</th><th>Status</th><th>Days</th><th>Cost</th></tr></thead><tbody>${list.map(x => `<tr><td>${esc(fmtDay(day10(x.date)) || x.date)}<small>${esc(x.jo)}</small></td><td>${esc(x.category || '')}<small>${esc(x.cls ? titleCase(x.cls) : 'No class yet')}${x.description ? ' · ' + esc(x.description) : ''}${x.mechanic ? ' · ' + esc(x.mechanic) : ''}</small></td><td>${esc(x.status || '')}${x.done ? `<small>done ${esc(fmtDay(day10(x.done)) || x.done)}</small>` : ''}</td><td>${(n => n===null ? '—' : n + ' d')(joSpan(x))}</td><td>${x.cost ? peso(x.cost) : '—'}</td></tr>`).join('')}</tbody></table>` : `<p class="hint">${none}</p>`;
-  $('popBody').innerHTML = hsBar(); hsOpen = '';
+  $('popBody').innerHTML = (docsP ? '<div class="td-box" id="tdBox"><p class="hint" style="margin:0">Getting the documents…</p></div>' : '') + hsBar(); hsOpen = '';
+  if(docsP) docsP.then(d => { if($('popTitle').textContent===title && $('tdBox')) renderDocs($('tdBox'), d); });
   hsWire(trips.length ? trips[trips.length - 1].date : '', (f, to) => {
     const inR = trips.filter(x => x.date >= f && x.date <= to), st = histStats(inR), span = hsSpan(f, to);
     const worked = new Set(inR.filter(x => WORK_ST.includes(String(x.status || '').trim().toLowerCase())).map(x => x.date)).size, down = Math.max(0, span - worked);
@@ -5687,7 +5699,7 @@ const OB = {sending:false};
    every tab opens from what this phone kept (trips per date, lists, summary, chat) and the actions above wait in the
    outbox. Everything else (users, fleet, manpower, maintenance, accounting, clients, uploads) needs signal and says so. */
 const NET = {down:false};
-const READ_FNS = /^(get|list|routeHardList|fleetUnitsView|opsFund|chatList|reminders|truckHistory|personHistory|acctData|payrollData|clientBook|statementOfAccount|profitReport|manpowerTripCounts|fleetWorkDays|longWaiting|overdue|idle)/;
+const READ_FNS = /^(get|list|routeHardList|fleetUnitsView|opsFund|truckDocs|truckDocFile|chatList|reminders|truckHistory|personHistory|acctData|payrollData|clientBook|statementOfAccount|profitReport|manpowerTripCounts|fleetWorkDays|longWaiting|overdue|idle)/;
 const syncAgo = () => { const t = Number(store('jmti_sync')); if(!t) return ''; const d = new Date(t); return ` (last updated ${fmtDay(ymdOf(d))} ${d.toTimeString().slice(0,5)})`; };
 const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const obKey = () => 'jmti_outbox_' + (S.me ? S.me.username : '');
@@ -6285,7 +6297,9 @@ function initUnits(){
     try{ await call('mntCall', 'savePmsRule', [km, days]); toast('PMS interval saved'); FU.data = null; await loadUnits(); }
     catch(e){ toast(e.message, true); } finally { b.disabled = false; }
   };
-  $('fuBody').onclick = e => { const b = e.target.closest('[data-fuedit]'); if(b) openUnitEdit((FU.data.units || []).find(u => String(u.UnitID)===b.dataset.fuedit)); };
+  $('fuBody').onclick = e => {
+    const dc = e.target.closest('[data-fudocs]'); if(dc){ const u = (FU.data.units || []).find(x => String(x.UnitID)===dc.dataset.fudocs); if(u) openTruckDocs(u.UnitID, u.PlateNo); return; }
+    const b = e.target.closest('[data-fuedit]'); if(b) openUnitEdit((FU.data.units || []).find(u => String(u.UnitID)===b.dataset.fuedit)); };
 }
 function loadUnits(){
   renderUnits();
@@ -6318,17 +6332,91 @@ function renderUnits(){
   $('fuNote').innerHTML = `${all.length} units from FLEET RECORD and PLATE · <b>${all.filter(fuOff).length}</b> under maintenance · <b>${all.filter(u => fuSoon(u, 'OrExp')).length}</b> OR and <b>${all.filter(u => fuSoon(u, 'FrExp')).length}</b> franchise expired or expiring within 30 days`
     + (d.pmsRule ? ` · <b>${all.filter(pmsDue).length}</b> PMS overdue or due soon (every ${Number(d.pmsRule.km).toLocaleString('en-PH')} km or ${d.pmsRule.days} days)` : '')
     + (noRec ? ` · ${noRec} truck${noRec===1 ? '' : 's'} in PLATE with no FLEET RECORD yet` : '') + (d.canEdit ? '' : ' · view only');
-  const doc = (url, label) => url ? `<a class="btn alt sm" href="${esc(url)}" target="_blank" rel="noopener">${label}</a>` : '';
+  const docTxt = u => [u.OrUrl && 'OR', u.CrUrl && 'CR', u.FrUrl && 'Franchise'].filter(Boolean).concat((u.Docs || []).map(x => x.kind).filter(k => k!=='OR' && k!=='Franchise'));
   const status = u => u.Status==='Inactive' ? '<span class="pill" style="--c:#94A3B8">Inactive</span>' : fuOff(u) ? '<span class="pill" style="--c:#DC2626">Under maintenance</span>'
     : (u.open || []).length ? '<span class="pill" style="--c:#D97706">Minor (roadworthy)</span>' : '<span class="pill" style="--c:#16A34A">Active</span>';
   const cls = c => ({'MAJOR':'Major', 'MINOR':'Minor', 'MINOR (ROADWORTHY)':'Minor (roadworthy)'})[c] || 'class not set';
   $('fuBody').innerHTML = rows.length ? rows.map(u => `<tr><td><b>${tLink(String(u.UnitID))}</b><small>${esc(u.PlateNo || '')}</small>${d.canEdit ? `<button class="btn alt sm" type="button" data-fuedit="${esc(u.UnitID)}" style="margin-top:4px">Edit</button>` : ''}</td>
     <td>${esc([u.Make, u.Model].filter(Boolean).join(' ')) || '<span class="dim">—</span>'}${u.Year ? `<small>${esc(u.Year)} model</small>` : ''}</td>
     <td>${fuExp(u.OrExp)}</td><td>${fuExp(u.FrExp)}</td><td>${fuPms(u)}</td>
-    <td>${[doc(u.OrUrl, 'OR'), doc(u.CrUrl, 'CR'), doc(u.FrUrl, 'Franchise')].filter(Boolean).join(' ') || (u.InRecord ? '<span class="dim">—</span>' : '<span class="dim">No FLEET RECORD</span>')}</td>
+    <td><button class="btn alt sm" type="button" data-fudocs="${esc(u.UnitID)}">Documents</button><small>${esc(docTxt(u).join(', ') || (u.InRecord ? 'None on file' : 'No FLEET RECORD'))}</small></td>
     <td>${status(u)}${(u.open || []).map(o => `<small>${esc(o.jo)} · ${esc(cls(o.cls))} · ${o.days} day${o.days===1 ? '' : 's'}</small>`).join('')}</td>
     <td class="n">${u.jobs || 0}</td><td class="n">${pesoTxt(u.cost || 0)}</td><td>${u.lastRepair ? esc(fmtDay(u.lastRepair)) : '<span class="dim">—</span>'}</td></tr>`).join('')
     : `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px">${all.length ? 'Nothing matches.' : 'No units yet. Trucks come from the FLEET RECORD and PLATE sheets.'}</td></tr>`;
+}
+/* ---- Truck documents (MANU 2026-10-20 "on the fleet, when truck is entered, add buttons linked to open the truck docs including validity,
+   add also option to upload new docs or edit current docs"). Code.gs truckDocs / truckDocSave / truckDocFile, TRUCK DOCS tab. Shown on top of
+   the truck pop-up and from Fleet → Units → Documents. Admin and Maintenance add, change and remove; anyone who sees the truck opens them. */
+const TD_TYPES = [['OR','OR'],['CR','CR'],['FRANCHISE','Franchise'],['INSURANCE','Insurance'],['OTHER','Other']];
+const mayDocs = () => ['fleet','fleetUnits','viewAll','maintenance'].some(may);
+function tdValid(exp, today){
+  if(!exp) return '<span class="dim">No expiry date</span>';
+  const n = Math.round((Date.parse(exp) - Date.parse(today || TODAY())) / 864e5);
+  return n < 0 ? `<span class="td-tag bad">Expired ${-n} day${n===-1 ? '' : 's'} ago</span>` : n <= 30 ? `<span class="td-tag soon">Expires in ${n} day${n===1 ? '' : 's'}</span>` : '<span class="td-tag ok">Valid</span>';
+}
+/** The documents of one truck into box (truck pop-up or the Documents pop-up), with View, Edit and Add. */
+function renderDocs(box, d){
+  if(!d || d.error){ box.innerHTML = `<p class="hint" style="margin:0">Documents: ${esc(d && d.error || 'not available')}</p>`; return; }
+  const docs = d.docs || [];
+  box.innerHTML = `<div class="td-head"><b>Documents</b>${d.canEdit ? '<button class="btn sm" type="button" data-tdadd="1">+ Add document</button>' : ''}</div>`
+    + (docs.length ? docs.map((x, i) => `<div class="td-row"><div class="td-main"><b>${esc(x.label)}</b>${x.docNo ? ` <small>No. ${esc(x.docNo)}</small>` : ''}
+        <div>${x.expires ? `Valid until ${esc(fmtDay(x.expires))} · ` : ''}${tdValid(x.expires, d.today)}</div>
+        <small>${x.source==='FLEET RECORD' ? 'From the FLEET RECORD form' : `Updated by ${esc(x.by || '—')}${x.at ? ' · ' + esc(x.at) : ''}`}${x.remarks ? ' · ' + esc(x.remarks) : ''}</small></div>
+      <div class="td-btns">${x.files.map((f, k) => `<button class="btn alt sm" type="button" data-tdview="${esc(f)}" data-tdname="${esc(x.label)}">${x.files.length > 1 ? 'Open ' + (k + 1) : 'Open'}</button>`).join('') || '<span class="dim">No file</span>'}${d.canEdit ? ` <button class="btn alt sm" type="button" data-tdedit="${i}">Edit</button>` : ''}</div></div>`).join('')
+      : `<p class="hint" style="margin:6px 0 0">No documents on file for this truck yet.${d.canEdit ? ' Tap + Add document to upload the OR, CR, franchise, insurance or others.' : ''}</p>`);
+  box.onclick = e => {
+    const v = e.target.closest('[data-tdview]'); if(v) return viewFile(v.dataset.tdview, `${v.dataset.tdname} · Truck ${d.truckNo}`, 'truckDocFile');
+    const ed = e.target.closest('[data-tdedit]'); if(ed) return openTruckDocForm(d, docs[Number(ed.dataset.tdedit)]);
+    if(e.target.closest('[data-tdadd]')) openTruckDocForm(d, null);
+  };
+}
+/** Fleet → Units → Documents (and after a save): one truck's documents on their own. */
+async function openTruckDocs(truckNo, plateNo, have){
+  openPop(`Documents · Truck ${truckNo || '—'}`, esc(plateNo || ''), '<div class="td-box" id="tdBox"><p class="hint" style="margin:0">Getting the documents…</p></div>',
+    `<button class="btn alt" type="button" onclick="closePop()">Close</button>`, true);
+  const d = have || await call('truckDocs', truckNo, plateNo).catch(e => ({error:e.message}));
+  if($('tdBox')) renderDocs($('tdBox'), d);
+}
+/** Admin / Maintenance: add a document (doc = null) or change one; a FLEET RECORD paper becomes an app document when changed. */
+function openTruckDocForm(d, doc){
+  const st = {type: doc ? doc.type : 'OR'};
+  openPop(`${doc ? 'Edit' : 'Add'} document · Truck ${d.truckNo}`, esc(d.plateNo || ''), `
+    ${doc && doc.source==='FLEET RECORD' ? '<p class="hint" style="margin:0 0 10px">This paper came from the FLEET RECORD form. Saving keeps its file unless you pick a new one, and from then on it is kept here.</p>' : ''}
+    <div class="form">
+      <div class="f full ds-f">Kind of document<div class="chips" id="tdType"></div></div>
+      <label class="f full" id="tdNameL" hidden>What document is it?<input id="tdName" autocomplete="off" placeholder="e.g. LTFRB permit, emission test" value="${esc(doc ? doc.name : '')}"></label>
+      <label class="f">Document no (optional)<input id="tdNo" autocomplete="off" value="${esc(doc ? doc.docNo : '')}"></label>
+      <label class="f">Valid until<input id="tdExp" type="date" value="${esc(doc ? doc.expires : '')}"></label>
+      <div class="f full ds-f">${doc && doc.files.length ? 'Replace the file (optional)' : 'File (photo or PDF)'}<input id="tdFile" type="file" accept="image/&#42;,application/pdf"></div>
+      <label class="f full">Remarks<input id="tdRem" autocomplete="off" value="${esc(doc ? doc.remarks : '')}"></label>
+    </div>
+    <div id="tdWhyBox" class="hint" style="margin-top:10px"></div>`,
+    `<button class="btn alt" type="button" id="tdBack">Back</button>${doc && doc.id ? ' <button class="btn alt" type="button" id="tdRemove">Remove</button>' : ''} <button class="btn road" type="button" id="tdSave">Save</button>`);
+  const showType = () => { $('tdNameL').hidden = st.type!=='OTHER'; };
+  filterChips($('tdType'), TD_TYPES, st.type, v => { st.type = v; showType(); });
+  showType();
+  $('tdBack').onclick = () => openTruckDocs(d.truckNo, d.plateNo, d);
+  const send = async (x, b) => {
+    b.disabled = true;
+    try{
+      const r = await call('truckDocSave', Object.assign({truckNo:d.truckNo, plateNo:d.plateNo}, x));
+      FU.data = null; S.rem = null; S.remAt = 0;
+      toast(x.remove ? 'Document removed' : 'Document saved');
+      openTruckDocs(r.truckNo, r.plateNo, r);
+    }catch(err){ toast(err.message, true); b.disabled = false; }
+  };
+  if($('tdRemove')) $('tdRemove').onclick = () => {
+    if(!$('tdRemove').dataset.sure){ $('tdRemove').dataset.sure = '1'; $('tdRemove').textContent = 'Tap again to remove'; return; }
+    send({id:doc.id, remove:true}, $('tdRemove'));
+  };
+  $('tdSave').onclick = async () => {
+    const f = $('tdFile').files[0], x = {id: doc && doc.id || '', type: st.type, name: $('tdName').value.trim(), docNo: $('tdNo').value.trim(), expires: $('tdExp').value, remarks: $('tdRem').value.trim()};
+    if(x.type==='OTHER' && !x.name) return toast('Type what the document is.', true);
+    if(!f && !(doc && doc.files.length)) return toast('Pick the file of the document (photo or PDF).', true);
+    if(f){ try{ x.file = await fileToBase64(f); }catch(err){ return toast(err.message, true); } }
+    else if(doc && !doc.id) x.keepUrl = doc.files[0];
+    send(x, $('tdSave'));
+  };
 }
 /** Admin / Maintenance: a unit's type, make, model, year, status and notes (same as the old Maintenance → Fleet Units Edit). */
 function openUnitEdit(u){
@@ -6722,7 +6810,7 @@ function initDisb(){
   $('dbFrom').value = addDays(today, -6); $('dbTo').value = today;
   $('dbFrom').onchange = $('dbTo').onchange = loadDisb;
   $('dbFind').oninput = $('dbAcct').onchange = renderDisb;
-  $('dbReport').onclick = disbCsv;
+  $('dbReport').onclick = opsCsv;
   $('dbTbl').onclick = e => { const tr = e.target.closest('tr[data-key]'); if(!tr) return; const t = (S.dbTrips || []).find(x => x.key===tr.dataset.key); if(t) openDisbTrip(t); };
   $('lqTbl').onclick = e => { const tr = e.target.closest('tr[data-lqp]'); if(tr) openLiqPerson(tr.dataset.lqp); };
   $('opBudgetBtn').onclick = () => openOpsForm('BUDGET', {});
@@ -6745,8 +6833,8 @@ function loadDisb(){
   $('dbRange')._mark(f, t);
   const k = f + '|' + t;
   if(DB.key !== k){ DB.key = k; DB.data = null; }
-  call('acctData', f, t).then(d => { if(DB.key===k){ DB.data = d; renderDisb(); } }).catch(e => toast(e.message, true));
-  return withTrips(f, t, list => { if($('dbFrom').value!==f || $('dbTo').value!==t) return; S.dbTrips = list; renderDisb(); }, $('dbTbl'));
+  renderDisb();
+  return call('acctData', f, t).then(d => { if(DB.key===k){ DB.data = d; renderDisb(); } }).catch(e => toast(e.message, true));   // trips not needed: the trip budget list is hidden (MANU 2026-10-20)
 }
 function renderDisb(){
   if(S.tab!=='disbursement') return;
@@ -7057,6 +7145,7 @@ function renderOps(q){
   const F = {all: () => true, got: e => e.type==='OPS BUDGET', out: e => e.type==='OPS DISBURSEMENT', norec: e => entryLive(e) && e.type==='OPS DISBURSEMENT' && !e.photo};
   counterChips($('opChips'), [['all','All'],['got','Budget received'],['out','Disbursed'],['norec','No receipt']].map(([k, l]) => [k, l, shown.filter(F[k]).length]), OPS.filter, v => { OPS.filter = v; renderDisb(); });
   const list = shown.filter(F[OPS.filter] || F.all).sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.entryNo).localeCompare(String(a.entryNo)));
+  OPS.report = list;
   $('opTbl').tBodies[0].innerHTML = list.length ? list.map(e => { const live = entryLive(e);
     return `<tr class="rowbtn${live ? '' : ' db-cancel'}" data-entry="${esc(e.entryNo)}"><td><b>${esc(e.entryNo)}</b>${live ? '' : `<small class="tag-repair">Cancelled</small>`}</td><td>${esc(fmtDay(e.date))}</td>`
       + `<td>${e.type==='OPS BUDGET' ? '<span class="db-ok">Budget received</span>' : 'Disbursed'}${e.ref ? `<small>Truck ${e.truckNo ? tLink(e.truckNo) : '—'} · ${esc(fmtDay(e.tripDate))}</small>` : ''}</td>`
@@ -7156,6 +7245,14 @@ function openOpsEntry(en){
     }catch(err){ toast(err.message, true); $('oeCancel').disabled = false; }
   };
 }
+/** Disbursement report: the operations fund entries shown (dates, chip and Find). */
+function opsCsv(){
+  const rows = OPS.report || [];
+  if(!rows.length) return toast('Nothing to put in the report with these filters.', true);
+  saveCsvFile(repFile('Disbursement', `${$('dbFrom').value} to ${$('dbTo').value}`, 'csv'),
+    ['Entry no','Date','Kind','Employee / received by','Purpose','Amount','Trip date','Truck','Plate','Trip ID','Receipt','Status','Recorded by','Recorded at','Remarks'],
+    rows.map(e => [e.entryNo, e.date, opsKindTxt(e), e.paidTo, e.details, Number(e.amount) || 0, e.tripDate, e.truckNo, e.plateNo, e.ref, e.photo, e.status, e.by, e.at, e.remarks]));
+}
 /* DISB-END */
 /* ACCT-START */
 /* ---- Accounting (MANU 2026-10-08): money paid out in a date range — trip budgets sent (Disbursement) and inventory bought
@@ -7214,7 +7311,7 @@ function renderAcct(){
   $('acPay').innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>How it was sent</th><th class="n">Payments</th><th class="n">Amount</th></tr></thead><tbody>`
     + byT.map(([l, c, a]) => `<tr><td>${esc(l)}</td><td class="n">${c}</td><td class="n">${pesoTxt(a)}</td></tr>`).join('')
     + `<tr class="tot"><td><b>Total</b></td><td class="n"><b>${trip.length}</b></td><td class="n"><b>${pesoTxt(total(trip))}</b></td></tr></tbody></table></div>`
-    + (can('disbursement') ? '<p class="hint" style="margin:8px 0 0">Budgets still to send are in the Disbursement tab.</p>' : '');
+    + (may('disburse') ? '<p class="hint" style="margin:8px 0 0">Tap a trip budget in the list below to change it, cancel it or liquidate it.</p>' : '');
   // job orders completed in the range
   const jos = d.jos.slice().sort((a, b) => String(b.done).localeCompare(String(a.done)));
   $('acJo').innerHTML = jos.length ? `<div class="tbl-wrap" style="max-height:420px"><table><thead><tr><th>Job order</th><th>Truck</th><th class="n">Labor</th><th class="n">Parts</th><th class="n">Other</th><th class="n">Total</th></tr></thead><tbody>`
@@ -7741,6 +7838,17 @@ const DEMO = (() => {
   };
   const ledger = [];
   const demoSent = {};
+  // Fleet units and truck documents (MANU 2026-10-20)
+  const demoDocs = [];
+  const demoUnits = () => trucks.slice(0, 8).map((t, i) => ({UnitID:t.truckNo, PlateNo:t.plateNo, Make:['ISUZU','HINO','FUSO'][i % 3], Model:'FORWARD', Year:String(2015 + i % 8), OrExp:addDays(today, [120, 12, -5, 200, 40, 300, 25, 90][i]), FrExp:addDays(today, [400, 300, 60, 15, -30, 500, 200, 100][i]),
+        OrUrl:i % 2 ? '' : 'https://example.com/or', CrUrl:'', FrUrl:'', InRecord:i!==7, Status:i===6 ? 'Inactive' : 'Active', PmsState:['ok','soon','overdue','ok','none','ok','ok','soon'][i], PmsLast:addDays(today, -40 - i * 10), PmsKm:4200 + i * 900, PmsDays:40 + i * 10,
+        jobs:i % 4, cost:(i % 4) * 4200, lastRepair:i % 4 ? addDays(today, -i - 1) : '', open:i===0 ? [{jo:'JO-00041', cls:'MAJOR', off:true, days:4}] : i===3 ? [{jo:'JO-00052', cls:'MINOR (ROADWORTHY)', off:false, days:1}] : []})).map(u => { const mine = demoDocs.filter(d => d.plate===u.PlateNo && d.status!=='REMOVED'), nw = t => mine.filter(d => d.type===t).pop();
+      if(nw('OR')){ u.OrUrl = nw('OR').file; u.OrExp = nw('OR').expires; } if(nw('CR')) u.CrUrl = nw('CR').file; if(nw('FRANCHISE')){ u.FrUrl = nw('FRANCHISE').file; u.FrExp = nw('FRANCHISE').expires; }
+      u.Docs = [{kind:'OR', exp:u.OrExp}, {kind:'Franchise', exp:u.FrExp}].concat(mine.filter(d => d.type==='INSURANCE' || d.type==='OTHER').map(d => ({kind:d.type==='OTHER' ? d.name : 'Insurance', exp:d.expires}))).filter(x => x.exp);
+      return u; });
+  const demoDocList = u => { const mine = demoDocs.filter(d => d.plate===u.PlateNo && d.status!=='REMOVED').map(d => ({id:d.id, type:d.type, label:d.type==='OTHER' ? d.name : ({OR:'OR', CR:'CR', FRANCHISE:'Franchise', INSURANCE:'Insurance'})[d.type], name:d.name, docNo:d.docNo, expires:d.expires, files:[d.file], remarks:d.remarks, by:d.by, at:d.at, source:'APP'}));
+    [['OR', u.OrUrl, u.OrExp, 'OR'], ['CR', u.CrUrl, '', 'CR'], ['FRANCHISE', u.FrUrl, u.FrExp, 'Franchise']].forEach(([t, url, exp, l]) => { if(!mine.some(d => d.type===t) && (url || exp)) mine.push({id:'', type:t, label:l, name:'', docNo:'', expires:exp || '', files:url ? [url] : [], remarks:'', by:'FLEET RECORD form', at:today + ' 07:00', source:'FLEET RECORD'}); });
+    const o = ['OR','CR','FRANCHISE','INSURANCE','OTHER']; return mine.sort((a, b) => o.indexOf(a.type) - o.indexOf(b.type)); };
   const demoFund = () => { const live = ledger.filter(e => e.status!=='CANCELLED'), sum = t => Math.round(live.filter(e => e.type===t).reduce((a, e) => a + Number(e.amount), 0) * 100) / 100;
     const r = sum('OPS BUDGET'), d = sum('OPS DISBURSEMENT'); return {received:r, disbursed:d, left:Math.round((r - d) * 100) / 100}; };
   const demoEntry = (t, o) => { const e = {entryNo:'DISB-' + String(ledger.filter(x => x.type==='TRIP BUDGET').length + 1).padStart(5,'0'), date:today, type:'TRIP BUDGET', ref:t.tripId, tripDate:t.date, truckNo:t.truckNo, plateNo:t.plateNo,
@@ -7898,9 +8006,7 @@ const DEMO = (() => {
       const v = String(d.rating ?? '').trim(); if(v!=='' && !/^[1-5]$/.test(v)) throw new Error('The hardship rating must be 1 to 5.');
       if(v==='') delete demoHard[k]; else demoHard[k] = [Number(v), String(d.why || '').toUpperCase().slice(0, 200), u.name, stampNow()]; return DEMO.routeHardList(tok); },
     fleetUnitsView: tok => { const u = auth(tok); if(!['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER','MAINTENANCE','BOSS'].includes(u.role)) throw new Error(`Your role (${u.role}) cannot do this.`);
-      const units = trucks.slice(0, 8).map((t, i) => ({UnitID:t.truckNo, PlateNo:t.plateNo, Make:['ISUZU','HINO','FUSO'][i % 3], Model:'FORWARD', Year:String(2015 + i % 8), OrExp:addDays(today, [120, 12, -5, 200, 40, 300, 25, 90][i]), FrExp:addDays(today, [400, 300, 60, 15, -30, 500, 200, 100][i]),
-        OrUrl:i % 2 ? '' : 'https://example.com/or', CrUrl:'', FrUrl:'', InRecord:i!==7, Status:i===6 ? 'Inactive' : 'Active', PmsState:['ok','soon','overdue','ok','none','ok','ok','soon'][i], PmsLast:addDays(today, -40 - i * 10), PmsKm:4200 + i * 900, PmsDays:40 + i * 10,
-        jobs:i % 4, cost:(i % 4) * 4200, lastRepair:i % 4 ? addDays(today, -i - 1) : '', open:i===0 ? [{jo:'JO-00041', cls:'MAJOR', off:true, days:4}] : i===3 ? [{jo:'JO-00052', cls:'MINOR (ROADWORTHY)', off:false, days:1}] : []}));
+      const units = demoUnits();
       return {units, pmsRule:{km:5000, days:90}, today, canEdit:['ADMIN','MAINTENANCE'].includes(u.role)}; },
     mntCall: (tok, action) => { const u = auth(tok); if(!['ADMIN','MAINTENANCE'].includes(u.role)) throw new Error(`Your role (${u.role}) cannot do this.`); if(!['saveUnit','savePmsRule'].includes(action)) throw new Error('Not in the preview.'); return {}; },
     routeHardList: tok => { const u = auth(tok); if(!CAN.hardship.includes(u.role) && !CAN.viewAll.includes(u.role)) throw new Error(`Your role (${u.role}) cannot do this.`); return {routeHard:JSON.parse(JSON.stringify(demoHard)), canEdit:CAN.hardship.includes(u.role)}; },
@@ -7951,6 +8057,19 @@ const DEMO = (() => {
       const all = CAN.accounting.includes(me.role) || CAN.viewAll.includes(me.role), inR = d => !!d && d >= f && d <= t;
       const open = ledger.filter(e => e.type==='TRIP BUDGET' && e.status!=='CANCELLED' && (!demoLiq[e.entryNo] || demoLiq[e.entryNo].status!=='LIQUIDATED')).map(e => ({entryNo:e.entryNo, date:e.date, ref:e.ref, tripDate:e.tripDate, truckNo:e.truckNo, plateNo:e.plateNo, details:e.details, paidTo:e.paidTo, amount:Number(e.amount), payType:e.payType}));
       return {entries: ledger.filter(e => (inR(e.date) || inR(e.tripDate)) && (all || e.type==='TRIP BUDGET' || e.type.startsWith('OPS '))).map(e => ({...e})), jos: all ? demoJos.filter(j => inR(j.done)).map(j => ({...j})) : [], readingOff: false, liq: JSON.parse(JSON.stringify(demoLiq)), open, fund: demoFund()}; },
+    truckDocs: (tok, truckNo, plateNo) => { const me = auth(tok); if(!['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','MAINTENANCE'].includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
+      const u = demoUnits().find(x => (plateNo && x.PlateNo===plateNo) || (truckNo && String(x.UnitID)===String(truckNo))); if(!u) throw new Error(`Truck ${truckNo || plateNo} is not in PLATE or FLEET RECORD.`);
+      return {truckNo:String(u.UnitID), plateNo:u.PlateNo, docs:demoDocList(u), canEdit:['ADMIN','MAINTENANCE'].includes(me.role), today}; },
+    truckDocSave: (tok, d) => { const me = auth(tok); if(!['ADMIN','MAINTENANCE'].includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
+      const u = demoUnits().find(x => (d.plateNo && x.PlateNo===d.plateNo) || String(x.UnitID)===String(d.truckNo)); if(!u) throw new Error('Truck not found.');
+      const cur = d.id ? demoDocs.find(x => x.id===d.id) : null;
+      if(d.remove){ if(!cur) throw new Error('Only documents added in the app can be removed.'); cur.status = 'REMOVED'; return DEMO.truckDocs(tok, u.UnitID, u.PlateNo); }
+      const type = String(d.type || '').toUpperCase(); if(!['OR','CR','FRANCHISE','INSURANCE','OTHER'].includes(type)) throw new Error('Pick the kind of document: OR, CR, Franchise, Insurance or Other.');
+      if(type==='OTHER' && !String(d.name || '').trim()) throw new Error('Type what the document is.');
+      const file = d.file && d.file.data ? 'demo:truckdoc-' + Date.now() : cur ? cur.file : d.keepUrl || ''; if(!file) throw new Error('Upload the file of the document (photo or PDF).');
+      const x = {id:cur ? cur.id : 'TD-' + String(demoDocs.length + 1).padStart(5, '0'), plate:u.PlateNo, truckNo:String(u.UnitID), type, name:String(d.name || '').toUpperCase(), docNo:String(d.docNo || '').toUpperCase(), expires:d.expires || '', file, status:'ACTIVE', remarks:d.remarks || '', by:me.name, at:stampNow()};
+      if(cur) Object.assign(cur, x); else demoDocs.push(x); return DEMO.truckDocs(tok, u.UnitID, u.PlateNo); },
+    truckDocFile: (tok, url) => DEMO.getAcctFile(tok, url),
     opsFund: tok => { const me = auth(tok); if(![...CAN.disburse, ...CAN.accounting, ...CAN.viewAll, ...CAN.opsView, ...CAN.opsBudget, ...CAN.opsDisburse].includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
       return {...demoFund(), canBudget: CAN.opsBudget.includes(me.role), canDisburse: CAN.opsDisburse.includes(me.role)}; },
     opsSave: (tok, d) => { const me = auth(tok), B = String(d.kind).toUpperCase()==='BUDGET', type = B ? 'OPS BUDGET' : 'OPS DISBURSEMENT';
