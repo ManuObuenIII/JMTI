@@ -1169,6 +1169,8 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
   #payrollTbl tfoot td:empty{display:none}
 }
 /* PAYROLL-CSS-END */
+  .x-fund{align-self:center;font-size:13px;color:var(--muted);white-space:normal}
+  .x-fund b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -1326,7 +1328,22 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 
   <!-- ================= FLEET ================= -->
   <section class="view" id="v-fleet">
-    <div class="cols2">
+    <!-- MANU 2026-10-20 "merge fleet and fleet units": one Fleet tab, Trucks (PLATE list) and Units (papers, PMS, repairs) -->
+    <div class="chips" id="fleetSub" style="margin-bottom:12px" hidden></div>
+    <div id="fleetUnits" hidden>
+      <div class="bar">
+        <label class="f grow">Find<input id="fuFind" placeholder="Truck, plate, make"></label>
+        <div class="chips" id="fuChips"></div>
+      </div>
+      <div class="bar" id="fuPms" hidden>
+        <label class="f">PMS every (km)<input type="number" id="fuPmsKm" min="500" step="500" inputmode="numeric"></label>
+        <label class="f">or every (days)<input type="number" id="fuPmsDays" min="7" step="1" inputmode="numeric"></label>
+        <button class="btn alt" type="button" id="fuPmsSave">Save PMS interval</button>
+      </div>
+      <p class="hint" id="fuNote" style="margin:0 0 10px"></p>
+      <div class="panel" style="padding:0" id="fuPanel"><div class="tbl-wrap"><table class="poptbl fu-tbl"><thead><tr><th>Truck</th><th>Make</th><th>OR expiration</th><th>Franchise expiration</th><th>PMS</th><th>Documents</th><th>Status</th><th class="n">Job orders</th><th class="n">Total cost</th><th>Last repair</th></tr></thead><tbody id="fuBody"></tbody></table></div></div>
+    </div>
+    <div class="cols2" id="fleetTrucks">
       <div>
         <div class="bar">
           <label class="f grow">Find<input id="fFind" placeholder="Truck no, plate, driver or remarks"></label>
@@ -1419,6 +1436,8 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <label class="f">From<input type="date" id="xDate"></label>
       <label class="f">To<input type="date" id="xTo"></label>
       <button class="btn" type="button" id="xAddBtn" hidden>+ Add trip</button>
+      <button class="btn alt" type="button" id="xDisbBtn" hidden>+ Disbursement</button>
+      <span class="x-fund" id="xFund" hidden></span>
       <label class="f">Account<select id="xAcct"><option value="">All accounts</option><option>COCA COLA CANLUBANG PLANT</option><option>COCA COLA SAN FERNANDO</option><option>OTHER ACCOUNTS</option></select></label>
       <label class="f grow">Find<input id="xFind" placeholder="Truck, plate, customer, driver, shipment"></label>
       <button class="btn alt" type="button" id="xReport">Generate report</button>
@@ -1434,19 +1453,6 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
   </section>
 
   <!-- ================= FLEET UNITS (MANU 2026-10-20: moved out of Maintenance) ================= -->
-  <section class="view" id="v-units">
-    <div class="bar">
-      <label class="f grow">Find<input id="fuFind" placeholder="Truck, plate, make"></label>
-      <div class="chips" id="fuChips"></div>
-    </div>
-    <div class="bar" id="fuPms" hidden>
-      <label class="f">PMS every (km)<input type="number" id="fuPmsKm" min="500" step="500" inputmode="numeric"></label>
-      <label class="f">or every (days)<input type="number" id="fuPmsDays" min="7" step="1" inputmode="numeric"></label>
-      <button class="btn alt" type="button" id="fuPmsSave">Save PMS interval</button>
-    </div>
-    <p class="hint" id="fuNote" style="margin:0 0 10px"></p>
-    <div class="panel" style="padding:0" id="fuPanel"><div class="tbl-wrap"><table class="poptbl fu-tbl"><thead><tr><th>Truck</th><th>Make</th><th>OR expiration</th><th>Franchise expiration</th><th>PMS</th><th>Documents</th><th>Status</th><th class="n">Job orders</th><th class="n">Total cost</th><th>Last repair</th></tr></thead><tbody id="fuBody"></tbody></table></div></div>
-  </section>
 
   <!-- ================= TRIP HARDSHIP (MANU 2026-10-20: own tab, Admin, Supervisor, Team leader) ================= -->
   <section class="view" id="v-hardship">
@@ -1669,6 +1675,17 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <label class="f grow">Find<input id="dbFind" placeholder="Truck, plate, driver, helper, route or transaction no"></label>
       <button class="btn alt" type="button" id="dbReport">Generate report (CSV)</button>
     </div>
+    <div class="panel" id="opPanel" style="margin-bottom:14px">
+      <h3 style="margin-top:0">Operations fund <small id="opNote"></small></h3>
+      <div class="kpis kpis4" id="opKpi"></div>
+      <div class="bar" style="margin:0 0 10px;flex-wrap:wrap">
+        <button class="btn" type="button" id="opBudgetBtn" hidden>+ Add budget</button>
+        <button class="btn" type="button" id="opDisbBtn" hidden>+ Disbursement</button>
+        <div class="chips" id="opChips"></div>
+      </div>
+      <div class="tbl-wrap" style="max-height:520px"><table id="opTbl"><thead><tr><th>Entry</th><th>Date</th><th>Kind</th><th>Employee</th><th>Purpose</th><th class="n">Amount</th><th>Receipt</th><th>Recorded by</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <h3 style="margin:4px 0 10px">Trip budgets</h3>
     <div class="kpis kpis4" id="dbKpi"></div>
     <div class="chips" id="dbChips" style="margin:-6px 0 10px"></div>
     <div class="hint-line" id="dbNote" style="margin:0 0 10px"></div>
@@ -1796,7 +1813,7 @@ const MS_KEYS = ['srcArrive','loadStart','loadEnd','srcDepart','destArrive','unl
 const MS_COL = {srcArrive:12,loadStart:13,loadEnd:14,srcDepart:15,destArrive:16,unloadStart:17,unloadEnd:18,destDepart:19};
 const MS_LABEL = {srcArrive:'Source time in',loadStart:'Loading start',loadEnd:'Loading end',srcDepart:'Source time out',
   destArrive:'Destination time in',unloadStart:'Unloading start',unloadEnd:'Unloading end',destDepart:'Destination time out'};
-const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',units:'Fleet units',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',pod:'POD',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users'};
+const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',pod:'POD',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users'};
 const NO_AUTH = ['login','getAppUrl'];
 
 const S = { sum:null, sumAt:0, sumView:'week', sumMeasure:'trips', topView:'p7', me:null, boot:null, trips:[], range:{}, tab:'', stageFilter:'', shown:150,
@@ -1984,7 +2001,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','savePayment','cancelPayment'];
+const WRITES = ['saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','savePayment','cancelPayment','opsSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 function submitTick(){
@@ -2422,7 +2439,7 @@ function prefetchTabs(){
     if(t==='fleet') want.add(rk(today, today));
   });
   want.forEach(k => { if(TC[k] && Date.now() - (FRESH[k] || 0) < 120000) return; const [f, t] = k.split('|'); fetchTrips(f, t).catch(() => {}); });
-  if(tabs.includes('fleet') && !S.fleetFresh) call('listFleet').then(f => { S.fleet = f; S.fleetFresh = 1; lsSet('jmti_fleet', f); }).catch(() => {});
+  if(may('fleet') && !S.fleetFresh) call('listFleet').then(f => { S.fleet = f; S.fleetFresh = 1; lsSet('jmti_fleet', f); }).catch(() => {});
   if(tabs.includes('manpower') && !S.peopleFresh) call('listManpower').then(p => { S.people = p; S.peopleFresh = 1; lsSet('jmti_people', p); }).catch(() => {});
 }
 /** The dates of trips the first tab shows (Faster loading, MANU 2026-10-13): they come with getInitial. */
@@ -2559,13 +2576,15 @@ function checkOverdue(force){
 function firstTab(){
   const tabs = S.me.tabs;
   const saved = store('jmti_tab_'+S.me.username);
-  return saved && tabs.includes(saved) ? saved : tabs[0];
+  const want = saved==='units' ? 'fleet' : saved;
+  return want && tabs.includes(want) ? want : tabs[0];
 }
 function openFirstTab(){ showTab(firstTab()); }
 /** A preloaded answer (from getInitial) while it is under a minute old, else a server call. */
 const preOr = (key, fn) => { const p = S[key]; S[key] = null; return p && Date.now() - p.at < 60000 ? Promise.resolve(p.v) : call(fn); };
 
 function showTab(t){
+  if(t==='units') t = 'fleet';   // Fleet units became part of Fleet (MANU 2026-10-20)
   if(!can(t)) return;
   S.tab = t; store('jmti_tab_'+S.me.username, t);
   document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.tab===t));
@@ -2575,9 +2594,9 @@ function showTab(t){
   document.querySelectorAll('#sumMeasure .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.f===S.sumMeasure));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id==='v-'+view));
   if(t==='maintenance') return loadMaintenance();
-  if(!S.boot && !['manpower','users','units'].includes(t)) return;
-  ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleet, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, units:loadUnits, pod:loadPod, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
-  if(['dashboard','fleet','manpower'].includes(t)) loadReminders();
+  if(!S.boot && !['manpower','users'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
+  ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, pod:loadPod, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
+  if(['dashboard','manpower'].includes(t) || (t==='fleet' && may('fleet'))) loadReminders();
 }
 
 window.jmtiToken = () => TOKEN;
@@ -3198,7 +3217,7 @@ function renderInactive(){
     const st = other.length ? statusText(other[other.length-1]) : '';
     return st ? st : 'No trip';
   };
-  const card = (t, reason, cls) => `<button class="itrk ${cls}" type="button" data-truck="${esc(t.truckNo)}" title="${can('fleet') ? 'Open in Fleet' : ''}"><b>${esc(t.truckNo)}</b><span class="pl">${esc(t.plateNo)}</span><span class="why">${esc(reason)}</span><small>${esc(sinceText(last(t)))}</small></button>`;
+  const card = (t, reason, cls) => `<button class="itrk ${cls}" type="button" data-truck="${esc(t.truckNo)}" title="${may('fleet') ? 'Open in Fleet' : ''}"><b>${esc(t.truckNo)}</b><span class="pl">${esc(t.plateNo)}</span><span class="why">${esc(reason)}</span><small>${esc(sinceText(last(t)))}</small></button>`;
   const single = S.range.from===S.range.to;
   const when = single ? (S.range.from===TODAY() ? 'today' : 'on ' + fmtDay(S.range.from)) : 'in these dates';
   $('inactNote').textContent = `${inactive.length + idle.length} of ${S.boot.trucks.length} trucks in PLATE`;
@@ -3210,8 +3229,8 @@ function renderInactive(){
   return {inactive: inactive.length, idle: idle.length};
 }
 function openTruck(no){
-  if(!can('fleet')) return;
-  S.fleetOpen = String(no);
+  if(!may('fleet')) return;
+  S.fleetOpen = String(no); S.fleetSub = 'trucks';
   showTab('fleet');
 }
 function renderTable(){
@@ -3566,6 +3585,7 @@ function initDispatcher(){
   $('xTo').onchange = () => { if($('xTo').value && $('xDate').value > $('xTo').value) $('xDate').value = $('xTo').value; loadDispatcher(); };
   $('xFind').oninput = renderDispatcher;
   $('xAddBtn').onclick = () => openDispatchAdd();
+  $('xDisbBtn').onclick = () => openOpsForm('DISB', {});
   $('xReport').onclick = openTruckPlanReport;
   $('xAcct').onchange = () => { const d = xRange()[1]; if(!S.assign[d]) call('getAssignments', d).then(l => { S.assign[d] = l; renderDispatcher(); }).catch(e => toast(e.message, true)); renderDispatcher(); };
   $('xBoard').onclick = e => { const idle = e.target.closest('[data-idle]'); if(idle){ if(may('dispatchAdd')) openDispatchAdd(idle.dataset.idle); return; } const c = e.target.closest('[data-key]'); if(c) openDispatch(S.xTrips.find(t => t.key===c.dataset.key)); };
@@ -3700,6 +3720,7 @@ function xRange(){ const f = $('xDate').value || TODAY(), t = $('xTo').value; re
 const xRangeText = () => { const [f, t] = xRange(); return f === t ? fmtDay(f) : `${fmtDay(f)} – ${fmtDay(t)}`; };
 function loadDispatcher(){
   const [f, t] = xRange(), d = t;
+  loadOpsFund();
   if(!S.assign[d]) call('getAssignments', d).then(l => { S.assign[d] = l; renderDispatcher(); }).catch(() => {});
   // 3 days either side too, so a round trip's other leg is found (as on the Dashboard); S.xTrips keeps the picked dates only
   return withTrips(addDays(f,-3), addDays(t,3), list => { const [f2, t2] = xRange(); if(f2!==f || t2!==t) return; S.xCtx = list; S.xTrips = list.filter(x => x.date >= f && x.date <= t); renderDispatcher(); }, $('xList'));
@@ -4311,7 +4332,8 @@ function openDispatch(t){
       ${field('helper1',10,'Helper','list="dlHelpers"')}
       ${field('helper2',11,'Helper 2','list="dlHelpers"')}
     </div>
-    ${hardSection(t)}`,
+    ${hardSection(t)}
+    ${may('opsDisburse') ? `<div class="sec">Disbursement</div><p class="hint" style="margin:0 0 8px">Money given to the crew for this trip comes out of the operations fund${OPS.fund ? ` (budget left ${pesoTxt(OPS.fund.left)})` : ''}.</p><button class="btn alt" type="button" id="drOps">+ Disburse for this trip</button>` : ''}`,
     `${stageOf(t)!=='Cancelled' && may('cancel') && !fedKey(t, 'status') ? '<button class="btn alt" id="drCancelTrip" type="button" style="margin-right:auto">Cancel trip</button>' : ''}<button class="btn" id="drSave" type="button">Save</button>`);
   const body = $('drBody');
   body.onclick = e => {
@@ -4329,6 +4351,7 @@ function openDispatch(t){
     ['driver','helper1','helper2'].forEach(k => { const i = body.querySelector(`input[data-k="${k}"]`); if(i) i.value = c[k] || ''; });
   };
   $('drSave').onclick = saveDispatch;
+  if($('drOps')) $('drOps').onclick = () => openOpsForm('DISB', {trip:t});
   if($('drCancelTrip')) $('drCancelTrip').onclick = () => {
     const reason = prompt('Reason for cancelling this trip:'); if(reason===null) return;
     closeDrawer();
@@ -4839,7 +4862,19 @@ async function saveRoute(e){
 
 let fFilter = 'all';
 const F_CHIPS = [['all','All'],['ACTIVE','Active'],['INACTIVE','Inactive'],['ontrip','On trip today'],['idle','No trip today'],['repair','Under maintenance'],['rwjo','Minor (roadworthy) JO']];
+/** Fleet tab (MANU 2026-10-20 "merge fleet and fleet units"): Trucks for roles with Fleet (Admin, Boss, Team leader), Units for roles with
+ *  Fleet units (also Supervisor, Dispatcher, Maintenance). The switch shows only when the role has both. */
+const fleetParts = () => [may('fleet') && 'trucks', (may('fleetUnits') || may('viewAll')) && 'units'].filter(Boolean);
+function loadFleetTab(){
+  const parts = fleetParts();
+  if(!parts.includes(S.fleetSub)) S.fleetSub = parts[0] || 'trucks';
+  $('fleetSub').hidden = parts.length < 2;
+  $('fleetSub').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.f===S.fleetSub));
+  $('fleetTrucks').hidden = S.fleetSub!=='trucks'; $('fleetUnits').hidden = S.fleetSub!=='units';
+  return S.fleetSub==='units' ? loadUnits() : loadFleet();
+}
 function initFleet(){
+  filterChips($('fleetSub'), [['trucks','Trucks'],['units','Units: papers, PMS, repairs']], 'trucks', f => { S.fleetSub = f; loadFleetTab(); });
   filterChips($('fChips'), F_CHIPS, fFilter, f => { fFilter = f; renderFleet(); });
   $('fFind').oninput = renderFleet;
   $('fdTo').value = TODAY(); $('fdFrom').value = addDays(TODAY(), -29);   // last 30 days
@@ -4884,7 +4919,7 @@ function fleetInfo(t){
   return { trip, onTrip: mine.some(isTrip), crew, rp: repairOf(t.plateNo), active: truckActive(t), last: (S.boot && S.boot.lastTrip || {})[t.truckNo] || '' };
 }
 function renderFleet(){
-  if(S.tab!=='fleet') return;
+  if(S.tab!=='fleet' || S.fleetSub==='units') return;
   $('fAddBtn').hidden = $('fPanel').hidden = !may('fleetEdit');   // team leaders see the fleet but don't edit it
   const list = (S.fleet || (S.boot ? S.boot.trucks : [])).map(t => ({t, i: fleetInfo(t)}));
   const pass = {all: () => true, ACTIVE: x => x.i.active, INACTIVE: x => !x.i.active, ontrip: x => x.i.onTrip, idle: x => x.i.active && !x.i.onTrip, repair: x => holdOfR(x.i.rp), rwjo: x => !!x.i.rp && !holdOfR(x.i.rp)};
@@ -5146,7 +5181,7 @@ function renderRem(){
   const lic = () => r.lic.length ? `<div class="rem-sec">Licenses · ${r.lic.length}</div>` + remList('lic', r.lic, x => `<li><span>${pLink(x.full)}<small>${esc(x.position)} · license ${esc(fmtDay(x.exp))}</small></span>${tag(x.days < 0 ? 'bad' : 'soon', daysTxt(x.days))}</li>`) : '';
   const notes = kinds => {
     const n = [];
-    if(kinds.includes('pms')) n.push(`PMS is due every ${Number(r.rule.km).toLocaleString('en-PH')} km or ${r.rule.days} days, whichever comes first${may('maintenance') ? ' (change it in the Fleet units tab)' : ''}.` + (r.noPms.length ? ` ${r.noPms.length} truck${r.noPms.length===1 ? ' has' : 's have'} no completed PMS job order yet, so it can't be tracked.` : ''));
+    if(kinds.includes('pms')) n.push(`PMS is due every ${Number(r.rule.km).toLocaleString('en-PH')} km or ${r.rule.days} days, whichever comes first${may('maintenance') ? ' (change it in Fleet > Units)' : ''}.` + (r.noPms.length ? ` ${r.noPms.length} truck${r.noPms.length===1 ? ' has' : 's have'} no completed PMS job order yet, so it can't be tracked.` : ''));
     if(kinds.includes('lic') && r.noLic) n.push(`${r.noLic} active driver${r.noLic===1 ? ' has' : 's have'} no license expiry yet${may('manpower') ? ' (tap a driver in Manpower to add it)' : ''}.`);
     let bk = '';
     if(kinds.includes('backup') && r.backup){   // daily backup of the sheet (Admin / Boss only)
@@ -5417,7 +5452,7 @@ async function showTruckHistory(t, byPlate){
   const title = byPlate ? 'Plate ' + t.plateNo : 'Truck ' + t.truckNo;
   openPop(title, `${byPlate ? (t.truckNo ? 'Truck ' + esc(t.truckNo) : 'Trips with this plate') : esc(t.plateNo || '')} · ${esc(t.status || 'ACTIVE')}${t.remarks ? ' · ' + esc(t.remarks) : ''}`, '<p class="hint">Loading trips and maintenance…</p>',
     may('fleetEdit') && t.row ? `<button class="btn alt" type="button" id="hsEdit">Edit truck</button>` : '', true);
-  if($('hsEdit')) $('hsEdit').onclick = () => { closePop(); showTab('fleet'); editTruck(t); };
+  if($('hsEdit')) $('hsEdit').onclick = () => { closePop(); S.fleetSub = 'trucks'; showTab('fleet'); editTruck(t); };
   let r;
   try{ r = await call('truckHistory', byPlate ? '' : t.truckNo, t.plateNo); }catch(e){ $('popBody').innerHTML = `<p class="hint">${esc(e.message)}</p>`; return; }
   if($('popTitle').textContent !== title) return;
@@ -5652,7 +5687,7 @@ const OB = {sending:false};
    every tab opens from what this phone kept (trips per date, lists, summary, chat) and the actions above wait in the
    outbox. Everything else (users, fleet, manpower, maintenance, accounting, clients, uploads) needs signal and says so. */
 const NET = {down:false};
-const READ_FNS = /^(get|list|routeHardList|fleetUnitsView|chatList|reminders|truckHistory|personHistory|acctData|payrollData|clientBook|statementOfAccount|profitReport|manpowerTripCounts|fleetWorkDays|longWaiting|overdue|idle)/;
+const READ_FNS = /^(get|list|routeHardList|fleetUnitsView|opsFund|chatList|reminders|truckHistory|personHistory|acctData|payrollData|clientBook|statementOfAccount|profitReport|manpowerTripCounts|fleetWorkDays|longWaiting|overdue|idle)/;
 const syncAgo = () => { const t = Number(store('jmti_sync')); if(!t) return ''; const d = new Date(t); return ` (last updated ${fmtDay(ymdOf(d))} ${d.toTimeString().slice(0,5)})`; };
 const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const obKey = () => 'jmti_outbox_' + (S.me ? S.me.username : '');
@@ -6690,6 +6725,13 @@ function initDisb(){
   $('dbReport').onclick = disbCsv;
   $('dbTbl').onclick = e => { const tr = e.target.closest('tr[data-key]'); if(!tr) return; const t = (S.dbTrips || []).find(x => x.key===tr.dataset.key); if(t) openDisbTrip(t); };
   $('lqTbl').onclick = e => { const tr = e.target.closest('tr[data-lqp]'); if(tr) openLiqPerson(tr.dataset.lqp); };
+  $('opBudgetBtn').onclick = () => openOpsForm('BUDGET', {});
+  $('opDisbBtn').onclick = () => openOpsForm('DISB', {});
+  $('opTbl').onclick = e => {
+    const ph = e.target.closest('[data-photo]'); if(ph) return viewFile(ph.dataset.photo, 'Receipt photo', 'getAcctFile');
+    const tr = e.target.closest('tr[data-entry]'); if(!tr) return;
+    const en = opsEntries().find(x => x.entryNo===tr.dataset.entry); if(en) openOpsEntry(en);
+  };
   $('dbEnt').onclick = e => {
     const ph = e.target.closest('[data-photo]'); if(ph) return viewFile(ph.dataset.photo, 'Receipt photo', 'getAcctFile');
     const tr = e.target.closest('tr[data-entry]'); if(!tr) return;
@@ -6727,7 +6769,7 @@ function renderDisb(){
   const list = rows.filter(F[DB.filter]).sort((a, b) => a.t.date.localeCompare(b.t.date) || String(a.t.truckNo).localeCompare(String(b.t.truckNo), undefined, {numeric:true}));
   S.dbReport = list;
   $('dbNote').textContent = !data ? 'Getting what was sent…' : data.readingOff ? 'Reading receipt photos is not switched on yet, so type the transaction number from the photo. (Admin: run authorizeReading once in the Apps Script editor.)' : 'Tap a trip to record money sent for it.';
-  if(data && !may('disburse')) $('dbNote').textContent = 'View only.';
+  if(data && !may('disburse')) $('dbNote').textContent = 'Trip budgets are recorded by Accounting and Payroll; view only here.';
   const how = r => !data ? '…' : r.live.length ? r.live.map(e => `${esc(payName(e.payType))} ${pesoTxt(e.amount)} to ${esc(e.paidTo)}${e.txnNo ? `<small>${esc(e.txnNo)}</small>` : ''}`).join('<br>') : '<span class="dim">Not sent yet</span>';
   const leftCell = r => !data ? '…' : r.left ? `<b class="db-left">${pesoTxt(r.left)}</b>` : r.over ? `<span class="db-over">${pesoTxt(r.over)} over</span>` : '<span class="db-ok">Sent</span>';
   $('dbTbl').tBodies[0].innerHTML = list.length ? list.map(r => `<tr class="rowbtn" data-key="${esc(r.t.key)}"><td>${esc(fmtDay(r.t.date))}</td><td><b>${esc(r.t.truckNo || '—')}</b><small>${esc(r.t.plateNo || '')}</small></td><td>${esc(r.t.customer)}<small>→ ${esc(r.t.destination || '—')}</small></td><td>${esc(crewText(r.t) || '—')}</td><td class="n">${r.budget ? pesoTxt(r.budget) : '<span class="dim">No budget</span>'}</td><td class="n">${!data ? '…' : r.sent ? pesoTxt(r.sent) : '—'}</td><td class="n">${leftCell(r)}</td><td>${how(r)}</td></tr>`).join('')
@@ -6738,6 +6780,7 @@ function renderDisb(){
   $('dbEnt').tBodies[0].innerHTML = ents.length ? ents.map(entryRow).join('')
     : `<tr><td colspan="8" class="empty-cell">${data ? 'No money recorded as sent in these dates.' : 'Loading…'}</td></tr>`;
   renderLiq(q);
+  renderOps(q);
 }
 /* ---- Budget liquidation (MANU 2026-10-13 "add 1"): after a trip budget is sent, the person who got it hands in the
    receipts and the change. Each released entry is Not liquidated, Liquidated, Owes ₱ (receipts + change short of what
@@ -6932,6 +6975,7 @@ function openDisbForm(t, en){
 }
 /** One ledger entry (trip budget or purchase): details and photo; with the right role, change or cancel it. */
 function openAcctEntry(en){
+  if(OPS_KINDS.includes(en.type)) return openOpsEntry(en);
   const isTripE = en.type==='TRIP BUDGET', live = entryLive(en);
   const mayEdit = live && (isTripE ? may('disburse') : may('accounting'));
   openPop(`${en.entryNo} · ${pesoTxt(en.amount)}`, `${isTripE ? 'Trip budget' : 'Purchase'} · ${live ? (isTripE ? 'Released' : 'Paid') : 'Cancelled'}`,
@@ -6969,6 +7013,148 @@ function disbCsv(){
     ['Trip date','Truck','Plate','Source','Destination','Crew','Trip ID','Budget','Sent','Still to send','Over budget','How it was sent'],
     rows.map(r => [r.t.date, r.t.truckNo, r.t.plateNo, r.t.customer, r.t.destination, crewText(r.t), r.t.tripId, r.budget, r.sent, r.left, r.over,
       r.live.map(e => `${e.entryNo} ${e.date} ${payName(e.payType)} ${e.amount} to ${e.paidTo}${e.txnNo ? ' #' + e.txnNo : ''}`).join('; ')]));
+}
+/* ---- Operations fund (MANU 2026-10-20 "operations receive the budget, then dispatchers disburse to employees, so there should be a
+   button to add budget, also disbursement can be entered in truckplan with the same format: date, employee, purpose, amount, receipt";
+   "only accounting can add budget"). Code.gs opsSave / opsFund: OPS BUDGET (OPB-) rows are cash Operations received, added by
+   Accounting; OPS DISBURSEMENT (OPD-) rows are money a dispatcher (or Admin) gave an employee, here or from Truck Plan. Budget left =
+   received − disbursed, all dates. Supervisor, Team leader and Dispatcher see the Disbursement tab. */
+const OPS_KINDS = ['OPS BUDGET', 'OPS DISBURSEMENT'];
+const OPS_PURPOSES = ['TOLL', 'FUEL', 'PARKING', 'MEALS', 'ALLOWANCE', 'LOADING / UNLOADING', 'TIRE / VULCANIZING', 'REPAIR', 'PASSWAY / CHECKPOINT'];
+const OPS = {filter:'all', fund:null};
+const opsEntries = () => ((DB.data && DB.data.entries) || []).filter(e => OPS_KINDS.includes(e.type));
+const opsKindTxt = e => e.type==='OPS BUDGET' ? 'Budget received' : 'Disbursed';
+function opsFundTxt(f){ return !f ? '' : `Budget left ${pesoTxt(f.left)}`; }
+/** Truck Plan: the button and the budget left, for those who disburse. */
+function loadOpsFund(){
+  const on = may('opsDisburse');
+  $('xDisbBtn').hidden = !on; $('xFund').hidden = !on;
+  if(!on) return;
+  if(!OPS.fund) OPS.fund = lsGet('jmti_opsfund');
+  renderOpsFund();
+  call('opsFund').then(f => { OPS.fund = f; lsSet('jmti_opsfund', f); renderOpsFund(); }).catch(() => {});
+}
+function renderOpsFund(){
+  const f = OPS.fund, el = $('xFund'); if(!el) return;
+  el.innerHTML = f ? `Budget left <b class="${f.left < 0 ? 'db-over' : ''}">${pesoTxt(f.left)}</b>` : '';
+}
+function renderOps(q){
+  if(!$('opTbl')) return;
+  const data = DB.data, f = data && data.fund;
+  $('opBudgetBtn').hidden = !may('opsBudget'); $('opDisbBtn').hidden = !may('opsDisburse');
+  if(f){ OPS.fund = Object.assign({}, OPS.fund, f); renderOpsFund(); }
+  const all = opsEntries(), inD = e => e.date >= $('dbFrom').value && e.date <= $('dbTo').value;
+  const shown = all.filter(e => inD(e) && (!q || [e.entryNo, e.paidTo, e.details, e.truckNo, e.plateNo, e.ref, e.by].join(' ').toLowerCase().includes(q)));
+  const sum = xs => xs.filter(entryLive).reduce((x, e) => x + (Number(e.amount) || 0), 0);
+  const got = shown.filter(e => e.type==='OPS BUDGET'), out = shown.filter(e => e.type==='OPS DISBURSEMENT');
+  $('opKpi').innerHTML = !data ? '' : !f ? kpiHtml([['—', 'Operations fund', 'Paste the latest Code.gs to see it']]) : kpiHtml([
+    [pesoTxt(f.received), 'Budget received', 'all dates, from Accounting'],
+    [pesoTxt(f.disbursed), 'Disbursed', 'all dates, to employees'],
+    [pesoTxt(f.left), 'Budget left', f.left < 0 ? 'more given out than received' : 'received minus disbursed'],
+    [pesoTxt(sum(out)), 'Disbursed in these dates', `${out.filter(entryLive).length} given out · ${pesoTxt(sum(got))} received`]]);
+  const who = [may('opsBudget') && 'Add budget records cash Operations received', may('opsDisburse') && 'Disbursement records money given to an employee (also from a trip in Truck Plan)'].filter(Boolean);
+  $('opNote').textContent = data ? (who.length ? '· ' + who.join('. ') + '.' : '· Accounting adds the budget; dispatchers record what they give out. View only.') : '';
+  const F = {all: () => true, got: e => e.type==='OPS BUDGET', out: e => e.type==='OPS DISBURSEMENT', norec: e => entryLive(e) && e.type==='OPS DISBURSEMENT' && !e.photo};
+  counterChips($('opChips'), [['all','All'],['got','Budget received'],['out','Disbursed'],['norec','No receipt']].map(([k, l]) => [k, l, shown.filter(F[k]).length]), OPS.filter, v => { OPS.filter = v; renderDisb(); });
+  const list = shown.filter(F[OPS.filter] || F.all).sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.entryNo).localeCompare(String(a.entryNo)));
+  $('opTbl').tBodies[0].innerHTML = list.length ? list.map(e => { const live = entryLive(e);
+    return `<tr class="rowbtn${live ? '' : ' db-cancel'}" data-entry="${esc(e.entryNo)}"><td><b>${esc(e.entryNo)}</b>${live ? '' : `<small class="tag-repair">Cancelled</small>`}</td><td>${esc(fmtDay(e.date))}</td>`
+      + `<td>${e.type==='OPS BUDGET' ? '<span class="db-ok">Budget received</span>' : 'Disbursed'}${e.ref ? `<small>Truck ${e.truckNo ? tLink(e.truckNo) : '—'} · ${esc(fmtDay(e.tripDate))}</small>` : ''}</td>`
+      + `<td>${e.type==='OPS BUDGET' ? esc(e.paidTo) : pLink(e.paidTo)}</td><td>${esc(titleCase(e.details || ''))}</td><td class="n">${e.type==='OPS BUDGET' ? '+' : '−'}${pesoTxt(e.amount)}</td>`
+      + `<td>${e.photo ? `<button class="icon-btn" type="button" data-photo="${esc(e.photo)}">Receipt</button>` : '<span class="dim">No receipt</span>'}</td><td>${esc(e.by || '')}<small>${esc(e.at || '')}</small></td></tr>`; }).join('')
+    : `<tr><td colspan="8" class="empty-cell">${data ? 'Nothing received or given out in these dates.' : 'Loading…'}</td></tr>`;
+}
+/**
+ * Add budget (kind 'BUDGET', Accounting) or a disbursement (kind 'DISB', from the Disbursement tab, the Truck Plan button or a trip).
+ * o = {trip, en}: en changes an entry. Same fields for both: date, employee (who received it, for a budget), purpose, amount, receipt.
+ */
+function openOpsForm(kind, o){
+  o = o || {};
+  const en = o.en || null, t = o.trip || null, isB = kind==='BUDGET';
+  const st = {photo: en ? en.photo : '', ref: 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)};
+  const crew = t ? [['Driver', t.driver], ['Helper', t.helper1], ['Helper 2', t.helper2]].filter(c => c[1]) : [];
+  const fund = OPS.fund;
+  openPop(en ? `Change ${en.entryNo}` : isB ? 'Add budget' : 'Disbursement',
+    t ? `Truck ${esc(t.truckNo || '—')} · ${esc(fmtDay(t.date))} · ${esc(t.customer || '')} → ${esc(t.destination || '—')}` : isB ? 'Cash Operations received from Accounting' : 'Money given to an employee from the operations fund', `
+    ${fund ? `<div class="ds-sum"><span>Budget received <b>${pesoTxt(fund.received)}</b></span><span>Disbursed <b>${pesoTxt(fund.disbursed)}</b></span><span>Budget left <b class="${fund.left < 0 ? 'db-over' : ''}">${pesoTxt(fund.left)}</b></span></div>` : ''}
+    <div class="form">
+      <label class="f">Date<input id="opDate" type="date" max="${TODAY()}" value="${esc(en ? en.date : TODAY())}"></label>
+      <label class="f">${isB ? 'Received by' : 'Employee'}<input id="opWho" list="dlOpsPeople" autocomplete="off" value="${esc(en ? en.paidTo : (crew[0] ? crew[0][1] : ''))}" placeholder="${isB ? 'Name of who got the cash' : 'Driver, helper or other employee'}"></label>
+      ${crew.length > 1 ? `<div class="f full ds-f">Crew of this trip<div class="chips" id="opCrew">${crew.map(c => `<button class="chip" type="button" data-who="${esc(c[1])}">${esc(c[0])}: ${esc(c[1])}</button>`).join('')}</div></div>` : ''}
+      <label class="f full">Purpose<input id="opWhy" list="dlOpsWhy" autocomplete="off" value="${esc(en ? en.details : '')}" placeholder="${isB ? 'e.g. weekly operations budget' : 'e.g. toll, fuel, meals'}"></label>
+      <label class="f">Amount (₱)<input id="opAmt" inputmode="decimal" autocomplete="off" value="${esc(en ? en.amount : '')}"></label>
+      <div class="f full ds-f">Receipt<input id="opFile" type="file" accept="image/&#42;,application/pdf"><div class="ds-read" id="opRead"></div></div>
+      <label class="f full">Remarks<input id="opRem" autocomplete="off" value="${esc(en ? en.remarks : '')}"></label>
+    </div>
+    <datalist id="dlOpsPeople">${[...new Set([...document.querySelectorAll('#dlDrivers option, #dlHelpers option')].map(x => x.value).filter(Boolean))].map(v => `<option value="${esc(v)}">`).join('')}</datalist>
+    <datalist id="dlOpsWhy">${OPS_PURPOSES.map(v => `<option value="${esc(v)}">`).join('')}</datalist>
+    <div class="hint" id="opWarn" style="margin-top:8px"></div>`,
+    `<button class="btn alt" type="button" onclick="closePop()">Cancel</button> <button class="btn road" type="button" id="opSave">${en ? 'Save changes' : 'Save'}</button>`);
+  const showPhoto = () => { const box = $('opRead');
+    if(st.photo){ box.className = 'ds-read ok'; box.innerHTML = `Receipt saved. <button class="icon-btn" type="button" data-photo="${esc(st.photo)}">View receipt</button> Pick another file to replace it.`; }
+    else { box.className = 'ds-read'; box.textContent = 'Take or pick a photo of the receipt (needs signal). It can be added later with Change.'; } };
+  showPhoto();
+  const amt = () => { const v = String($('opAmt').value).replace(/[₱,\s]/g, ''); return v==='' ? NaN : Number(v); };
+  const warn = () => { const a = amt(), f = OPS.fund;
+    $('opWarn').innerHTML = !isB && f && a > 0 && a - (en ? Number(en.amount) || 0 : 0) > f.left ? `<span class="db-over">This is more than the budget left (${pesoTxt(f.left)}). It still saves; Accounting sees the fund go below zero.</span>` : ''; };
+  $('opAmt').oninput = warn; warn();
+  $('popBody').onclick = e => { const ph = e.target.closest('[data-photo]'); if(ph) return viewFile(ph.dataset.photo, 'Receipt photo', 'getAcctFile');
+    const c = e.target.closest('[data-who]'); if(c) $('opWho').value = c.dataset.who; };
+  $('opFile').onchange = async () => {
+    const file = $('opFile').files[0]; if(!file) return;
+    const box = $('opRead'); box.className = 'ds-read'; box.textContent = 'Saving the receipt…';
+    try{
+      const res = await call('acctReadPhoto', await fileToBase64(file), `${isB ? 'OPS BUDGET' : 'OPS DISBURSEMENT'} ${$('opWho').value.trim()}`.trim());
+      st.photo = res.url; showPhoto();
+      if(res.reading==='OK' && res.amount && !$('opAmt').value){ $('opAmt').value = res.amount; warn(); box.insertAdjacentHTML('beforeend', ` The receipt shows ${pesoTxt(res.amount)}; check the amount.`); }
+    }catch(err){ box.className = 'ds-read err'; box.textContent = 'Receipt not saved: ' + err.message; $('opFile').value = ''; }
+  };
+  $('opSave').onclick = async () => {
+    const d = {kind, date: $('opDate').value || TODAY(), paidTo: $('opWho').value.trim(), purpose: $('opWhy').value.trim(), amount: amt(), photo: st.photo, remarks: $('opRem').value.trim()};
+    if(d.date > TODAY()) return toast('The date cannot be in the future.', true);
+    if(!d.paidTo) return toast(isB ? 'Type who received the budget.' : 'Pick the employee who got the money.', true);
+    if(!d.purpose) return toast('Type the purpose.', true);
+    if(!(d.amount > 0)) return toast('Type the amount in pesos.', true);
+    if(en) d.entryNo = en.entryNo; else { d.ref = st.ref; if(t) d.trip = refOf(t); }
+    $('opSave').disabled = true;
+    try{
+      const r = await call('opsSave', d);
+      putEntry(r.entry); OPS.fund = Object.assign({}, OPS.fund, r.fund); lsSet('jmti_opsfund', OPS.fund);
+      if(DB.data) DB.data.fund = r.fund;
+      closePop(); renderOpsFund(); renderDisb(); renderAcct();
+      toast(en ? `${r.entry.entryNo} saved` : isB ? `${r.entry.entryNo}: ${pesoTxt(r.entry.amount)} budget received · left ${pesoTxt(r.fund.left)}` : `${r.entry.entryNo}: ${pesoTxt(r.entry.amount)} to ${r.entry.paidTo} · left ${pesoTxt(r.fund.left)}`, false, 4000);
+    }catch(err){ toast(err.message, true); $('opSave').disabled = false; }
+  };
+}
+/** One operations entry: details and receipt; who may record it changes or cancels it. */
+function openOpsEntry(en){
+  const isB = en.type==='OPS BUDGET', live = entryLive(en), mayEdit = live && may(isB ? 'opsBudget' : 'opsDisburse');
+  openPop(`${en.entryNo} · ${pesoTxt(en.amount)}`, `${isB ? 'Operations budget received' : 'Operations disbursement'} · ${live ? (isB ? 'Received' : 'Given out') : 'Cancelled'}`,
+    `<dl class="kv">
+      <dt>Date</dt><dd>${esc(fmtDay(en.date))}</dd>
+      <dt>${isB ? 'Received by' : 'Employee'}</dt><dd>${esc(en.paidTo || '—')}</dd>
+      <dt>Purpose</dt><dd>${esc(titleCase(en.details || '—'))}</dd>
+      <dt>Amount</dt><dd><b>${pesoTxt(en.amount)}</b></dd>
+      ${en.ref ? `<dt>Trip</dt><dd>${esc(fmtDay(en.tripDate))} · Truck ${esc(en.truckNo || '—')}${en.plateNo ? ' · ' + esc(en.plateNo) : ''}<br><span class="hint">${esc(en.ref)}</span></dd>` : ''}
+      <dt>Receipt</dt><dd>${en.photo ? `<button class="icon-btn" type="button" data-photo="${esc(en.photo)}">View receipt</button>` : 'None yet'}</dd>
+      <dt>Recorded by</dt><dd>${esc(en.by || '—')}${en.at ? ' · ' + esc(en.at) : ''}${en.updBy ? `<br>Changed by ${esc(en.updBy)} · ${esc(en.updAt)}` : ''}</dd>
+      <dt>Remarks</dt><dd>${esc(en.remarks || '—')}</dd>
+    </dl>
+    ${mayEdit ? `<div id="oeWhyBox" hidden style="margin-top:12px"><label class="f">Why is it cancelled?<input id="oeWhy" autocomplete="off"></label></div>` : ''}`,
+    `<button class="btn alt" type="button" onclick="closePop()">Close</button>${mayEdit ? ' <button class="btn alt" type="button" id="oeCancel">Cancel entry</button> <button class="btn road" type="button" id="oeEdit">Change</button>' : ''}`, true);
+  $('popBody').onclick = e => { const ph = e.target.closest('[data-photo]'); if(ph) viewFile(ph.dataset.photo, 'Receipt photo', 'getAcctFile'); };
+  if($('oeEdit')) $('oeEdit').onclick = () => openOpsForm(isB ? 'BUDGET' : 'DISB', {en});
+  if($('oeCancel')) $('oeCancel').onclick = async () => {
+    if($('oeWhyBox').hidden){ $('oeWhyBox').hidden = false; $('oeWhy').focus(); $('oeCancel').textContent = 'Cancel this entry'; return; }
+    const why = $('oeWhy').value.trim(); if(!why) return toast('Type why it is cancelled.', true);
+    $('oeCancel').disabled = true;
+    try{
+      const up = await call('acctCancel', en.entryNo, why); putEntry(up);
+      const f = await call('opsFund').catch(() => null);
+      if(f){ OPS.fund = f; lsSet('jmti_opsfund', f); if(DB.data) DB.data.fund = f; }
+      closePop(); renderOpsFund(); renderDisb(); renderAcct(); toast(`${up.entryNo} cancelled`);
+    }catch(err){ toast(err.message, true); $('oeCancel').disabled = false; }
+  };
 }
 /* DISB-END */
 /* ACCT-START */
@@ -7011,7 +7197,7 @@ function renderAcct(){
   const n = (k, w, ws) => `${k} ${k===1 ? w : (ws || w + 's')}`;
   if(!d){ $('acKpi').innerHTML = ''; $('acPay').innerHTML = $('acJo').innerHTML = '<div class="empty">Loading…</div>'; $('acChips').innerHTML = ''; $('acEnt').tBodies[0].innerHTML = ''; $('acNote').textContent = ''; $('acEntNote').textContent = ''; return; }
   const inR = x => !!x && x >= f && x <= t;
-  const paid = d.entries.filter(e => inR(e.date));   // money out by the date it was paid
+  const paid = d.entries.filter(e => inR(e.date) && e.type!=='OPS DISBURSEMENT');   // money out by the date it was paid; operations disbursements come out of an operations budget already counted
   const live = paid.filter(entryLive), trip = live.filter(e => e.type==='TRIP BUDGET'), buy = live.filter(e => e.type==='PURCHASE');
   const total = xs => xs.reduce((x, e) => x + (Number(e.amount) || 0), 0);
   const joSum = k => d.jos.reduce((x, j) => x + (Number(j[k]) || 0), 0);
@@ -7044,7 +7230,7 @@ function renderAcct(){
   $('acEntNote').textContent = `· ${n(list.length, 'entry', 'entries')} paid in these dates`;
   $('acEnt').tBodies[0].innerHTML = list.length ? list.map(e => {
     const isTripE = e.type==='TRIP BUDGET', live1 = entryLive(e);
-    return `<tr class="rowbtn${live1 ? '' : ' db-cancel'}" data-entry="${esc(e.entryNo)}"><td><b>${esc(e.entryNo)}</b></td><td>${esc(fmtDay(e.date))}</td><td>${isTripE ? 'Trip budget' : 'Purchase'}</td>`
+    return `<tr class="rowbtn${live1 ? '' : ' db-cancel'}" data-entry="${esc(e.entryNo)}"><td><b>${esc(e.entryNo)}</b></td><td>${esc(fmtDay(e.date))}</td><td>${isTripE ? 'Trip budget' : e.type==='OPS BUDGET' ? 'Operations budget' : 'Purchase'}</td>`
       + `<td>${isTripE ? `${esc(fmtDay(e.tripDate))} · Truck ${e.truckNo ? tLink(e.truckNo) : '—'}<small>${esc(e.details || '')}</small>` : esc(e.details || '—')}</td><td>${isTripE && e.paidTo ? pLink(e.paidTo) : esc(e.paidTo || '—')}</td><td class="n">${pesoTxt(e.amount)}</td>`
       + `<td>${esc(e.payType ? payName(e.payType) : '—')}</td><td>${esc(isTripE ? (e.txnNo || (e.payType==='CASH' ? 'Cash' : '—')) : (e.ref || e.txnNo || '—'))}${e.photo ? ` <button class="icon-btn" type="button" data-photo="${esc(e.photo)}">Photo</button>` : ''}</td>`
       + `<td>${live1 ? `<span class="db-ok">${isTripE ? 'Released' : 'Paid'}</span>` : `<span class="tag-repair">Cancelled</span><small>${esc(cancelWhy(e))}</small>`}</td></tr>`;
@@ -7496,14 +7682,14 @@ const DEMO = (() => {
     .concat(helpers.map((n,i) => ({row:i+40,id:String(3000+i),last:n.split(' , ')[0],first:n.split(' , ')[1],full:n,position:'Helper',hired:'2025-01-1'+(i%9),status:'ACTIVE'})));
   const users = [['admin','ADMINISTRATOR','ADMIN'],['boss','OWNER','BOSS'],['supervisor','OPS SUPERVISOR','SUPERVISOR'],['teamleader','TEAM LEADER','TEAM LEADER'],['dispatcher','DISPATCHER','DISPATCHER'],['pod','POD CLERK','POD'],['billing','BILLING CLERK','BILLING'],['accounting','ACCOUNTANT','ACCOUNTING'],['payroll','PAYROLL CLERK','PAYROLL'],['hr','HR OFFICER','HR'],['maintenance','MECHANIC','MAINTENANCE']]
     .map(([u,n,r]) => ({username:u,name:n,role:r,status:'ACTIVE',mustChange:false,lastLogin:today+' 07:30'}));
-  const TABS = {'ADMIN':['dashboard','fleet','units','assign','dispatcher','hardship','pod','billing','clients','disbursement','accounting','payroll','manpower','maintenance','users'],'BOSS':['dashboard','fleet','units','assign','dispatcher','hardship','pod','billing','clients','disbursement','accounting','payroll','manpower','maintenance','users'],'SUPERVISOR':['dashboard','units','assign','dispatcher','hardship'],'TEAM LEADER':['dashboard','fleet','units','assign','dispatcher','hardship'],'DISPATCHER':['dispatcher','units'],'POD':['pod'],'BILLING':['billing','clients'],'ACCOUNTING':['disbursement','accounting','clients'],'PAYROLL':['payroll','disbursement'],'HR':['manpower','users'],'MAINTENANCE':['maintenance','units']};
+  const TABS = {'ADMIN':['dashboard','fleet','assign','dispatcher','hardship','pod','billing','clients','disbursement','accounting','payroll','manpower','maintenance','users'],'BOSS':['dashboard','fleet','assign','dispatcher','hardship','pod','billing','clients','disbursement','accounting','payroll','manpower','maintenance','users'],'SUPERVISOR':['dashboard','fleet','assign','dispatcher','hardship','disbursement'],'TEAM LEADER':['dashboard','fleet','assign','dispatcher','hardship','disbursement'],'DISPATCHER':['dispatcher','fleet','disbursement'],'POD':['pod'],'BILLING':['billing','clients'],'ACCOUNTING':['disbursement','accounting','clients'],'PAYROLL':['payroll','disbursement'],'HR':['manpower','users'],'MAINTENANCE':['maintenance','fleet']};
   let sess = null;
   // GENERAL DATABASE 2.0 formula (Code.gs feed_): localStorage jmti_demo_feed = its row, to try the guard in the demo
   const DEMO_FEED = (() => { try { const r = Number(localStorage.getItem('jmti_demo_feed')); return r > 0 ? {row:r, width:11, keys:['date','truckNo','plateNo','customer','destination','kms','shipmentNo','status','driver','helper1','helper2']} : null; } catch(e){ return null; } })();
   const demoFed = t => !!DEMO_FEED && t.row >= DEMO_FEED.row;
   // same as CAN in Code.gs
-  const CAN = {viewTrips:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','BILLING','ACCOUNTING','PAYROLL'], disburse:['ADMIN','ACCOUNTING','PAYROLL'], accounting:['ADMIN','ACCOUNTING'], clients:['ADMIN','BILLING','ACCOUNTING'], profit:['ADMIN','ACCOUNTING'], hardship:['ADMIN','SUPERVISOR','TEAM LEADER'], payroll:['ADMIN','PAYROLL'], plan:['ADMIN','TEAM LEADER'], assign:['ADMIN','SUPERVISOR','TEAM LEADER'],
-    fleet:['ADMIN','BOSS','TEAM LEADER'], fleetEdit:['ADMIN'], dispatch:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER'], dispatchAll:['ADMIN','TEAM LEADER'], routeOnly:['SUPERVISOR'],
+  const CAN = {viewTrips:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','BILLING','ACCOUNTING','PAYROLL'], disburse:['ADMIN','ACCOUNTING','PAYROLL'], opsView:['SUPERVISOR','TEAM LEADER','DISPATCHER'], opsBudget:['ACCOUNTING'], opsDisburse:['ADMIN','DISPATCHER'], accounting:['ADMIN','ACCOUNTING'], clients:['ADMIN','BILLING','ACCOUNTING'], profit:['ADMIN','ACCOUNTING'], hardship:['ADMIN','SUPERVISOR','TEAM LEADER'], payroll:['ADMIN','PAYROLL'], plan:['ADMIN','TEAM LEADER'], assign:['ADMIN','SUPERVISOR','TEAM LEADER'],
+    fleet:['ADMIN','BOSS','TEAM LEADER'], fleetEdit:['ADMIN'], fleetUnits:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER','MAINTENANCE'], dispatch:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER'], dispatchAll:['ADMIN','TEAM LEADER'], routeOnly:['SUPERVISOR'],
     cancel:['ADMIN','TEAM LEADER'], summary:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER'], tripStats:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER'], dispatchAdd:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER'], pod:['ADMIN','POD'], billing:['ADMIN','BILLING'], routes:['ADMIN','BILLING'], docs:['ADMIN','BOSS','POD','BILLING'],
     manpower:['ADMIN','HR'], maintenance:['ADMIN','MAINTENANCE'], users:['ADMIN','HR'], viewAll:['BOSS']};
   const meOf = u => ({username:u.username, name:u.name, role:u.role, tabs:TABS[u.role], perms:Object.keys(CAN).filter(k => CAN[k].includes(u.role))});
@@ -7554,11 +7740,19 @@ const DEMO = (() => {
       canEdit:CAN.clients.includes(u.role), canProfit:CAN.profit.includes(u.role) || CAN.viewAll.includes(u.role), today};
   };
   const ledger = [];
+  const demoSent = {};
+  const demoFund = () => { const live = ledger.filter(e => e.status!=='CANCELLED'), sum = t => Math.round(live.filter(e => e.type===t).reduce((a, e) => a + Number(e.amount), 0) * 100) / 100;
+    const r = sum('OPS BUDGET'), d = sum('OPS DISBURSEMENT'); return {received:r, disbursed:d, left:Math.round((r - d) * 100) / 100}; };
   const demoEntry = (t, o) => { const e = {entryNo:'DISB-' + String(ledger.filter(x => x.type==='TRIP BUDGET').length + 1).padStart(5,'0'), date:today, type:'TRIP BUDGET', ref:t.tripId, tripDate:t.date, truckNo:t.truckNo, plateNo:t.plateNo,
     details:[t.customer, t.destination].filter(Boolean).join(' → '), paidTo:t.driver, budget:t.budget, amount:'', payType:'CASH', txnNo:'', photo:'', status:'RELEASED', by:'ACCOUNTANT', at:today + ' 08:15', updBy:'', updAt:'', remarks:'', ...o}; ledger.push(e); return e; };
   trips.filter(t => t.budget).slice(0, 4).forEach((t, i) => demoEntry(t, [{amount:t.budget, payType:'E-WALLET', txnNo:'5012345678' + (901 + i), photo:'demo:gcash-' + i},
     {amount:String(Number(t.budget) - 500), payType:'CASH'}, {amount:t.budget, payType:'BANK TRANSFER', txnNo:'BDO' + (774100 + i), photo:'demo:bank-' + i, paidTo:t.helper1},
     {amount:'1000', payType:'CASH', status:'CANCELLED', remarks:'CANCELLED: wrong trip'}][i]));
+  // operations fund (MANU 2026-10-20): a budget from Accounting and two disbursements
+  const opsRow = (no, type, o) => ledger.push({entryNo:no, type, ref:'', tripDate:'', truckNo:'', plateNo:'', payType:'', txnNo:'', budget:'', status:type==='OPS BUDGET' ? 'RECEIVED' : 'RELEASED', updBy:'', updAt:'', remarks:'', ...o});
+  opsRow('OPB-00001', 'OPS BUDGET', {date:addDays(today, -2), paidTo:'OPS SUPERVISOR', details:'WEEKLY OPERATIONS BUDGET', amount:'20000', photo:'demo:receipt-ops', by:'ACCOUNTANT', at:addDays(today, -2) + ' 08:00'});
+  opsRow('OPD-00001', 'OPS DISBURSEMENT', {date:addDays(today, -1), paidTo:(trips[0] || {}).driver || 'DRIVER', details:'TOLL', amount:'850', photo:'demo:receipt-toll', by:'DISPATCHER', at:addDays(today, -1) + ' 06:40', ref:(trips[0] || {}).tripId || '', tripDate:(trips[0] || {}).date || '', truckNo:(trips[0] || {}).truckNo || '', plateNo:(trips[0] || {}).plateNo || ''});
+  opsRow('OPD-00002', 'OPS DISBURSEMENT', {date:today, paidTo:(trips[1] || {}).helper1 || 'HELPER', details:'MEALS', amount:'300', photo:'', by:'DISPATCHER', at:today + ' 07:10'});
   const demoLiq = {};
   if(ledger[0]) demoLiq[ledger[0].entryNo] = {entryNo:ledger[0].entryNo, ref:ledger[0].ref, date:today, spent:Number(ledger[0].amount) - 300, returned:0, spentOn:'TOLL, PARKING', photo:'', balance:300, status:'OWES', by:'ACCOUNTANT', at:today + ' 17:10', remarks:''};
   ledger.push({entryNo:'PUR-00001', date:addDays(today, -1), type:'PURCHASE', ref:'OR-7781', tripDate:'', truckNo:'', plateNo:'', details:'2 × Brake pad set; 4 L Engine oil 15W-40', paidTo:'AUTO PARTS DEPOT', budget:'', amount:'3450', payType:'CASH', txnNo:'', photo:'demo:receipt-1', status:'PAID', by:'ACCOUNTANT', at:addDays(today, -1) + ' 14:02', updBy:'', updAt:'', remarks:''});
@@ -7752,18 +7946,33 @@ const DEMO = (() => {
       if(me.role!=='ADMIN' && !isNew && was && was.username===me.username) throw new Error('Ask an admin to change your own account. Your password: use the Password button.');
       const v = {username:u.username.toLowerCase(), name:u.name.toUpperCase(), role:u.role, status:u.status, mustChange:!!u.password, lastLogin:''}; if(isNew){ if(users.some(x => x.username===v.username)) throw new Error('Username "'+v.username+'" is already taken.'); users.push(v); } else Object.assign(users.find(x => x.username===v.username), v); return users.map(x => ({...x})); },
     /* ACCT-DEMO-START */
-    acctData: (tok, f, t) => { const me = auth(tok); if(![...CAN.disburse, ...CAN.accounting, ...CAN.viewAll].includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
+    acctData: (tok, f, t) => { const me = auth(tok); if(![...CAN.disburse, ...CAN.accounting, ...CAN.viewAll, ...CAN.opsView, ...CAN.opsBudget, ...CAN.opsDisburse].includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
       if(!f || !t || f > t) throw new Error('Pick a From date on or before the To date.');
       const all = CAN.accounting.includes(me.role) || CAN.viewAll.includes(me.role), inR = d => !!d && d >= f && d <= t;
       const open = ledger.filter(e => e.type==='TRIP BUDGET' && e.status!=='CANCELLED' && (!demoLiq[e.entryNo] || demoLiq[e.entryNo].status!=='LIQUIDATED')).map(e => ({entryNo:e.entryNo, date:e.date, ref:e.ref, tripDate:e.tripDate, truckNo:e.truckNo, plateNo:e.plateNo, details:e.details, paidTo:e.paidTo, amount:Number(e.amount), payType:e.payType}));
-      return {entries: ledger.filter(e => (inR(e.date) || inR(e.tripDate)) && (all || e.type==='TRIP BUDGET')).map(e => ({...e})), jos: all ? demoJos.filter(j => inR(j.done)).map(j => ({...j})) : [], readingOff: false, liq: JSON.parse(JSON.stringify(demoLiq)), open}; },
+      return {entries: ledger.filter(e => (inR(e.date) || inR(e.tripDate)) && (all || e.type==='TRIP BUDGET' || e.type.startsWith('OPS '))).map(e => ({...e})), jos: all ? demoJos.filter(j => inR(j.done)).map(j => ({...j})) : [], readingOff: false, liq: JSON.parse(JSON.stringify(demoLiq)), open, fund: demoFund()}; },
+    opsFund: tok => { const me = auth(tok); if(![...CAN.disburse, ...CAN.accounting, ...CAN.viewAll, ...CAN.opsView, ...CAN.opsBudget, ...CAN.opsDisburse].includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
+      return {...demoFund(), canBudget: CAN.opsBudget.includes(me.role), canDisburse: CAN.opsDisburse.includes(me.role)}; },
+    opsSave: (tok, d) => { const me = auth(tok), B = String(d.kind).toUpperCase()==='BUDGET', type = B ? 'OPS BUDGET' : 'OPS DISBURSEMENT';
+      if(!(B ? CAN.opsBudget : CAN.opsDisburse).includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
+      const amount = Math.round(Number(String(d.amount ?? '').replace(/[₱,\s]/g, '')) * 100) / 100; if(!(amount > 0)) throw new Error('Type the amount in pesos.');
+      const paidTo = String(d.paidTo || '').trim().toUpperCase(); if(!paidTo) throw new Error(B ? 'Type who received the budget.' : 'Pick the employee who got the money.');
+      const purpose = String(d.purpose || '').trim().toUpperCase(); if(!purpose) throw new Error('Type the purpose.');
+      if((d.date || today) > today) throw new Error('The date cannot be in the future.');
+      const f = {date:d.date || today, paidTo, details:purpose, amount:String(amount), photo:d.photo || '', remarks:d.remarks || ''};
+      if(d.entryNo){ const cur = ledger.find(x => x.entryNo===d.entryNo); if(!cur || cur.type!==type) throw new Error(`Entry ${d.entryNo} not found. Refresh.`); if(cur.status==='CANCELLED') throw new Error(`${cur.entryNo} is cancelled.`);
+        Object.assign(cur, f, {updBy:me.name, updAt:stampNow()}); return {entry:{...cur}, fund:demoFund()}; }
+      if(d.ref && demoSent[d.ref]) return demoSent[d.ref];
+      const pre = B ? 'OPB-' : 'OPD-', t = d.trip ? trips.find(x => (d.trip.tripId && x.tripId===d.trip.tripId) || x.row===d.trip.row) : null;
+      const e = {entryNo: pre + String(ledger.filter(x => x.type===type).length + 1).padStart(5, '0'), type, ref:t ? t.tripId : '', tripDate:t ? t.date : '', truckNo:t ? t.truckNo : '', plateNo:t ? t.plateNo : '', payType:'', txnNo:'', budget:'', status:B ? 'RECEIVED' : 'RELEASED', by:me.name, at:stampNow(), updBy:'', updAt:'', ...f};
+      ledger.push(e); const out = {entry:{...e}, fund:demoFund()}; if(d.ref) demoSent[d.ref] = out; return out; },
     liqSave: (tok, d) => { const me = auth(tok); if(!CAN.disburse.includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
       const e = ledger.find(x => x.entryNo===d.entryNo); if(!e || e.type!=='TRIP BUDGET') throw new Error(`Entry ${d.entryNo} not found. Refresh.`); if(e.status==='CANCELLED') throw new Error(`${e.entryNo} is cancelled.`);
       const sp = Number(d.spent) || 0, bk = Number(d.returned) || 0; if(!sp && !bk) throw new Error('Type the receipts total, the change returned, or both.');
       const b = Math.round((Number(e.amount) - sp - bk) * 100) / 100;
       demoLiq[e.entryNo] = {entryNo:e.entryNo, ref:e.ref, date:d.date || today, spent:sp, returned:bk, spentOn:String(d.spentOn || '').toUpperCase(), photo:d.photo || '', balance:b, status:Math.abs(b) < 0.005 ? 'LIQUIDATED' : b > 0 ? 'OWES' : 'OVER', by:me.name, at:stampNow(), remarks:d.remarks || ''};
       return {...demoLiq[e.entryNo]}; },
-    acctReadPhoto: (tok, file, label) => { const me = auth(tok); if(!CAN.disburse.includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
+    acctReadPhoto: (tok, file, label) => { const me = auth(tok); if(![...CAN.disburse, ...CAN.opsBudget, ...CAN.opsDisburse].includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
       if(!file || !file.data) throw new Error('No photo received.');
       return {url:'demo:transfer-' + Date.now(), reading:'OK', why:'', txnNo:'50' + String(Date.now()).slice(-11), amount:''}; },
     acctSave: (tok, d) => { const me = auth(tok); if(!CAN.disburse.includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
@@ -7780,10 +7989,10 @@ const DEMO = (() => {
         Object.assign(cur, f, {updBy:me.name, updAt:stampNow()}); return {...cur}; }
       const t = trips.find(x => (d.ref.tripId && x.tripId===d.ref.tripId) || x.row===d.ref.row); if(!t) throw new Error('Trip not found. Refresh the page.');
       return {...demoEntry(t, {...f, at:stampNow(), by:me.name})}; },
-    acctCancel: (tok, entryNo, reason) => { const me = auth(tok); if(![...CAN.disburse, ...CAN.accounting].includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
+    acctCancel: (tok, entryNo, reason) => { const me = auth(tok); if(![...CAN.disburse, ...CAN.accounting, ...CAN.opsBudget, ...CAN.opsDisburse].includes(me.role)) throw new Error(`Your role (${me.role}) cannot do this.`);
       if(!String(reason || '').trim()) throw new Error('Type why it is cancelled.');
       const cur = ledger.find(x => x.entryNo===entryNo); if(!cur) throw new Error(`Entry ${entryNo} not found. Refresh.`);
-      if(!(cur.type==='PURCHASE' ? CAN.accounting : CAN.disburse).includes(me.role)) throw new Error(`Your role (${me.role}) cannot cancel this entry.`);
+      if(!({'PURCHASE':CAN.accounting, 'OPS BUDGET':CAN.opsBudget, 'OPS DISBURSEMENT':CAN.opsDisburse}[cur.type] || CAN.disburse).includes(me.role)) throw new Error(`Your role (${me.role}) cannot cancel this entry.`);
       Object.assign(cur, {status:'CANCELLED', updBy:me.name, updAt:stampNow(), remarks:(cur.remarks ? cur.remarks + ' | ' : '') + 'CANCELLED: ' + reason}); return {...cur}; },
     getAcctFile: (tok, url) => { auth(tok); const SVGNS = ['http:', '', 'www.w3.org', '2000', 'svg'].join('/'); const svg = `<svg xmlns="${SVGNS}" width="480" height="760"><rect width="100%" height="100%" fill="#fff"/><rect width="100%" height="90" fill="#0A5BD3"/><text x="30" y="58" font-size="30" font-family="sans-serif" fill="#fff">Sample receipt</text><text x="30" y="160" font-size="20" font-family="sans-serif">Amount  PHP 2,500.00</text><text x="30" y="210" font-size="20" font-family="sans-serif">Ref No. 5012 345 678901</text><text x="30" y="260" font-size="16" font-family="sans-serif" fill="#555">${url}</text></svg>`; return {name:url.replace('demo:', '') + '.svg', type:'image/svg+xml', data:btoa(svg)}; },
     /* ACCT-DEMO-END */
