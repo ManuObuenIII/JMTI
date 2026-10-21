@@ -1117,6 +1117,9 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .br-head{margin:0 0 10px;font-size:14px;line-height:1.45}
 .br-tbl tfoot td{font-weight:700;border-top:2px solid #CBD5E1}
 .br-ph-h{margin:16px 0 8px}
+.nd-km{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.nd-km input{width:90px;min-width:0}
+.cl-rates input.cl-km{width:80px;min-width:0;text-align:right}
+#lowTbl td:first-child,.hs-tbl td.n,.hs-tbl th.n{white-space:nowrap}   /* peso amounts stay on one line */
 .br-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .br-ph{margin:0;border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff;break-inside:avoid}
 .br-img{min-height:80px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px}
@@ -1341,6 +1344,11 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
     <div class="panel sumpanel" id="topPanel">
       <div class="sumhead"><h3>Top 10 <small>trips counted like the accounts, then KMS</small></h3><div class="chips" id="topView"></div></div>
       <div class="tops" id="tops"></div>
+    </div>
+    <!-- MANU 2026-10-21 "add in dashboard 20 drivers and helpers earning the least": estimated trip income, pay roles only -->
+    <div class="panel" id="lowPanel" hidden>
+      <div class="sumhead"><h3>Earning the least <small id="lowNote"></small></h3><div class="chips" id="lowView"></div></div>
+      <div class="tbl-wrap"><table class="hs-tbl" id="lowTbl"><thead><tr><th>#</th><th>Name</th><th>Trips</th><th class="n">Est. income</th></tr></thead><tbody></tbody></table></div>
     </div>
     <div class="panel" id="hdPanel">
       <h3>Trip hardship by route <small id="hdNote"></small></h3>
@@ -1666,6 +1674,11 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <div class="chips" id="clChips" style="margin:-6px 0 10px"></div>
       <div class="hint-line" id="clNote" style="margin:0 0 10px"></div>
       <div class="tbl-wrap" style="max-height:640px"><table id="clTbl"><thead><tr><th>Client</th><th>Account</th><th>Contact</th><th class="n">Routes with a rate</th><th class="n">Billed</th><th class="n">Paid</th><th class="n">Balance owed</th><th class="n">To bill</th></tr></thead><tbody></tbody></table></div>
+      <!-- MANU 2026-10-21 "in client, show trip without distance yet, should be able to edit" -->
+      <div class="panel" style="margin-top:14px" id="ndPanel">
+        <h3 style="margin-top:0">Trips with no distance yet <small id="ndNote"></small></h3>
+        <div class="tbl-wrap" style="max-height:520px"><table id="ndTbl"><thead><tr><th>Route</th><th class="n">Trips</th><th>Dates</th><th>KM (one way)</th></tr></thead><tbody></tbody></table></div>
+      </div>
       <div class="panel" style="margin-top:14px">
         <h3 style="margin-top:0">Payments received <small id="clPayNote"></small></h3>
         <div class="tbl-wrap" style="max-height:520px"><table id="clPays"><thead><tr><th>Date paid</th><th>Client</th><th class="n">Amount</th><th>Reference</th><th>Remarks</th><th>Recorded by</th><th>Status</th></tr></thead><tbody></tbody></table></div>
@@ -2045,7 +2058,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
+const WRITES = ['saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 function submitTick(){
@@ -2701,7 +2714,7 @@ function fillDest(customer){
 }
 function tripKm(t){ const k = kmFor(t.customer, t.destination); return k !== '' ? k : String(t.kms||'').trim(); }
 function kmFor(customer, dest){
-  const km = S.boot.km || {}, c = nameKey(customer), d = nameKey(dest);
+  const km = (S.boot && S.boot.km) || {}, c = nameKey(customer), d = nameKey(dest);   // HR has no boot data: trip KMS only
   return km[c+'|'+d] ?? km['|'+d] ?? '';
 }
 /** Source / destination must be in CLIENT LIST: returns {customer, destination} as spelled there, or {err}. */
@@ -2813,6 +2826,31 @@ function loadLastYear(from, to){
     renderDashboard();
   }).then(() => { if(S.ly === req && req.loading){ req.loading = false; req.err = true; renderDashboard(); } });
 }
+/**
+ * Dashboard: the 20 active drivers and 20 active helpers with the lowest estimated trip income in the Dashboard dates (all accounts,
+ * round trip legs 0.5, rate per trip by distance; people with no trip show ₱0). Only for may('payView'); tap a name for the pop-up.
+ */
+const LOW = {role:'driver', peopleAsked:false};
+function renderLowPay(){
+  const box = $('lowPanel'); if(!box) return;
+  box.hidden = !may('payView'); if(box.hidden) return;
+  if(!S.people) S.people = lsGet('jmti_people');
+  if(!S.people && !LOW.peopleAsked){ LOW.peopleAsked = true; call('listManpower').then(p => { S.people = p; lsSet('jmti_people', p); renderLowPay(); }).catch(() => {}); }
+  const by = {driver:{}, helper:{}}, add = (role, n, t, w, km) => { const k = nameKey(n); if(!k) return; const p = by[role][k] || (by[role][k] = {pay:0, n:0, none:0, over:0, trips:0});
+    p.trips += w; if(!km){ p.none += w; return; } p.pay += payRate(role, km) * w; p.n += w; if(km > 200) p.over += w; };
+  S.trips.filter(isTrip).forEach(t => { const w = legW(t), km = payKm(t); add('driver', t.driver, t, w, km); [t.helper1, t.helper2].forEach(h => add('helper', h, t, w, km)); });
+  const pos = {driver:'Driver', helper:'Helper'};
+  const list = role => (S.people || []).filter(p => p.status==='ACTIVE' && p.position===pos[role]).map(p => { const x = by[role][nameKey(p.full)];
+    return {p, trips: x ? x.trips : 0, ...payEst(x, role)}; }).sort((a, b) => a.est - b.est || a.trips - b.trips || a.p.full.localeCompare(b.p.full));
+  const L = {driver: list('driver'), helper: list('helper')};
+  counterChips($('lowView'), [['driver', 'Drivers', Math.min(20, L.driver.length)], ['helper', 'Helpers', Math.min(20, L.helper.length)]], LOW.role, v => { LOW.role = v; renderLowPay(); });
+  const rows = L[LOW.role].slice(0, 20), {from, to} = S.range;
+  $('lowNote').textContent = `estimated trip income ${from===to ? 'on ' + fmtDay(from) : `from ${fmtDay(from)} to ${fmtDay(to)}`}, all accounts, active ${LOW.role}s, lowest first`;
+  $('lowTbl').tBodies[0].innerHTML = !S.people ? '<tr><td colspan="4" class="empty-cell">Loading the drivers and helpers…</td></tr>'
+    : rows.length ? rows.map((x, i) => `<tr><td>${i + 1}</td><td><b>${pLink(x.p.full)}</b>${x.p.truck ? `<small>Truck ${esc(x.p.truck)} today</small>` : ''}</td><td>${x.trips ? fmtN(x.trips) : '<span class="mp-idle">0</span>'}</td>`
+      + `<td class="n">${x.est ? pesoTxt(Math.round(x.est)) : '<span class="mp-idle">₱0</span>'}${x.none ? `<small>${fmtN(x.none)} at average rate</small>` : ''}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="empty-cell">No active people in this list.</td></tr>';
+}
 function renderDashboard(){
   if(!['dashboard','trips'].includes(S.tab)) return;
   const LY = S.cmp ? S.ly : null, lyOk = !!(LY && LY.trips && !LY.none);
@@ -2820,6 +2858,7 @@ function renderDashboard(){
   const all = S.trips.filter(dashPass());
   const trips = all.filter(isTrip);
   renderHardship(trips);
+  renderLowPay();
   const count = st => wsum(trips.filter(t => stageOf(t)===st), legW);   // round trips: 0.5 per leg (MANU 2026-10-13)
   const nTrips = wsum(trips, legW);
   const moving = trips.filter(t => MOVING.includes(stageOf(t)));
@@ -5066,12 +5105,15 @@ function renderMpRange(){
   if(!S.mpRange || !S.people) return;
   const role = $('mrRole').value, counts = S.mpRange[role==='Driver' ? 'driver' : 'helper'] || {};
   const span = Math.round((new Date($('mrTo').value+'T00:00') - new Date($('mrFrom').value+'T00:00')) / 864e5) + 1, worked = S.mpRange.days || {};
-  const people = S.people.filter(p => p.status==='ACTIVE' && p.position===role).map(p => ({p, n: counts[nameKey(p.full)] || 0, off: Math.max(0, span - (worked[nameKey(p.full)] || 0))}));
+  const payBy = S.mpRange.pay && S.mpRange.pay[role==='Driver' ? 'driver' : 'helper'], prole = role==='Driver' ? 'driver' : 'helper';   // estimated income, pay roles only
+  const people = S.people.filter(p => p.status==='ACTIVE' && p.position===role).map(p => ({p, n: counts[nameKey(p.full)] || 0, off: Math.max(0, span - (worked[nameKey(p.full)] || 0)), pay: payBy ? payEst(payBy[nameKey(p.full)], prole) : null}));
+  $('mrTbl').tHead.rows[0].innerHTML = `<th>#</th><th>Name</th><th>Trips</th>${payBy ? '<th class="n">Est. income</th>' : ''}<th>Days without trip</th><th>Truck today</th><th>Last trip</th>`;
   const none = people.filter(x => !x.n).length;
   const list = people.filter(x => !$('mrNone').checked || !x.n).sort((a,b) => a.n - b.n || b.off - a.off || a.p.full.localeCompare(b.p.full));
-  $('mrNote').innerHTML = `${people.length} active ${role.toLowerCase()}s · <b>${none}</b> with no trip as ${role.toLowerCase()} from ${esc(fmtDay($('mrFrom').value))} to ${esc(fmtDay($('mrTo').value))} · lowest count first · tap a name for their record`;
-  $('mrTbl').tBodies[0].innerHTML = list.length ? list.map((x,i) => `<tr class="rowbtn" data-row="${x.p.row}"><td>${i+1}</td><td><b>${esc(x.p.full)}</b></td><td>${x.n ? `<b>${fmtN(x.n)}</b>` : '<span class="mp-idle">0</span>'}</td><td>${x.off===span ? `<span class="mp-idle">${x.off} of ${span} (all)</span>` : `${x.off} of ${span}`}</td><td>${x.p.truck ? tLink(x.p.truck) : '—'}</td><td>${x.p.lastTrip ? esc(fmtDay(x.p.lastTrip)) : '<span class="dim">—</span>'}</td></tr>`).join('')
-    : `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">${$('mrNone').checked ? 'Everyone had at least one trip in these dates.' : 'Nobody to show.'}</td></tr>`;
+  $('mrNote').innerHTML = `${people.length} active ${role.toLowerCase()}s · <b>${none}</b> with no trip as ${role.toLowerCase()} from ${esc(fmtDay($('mrFrom').value))} to ${esc(fmtDay($('mrTo').value))} · lowest count first · tap a name for their record`
+    + (payBy ? ` · estimated income <b>${pesoTxt(Math.round(people.reduce((a, x) => a + x.pay.est, 0)))}</b> in all (rate per trip by distance)` : '');
+  $('mrTbl').tBodies[0].innerHTML = list.length ? list.map((x,i) => `<tr class="rowbtn" data-row="${x.p.row}"><td>${i+1}</td><td><b>${esc(x.p.full)}</b></td><td>${x.n ? `<b>${fmtN(x.n)}</b>` : '<span class="mp-idle">0</span>'}</td>${payBy ? `<td class="n">${x.pay.est ? pesoTxt(Math.round(x.pay.est)) : '—'}${x.pay.none ? `<small>${fmtN(x.pay.none)} at average rate</small>` : ''}</td>` : ''}<td>${x.off===span ? `<span class="mp-idle">${x.off} of ${span} (all)</span>` : `${x.off} of ${span}`}</td><td>${x.p.truck ? tLink(x.p.truck) : '—'}</td><td>${x.p.lastTrip ? esc(fmtDay(x.p.lastTrip)) : '<span class="dim">—</span>'}</td></tr>`).join('')
+    : `<tr><td colspan="${payBy ? 7 : 6}" style="text-align:center;color:var(--muted);padding:20px">${$('mrNone').checked ? 'Everyone had at least one trip in these dates.' : 'Nobody to show.'}</td></tr>`;
 }
 /** Refresh button: lists who has had no trip for 30 days, then sets them INACTIVE after confirming (MANU). */
 async function refreshInactive(){
@@ -5247,6 +5289,17 @@ function renderRem(){
   if(S.tab==='fleet') box(el.fleet, ['pms','docs']);
   if(S.tab==='manpower') box(el.manpower, ['lic']);
 }
+
+/* ---- Estimated income (MANU 2026-10-21 "based on the rate matrix of the drivers and helpers, generate the estimated income of the drivers
+   and add to analytics", "shown in jmti app"): pay per trip by one-way distance, same table as Code.gs PAY_BANDS. Over 200 km has no rate
+   yet (paid at 151-200, counted apart); a round trip's legs are 0.5 each; trips with no distance take the person's average rate for that
+   role (or the 0-15 km rate). Admin, Boss, HR, Accounting and Payroll see it (may('payView')). */
+const PAY_BANDS = {driver:[[15,1000],[50,1050],[100,1250],[150,1450],[200,1650]], helper:[[15,825],[50,850],[100,900],[150,1050],[200,1150]]};
+const payRate = (role, km) => { const b = PAY_BANDS[role]; return (b.find(x => km <= x[0]) || b[b.length - 1])[1]; };
+const payKm = t => { const k = numOf(t.kms); return k > 0 && k <= 400 ? k : numOf(kmFor(t.customer, t.destination)); };
+/** {est, pay, n, none, over, avg} for a pay entry {pay, n, none, over} of one role. */
+const payEst = (p, role) => { if(!p) return {est:0, pay:0, n:0, none:0, over:0, avg:0}; const avg = p.n ? p.pay / p.n : PAY_BANDS[role][0][1]; return {...p, avg, est: p.pay + p.none * avg}; };
+const payBandsHtml = () => `<table class="hs-tbl"><thead><tr><th>Distance (one way)</th><th class="n">Driver</th><th class="n">Helper</th></tr></thead><tbody>${PAY_BANDS.driver.map((b, i) => `<tr><td>${i ? PAY_BANDS.driver[i - 1][0] + 1 : 0} to ${b[0]} km${i===PAY_BANDS.driver.length - 1 ? ' (also over 200 km for now)' : ''}</td><td class="n">${pesoTxt(b[1])}</td><td class="n">${pesoTxt(PAY_BANDS.helper[i][1])}</td></tr>`).join('')}</tbody></table>`;
 
 /* ===== Manpower / Fleet pop-ups: trip record, statistics and analysis (view only) ===== */
 const numOf = v => { const n = parseFloat(String(v ?? '').replace(/,/g,'').replace(/[^0-9.\-]/g,'')); return isFinite(n) ? n : 0; };
@@ -5447,6 +5500,21 @@ function hsScoreFill(p, f, to, details){
   }).catch(() => { set0(); });
   const set0 = () => { const b = document.querySelector('[data-hk="score"] b'); if(b) b.textContent = '—'; };
 }
+/** Estimated income from the trips in the chosen dates (round trip legs 0.5): totals, per week / month, and each trip's rate. */
+function personPay(ok, span){
+  const rows = ok.map(t => { const role = t._role==='Driver' ? 'driver' : 'helper', km = payKm(t), w = t._w ?? 1; return {t, role, km, w, rate: km ? payRate(role, km) : 0}; });
+  const by = {}; rows.forEach(r => { const p = by[r.role] || (by[r.role] = {pay:0, n:0, none:0, over:0}); if(!r.km){ p.none += r.w; return; } p.pay += r.rate * r.w; p.n += r.w; if(r.km > 200) p.over += r.w; });
+  const e = {driver: payEst(by.driver, 'driver'), helper: payEst(by.helper, 'helper')};
+  rows.forEach(r => { if(!r.km){ r.rate = e[r.role].avg; r.guess = true; } });
+  const est = e.driver.est + e.helper.est, none = e.driver.none + e.helper.none, over = e.driver.over + e.helper.over;
+  const line = (lbl, x) => x.n || x.none ? `<li><span>As ${lbl}: ${fmtN(x.n + x.none)} trip${x.n + x.none===1 ? '' : 's'}${x.none ? ` (${fmtN(x.none)} with no distance, at ${pesoTxt(Math.round(x.avg))} each)` : ''}</span><b>${pesoTxt(Math.round(x.est))}</b></li>` : '';
+  const html = `<ul class="hs-top">${line('driver', e.driver)}${line('helper', e.helper)}<li><span>Total in these dates</span><b>${pesoTxt(Math.round(est))}</b></li>`
+    + (span >= 7 ? `<li><span>About per week</span><b>${pesoTxt(Math.round(est / span * 7))}</b></li><li><span>About per month</span><b>${pesoTxt(Math.round(est / span * 30.4))}</b></li>` : '') + `</ul>`
+    + `<p class="hint">Estimate from the rate per trip by one-way distance (KMS, else CLIENT LIST). A round trip counts as one trip at its distance (each leg half).${over ? ` ${fmtN(over)} trip${over===1 ? '' : 's'} over 200 km use the 151 to 200 km rate (no rate yet).` : ''}${none ? ' Trips with no distance use the average rate.' : ''} Not the payroll: no deductions, allowances or guarantees.</p>`
+    + (rows.length ? `<table class="hs-tbl"><thead><tr><th>Date</th><th>Route</th><th>Role · km</th><th class="n">Pay</th></tr></thead><tbody>${rows.slice(0, 150).map(r => `<tr><td>${esc(fmtDay(r.t.date))}</td><td>${esc(r.t.customer || '—')}<small>→ ${esc(r.t.destination || '—')}</small></td><td>${r.role==='driver' ? 'Driver' : 'Helper'}<small>${r.km ? fmtN(r.km) + ' km' : 'no distance'}</small></td><td class="n">${pesoTxt(Math.round(r.rate * r.w))}${r.w < 1 ? '<small>half, round trip</small>' : ''}${r.guess ? '<small>average rate</small>' : ''}${r.km > 200 ? '<small>over 200 km</small>' : ''}</td></tr>`).join('')}</tbody></table>${rows.length > 150 ? `<p class="hint">Showing the latest 150 of ${rows.length} trips.</p>` : ''}` : '<p class="hint">No trips in these dates.</p>')
+    + `<div class="hs-sec">Rate per trip</div>${payBandsHtml()}`;
+  return {est, html};
+}
 async function showPersonHistory(p){
   if(!p) return;
   openPop(p.full, `${esc(p.position || 'Driver / helper')}${p.status ? ' · ' + esc(p.status) : ''}${p.truck ? ' · truck ' + esc(p.truck) + ' today' : ''}`, '<p class="hint">Loading trips…</p>',
@@ -5465,10 +5533,11 @@ async function showPersonHistory(p){
     const asDriver = wsum(st.ok.filter(t => t._role==='Driver')), asHelper = st.n - asDriver, off = Math.max(0, span - st.days);
     const partners = tallyTop(st.ok, t => [t.driver, t.helper1, t.helper2].filter(n => n && nameKey(n)!==k).join(' · '), 3);
     const ds = daysSince(lastAll);
+    const pay = may('payView') ? personPay(st.ok, span) : null;
     const note = `${hsWhen(f, to)}: ${fmtN(st.n)} trip${st.n===1 ? '' : 's'}${st.ok.length ? ` (${fmtN(asDriver)} as driver, ${fmtN(asHelper)} as helper)` : ''}, worked ${st.days} of ${span} day${span===1 ? '' : 's'}, ${off} day${off===1 ? '' : 's'} without a trip.`
       + (st.cancelled ? ` ${st.cancelled} cancelled or NO TRIP.` : '') + ' ' + (lastAll ? (ds <= 0 ? 'Had a trip today.' : `Last trip ${fmtDay(lastAll)} (${ds} day${ds===1 ? '' : 's'} ago).`) : 'No trips on record.');
     $('hsOut').innerHTML = `<div class="hs-note">${esc(note)}</div>
-      <div class="hs-grid">${kCard(fmtN(st.n), 'trips in these dates', 'trips')}${kCard(fmtN(st.nDone), 'completed', 'done')}${kCard(st.days, 'days worked', 'days')}${kCard(off, 'days without a trip', 'off')}${kCard(fmtN(asDriver) + ' / ' + fmtN(asHelper), 'as driver / helper', 'role')}${kCard(st.cancelled, 'cancelled / no trip', 'cancel')}${kCard(fmtN(wsum(allOk)), 'trips on record (all dates)', 'all')}${kCard(allOk.length ? esc(fmtDay(allOk[allOk.length - 1].date)) : '—', 'first trip', allOk.length ? 'first' : '')}${kCard(hardAvgTxt(hardAvg(st.ok)), `hardship average (${hardAvg(st.ok).n} rated)`, 'hard')}${kCard('…', 'driver score', 'score')}${kCard('…', 'incidents on record', 'inc')}</div>
+      <div class="hs-grid">${kCard(fmtN(st.n), 'trips in these dates', 'trips')}${kCard(fmtN(st.nDone), 'completed', 'done')}${kCard(st.days, 'days worked', 'days')}${kCard(off, 'days without a trip', 'off')}${kCard(fmtN(asDriver) + ' / ' + fmtN(asHelper), 'as driver / helper', 'role')}${kCard(st.cancelled, 'cancelled / no trip', 'cancel')}${kCard(fmtN(wsum(allOk)), 'trips on record (all dates)', 'all')}${kCard(allOk.length ? esc(fmtDay(allOk[allOk.length - 1].date)) : '—', 'first trip', allOk.length ? 'first' : '')}${kCard(hardAvgTxt(hardAvg(st.ok)), `hardship average (${hardAvg(st.ok).n} rated)`, 'hard')}${kCard('…', 'driver score', 'score')}${kCard('…', 'incidents on record', 'inc')}${pay ? kCard(pesoTxt(Math.round(pay.est)), 'estimated income', 'pay') : ''}</div>
       ${hsBars(st.ok, f, to)}
       <div class="hs-cols"><div><div class="hs-sec">Top routes</div>${topHtml(tallyTop(st.ok, t => t.customer ? `${t.customer} → ${t.destination || '—'}` : ''), 'trips')}</div>
         <div><div class="hs-sec">Accounts</div>${topHtml(tallyTop(st.ok, acctOfTrip), 'trips')}<div class="hs-sec">Trucks used most</div>${topHtml(tallyTop(st.ok, t => t.truckNo ? 'Truck ' + t.truckNo : ''), 'trips')}<div class="hs-sec">Usually works with</div>${topHtml(partners, 'trips')}</div></div>
@@ -5483,7 +5552,8 @@ async function showPersonHistory(p){
       cancel: () => [`Cancelled / no trip · ${cx.length}`, hsList(cx, 'person', null, 'None in these dates.')],
       all: () => [hsTitle('Trips on record, all dates', allOk), hsList(allOk, 'person')],
       first: () => ['First trip on record', hsList(allOk.slice(-1), 'person')],
-      hard: () => { const h = hardAvg(st.ok); return [`Hardship · ${h.n} rated trip${h.n===1 ? '' : 's'}, average ${hardAvgTxt(h)}`, hsList(h.rated, 'person', ['Hardship', hardCell], 'No rated trips in these dates. Routes are rated in the Trip hardship tab.')]; }
+      hard: () => { const h = hardAvg(st.ok); return [`Hardship · ${h.n} rated trip${h.n===1 ? '' : 's'}, average ${hardAvgTxt(h)}`, hsList(h.rated, 'person', ['Hardship', hardCell], 'No rated trips in these dates. Routes are rated in the Trip hardship tab.')]; },
+      ...(pay ? {pay: () => [`Estimated income · ${pesoTxt(Math.round(pay.est))}`, pay.html]} : {})
     };
     const keep = hsOpen;
     hsScoreFill(p, f, to, det);
@@ -6639,6 +6709,8 @@ function initBook(){
   $('clFind').oninput = renderBook;
   $('clCsv').onclick = bookCsv;
   $('clPayBtn').onclick = () => openPayForm('');
+  $('ndTbl').onclick = e => { const b = e.target.closest('[data-ndsave]'); if(b) saveNoDist(Number(b.dataset.ndsave)); };
+  $('ndTbl').onkeydown = e => { const i = e.target.closest('input[data-nd]'); if(i && e.key==='Enter') saveNoDist(Number(i.dataset.nd)); };
   $('clTbl').onclick = e => { const tr = e.target.closest('tr[data-client]'); if(!tr || !CL.data) return; const c = CL.data.clients.find(x => x.client===tr.dataset.client); if(c) openClientCard(c); };
   $('clPays').onclick = e => { const tr = e.target.closest('tr[data-prow]'); if(!tr || !CL.data) return; const p = CL.data.payments.find(x => String(x.row)===tr.dataset.prow); if(p) openPayment(p); };
   bookRange($('soaRange'), (f, t) => { $('soaFrom').value = f; $('soaTo').value = t; loadSoa(); });
@@ -6659,8 +6731,42 @@ function bookSub(sub){
   if(sub==='soa') loadSoa(); else if(sub==='profit') loadProfit(); else renderBook();
 }
 function loadBook(){
-  renderBook();
+  renderBook(); loadNoDist();
   return callFast('clientBook', [], d => { CL.data = d; afterBook(); }, () => CL.data).catch(e => { toast(e.message, true); if(!CL.data) $('clNote').textContent = e.message; });
+}
+/* ---- Route distance (MANU 2026-10-21 "in client, should be able to edit km distance", "show trip without distance yet, should be able
+   to edit"): routes of the last year's trips with no KMS and no CLIENT LIST km; typing the km saves it to CLIENT LIST (saveRouteKm). The
+   trips keep their KMS; a blank KMS reads the route km, so those trips get a distance (pay, reports) without changing GENERAL. */
+const ND = {data:null};
+function loadNoDist(){
+  renderNoDist();
+  return call('noDistanceRoutes').then(d => { ND.data = d; renderNoDist(); }).catch(e => { if(!ND.data) $('ndNote').textContent = '· ' + e.message; });
+}
+function renderNoDist(){
+  const d = ND.data, body = $('ndTbl') && $('ndTbl').tBodies[0]; if(!body) return;
+  const ed = !!(CL.data && CL.data.canEdit), addOk = may('routes');
+  if(!d){ body.innerHTML = '<tr><td colspan="4" class="empty-cell">Looking for trips with no distance…</td></tr>'; return; }
+  const n = d.routes.reduce((a, r) => a + r.trips, 0);
+  $('ndNote').textContent = `· ${plural(n, 'trip')} on ${plural(d.routes.length, 'route')} since ${fmtDay(d.from)}${d.noDest ? `, plus ${plural(d.noDest, 'trip')} with no destination` : ''}`
+    + (ed ? '. Type the km once per route: it goes to the CLIENT LIST and every trip on that route with blank KMS uses it.' : '. View only.');
+  body.innerHTML = d.routes.length ? d.routes.map((r, i) => `<tr><td>${esc(r.source || '—')}<small>→ ${esc(plainDest(r.destination))}${r.inList ? '' : ' · not in the CLIENT LIST'}</small></td><td class="n">${fmtN(r.trips)}</td>`
+    + `<td>${esc(fmtDay(r.last))}${r.first!==r.last ? `<small>since ${esc(fmtDay(r.first))}</small>` : ''}</td>`
+    + `<td>${ed && (r.inList || addOk) ? `<div class="nd-km"><input data-nd="${i}" inputmode="decimal" placeholder="km" autocomplete="off" aria-label="KM"><button class="btn alt" type="button" data-ndsave="${i}">Save</button></div>`
+      : ed ? '<span class="dim">Billing or Admin adds this route first</span>' : '<span class="dim">—</span>'}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="empty-cell">Every trip in the last year has a distance.</td></tr>';
+}
+async function saveNoDist(i){
+  const r = ND.data && ND.data.routes[i], inp = document.querySelector(`#ndTbl input[data-nd="${i}"]`); if(!r || !inp) return;
+  const km = Number(inp.value.replace(/[^0-9.]/g, ''));
+  if(!(km > 0)) return toast('Type the distance in km.', true);
+  const btn = document.querySelector(`#ndTbl [data-ndsave="${i}"]`); btn.disabled = true;
+  try{
+    await call('saveRouteKm', [{source: r.source, destination: r.destination, km}]);
+    if(S.boot && S.boot.km){ S.boot.km[nameKey(r.source) + '|' + nameKey(r.destination)] = km; if(S.boot.km['|' + nameKey(r.destination)]===undefined) S.boot.km['|' + nameKey(r.destination)] = km; }
+    ND.data.routes.splice(i, 1); renderNoDist();
+    toast(`${r.source} → ${plainDest(r.destination)}: ${fmtN(km)} km saved · ${plural(r.trips, 'trip')} now have a distance`);
+    loadBook();
+  }catch(e){ toast(e.message, true); btn.disabled = false; }
 }
 function afterBook(){
   const d = CL.data;
@@ -6668,7 +6774,7 @@ function afterBook(){
   const sel = $('soaClient'), cur = sel.value;
   sel.innerHTML = '<option value="">Pick the client</option>' + d.clients.map(c => `<option value="${esc(c.client)}" ${c.client===cur ? 'selected' : ''}>${esc(c.client)}</option>`).join('');
   if(S.tab!=='clients') return;
-  if(CL.sub==='book') renderBook(); else bookSub(CL.sub);
+  if(CL.sub==='book'){ renderBook(); renderNoDist(); } else bookSub(CL.sub);
 }
 const BOOK_F = {all:['All clients', () => true], owed:['Balance owed', c => c.bal.owed > 0], tobill:['Trips to bill', c => c.bal.toBillTrips > 0], norate:['Routes with no rate', c => c.routes.some(r => r.rate===null)]};
 function renderBook(){
@@ -6703,14 +6809,15 @@ function openClientCard(c){
   const fld = (id, label, v, extra) => ed ? `<label class="f${extra && extra.full ? ' full' : ''}">${label}<input id="${id}" value="${esc(v || '')}" autocomplete="off"${extra && extra.mode ? ` inputmode="${extra.mode}"` : ''}></label>`
     : `<div class="f${extra && extra.full ? ' full' : ''}">${label}<b>${esc(v || '—')}</b></div>`;
   const hist = r => r.history && r.history.length > 1 ? `<small>Before: ${r.history.slice(1).map(h => `${pesoTxt(h.rate)} from ${esc(fmtDay(h.from))}`).join(', ')}</small>` : '';
-  const rows = c.routes.map((r, k) => `<tr><td>${esc(r.source)}<small>→ ${esc(plainDest(r.destination))}</small></td><td class="n">${esc(r.km || '—')}</td><td class="n">${rateTxt(r.rate)}${r.from ? `<small>since ${esc(fmtDay(r.from))}</small>` : ''}${r.next ? `<small>${pesoTxt(r.next.rate)} from ${esc(fmtDay(r.next.from))}</small>` : ''}${hist(r)}</td>`
+  // KM editable here too (MANU 2026-10-21 "in client, should be able to edit km distance")
+  const rows = c.routes.map((r, k) => `<tr><td>${esc(r.source)}<small>→ ${esc(plainDest(r.destination))}</small></td><td class="n">${ed ? `<input class="cl-km" data-k="${k}" inputmode="decimal" value="${esc(r.km || '')}" placeholder="km" autocomplete="off" aria-label="KM">` : esc(r.km || '—')}</td><td class="n">${rateTxt(r.rate)}${r.from ? `<small>since ${esc(fmtDay(r.from))}</small>` : ''}${r.next ? `<small>${pesoTxt(r.next.rate)} from ${esc(fmtDay(r.next.from))}</small>` : ''}${hist(r)}</td>`
     + (ed ? `<td class="cl-new"><input class="cl-rate" data-k="${k}" inputmode="decimal" placeholder="₱ new rate" autocomplete="off" aria-label="New rate"><span>starts on</span><input class="cl-from" data-k="${k}" type="date" value="${m0}" aria-label="Starts on"></td>` : '') + '</tr>').join('');
   openPop(`Client · ${c.client}`, `${esc(acctTxt(c.account))} · ${c.routes.length} route${c.routes.length===1 ? '' : 's'} in the CLIENT LIST`, `
     <div class="ds-sum"><span>Billed <b>${pesoTxt(c.bal.billed)}</b></span><span>Paid <b>${pesoTxt(c.bal.paid)}</b></span><span>Balance owed <b>${pesoTxt(c.bal.owed)}</b></span><span>To bill <b>${pesoTxt(c.bal.toBill)}</b></span></div>
     <h4 style="margin:12px 0 6px">Contact details</h4>
     <div class="form">${fld('ciContact', 'Contact person', i.contact)}${fld('ciPhone', 'Phone', i.phone, {mode:'tel'})}${fld('ciEmail', 'Email', i.email, {mode:'email'})}${fld('ciTin', 'TIN', i.tin)}${fld('ciTerms', 'Terms (days to pay)', i.terms, {mode:'numeric'})}${fld('ciAddress', 'Billing address', i.address, {full:1})}</div>
     <h4 style="margin:14px 0 6px">Rate per trip</h4>
-    ${ed ? '<p class="hint" style="margin:0 0 8px">Type a new rate only where it changes, and the date it starts. Trips before that date keep the old rate.</p>' : ''}
+    ${ed ? '<p class="hint" style="margin:0 0 8px">Type a new rate only where it changes, and the date it starts. Trips before that date keep the old rate. KM is the one-way distance in the CLIENT LIST: trips already saved keep their KMS, trips with blank KMS use it.</p>' : ''}
     ${c.routes.length ? `<div class="tbl-wrap"><table class="poptbl cl-rates"><thead><tr><th>Route</th><th class="n">KM</th><th class="n">Rate now</th>${ed ? '<th>New rate</th>' : ''}</tr></thead><tbody>${rows}</tbody></table></div>`
       : '<p class="hint" style="margin:0">No route for this client in the CLIENT LIST yet. Billing adds routes in Billing → Source, destination &amp; distance.</p>'}`,
     `<button class="btn alt" type="button" onclick="closePop()">Close</button> <button class="btn alt" type="button" id="ciSoa">Statement</button>${ed ? ' <button class="btn alt" type="button" id="ciPay">Record payment</button> <button class="btn road" type="button" id="ciSave">Save</button>' : ''}`, !ed);
@@ -6730,14 +6837,22 @@ function openClientCard(c){
       if(!from) return toast(`Pick the date the rate starts for ${r.source} → ${plainDest(r.destination)}.`, true);
       rates.push({source:r.source, destination:r.destination, rate, from});
     }
-    if(!infoChanged && !rates.length) return toast('Nothing changed.');
+    const kms = [];
+    for(const inp of document.querySelectorAll('#popBody .cl-km')){
+      const r = c.routes[inp.dataset.k], raw = inp.value.replace(/[,\s]/g, ''); if(String(raw)===String(r.km || '')) continue;
+      const km = Number(raw); if(!(km > 0)) return toast(`Type the km for ${r.source} → ${plainDest(r.destination)}.`, true);
+      if(km!==Number(r.km)) kms.push({source:r.source, destination:r.destination, km});
+    }
+    if(!infoChanged && !rates.length && !kms.length) return toast('Nothing changed.');
     const btn = $('ciSave'); btn.disabled = true; btn.textContent = 'Saving…';
     try{
       if(infoChanged) CL.data = await call('saveClientInfo', info);
       if(rates.length) CL.data = await call('saveRates', c.client, rates);
+      if(kms.length){ await call('saveRouteKm', kms); CL.data = await call('clientBook'); loadNoDist();
+        if(S.boot && S.boot.km) kms.forEach(r => { S.boot.km[nameKey(r.source) + '|' + nameKey(r.destination)] = r.km; }); }
       CL.soaKey = ''; CL.prKey = '';
       closePop(); afterBook();
-      toast([infoChanged ? 'Contact details saved' : '', rates.length ? `${rates.length} rate${rates.length===1 ? '' : 's'} saved` : ''].filter(Boolean).join(' · '));
+      toast([infoChanged ? 'Contact details saved' : '', rates.length ? `${rates.length} rate${rates.length===1 ? '' : 's'} saved` : '', kms.length ? `${kms.length} distance${kms.length===1 ? '' : 's'} saved` : ''].filter(Boolean).join(' · '));
     }catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Save'; }
   };
 }
@@ -7972,7 +8087,7 @@ const DEMO = (() => {
   const DEMO_FEED = (() => { try { const r = Number(localStorage.getItem('jmti_demo_feed')); return r > 0 ? {row:r, width:11, keys:['date','truckNo','plateNo','customer','destination','kms','shipmentNo','status','driver','helper1','helper2']} : null; } catch(e){ return null; } })();
   const demoFed = t => !!DEMO_FEED && t.row >= DEMO_FEED.row;
   // same as CAN in Code.gs
-  const CAN = {viewTrips:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','BILLING','ACCOUNTING','PAYROLL'], disburse:['ADMIN','ACCOUNTING','PAYROLL'], opsView:['SUPERVISOR','TEAM LEADER','DISPATCHER'], opsBudget:['ACCOUNTING','ADMIN'], opsDisburse:['ADMIN','DISPATCHER'], social:['ADMIN'], accounting:['ADMIN','ACCOUNTING'], clients:['ADMIN','BILLING','ACCOUNTING'], profit:['ADMIN','ACCOUNTING'], hardship:['ADMIN','SUPERVISOR','TEAM LEADER'], payroll:['ADMIN','PAYROLL'], plan:['ADMIN','TEAM LEADER'], assign:['ADMIN','SUPERVISOR','TEAM LEADER'],
+  const CAN = {viewTrips:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','BILLING','ACCOUNTING','PAYROLL'], disburse:['ADMIN','ACCOUNTING','PAYROLL'], opsView:['SUPERVISOR','TEAM LEADER','DISPATCHER'], opsBudget:['ACCOUNTING','ADMIN'], opsDisburse:['ADMIN','DISPATCHER'], social:['ADMIN'], accounting:['ADMIN','ACCOUNTING'], clients:['ADMIN','BILLING','ACCOUNTING'], profit:['ADMIN','ACCOUNTING'], hardship:['ADMIN','SUPERVISOR','TEAM LEADER'], payroll:['ADMIN','PAYROLL'], payView:['ADMIN','BOSS','HR','ACCOUNTING','PAYROLL'], plan:['ADMIN','TEAM LEADER'], assign:['ADMIN','SUPERVISOR','TEAM LEADER'],
     fleet:['ADMIN','BOSS','TEAM LEADER'], fleetEdit:['ADMIN'], fleetUnits:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER','MAINTENANCE'], dispatch:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER'], dispatchAll:['ADMIN','TEAM LEADER'], routeOnly:['SUPERVISOR'],
     cancel:['ADMIN','TEAM LEADER'], summary:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER'], tripStats:['ADMIN','BOSS','SUPERVISOR','TEAM LEADER'], dispatchAdd:['ADMIN','SUPERVISOR','TEAM LEADER','DISPATCHER'], pod:['ADMIN','POD'], billing:['ADMIN','BILLING'], routes:['ADMIN','BILLING'], docs:['ADMIN','BOSS','POD','BILLING'],
     manpower:['ADMIN','HR'], maintenance:['ADMIN','MAINTENANCE'], users:['ADMIN','HR'], viewAll:['BOSS']};
@@ -8076,7 +8191,10 @@ const DEMO = (() => {
       const hw = DEMO._halves(f, t2);
       trips.filter(t => t.date >= f && t.date <= t2 && ['completed','tukod'].includes(String(t.status).toLowerCase())).forEach(t => { const k = String(t.truckNo); out.trips[k] = (out.trips[k]||0) + (hw[t.key] || 1); if(!seen[k+t.date]){ seen[k+t.date] = 1; out.days[k] = (out.days[k]||0) + 1; } }); return out; },
     _halves: (f, t2) => { const rw = roundTrips(trips.filter(t => t.date >= addDays(f,-3) && t.date <= addDays(t2,3))), out = {}; Object.keys(rw).forEach(k => { out[k] = 0.5; }); return out; },
-    manpowerTripCounts: (tok, f, t2) => { auth(tok); const out = {driver:{}, helper:{}, days:{}}, seen = {}, hw = DEMO._halves(f, t2); trips.filter(t => t.date >= f && t.date <= t2 && isTrip(t)).forEach(t => { const h = hw[t.key] || 1; [t.driver,t.helper1,t.helper2].forEach(n => { n = nameKey(n); if(n && !seen[n+t.date]){ seen[n+t.date] = 1; out.days[n] = (out.days[n]||0)+1; } }); const d = nameKey(t.driver); if(d) out.driver[d] = (out.driver[d]||0)+h; [t.helper1,t.helper2].forEach(p => { p = nameKey(p); if(p) out.helper[p] = (out.helper[p]||0)+h; }); }); return out; },
+    manpowerTripCounts: (tok, f, t2) => { const me = auth(tok); const out = {driver:{}, helper:{}, days:{}}, seen = {}, hw = DEMO._halves(f, t2), pay = CAN.payView.includes(me.role) ? {driver:{}, helper:{}} : null;
+      const addPay = (role, k, t, n) => { if(!pay) return; const p = pay[role][k] || (pay[role][k] = {pay:0, n:0, none:0, over:0}), d = payKm(t); if(!d){ p.none += n; return; } p.pay += payRate(role, d) * n; p.n += n; if(d > 200) p.over += n; };
+      trips.filter(t => t.date >= f && t.date <= t2 && isTrip(t)).forEach(t => { const h = hw[t.key] || 1; [t.driver,t.helper1,t.helper2].forEach(n => { n = nameKey(n); if(n && !seen[n+t.date]){ seen[n+t.date] = 1; out.days[n] = (out.days[n]||0)+1; } }); const d = nameKey(t.driver); if(d){ out.driver[d] = (out.driver[d]||0)+h; addPay('driver', d, t, h); } [t.helper1,t.helper2].forEach(p => { p = nameKey(p); if(p){ out.helper[p] = (out.helper[p]||0)+h; addPay('helper', p, t, h); } }); });
+      if(pay){ out.pay = pay; out.bands = PAY_BANDS; } return out; },
     previewInactive: tok => { auth(tok); const cut = addDays(today, -30); return people.filter(p => p.status==='ACTIVE').map(p => { const k = nameKey(p.full); const last = trips.filter(t => [t.driver,t.helper1,t.helper2].some(n => nameKey(n)===k)).map(t => t.date).sort().pop() || ''; return {row:p.row, full:p.full, position:p.position, hired:p.hired, last}; }).filter(x => [x.last, x.hired].reduce((m,d) => d > m ? d : m, '') < cut); },
     applyInactive: (tok, rows) => { auth(tok); const due = DEMO.previewInactive(tok).filter(x => !rows || rows.map(String).includes(String(x.row))); people.forEach(p => { if(due.some(x => String(x.row)===String(p.row))) p.status = 'INACTIVE'; }); return {changed:due.length, list:due, people: people.map(p => ({...p}))}; },
     idleYesterday: tok => { auth(tok); return {date: addDays(today,-1), trucks: [{truckNo:'91', plateNo:'TST-91', account:'COCA COLA CANLUBANG PLANT', driver:'TEST , DRIVER'},{truckNo:'92', plateNo:'TST-92', account:'COCA COLA SAN FERNANDO', driver:''}]}; },
@@ -8198,6 +8316,18 @@ const DEMO = (() => {
       return {units, pmsRule:{km:5000, days:90}, today, canEdit:['ADMIN','MAINTENANCE'].includes(u.role)}; },
     mntCall: (tok, action) => { const u = auth(tok); if(!['ADMIN','MAINTENANCE'].includes(u.role)) throw new Error(`Your role (${u.role}) cannot do this.`); if(!['saveUnit','savePmsRule'].includes(action)) throw new Error('Not in the preview.'); return {}; },
     routeHardList: tok => { const u = auth(tok); if(!CAN.hardship.includes(u.role) && !CAN.viewAll.includes(u.role)) throw new Error(`Your role (${u.role}) cannot do this.`); return {routeHard:JSON.parse(JSON.stringify(demoHard)), canEdit:CAN.hardship.includes(u.role)}; },
+    noDistanceRoutes: tok => { needBook(tok, 'clients|routes|viewAll'); const from = addDays(today, -365), by = {}; let noDest = 0;
+      const inList = new Set(kmRows.map(r => bk(r.origin) + '|' + bk(r.destination)));
+      trips.filter(t => t.date >= from && isTrip(t) && !payKm(t)).forEach(t => { if(!t.destination){ noDest++; return; } const k = bk(t.customer) + '|' + bk(t.destination);
+        const g = by[k] || (by[k] = {source:t.customer, destination:t.destination, trips:0, first:t.date, last:t.date, inList:inList.has(k)}); g.trips++; if(t.date < g.first) g.first = t.date; if(t.date > g.last) g.last = t.date; });
+      return {from, routes:Object.values(by).sort((a, b) => b.trips - a.trips), noDest}; },
+    saveRouteKm: (tok, items) => { const u = needBook(tok, 'clients|routes'); let saved = 0;
+      (items || []).forEach(r => { const n = Number(String(r.km).replace(/[^0-9.]/g, '')); if(!(n > 0)) throw new Error(`Type the distance in km for ${r.source} → ${r.destination}.`);
+        let cur = kmRows.find(x => bk(x.origin)===bk(r.source) && bk(x.destination)===bk(r.destination));
+        if(!cur){ if(!CAN.routes.includes(u.role)) throw new Error(`${r.source} → ${r.destination} is not in the CLIENT LIST yet. Ask Billing or Admin to add it.`); cur = {row:kmRows.length + 2, origin:r.source, destination:r.destination, km:''}; kmRows.push(cur); }
+        if(Number(cur.km)===n) return; cur.km = String(n); saved++;
+        km[nameKey(r.source) + '|' + nameKey(r.destination)] = n; if(km['|' + nameKey(r.destination)]===undefined) km['|' + nameKey(r.destination)] = n; });
+      return {saved}; },
     saveRates: (tok, client, rows) => { const u = needBook(tok, 'clients'); if(!rows || !rows.length) throw new Error('No rate changed.');
       rows.forEach(r => { if(!(Number(r.rate) > 0)) throw new Error('Enter a rate above 0 for ' + r.source + '.'); if(!r.from) throw new Error('Pick the date the rate starts.'); });
       rows.forEach(r => bookRates.push({source:r.source, destination:r.destination, rate:Number(r.rate), from:r.from, by:u.name})); return bookOut(tok); },
