@@ -661,6 +661,8 @@ table.xl tr.routehd.mnthd span{color:#B91C1C}
 .fm-tbl tr.fm-hd td{background:#E8EEFF;color:#0A1F8F;font-weight:700;white-space:normal}
 .fm-tbl tr.fm-hd td span{font-weight:500;color:#475569}
 .fm-tbl tr.fm-r{cursor:pointer}
+.fm-tbl tr.fm-sec td{background:#1E3A8A;color:#fff;font-size:13.5px;white-space:normal}
+.fm-tbl tr.fm-sec td span{color:#DBEAFE;font-weight:500}
 .fm-low{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#FEE2E2;color:#B91C1C;font-size:11px;font-weight:700}
 .fm-open{color:#64748B;font-weight:500}
 table.xl tbody tr.acchd.garhd td{background:#E2E8F0;color:#1E293B;border-color:#CBD5E1}
@@ -1536,11 +1538,13 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <label class="f">From<input type="date" id="fmFrom"></label>
       <label class="f">To<input type="date" id="fmTo"></label>
       <label class="f grow">Find<input id="fmFind" placeholder="Truck, plate, driver"></label>
+      <label class="f">Account<select id="fmAcct"><option value="">All accounts</option><option value="0">Coca Cola Canlubang</option><option value="1">Coca Cola San Fernando</option><option value="2">Other accounts</option><option value="3">Not counted in an account</option></select></label>
+      <div class="chips" id="fmView"></div>
       <div class="chips" id="fmChips"></div>
     </div>
     <p class="hint" id="fmNote" style="margin:0 0 10px"></p>
     <div class="kpis" id="fmKpis"></div>
-    <div class="panel" style="padding:0" id="fmPanel"><div class="tbl-wrap"><table class="poptbl fm-tbl"><thead><tr><th>Refuel</th><th class="n">Liters</th><th class="n">Trips</th><th class="n">Km</th><th class="n">km/L</th><th>Until</th></tr></thead><tbody id="fmBody"></tbody></table></div></div>
+    <div class="panel" style="padding:0" id="fmPanel"><div class="tbl-wrap"><table class="poptbl fm-tbl"><thead id="fmHead"><tr><th>Refuel</th><th>Trip</th><th class="n">Liters</th><th class="n">Km</th><th class="n">km/L</th></tr></thead><tbody id="fmBody"></tbody></table></div></div>
   </section>
 
   <!-- ================= POD ================= -->
@@ -6765,12 +6769,18 @@ function openUnitEdit(u){
   };
 }
 /* ================= Fuel monitoring tab (MANU 2026-10-21) =================
-   "ADD FUEL MONITORING TAB ACCESSIBLE BY ADMIN, SUPERVISOR, BOSS AND TEAM LEADER", "FUEL MONITORING IS COMPUTED AS TOTAL DISTANCE TRAVELLED
-   BASED ON REGISTERED DISTANCE BY THE TRUCK IN BETWEEN REFUEL", "SHO CUSTOM RANGE", "SHOW FUEL ECONOMY ON EVERY REFUEL".
-   Code.gs fuelMonitor: every row with liters in FUEL (W) is a refuel; its km = the registered km (KMS, else the route km) of the truck's
-   trips from that refuel until the next one; km/L = km ÷ liters. One line per refuel, grouped by truck (lowest average km/L first).
-   A refuel under 80% of the fleet's km/L in these dates is marked Low. Read only: Boss sees the same as the others. */
-const FM = {data:null, filter:'all'};
+   "ADD FUEL MONITORING TAB ACCESSIBLE BY ADMIN, SUPERVISOR, BOSS AND TEAM LEADER", "SHO CUSTOM RANGE", "SHOW FUEL ECONOMY ON EVERY REFUEL",
+   "the trucks refuel every trip so the refuel row is its trip", "for coca cola, computation is, the km distance of the trip multiplied by 2
+   since its rountrip divided by the refuel in L". Code.gs fuelMonitor: every row with liters in FUEL (W) is a refuel; km/L = that trip's km
+   (× 2 for a Coca Cola round trip) ÷ its liters. One line per refuel, grouped by truck (lowest average km/L first). A refuel under 80% of
+   the fleet's km/L in these dates is marked Low. Read only: Boss sees the same as the others.
+   MANU 2026-10-21 "get the average fuel consumption of truck per destination, limit is 2 km/L, below that is a warning": a Per destination
+   view (each truck's average km/L per destination: total km ÷ total liters of its refuels there), and Low is now under FUEL_MIN km/L. */
+const FUEL_MIN = 2;
+/** Account sections (MANU 2026-10-21 "refuel can be sorted by account"), in the Truck Plan order. */
+const FM_SECS = ['Coca Cola Canlubang', 'Coca Cola San Fernando', 'Other accounts', 'Not counted in an account'];
+const fmSec = a => { const k = nameKey(a); return k.includes('CANLUBANG') ? 0 : k.includes('SANFERNANDO') ? 1 : k ? 2 : 3; };
+const FM = {data:null, filter:'all', view:'refuel'};
 const fmKey = () => $('fmFrom').value + '|' + $('fmTo').value;
 function initFuelTab(){
   const T = TODAY(), som = T.slice(0, 8) + '01', lm = addDays(som, -1);
@@ -6781,7 +6791,8 @@ function initFuelTab(){
   const dates = () => { let f = $('fmFrom').value, t = $('fmTo').value; if(!f || !t) return; if(f > t){ [f, t] = [t, f]; $('fmFrom').value = f; $('fmTo').value = t; }
     $('fmRange').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', 'false')); loadFuelTab(); };
   $('fmFrom').onchange = $('fmTo').onchange = dates;
-  $('fmFind').oninput = renderFuel;
+  $('fmFind').oninput = $('fmAcct').onchange = renderFuel;
+  filterChips($('fmView'), [['refuel', 'Each refuel'], ['dest', 'Per destination']], 'refuel', v => { FM.view = v; renderFuel(); });
   $('fmBody').onclick = e => { const tr = e.target.closest('tr[data-fm]'); if(tr && !e.target.closest('a')) openFuelRefuel(tr.dataset.fm); };
 }
 function loadFuelTab(){
@@ -6790,48 +6801,81 @@ function loadFuelTab(){
   return callFast('fuelMonitor', [f, t], d => { if(fmKey() !== k) return; d._k = k; FM.data = d; renderFuel(); }, () => FM.data && FM.data._k===k)
     .catch(e => { if(fmKey()===k && !FM.data){ $('fmNote').textContent = e.message; $('fmBody').innerHTML = ''; } });
 }
-/** All refuels with their truck, the fleet km/L (refuels already closed) and the Low mark. */
+/** All refuels with their truck, the fleet km/L (refuels with km) and the Low mark. */
 function fuelRows(d){
   const all = [];
   (d.trucks || []).forEach(tk => tk.refuels.forEach((r, i) => all.push({...r, truck: tk.truck, truckPlate: tk.plate, id: tk.truck + '#' + i})));
-  const closed = all.filter(r => r.kmPerL !== null), km = closed.reduce((a, r) => a + r.km, 0), L = closed.reduce((a, r) => a + r.liters, 0);
+  const withKm = all.filter(r => r.kmPerL !== null), km = withKm.reduce((a, r) => a + r.km, 0), L = withKm.reduce((a, r) => a + r.liters, 0);
   const fleet = L ? km / L : null;
-  all.forEach(r => { r.low = fleet !== null && r.kmPerL !== null && r.kmPerL < fleet * 0.8; });
-  return {all, fleet, km, L, closed};
+  all.forEach(r => { r.low = r.kmPerL !== null && r.kmPerL < FUEL_MIN; });
+  return {all, fleet, km, L};
 }
 function renderFuel(){
   if(!$('fmBody')) return;
   const d = FM.data, f = $('fmFrom').value, t = $('fmTo').value;
-  if(!d){ $('fmNote').textContent = 'Loading the refuels…'; $('fmKpis').innerHTML = ''; $('fmBody').innerHTML = '<tr><td colspan="6" class="empty-cell">Loading…</td></tr>'; return; }
-  const {all, fleet, km, L, closed} = fuelRows(d);
+  if(!d){ $('fmNote').textContent = 'Loading the refuels…'; $('fmKpis').innerHTML = ''; $('fmBody').innerHTML = '<tr><td colspan="5" class="empty-cell">Loading…</td></tr>'; return; }
+  const fa = $('fmAcct').value, rows0 = fuelRows(d);
+  const all = rows0.all.filter(r => fa==='' || String(fmSec(r.acct))===fa);   // the Account box narrows everything below, the numbers too
+  const withKm = all.filter(r => r.kmPerL !== null), km = withKm.reduce((a, r) => a + r.km, 0), L = withKm.reduce((a, r) => a + r.liters, 0), fleet = L ? km / L : null;
   const q = $('fmFind').value.toLowerCase().trim();
-  const nLow = all.filter(r => r.low).length, nOpen = all.filter(r => !r.closed).length;
-  counterChips($('fmChips'), [['all', 'All refuels', all.length], ['low', 'Low km/L', nLow], ['open', 'Not closed yet', nOpen]], FM.filter, v => { FM.filter = v; renderFuel(); });
-  const show = all.filter(r => (FM.filter!=='low' || r.low) && (FM.filter!=='open' || !r.closed)
-    && (!q || [r.truck, r.plate, r.truckPlate, r.driver].join(' ').toLowerCase().includes(q)));
-  const by = {}; show.forEach(r => (by[r.truck] = by[r.truck] || []).push(r));
-  const avgOf = l => { const c = l.filter(r => r.kmPerL !== null), k = c.reduce((a, r) => a + r.km, 0), x = c.reduce((a, r) => a + r.liters, 0); return {km: k, L: x, kmpl: x ? k / x : null}; };
-  const trucks = Object.keys(by).map(k => ({k, list: by[k].sort((a, b) => a.date.localeCompare(b.date) || a.row - b.row), avg: avgOf(all.filter(r => r.truck===k))}))
-    .sort((a, b) => (a.avg.kmpl===null) - (b.avg.kmpl===null) || (a.avg.kmpl || 0) - (b.avg.kmpl || 0) || String(a.k).localeCompare(String(b.k), undefined, {numeric:true}));
+  const nLow = all.filter(r => r.low).length, nNo = all.filter(r => r.kmPerL === null).length;
+  counterChips($('fmChips'), [['all', 'All', all.length], ['low', `Under ${FUEL_MIN} km/L`, nLow], ['nokm', 'No km', nNo]], FM.filter, v => { FM.filter = v; renderFuel(); });
   const n2 = v => v===null || v===undefined ? '—' : Number(v).toFixed(2), lit = v => Number(v).toLocaleString('en-PH', {maximumFractionDigits:2});
-  $('fmNote').textContent = `Refuels from ${fmtDay(f)} to ${fmtDay(t)}. Each refuel's liters cover the truck's trips from that refuel until its next one; km is each trip's registered distance (KMS, else the route km in Clients), every leg counted. km/L = km ÷ liters. Low = under 80% of the fleet's ${n2(fleet)} km/L. Tap a refuel to see its trips.`;
-  $('fmKpis').innerHTML = `<div class="kpi"><div class="v">${n2(fleet)}</div><div class="l">Fleet km/L</div><div class="s">${fmtN(Math.round(km))} km ÷ ${lit(Math.round(L))} L</div></div>`
-    + `<div class="kpi"><div class="v">${fmtN(all.length)}</div><div class="l">Refuels</div><div class="s">${(d.trucks || []).length} truck${(d.trucks || []).length===1 ? '' : 's'} · ${lit(Math.round(all.reduce((a, r) => a + r.liters, 0)))} L</div></div>`
-    + `<div class="kpi"><div class="v">${fmtN(nLow)}</div><div class="l">Low km/L</div><div class="s">under ${n2(fleet === null ? null : fleet * 0.8)} km/L</div></div>`
-    + `<div class="kpi"><div class="v">${fmtN(nOpen)}</div><div class="l">Not closed yet</div><div class="s">no next refuel yet, km so far</div></div>`;
-  FM.rows = {}; show.forEach(r => { FM.rows[r.id] = r; });
-  $('fmBody').innerHTML = trucks.length ? trucks.map(tk => {
-    const a = tk.avg, first = tk.list[0];
-    return `<tr class="fm-hd"><td colspan="6">${tLink(tk.k, 'Truck ' + tk.k)} <span>· ${esc(first.truckPlate || first.plate || '')} · ${tk.list.length} refuel${tk.list.length===1 ? '' : 's'} · ${a.kmpl===null ? 'no closed refuel yet' : `${n2(a.kmpl)} km/L (${fmtN(Math.round(a.km))} km ÷ ${lit(a.L)} L)`}</span></td></tr>`
-      + tk.list.map(r => `<tr class="fm-r rowbtn" data-fm="${esc(r.id)}" tabindex="0"><td>${esc(fmtDay(r.date))}<small>${pLink(r.driver)}${r.plate && plateKey(r.plate) !== plateKey(r.truckPlate) ? ' · ' + esc(r.plate) : ''}</small></td><td class="n">${lit(r.liters)}</td><td class="n">${fmtN(r.trips)}${r.noKm ? `<small>${r.noKm} with no km</small>` : ''}</td><td class="n">${fmtN(Math.round(r.km))}</td><td class="n"><b>${r.kmPerL===null ? `<span class="fm-open">${r.closed ? 'no km' : 'open'}</span>` : n2(r.kmPerL)}</b>${r.low ? '<span class="fm-low">Low</span>' : ''}</td><td>${r.closed ? esc(fmtDay(r.next)) : '<span class="fm-open">no next refuel yet</span>'}</td></tr>`).join('');
-  }).join('') : `<tr><td colspan="6" class="empty-cell">${all.length ? 'No refuel matches.' : 'No liters were logged in Fuel (L) in these dates.'}</td></tr>`;
+  const avgOf = l => { const c = l.filter(r => r.kmPerL !== null), k = c.reduce((a, r) => a + r.km, 0), x = c.reduce((a, r) => a + r.liters, 0); return {km: k, L: x, kmpl: x ? k / x : null}; };
+  const byTruckSorted = (list, avgFor) => { const by = {}; list.forEach(x => (by[x.truck] = by[x.truck] || []).push(x));
+    return Object.keys(by).map(k => ({k, list: by[k], avg: avgFor(k)}))
+      .sort((a, b) => (a.avg.kmpl===null) - (b.avg.kmpl===null) || (a.avg.kmpl || 0) - (b.avg.kmpl || 0) || String(a.k).localeCompare(String(b.k), undefined, {numeric:true})); };
+  // per destination: each truck's refuels with km, by account and destination (total km ÷ total liters)
+  const dests = {}; withKm.forEach(r => { const k = fmSec(r.acct) + '|' + r.truck + '|' + nameKey(r.destination); const g = dests[k] || (dests[k] = {sec: fmSec(r.acct), truck: r.truck, dest: r.destination || '—', km: 0, L: 0, n: 0}); g.km += r.km; g.L += r.liters; g.n++; });
+  const dl = Object.values(dests).map(g => ({...g, kmpl: g.km / g.L})); dl.forEach(g => { g.low = g.kmpl < FUEL_MIN; });
+  const dLow = dl.filter(g => g.low).length;
+  $('fmNote').textContent = FM.view==='dest' ? `${fmtDay(f)} to ${fmtDay(t)}: each truck's average km/L per destination = the km of its refuels to that place ÷ their liters (Coca Cola km × 2), by account. Under ${FUEL_MIN} km/L is a warning. Refuels with no km are left out.`
+    : `Refuels from ${fmtDay(f)} to ${fmtDay(t)}, by account. Each refuel is its trip: km/L = the trip's km (KMS, else the route km in Clients) ÷ the liters. A Coca Cola trip is a round trip, so its km × 2. Under ${FUEL_MIN} km/L is a warning. Tap a refuel for its details.`;
+  $('fmKpis').innerHTML = `<div class="kpi"><div class="v">${n2(fleet)}</div><div class="l">${fa==='' ? 'Fleet' : esc(FM_SECS[fa])} km/L</div><div class="s">${fmtN(Math.round(km))} km ÷ ${lit(Math.round(L))} L</div></div>`
+    + `<div class="kpi"><div class="v">${fmtN(all.length)}</div><div class="l">Refuels</div><div class="s">${new Set(all.map(r => r.truck)).size} trucks · ${lit(Math.round(all.reduce((a, r) => a + r.liters, 0)))} L</div></div>`
+    + `<div class="kpi"><div class="v">${fmtN(nLow)}</div><div class="l">Low km/L</div><div class="s">refuels under ${FUEL_MIN} km/L · ${dLow} truck-destination average${dLow===1 ? '' : 's'}</div></div>`
+    + `<div class="kpi"><div class="v">${fmtN(nNo)}</div><div class="l">No km</div><div class="s">not a trip, or the route has no km yet</div></div>`;
+  $('fmHead').innerHTML = FM.view==='dest' ? '<tr><th>Destination</th><th class="n">Refuels</th><th class="n">Liters</th><th class="n">Km</th><th class="n">Avg km/L</th></tr>'
+    : '<tr><th>Refuel</th><th>Trip</th><th class="n">Liters</th><th class="n">Km</th><th class="n">km/L</th></tr>';
+  const secHead = (i, sub) => `<tr class="fm-sec"><td colspan="5"><b>${esc(FM_SECS[i])}</b> <span>· ${sub}</span></td></tr>`;
+  const truckHead = (k, list, a, what) => `<tr class="fm-hd"><td colspan="5">${tLink(k, 'Truck ' + k)} <span>· ${what} · ${a.kmpl===null ? 'no km yet' : `${n2(a.kmpl)} km/L (${fmtN(Math.round(a.km))} km ÷ ${lit(Math.round(a.L * 100) / 100)} L)`}</span></td></tr>`;
+  let body = '';
+  FM.rows = {};
+  if(FM.view==='dest'){
+    const dq = dl.filter(g => (FM.filter!=='low' || g.low) && (!q || [g.truck, g.dest].join(' ').toLowerCase().includes(q)));
+    [0, 1, 2, 3].forEach(i => {
+      const sl = dq.filter(g => g.sec===i); if(!sl.length) return;
+      const sa = avgOf(withKm.filter(r => fmSec(r.acct)===i));
+      body += secHead(i, `${n2(sa.kmpl)} km/L · ${sl.length} truck-destination${sl.length===1 ? '' : 's'}`) + byTruckSorted(sl, k => avgOf(withKm.filter(r => r.truck===k && fmSec(r.acct)===i))).map(x =>
+        truckHead(x.k, x.list, x.avg, `${x.list.length} destination${x.list.length===1 ? '' : 's'}`)
+        + x.list.sort((a, b) => a.kmpl - b.kmpl).map(g => `<tr><td>${esc(plainDest(g.dest))}<small>${esc(g.dest)}</small></td><td class="n">${fmtN(g.n)}</td><td class="n">${lit(Math.round(g.L * 100) / 100)}</td><td class="n">${fmtN(Math.round(g.km))}</td><td class="n"><b>${n2(g.kmpl)}</b>${g.low ? `<span class="fm-low">Below ${FUEL_MIN} km/L</span>` : ''}</td></tr>`).join('')).join('');
+    });
+    $('fmBody').innerHTML = body || `<tr><td colspan="5" class="empty-cell">${dl.length ? 'Nothing matches.' : 'No refuels with km in these dates.'}</td></tr>`;
+    return;
+  }
+  const show = all.filter(r => (FM.filter!=='low' || r.low) && (FM.filter!=='nokm' || r.kmPerL === null)
+    && (!q || [r.truck, r.plate, r.truckPlate, r.driver, r.source, r.destination].join(' ').toLowerCase().includes(q)));
+  show.forEach(r => { FM.rows[r.id] = r; });
+  [0, 1, 2, 3].forEach(i => {
+    const sl = show.filter(r => fmSec(r.acct)===i); if(!sl.length) return;
+    const sa = avgOf(all.filter(r => fmSec(r.acct)===i));
+    body += secHead(i, `${n2(sa.kmpl)} km/L · ${sl.length} refuel${sl.length===1 ? '' : 's'}`) + byTruckSorted(sl, k => avgOf(all.filter(r => r.truck===k && fmSec(r.acct)===i))).map(tk => {
+      const first = tk.list[0];
+      return truckHead(tk.k, tk.list, tk.avg, `${esc(first.truckPlate || first.plate || '')} · ${tk.list.length} refuel${tk.list.length===1 ? '' : 's'}`)
+        + tk.list.sort((a, b) => a.date.localeCompare(b.date) || a.row - b.row).map(r => `<tr class="fm-r rowbtn" data-fm="${esc(r.id)}" tabindex="0"><td>${esc(fmtDay(r.date))}<small>${pLink(r.driver)}${r.plate && plateKey(r.plate) !== plateKey(r.truckPlate) ? ' · ' + esc(r.plate) : ''}</small></td><td>${esc(r.source || '—')}<small>→ ${esc(r.destination || '—')}${r.trip ? '' : ' · ' + esc(r.status || 'not a trip')}</small></td><td class="n">${lit(r.liters)}</td><td class="n">${r.km ? fmtN(Math.round(r.km)) : '—'}${r.times === 2 ? `<small>${fmtN(r.base)} × 2 round trip</small>` : ''}</td><td class="n"><b>${r.kmPerL===null ? '<span class="fm-open">no km</span>' : n2(r.kmPerL)}</b>${r.low ? `<span class="fm-low">Below ${FUEL_MIN}</span>` : ''}</td></tr>`).join('');
+    }).join('');
+  });
+  $('fmBody').innerHTML = body || `<tr><td colspan="5" class="empty-cell">${all.length ? 'No refuel matches.' : 'No liters were logged in Fuel (L) in these dates.'}</td></tr>`;
 }
 function openFuelRefuel(id){
   const r = FM.rows && FM.rows[id]; if(!r) return;
   const n2 = v => v===null ? '—' : Number(v).toFixed(2);
-  openPop(`Truck ${r.truck} · refuel ${fmtDay(r.date)}`, `${esc(String(r.liters))} L · ${fmtN(Math.round(r.km))} km · ${r.kmPerL===null ? (r.closed ? 'no km' : 'not closed yet') : n2(r.kmPerL) + ' km/L'}`,
-    `<p class="hint">${r.closed ? `The trips from this refuel until the next one on ${esc(fmtDay(r.next))}.` : 'The trips since this refuel. There is no next refuel yet, so the km/L will show when the truck refuels again.'}${r.noKm ? ` ${r.noKm} trip${r.noKm===1 ? ' has' : 's have'} no km yet: add the route km in Clients.` : ''}</p>`
-    + (r.list.length ? `<table class="hs-tbl"><thead><tr><th>Date</th><th>Route</th><th>Status</th><th class="n">Km</th></tr></thead><tbody>${r.list.map(x => `<tr><td>${esc(fmtDay(x[0]))}</td><td>${esc(x[1] || '—')}<small>→ ${esc(x[2] || '—')}</small></td><td>${esc(x[4] || 'Clip Board')}</td><td class="n">${x[3] ? fmtN(x[3]) : '—'}</td></tr>`).join('')}</tbody></table>` : '<p class="hint">No trips after this refuel yet.</p>'),
+  const why = !r.trip ? `This row is not a trip (${esc(r.status || 'no status')}), so it has no km.` : !r.base ? 'This trip has no km yet: add the route km in Clients (or the KMS on the trip).'
+    : r.times === 2 ? `A Coca Cola round trip: ${fmtN(r.base)} km × 2 = ${fmtN(Math.round(r.km))} km.` : r.coke ? 'One way of a round trip whose other way has its own refuel (or is counted half), so the km is not doubled.' : 'Not a Coca Cola trip: the km as it is.';
+  openPop(`Truck ${r.truck} · refuel ${fmtDay(r.date)}`, `${esc(String(r.liters))} L · ${r.km ? fmtN(Math.round(r.km)) + ' km' : 'no km'} · ${r.kmPerL===null ? 'no km/L' : n2(r.kmPerL) + ' km/L'}`,
+    `<table class="hs-tbl"><tbody><tr><td>Trip</td><td><b>${esc(r.source || '—')}</b><small>→ ${esc(r.destination || '—')}</small></td></tr><tr><td>Status</td><td>${esc(r.status || 'Clip Board')}</td></tr><tr><td>Account</td><td>${esc(FM_SECS[fmSec(r.acct)])}</td></tr>`
+    + `<tr><td>Driver</td><td>${pLink(r.driver) || '—'}</td></tr><tr><td>Plate</td><td>${esc(r.plate || '—')}</td></tr>${r.shipment ? `<tr><td>Shipment</td><td>${esc(r.shipment)}</td></tr>` : ''}`
+    + `<tr><td>Liters</td><td>${esc(String(r.liters))}</td></tr><tr><td>Km</td><td>${r.km ? fmtN(Math.round(r.km)) : '—'}</td></tr><tr><td>km/L</td><td><b>${n2(r.kmPerL)}</b>${r.low ? `<span class="fm-low">Below ${FUEL_MIN} km/L</span>` : ''}</td></tr></tbody></table><p class="hint">${why}</p>`,
     '', true);
 }
 /** Trip hardship tab (MANU 2026-10-20): every CLIENT LIST route with its rating; Admin, Supervisor and Team leader tap one to set it, Boss views. */
@@ -8549,17 +8593,14 @@ const DEMO = (() => {
     mntCall: (tok, action) => { const u = auth(tok); if(!['ADMIN','MAINTENANCE'].includes(u.role)) throw new Error(`Your role (${u.role}) cannot do this.`); if(!['saveUnit','savePmsRule'].includes(action)) throw new Error('Not in the preview.'); return {}; },
     routeHardList: tok => { const u = auth(tok); if(!CAN.hardship.includes(u.role) && !CAN.viewAll.includes(u.role)) throw new Error(`Your role (${u.role}) cannot do this.`); return {routeHard:JSON.parse(JSON.stringify(demoHard)), canEdit:CAN.hardship.includes(u.role)}; },
     fuelMonitor: (tok, f, t2) => { needBook(tok, 'fuel|viewAll'); if(!f || !t2 || f > t2) throw new Error('Pick a From date on or before the To date.');
-      const end = addDays(t2, 31) < today ? addDays(t2, 31) : (t2 > today ? t2 : today), by = {};
-      trips.filter(x => x.date >= f && x.date <= end).forEach(x => { const u = String(x.truckNo || '').trim() || plateKey(x.plateNo); if(u) (by[u] = by[u] || []).push(x); });
-      const out = Object.keys(by).map(u => { const l = by[u].sort((a, b) => a.date.localeCompare(b.date) || a.row - b.row), refuels = []; let cur = null, stop = false;
-        l.forEach(x => { if(stop) return; const L = numOf(x.mano);
-          if(L > 0){ if(cur){ cur.closed = true; cur.next = x.date; } if(x.date > t2){ stop = true; return; }
-            cur = {date:x.date, row:x.row, liters:Math.round(L * 100) / 100, km:0, trips:0, noKm:0, plate:x.plateNo || '', driver:x.driver || '', closed:false, next:'', list:[]}; refuels.push(cur); }
-          if(!cur || !(isTrip(x) || !String(x.status || '').trim())) return;
-          const d = payKm(x); cur.trips++; if(d) cur.km += d; else cur.noKm++; cur.list.push([x.date, x.customer || '', x.destination || '', d, x.status || '']); });
-        refuels.forEach(r => { r.km = Math.round(r.km * 100) / 100; r.kmPerL = r.closed && r.km > 0 ? Math.round(r.km / r.liters * 100) / 100 : null; });
-        return {truck: String(l[l.length - 1].truckNo || u), plate: l[l.length - 1].plateNo || '', refuels}; }).filter(x => x.refuels.length);
-      return {from:f, to:t2, readTo:end, trucks:out}; },
+      const hw = DEMO._halves(f, t2), by = {}, coke = x => Object.entries(acctWeights(x)).reduce((n, [a, v]) => n + (/COCACOLA/.test(nameKey(a)) ? v : 0), 0);
+      trips.filter(x => x.date >= f && x.date <= t2).forEach(x => { const L = numOf(x.mano), u = String(x.truckNo || '').trim() || plateKey(x.plateNo); if(!(L > 0) || !u) return;
+        const trip = isTrip(x) || !String(x.status || '').trim(), base = trip ? payKm(x) : 0, cc = trip ? coke(x) : 0, mate = hw[x.key] ? hw._mate(x.key) : null;
+        const times = cc >= 1 || (mate && cc > 0) ? (mate && numOf(mate.mano) > 0 ? 1 : 2) : 1, d = base * times;
+        const aw = acctWeights(x), acct = Object.keys(aw).sort((a, b) => aw[b] - aw[a])[0] || ((S.assign[x.date] || []).find(a => String(a.truckNo)===u) || {}).account || '';
+        (by[u] = by[u] || []).push({date:x.date, row:x.row, liters:Math.round(L * 100) / 100, base, times, km:d, kmPerL:d > 0 ? Math.round(d / L * 100) / 100 : null, trip, coke:cc > 0, acct,
+          source:x.customer || '', destination:x.destination || '', status:x.status || '', plate:x.plateNo || '', driver:x.driver || '', shipment:x.shipmentNo || ''}); });
+      return {from:f, to:t2, trucks:Object.keys(by).map(u => { const l = by[u].sort((a, b) => a.date.localeCompare(b.date) || a.row - b.row); return {truck:u, plate:l[l.length - 1].plate, refuels:l}; })}; },
     noDistanceRoutes: tok => { needBook(tok, 'clients|routes|viewAll'); const from = addDays(today, -365), by = {}; let noDest = 0;
       const inList = new Set(kmRows.map(r => bk(r.origin) + '|' + bk(r.destination)));
       trips.filter(t => t.date >= from && isTrip(t) && !payKm(t)).forEach(t => { if(!t.destination){ noDest++; return; } const k = bk(t.customer) + '|' + bk(t.destination);
