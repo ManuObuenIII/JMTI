@@ -1127,6 +1127,16 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .br-ph figcaption{font-size:12px;line-height:1.35;margin-top:5px;overflow-wrap:anywhere}
 .popbox.pdfing .br-photos{grid-template-columns:repeat(3,1fr)}
 .popbox.pdfing .pdf-foot{padding:10px 18px 14px;font-size:11px;color:#64748B;border-top:1px solid #E7ECF2}
+/* Save each part of the Dashboard as JPEG or PDF (MANU 2026-10-21) */
+.secsave{margin-left:auto;flex:none;align-self:center;display:inline-flex;align-items:center;gap:5px;font:600 11px/1 inherit;font-stretch:100%;letter-spacing:0;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;color:#0A1F8F;cursor:pointer;white-space:nowrap;box-shadow:0 1px 2px rgba(10,31,143,.12)}
+.secsave svg{width:13px;height:13px}
+.secsave:active{transform:translateY(1px)}
+.road .side .secsave{display:flex;margin:10px 0 0 auto;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff;box-shadow:none}
+.secrow{display:flex;justify-content:flex-end;margin:-6px 0 8px}
+.shotting .kpi .v,.shotting .v{background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;color:#0A1F8F!important;-webkit-text-fill-color:#0A1F8F!important}
+.shotting .secsave,.shotting #tgEdit,.shotting #moreBtn{display:none!important}
+.shotting .tbl-wrap{max-height:none!important;overflow:visible!important}
+.shotting,.shotting *{animation:none!important;transition:none!important}
 /* ACCT-CSS-END */
 /* trips from GENERAL DATABASE 2.0 (feed guard): what the app can't change */
 .feed-hint,.fed-note{padding:8px 12px;border-radius:10px;background:#EEF3FF;border:1px solid #C9D6FF;color:#1E3A8A;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
@@ -1307,6 +1317,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <div class="side"><b id="roadTotal">0</b><span id="roadSide">trips in range</span><span id="roadLy"></span></div>
       <div class="lane" id="lane"></div>
     </div>
+    <div class="secrow"><button class="secsave" type="button" data-sec="kpis" data-title="Key numbers">Save key numbers</button></div>
     <div class="kpis" id="kpis"></div>
     <div class="alerts" id="alerts"></div>
     <div class="panel rem" id="remPanel" hidden></div>
@@ -2039,7 +2050,7 @@ const tripsTxt = n => `${fmtN(n)} trip${n===1?'':'s'}`;
 /** Truck Plan: legs paired among the Truck Plan's own trips (set in renderDispatcher); xw(list) = that list's trip count. */
 let XW = {};
 const xw = l => wsum(l, t => XW[t.key] ? 0.5 : 1);
-function setLegW(list){ const rw = roundTrips(list); list.forEach(t => { t._w = rw[t.key] ? 0.5 : 1; }); return list; }
+function setLegW(list){ const rw = roundTrips(list), by = {}; list.forEach(t => { by[t.key] = t; }); list.forEach(t => { const r = rw[t.key]; t._w = r ? 0.5 : 1; t._mate = r ? by[r.other] || null : null; }); return list; }   // _mate: the round trip's other leg
 const inAcct = (t, a) => {
   const e = TRIP_W[t.key];
   if(e) return a===NO_ACCT ? !e.pairAcc : e.pairAcc===a;
@@ -2775,6 +2786,7 @@ function initDashboard(){
   $('dCust').onchange = renderDashboard;
   $('dAcct').onchange = () => { fillCustSelect(); renderDashboard(); };
   $('dReport').onclick = openDashReport;
+  secSaveBtns();
   $('acctBars').onclick = e => { const b = e.target.closest('[data-acct]'); if(!b) return; $('dAcct').value = $('dAcct').value===b.dataset.acct ? '' : b.dataset.acct; fillCustSelect(); renderDashboard(); };
   $('inactBody').onclick = e => { const b = e.target.closest('[data-truck]'); if(b) openTruck(b.dataset.truck); };
   $('dRefresh').onclick = () => { S.sumAt = 0; loadDashboard(); };
@@ -2837,8 +2849,9 @@ function renderLowPay(){
   if(!S.people) S.people = lsGet('jmti_people');
   if(!S.people && !LOW.peopleAsked){ LOW.peopleAsked = true; call('listManpower').then(p => { S.people = p; lsSet('jmti_people', p); renderLowPay(); }).catch(() => {}); }
   const by = {driver:{}, helper:{}}, add = (role, n, t, w, km) => { const k = nameKey(n); if(!k) return; const p = by[role][k] || (by[role][k] = {pay:0, n:0, none:0, over:0, trips:0});
-    p.trips += w; if(!km){ p.none += w; return; } p.pay += payRate(role, km) * w; p.n += w; if(km > 200) p.over += w; };
-  S.trips.filter(isTrip).forEach(t => { const w = legW(t), km = payKm(t); add('driver', t.driver, t, w, km); [t.helper1, t.helper2].forEach(h => add('helper', h, t, w, km)); });
+    p.trips += w; const fx = routePay(role, t); if(fx){ p.pay += fx; p.n += w; return; } if(!km){ p.none += w; return; } p.pay += payRate(role, km) * w; p.n += w; if(km > 200) p.over += w; };
+  const ctx = {}; (S.tripsCtx || S.trips).forEach(t => { ctx[t.key] = t; });
+  S.trips.filter(isTrip).forEach(t => { const w = legW(t), km = pairKm(t, TRIP_W[t.key] && ctx[TRIP_W[t.key].other]); add('driver', t.driver, t, w, km); [t.helper1, t.helper2].forEach(h => add('helper', h, t, w, km)); });
   const pos = {driver:'Driver', helper:'Helper'};
   const list = role => (S.people || []).filter(p => p.status==='ACTIVE' && p.position===pos[role]).map(p => { const x = by[role][nameKey(p.full)];
     return {p, trips: x ? x.trips : 0, ...payEst(x, role)}; }).sort((a, b) => a.est - b.est || a.trips - b.trips || a.p.full.localeCompare(b.p.full));
@@ -5285,7 +5298,7 @@ function renderRem(){
     e.hidden = false;
     e.onclick = ev => { const b = ev.target.closest('[data-remmore]'); if(!b) return; S.remAll = S.remAll || {}; S.remAll[b.dataset.remmore] = !S.remAll[b.dataset.remmore]; renderRem(); };
   };
-  if(S.tab==='dashboard') box(el.dashboard, ['pms','docs','lic','backup']);
+  if(S.tab==='dashboard'){ box(el.dashboard, ['pms','docs','lic','backup']); secSaveBtns(); }
   if(S.tab==='fleet') box(el.fleet, ['pms','docs']);
   if(S.tab==='manpower') box(el.manpower, ['lic']);
 }
@@ -5296,10 +5309,19 @@ function renderRem(){
    role (or the 0-15 km rate). Admin, Boss, HR, Accounting and Payroll see it (may('payView')). */
 const PAY_BANDS = {driver:[[15,1000],[50,1050],[100,1250],[150,1450],[200,1650]], helper:[[15,825],[50,850],[100,900],[150,1050],[200,1150]]};
 const payRate = (role, km) => { const b = PAY_BANDS[role]; return (b.find(x => km <= x[0]) || b[b.length - 1])[1]; };
+/** Routes with their own pay, whatever the km (MANU 2026-10-21 "COCA COLA SAN FERNANDO TO COCA COLA SAN FERNANDO CENTRAL IS ONLY 800 PER
+    ROUNDTRIP FOR DRIVER AND 600 PER ROUNDTRIP FOR HELPER"): either way; each leg pays half the round trip. Same table as Code.gs ROUTE_PAY. */
+const ROUTE_PAY = [{name:'Coca Cola San Fernando Pampanga and Central San Fernando', a: k => /SANFERNANDO/.test(k) && !/CENTRAL|CLRAUX/.test(k),
+  b: k => /CENTRALSANFERNANDO/.test(k), driver:800, helper:600}];
+const routePay = (role, t) => { const key = v => String(v || '').split('|').pop().toUpperCase().replace(/[^A-Z0-9]/g, ''), s = key(t.customer), d = key(t.destination);
+  const r = ROUTE_PAY.find(r => (r.a(s) && r.b(d)) || (r.b(s) && r.a(d))); return r ? r[role] / 2 : 0; };
 const payKm = t => { const k = numOf(t.kms); return k > 0 && k <= 400 ? k : numOf(kmFor(t.customer, t.destination)); };
+/** A Coca Cola round trip is paid as 1 trip (MANU 2026-10-21 "SALARY RATE FOR COCA COLA ROUNDTRIP IS CONSIDERED 1 TRIP"): each leg is half,
+    both at the round trip's distance (the longer leg), so the pair pays one band rate. mate = the other leg, if any. */
+const pairKm = (t, mate) => Math.max(payKm(t), mate ? payKm(mate) : 0);
 /** {est, pay, n, none, over, avg} for a pay entry {pay, n, none, over} of one role. */
 const payEst = (p, role) => { if(!p) return {est:0, pay:0, n:0, none:0, over:0, avg:0}; const avg = p.n ? p.pay / p.n : PAY_BANDS[role][0][1]; return {...p, avg, est: p.pay + p.none * avg}; };
-const payBandsHtml = () => `<table class="hs-tbl"><thead><tr><th>Distance (one way)</th><th class="n">Driver</th><th class="n">Helper</th></tr></thead><tbody>${PAY_BANDS.driver.map((b, i) => `<tr><td>${i ? PAY_BANDS.driver[i - 1][0] + 1 : 0} to ${b[0]} km${i===PAY_BANDS.driver.length - 1 ? ' (also over 200 km for now)' : ''}</td><td class="n">${pesoTxt(b[1])}</td><td class="n">${pesoTxt(PAY_BANDS.helper[i][1])}</td></tr>`).join('')}</tbody></table>`;
+const payBandsHtml = () => `<table class="hs-tbl"><thead><tr><th>Distance (one way)</th><th class="n">Driver</th><th class="n">Helper</th></tr></thead><tbody>${PAY_BANDS.driver.map((b, i) => `<tr><td>${i ? PAY_BANDS.driver[i - 1][0] + 1 : 0} to ${b[0]} km${i===PAY_BANDS.driver.length - 1 ? ' (also over 200 km for now)' : ''}</td><td class="n">${pesoTxt(b[1])}</td><td class="n">${pesoTxt(PAY_BANDS.helper[i][1])}</td></tr>`).join('')}${ROUTE_PAY.map(r => `<tr><td>${esc(r.name)}, any km, per round trip (half per leg)</td><td class="n">${pesoTxt(r.driver)}</td><td class="n">${pesoTxt(r.helper)}</td></tr>`).join('')}</tbody></table>`;
 
 /* ===== Manpower / Fleet pop-ups: trip record, statistics and analysis (view only) ===== */
 const numOf = v => { const n = parseFloat(String(v ?? '').replace(/,/g,'').replace(/[^0-9.\-]/g,'')); return isFinite(n) ? n : 0; };
@@ -5502,16 +5524,17 @@ function hsScoreFill(p, f, to, details){
 }
 /** Estimated income from the trips in the chosen dates (round trip legs 0.5): totals, per week / month, and each trip's rate. */
 function personPay(ok, span){
-  const rows = ok.map(t => { const role = t._role==='Driver' ? 'driver' : 'helper', km = payKm(t), w = t._w ?? 1; return {t, role, km, w, rate: km ? payRate(role, km) : 0}; });
-  const by = {}; rows.forEach(r => { const p = by[r.role] || (by[r.role] = {pay:0, n:0, none:0, over:0}); if(!r.km){ p.none += r.w; return; } p.pay += r.rate * r.w; p.n += r.w; if(r.km > 200) p.over += r.w; });
+  const rows = ok.map(t => { const role = t._role==='Driver' ? 'driver' : 'helper', km = pairKm(t, t._mate), w = t._w ?? 1, fx = routePay(role, t);
+    return {t, role, km, w, fx, rate: fx ? fx / w : km ? payRate(role, km) : 0}; });
+  const by = {}; rows.forEach(r => { const p = by[r.role] || (by[r.role] = {pay:0, n:0, none:0, over:0}); if(r.fx){ p.pay += r.fx; p.n += r.w; return; } if(!r.km){ p.none += r.w; return; } p.pay += r.rate * r.w; p.n += r.w; if(r.km > 200) p.over += r.w; });
   const e = {driver: payEst(by.driver, 'driver'), helper: payEst(by.helper, 'helper')};
-  rows.forEach(r => { if(!r.km){ r.rate = e[r.role].avg; r.guess = true; } });
+  rows.forEach(r => { if(!r.km && !r.fx){ r.rate = e[r.role].avg; r.guess = true; } });
   const est = e.driver.est + e.helper.est, none = e.driver.none + e.helper.none, over = e.driver.over + e.helper.over;
   const line = (lbl, x) => x.n || x.none ? `<li><span>As ${lbl}: ${fmtN(x.n + x.none)} trip${x.n + x.none===1 ? '' : 's'}${x.none ? ` (${fmtN(x.none)} with no distance, at ${pesoTxt(Math.round(x.avg))} each)` : ''}</span><b>${pesoTxt(Math.round(x.est))}</b></li>` : '';
   const html = `<ul class="hs-top">${line('driver', e.driver)}${line('helper', e.helper)}<li><span>Total in these dates</span><b>${pesoTxt(Math.round(est))}</b></li>`
     + (span >= 7 ? `<li><span>About per week</span><b>${pesoTxt(Math.round(est / span * 7))}</b></li><li><span>About per month</span><b>${pesoTxt(Math.round(est / span * 30.4))}</b></li>` : '') + `</ul>`
-    + `<p class="hint">Estimate from the rate per trip by one-way distance (KMS, else CLIENT LIST). A round trip counts as one trip at its distance (each leg half).${over ? ` ${fmtN(over)} trip${over===1 ? '' : 's'} over 200 km use the 151 to 200 km rate (no rate yet).` : ''}${none ? ' Trips with no distance use the average rate.' : ''} Not the payroll: no deductions, allowances or guarantees.</p>`
-    + (rows.length ? `<table class="hs-tbl"><thead><tr><th>Date</th><th>Route</th><th>Role · km</th><th class="n">Pay</th></tr></thead><tbody>${rows.slice(0, 150).map(r => `<tr><td>${esc(fmtDay(r.t.date))}</td><td>${esc(r.t.customer || '—')}<small>→ ${esc(r.t.destination || '—')}</small></td><td>${r.role==='driver' ? 'Driver' : 'Helper'}<small>${r.km ? fmtN(r.km) + ' km' : 'no distance'}</small></td><td class="n">${pesoTxt(Math.round(r.rate * r.w))}${r.w < 1 ? '<small>half, round trip</small>' : ''}${r.guess ? '<small>average rate</small>' : ''}${r.km > 200 ? '<small>over 200 km</small>' : ''}</td></tr>`).join('')}</tbody></table>${rows.length > 150 ? `<p class="hint">Showing the latest 150 of ${rows.length} trips.</p>` : ''}` : '<p class="hint">No trips in these dates.</p>')
+    + `<p class="hint">Estimate from the rate per trip by one-way distance (KMS, else CLIENT LIST). A round trip counts as one trip at its distance (each leg half).${over ? ` ${fmtN(over)} trip${over===1 ? '' : 's'} over 200 km use the 151 to 200 km rate (no rate yet).` : ''}${none ? ' Trips with no distance use the average rate.' : ''}${rows.some(r => r.fx) ? ' San Fernando and Central San Fernando trips use their route rate.' : ''} Not the payroll: no deductions, allowances or guarantees.</p>`
+    + (rows.length ? `<table class="hs-tbl"><thead><tr><th>Date</th><th>Route</th><th>Role · km</th><th class="n">Pay</th></tr></thead><tbody>${rows.slice(0, 150).map(r => `<tr><td>${esc(fmtDay(r.t.date))}</td><td>${esc(r.t.customer || '—')}<small>→ ${esc(r.t.destination || '—')}</small></td><td>${r.role==='driver' ? 'Driver' : 'Helper'}<small>${r.km ? fmtN(r.km) + ' km' : 'no distance'}</small></td><td class="n">${pesoTxt(Math.round(r.rate * r.w))}${r.fx ? '<small>route rate, half a round trip</small>' : r.w < 1 ? '<small>half, round trip</small>' : ''}${r.guess ? '<small>average rate</small>' : ''}${r.km > 200 && !r.fx ? '<small>over 200 km</small>' : ''}</td></tr>`).join('')}</tbody></table>${rows.length > 150 ? `<p class="hint">Showing the latest 150 of ${rows.length} trips.</p>` : ''}` : '<p class="hint">No trips in these dates.</p>')
     + `<div class="hs-sec">Rate per trip</div>${payBandsHtml()}`;
   return {est, html};
 }
@@ -5747,6 +5770,14 @@ function canvasPages(c){
   }
   return out;
 }
+/** html2canvas can't read colors written as color(srgb …) (what color-mix becomes, e.g. the status pills): turn them into rgba(). */
+function h2cColors(doc, els){
+  const rgb = v => v.replace(/color\(srgb\s+([-\d.e]+)\s+([-\d.e]+)\s+([-\d.e]+)(?:\s*\/\s*([-\d.e]+%?))?\)/g, (m, r, g, bl, a) =>
+    `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(bl * 255)}, ${a === undefined ? 1 : /%$/.test(a) ? parseFloat(a) / 100 : a})`);
+  const PROPS = ['color','background-color','background-image','border-top-color','border-right-color','border-bottom-color','border-left-color','outline-color','box-shadow','text-shadow','text-decoration-color','fill','stroke'];
+  els.forEach(el => { const cs = doc.defaultView.getComputedStyle(el);
+    PROPS.forEach(pr => { const v = cs.getPropertyValue(pr); if(v && v.indexOf('color(') >= 0) el.style.setProperty(pr, rgb(v), 'important'); }); });
+}
 async function popPdf(){
   const btn = $('popPdf'), title = $('popTitle').textContent.trim() || 'Report';
   btn.disabled = true; const was = btn.textContent; btn.textContent = 'Making PDF…';
@@ -5759,12 +5790,7 @@ async function popPdf(){
       pop.style.cssText += `;position:absolute;inset:auto;left:0;top:0;width:${W}px;height:auto;display:block;padding:0;background:#fff;overflow:visible;backdrop-filter:none;-webkit-backdrop-filter:none`;
       b.classList.add('pdfing'); b.style.cssText += `;width:${W}px;max-width:none;max-height:none;margin:0;border-radius:0;box-shadow:none;background:#fff`;
       const f = doc.createElement('div'); f.className = 'pdf-foot'; f.textContent = `JMTI DASH · ${who}As of ${repStamp()}`; b.appendChild(f);
-      // html2canvas can't read colors written as color(srgb …) (what color-mix becomes, e.g. the status pills): turn them into rgba()
-      const rgb = v => v.replace(/color\(srgb\s+([-\d.e]+)\s+([-\d.e]+)\s+([-\d.e]+)(?:\s*\/\s*([-\d.e]+%?))?\)/g, (m, r, g, bl, a) =>
-        `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(bl * 255)}, ${a === undefined ? 1 : /%$/.test(a) ? parseFloat(a) / 100 : a})`);
-      const PROPS = ['color','background-color','background-image','border-top-color','border-right-color','border-bottom-color','border-left-color','outline-color','box-shadow','text-shadow','text-decoration-color','fill','stroke'];
-      [pop, b, ...b.querySelectorAll('*')].forEach(el => { const cs = doc.defaultView.getComputedStyle(el);
-        PROPS.forEach(pr => { const v = cs.getPropertyValue(pr); if(v && v.indexOf('color(') >= 0) el.style.setProperty(pr, rgb(v), 'important'); }); });
+      h2cColors(doc, [pop, b, ...b.querySelectorAll('*')]);
       const app = doc.getElementById('app'); if(app) app.style.display = 'none';
       ['bgFx','loadLogo'].forEach(id => { const e = doc.getElementById(id); if(e) e.style.display = 'none'; });
     };
@@ -5778,6 +5804,104 @@ async function popPdf(){
     setTimeout(() => URL.revokeObjectURL(url), 60000);
   }catch(e){ toast('PDF not made: ' + (e && e.message || e), true); }
   btn.disabled = false; btn.textContent = was;
+}
+
+/* ---- Save each part of the Dashboard (MANU 2026-10-21 "ADD GENERATE JPEG OR PDF OF EACH PART OF THE DASHBOARD") ----
+ * Every Dashboard part has a Save button: the part is drawn as it shows now (html2canvas, like Save PDF on pop-ups) at
+ * computer width, scroll boxes opened up and buttons left out, with a heading (part, account, customer, dates) and a footer
+ * (who, when). JPEG shows the picture to save; PDF cuts it into A4 pages. The whole-Dashboard report stays as it is. */
+const SEC_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/** Puts a Save button in the heading of every Dashboard part that has none yet (parts drawn again later get theirs back). */
+function secSaveBtns(){
+  const v = $('v-dashboard'); if(!v) return;
+  const add = (h, title) => { if(!h || h.querySelector('.secsave')) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'secsave'; b.innerHTML = SEC_ICON + 'Save';
+    b.title = 'Save this part as JPEG or PDF'; if(title) b.dataset.title = title; h.appendChild(b); };
+  add(v.querySelector('.road .side'), 'On the road now');   // not in the title: it is written again on every refresh
+  v.querySelectorAll('.panel').forEach(p => add(p.querySelector(':scope > h3, :scope > .sumhead > h3')));
+  v.querySelectorAll('.secsave:not([data-ready])').forEach(b => { b.dataset.ready = '1'; b.onclick = e => { e.stopPropagation(); openSecSave(b); }; });
+}
+/** The part a Save button belongs to, and its name without the notes beside it. */
+function secOf(btn){
+  if(btn.dataset.sec === 'kpis') return {el: $('kpis'), title: 'Key numbers'};
+  const el = btn.closest('.road, .panel'), h = btn.closest('h2, h3');
+  const title = btn.dataset.title || [...(h ? h.childNodes : [])].filter(n => n.nodeType === 3).map(n => n.textContent).join(' ').replace(/\s+/g, ' ').trim() || 'Dashboard';
+  return {el, title};
+}
+/** Account, customer and dates the Dashboard shows now, for the heading and the file name. */
+function secFilters(){
+  const acc = $('dAcct').value, cust = $('dCust').value, r = S.range || {};
+  const who = acc ? (acc === NO_ACCT ? 'Not counted in an account' : titleCase(acc)) : 'All accounts';
+  const day = (f, t) => f === t ? fmtDay(f) : `${fmtDay(f)} to ${fmtDay(t)}`;
+  const parts = [who + (cust ? ' · ' + cust : ''), r.from ? day(r.from, r.to) : ''];
+  if(S.cmp && S.ly && S.ly.from) parts.push('compared with ' + day(S.ly.from, S.ly.to));
+  return {name: who + (cust ? ' ' + cust : ''), line: parts.filter(Boolean).join(' · ')};
+}
+function openSecSave(btn){
+  const {el, title} = secOf(btn), f = secFilters();
+  if(!el || !el.offsetParent) return toast('This part is not showing right now.', true);
+  openPop('Save ' + title, esc(f.line), '<p class="hint-line" style="margin:0">Saves this part as it shows now, with its name, the account and the dates on top. JPEG is a picture; PDF is a file you can print or send.</p>',
+    '<button class="btn alt" type="button" id="secJpg">JPEG picture</button> <button class="btn road" type="button" id="secPdf">PDF</button>');
+  const go = kind => { const b = $(kind === 'pdf' ? 'secPdf' : 'secJpg'); $('secJpg').disabled = $('secPdf').disabled = true; b.textContent = kind === 'pdf' ? 'Making PDF…' : 'Making picture…'; secShot(el, title, f, kind); };
+  $('secJpg').onclick = () => go('jpg'); $('secPdf').onclick = () => go('pdf');
+}
+async function secShot(el, title, f, kind){
+  try{
+    await loadH2C();
+    const tw = Math.max(0, ...[...el.querySelectorAll('table')].map(t => t.scrollWidth + 40));
+    const W = Math.min(2400, Math.max(960, tw));
+    el.setAttribute('data-shot', '1');
+    const prep = doc => {
+      const c = doc.querySelector('[data-shot]'), w = doc.createElement('div');
+      // the part alone at the top of the page, on white, at computer width (the Dashboard's own classes so it keeps its look)
+      w.id = 'v-dashboard'; w.className = 'view'; w.style.cssText = `display:block;position:absolute;left:0;top:0;width:${W}px;margin:0;padding:0;background:#fff`;
+      doc.body.appendChild(w); w.appendChild(c);
+      c.classList.add('shotting'); c.style.margin = '0'; c.style.width = W + 'px'; c.style.maxWidth = 'none';
+      const app = doc.getElementById('app'); if(app) app.style.display = 'none';
+      ['bgFx', 'loadLogo', 'pop'].forEach(id => { const e = doc.getElementById(id); if(e && e !== w) e.style.display = 'none'; });
+      h2cColors(doc, [c, ...c.querySelectorAll('*')]);
+    };
+    const opt = s => ({scale: s, backgroundColor: '#ffffff', logging: false, windowWidth: W, scrollX: 0, scrollY: 0, onclone: prep});
+    // first the height at that width, then drawn within the size phones allow
+    const probe = await html2canvas(el, opt(0.1));
+    const fullH = probe.height / 0.1, scale = Math.max(0.8, Math.min(2, Math.sqrt(14e6 / (W * Math.max(1, fullH)))));
+    const shot = await html2canvas(el, opt(scale));
+    const out = secFrame(shot, scale, title, f.line);
+    const name = repFile('Dashboard ' + title.replace(/[·|]/g, '-').slice(0, 60), f.name, kind);
+    if(kind === 'pdf'){
+      const url = URL.createObjectURL(pdfFromJpegs(canvasPages(out)));
+      closePop();
+      if(repSave(name, url)) toast('Saved ' + name); else { window.open(url, '_blank'); toast('The PDF opened in a new tab. Save it from there.'); }
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } else repShow(title, name, out);
+  }catch(e){
+    toast((kind === 'pdf' ? 'PDF' : 'Picture') + ' not made: ' + (e && e.message || e), true);
+    if($('secJpg')){ $('secJpg').disabled = $('secPdf').disabled = false; $('secJpg').textContent = 'JPEG picture'; $('secPdf').textContent = 'PDF'; }
+  }
+  el.removeAttribute('data-shot');
+}
+/** The drawn part with a white margin, its heading on top and the footer under it. */
+function secFrame(shot, k, title, line){
+  const pad = Math.round(24 * k), F = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+  const who = S.me ? `Prepared by ${S.me.name || S.me.username}${S.me.role ? ' (' + titleCase(S.me.role) + ')' : ''} · ` : '';
+  const c = document.createElement('canvas'), x = c.getContext('2d');
+  const wrap = (txt, font, maxW) => { x.font = font; const out = []; let cur = '';
+    String(txt).split(' ').forEach(wd => { const t = cur ? cur + ' ' + wd : wd; if(cur && x.measureText(t).width > maxW){ out.push(cur); cur = wd; } else cur = t; });
+    if(cur) out.push(cur); return out; };
+  const W = shot.width + 2 * pad, tf = `800 ${Math.round(22 * k)}px ${F}`, sf = `500 ${Math.round(14 * k)}px ${F}`, ff = `500 ${Math.round(12 * k)}px ${F}`;
+  const tl = wrap('JMTI · ' + title, tf, W - 2 * pad), sl = wrap(line, sf, W - 2 * pad), fl = wrap(`JMTI DASH · ${who}As of ${repStamp()}`, ff, W - 2 * pad);
+  const tH = Math.round(30 * k), sH = Math.round(20 * k), fH = Math.round(18 * k);
+  const headH = pad + tl.length * tH + sl.length * sH + Math.round(14 * k), footH = Math.round(14 * k) + fl.length * fH + pad;
+  c.width = W; c.height = headH + shot.height + footH;
+  x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+  x.textBaseline = 'top'; let y = pad;
+  x.font = tf; x.fillStyle = '#0A1F8F'; tl.forEach(t => { x.fillText(t, pad, y); y += tH; });
+  x.font = sf; x.fillStyle = '#475569'; sl.forEach(t => { x.fillText(t, pad, y); y += sH; });
+  x.fillStyle = '#2E5BFF'; x.fillRect(pad, headH - Math.round(8 * k), W - 2 * pad, Math.max(1, Math.round(2 * k)));
+  x.drawImage(shot, pad, headH);
+  y = headH + shot.height + Math.round(14 * k);
+  x.font = ff; x.fillStyle = '#94A3B8'; fl.forEach(t => { x.fillText(t, pad, y); y += fH; });
+  return c;
 }
 
 /* DISB-START */
@@ -8190,9 +8314,9 @@ const DEMO = (() => {
     fleetWorkDays: (tok, f, t2) => { auth(tok); const span = Math.round((new Date(t2+'T00:00') - new Date(f+'T00:00')) / 864e5) + 1, out = {from:f, to:t2, span, days:{}, trips:{}}, seen = {};
       const hw = DEMO._halves(f, t2);
       trips.filter(t => t.date >= f && t.date <= t2 && ['completed','tukod'].includes(String(t.status).toLowerCase())).forEach(t => { const k = String(t.truckNo); out.trips[k] = (out.trips[k]||0) + (hw[t.key] || 1); if(!seen[k+t.date]){ seen[k+t.date] = 1; out.days[k] = (out.days[k]||0) + 1; } }); return out; },
-    _halves: (f, t2) => { const rw = roundTrips(trips.filter(t => t.date >= addDays(f,-3) && t.date <= addDays(t2,3))), out = {}; Object.keys(rw).forEach(k => { out[k] = 0.5; }); return out; },
+    _halves: (f, t2) => { const rw = roundTrips(trips.filter(t => t.date >= addDays(f,-3) && t.date <= addDays(t2,3))), out = {}; Object.keys(rw).forEach(k => { out[k] = 0.5; }); out._mate = k => rw[k] && trips.find(x => x.key===rw[k].other); return out; },
     manpowerTripCounts: (tok, f, t2) => { const me = auth(tok); const out = {driver:{}, helper:{}, days:{}}, seen = {}, hw = DEMO._halves(f, t2), pay = CAN.payView.includes(me.role) ? {driver:{}, helper:{}} : null;
-      const addPay = (role, k, t, n) => { if(!pay) return; const p = pay[role][k] || (pay[role][k] = {pay:0, n:0, none:0, over:0}), d = payKm(t); if(!d){ p.none += n; return; } p.pay += payRate(role, d) * n; p.n += n; if(d > 200) p.over += n; };
+      const addPay = (role, k, t, n) => { if(!pay) return; const p = pay[role][k] || (pay[role][k] = {pay:0, n:0, none:0, over:0}), fx = routePay(role, t), d = pairKm(t, hw._mate(t.key)); if(fx){ p.pay += fx; p.n += n; return; } if(!d){ p.none += n; return; } p.pay += payRate(role, d) * n; p.n += n; if(d > 200) p.over += n; };
       trips.filter(t => t.date >= f && t.date <= t2 && isTrip(t)).forEach(t => { const h = hw[t.key] || 1; [t.driver,t.helper1,t.helper2].forEach(n => { n = nameKey(n); if(n && !seen[n+t.date]){ seen[n+t.date] = 1; out.days[n] = (out.days[n]||0)+1; } }); const d = nameKey(t.driver); if(d){ out.driver[d] = (out.driver[d]||0)+h; addPay('driver', d, t, h); } [t.helper1,t.helper2].forEach(p => { p = nameKey(p); if(p){ out.helper[p] = (out.helper[p]||0)+h; addPay('helper', p, t, h); } }); });
       if(pay){ out.pay = pay; out.bands = PAY_BANDS; } return out; },
     previewInactive: tok => { auth(tok); const cut = addDays(today, -30); return people.filter(p => p.status==='ACTIVE').map(p => { const k = nameKey(p.full); const last = trips.filter(t => [t.driver,t.helper1,t.helper2].some(n => nameKey(n)===k)).map(t => t.date).sort().pop() || ''; return {row:p.row, full:p.full, position:p.position, hired:p.hired, last}; }).filter(x => [x.last, x.hired].reduce((m,d) => d > m ? d : m, '') < cut); },
