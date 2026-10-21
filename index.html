@@ -654,6 +654,10 @@ table.xl tr.routehd div{position:sticky;left:10px;display:inline-block;max-width
 table.xl tr.idle td.tk b{color:#7B8798}
 table.xl tbody tr.routehd.mnthd td, table.xl tbody tr.routehd.mnthd:hover td{background:#FEE2E2;color:#7F1D1D;border-color:#FCA5A5}
 table.xl tr.routehd.mnthd span{color:#B91C1C}
+table.xl tbody tr.acchd.garhd td{background:#E2E8F0;color:#1E293B;border-color:#CBD5E1}
+table.xl tbody tr.acchd.nothd td{background:#FEF3C7;color:#78350F;border-color:#FCD34D}
+table.xl tr.acchd.garhd span{color:#475569}
+table.xl tr.acchd.nothd span{color:#92400E}
 table.xl tr.idle.mnt td{background:#FFF7F7}
 table.xl tr.idle.mnt td small{display:block;color:#7B8798}
 table.xl td.ed{cursor:cell}
@@ -3919,7 +3923,7 @@ function groupRoutes(list, byTrip, showHead, cols, rank){
   glist.sort((a,b) => (rank ? rank(a[0]) - rank(b[0]) : 0) || byTrip(a[0], b[0]) || String(a[0].customer).localeCompare(String(b[0].customer)) || String(a[0].destination).localeCompare(String(b[0].destination)));
   list.length = 0; glist.forEach(g => list.push(...g));
   const head = {};
-  glist.forEach(g => { if(isTrip(g[0]) && g[0].customer && showHead(g[0])) head[g[0].key] = `<tr class="routehd"><td colspan="${cols}"><div><b>${esc(g[0].customer)}</b> → <b>${esc(g[0].destination || '(no destination)')}</b> <span>· ${tripsTxt(xw(g))}</span></div></td></tr>`; });
+  glist.forEach(g => { if((isTrip(g[0]) || stageOf(g[0])==='Cancelled') && showHead(g[0])) head[g[0].key] = `<tr class="routehd"><td colspan="${cols}"><div><b>${esc(g[0].customer || '(no source)')}</b> → <b>${esc(g[0].destination || '(no destination)')}</b> <span>· ${tripsTxt(xw(g))}</span></div></td></tr>`; });
   return head;
 }
 /* ====================================================================================================
@@ -4342,7 +4346,13 @@ function renderDispatcher(){
   const secOf = t => { const w = acctWeights(t), top = Object.keys(w).sort((x,y) => w[y] - w[x])[0]; return top || assignAcct(t.truckNo); };
   const SECS = ['COCA COLA CANLUBANG','COCA COLA SAN FERNANDO','OTHER ACCOUNTS',''];   // trip rules say "COCA COLA CANLUBANG", Truck assignment "... PLANT": match by name
   const secRank = a => { const k = nameKey(a); return k.includes('CANLUBANG') ? 0 : k.includes('SANFERNANDO') ? 1 : k.includes('OTHER') ? 2 : 3; };
-  const head = groupRoutes(list, byTrip, () => true, 15 + MS_KEYS.length, acc ? null : t => secRank(secOf(t)));   // blue route title on every route, all accounts (MANU)
+  // rows that are not trips leave the routes (MANU 2026-10-21 "WHY ARE THERE MIXED", "ALL WITH GARAGE STATUS SHOULD BE TOGETHER"): every garage
+  // status together in one GARAGE section, the rest (no-trip reasons, other statuses) in NOT A TRIP, both after the accounts. Cancelled stays on its route.
+  const onRoute = t => isTrip(t) || stageOf(t)==='Cancelled', isGar = t => LANE_EXTRA.includes(laneOf(t));
+  const byTruck = (a,b) => String(a.truckNo).localeCompare(String(b.truckNo),undefined,{numeric:true}) || String(a.date).localeCompare(String(b.date));
+  const garL = list.filter(t => !onRoute(t) && isGar(t)).sort((a,b) => statusText(a).localeCompare(statusText(b)) || byTruck(a,b));
+  const notL = list.filter(t => !onRoute(t) && !isGar(t)).sort(byTruck), routeL = list.filter(onRoute);
+  const head = groupRoutes(routeL, byTrip, () => true, 15 + MS_KEYS.length, acc ? null : t => secRank(secOf(t)));   // blue route title on every route, all accounts (MANU)
   const tm = v => v ? esc(toDate(v) ? toDate(v).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : v) : '';
   // every truck assigned to an account (or to the picked account) with no trip that day, grouped by account at the end
   const assignedNos = accTrucks || (S.assign[d] || []).filter(a => a.account).map(a => String(a.truckNo));
@@ -4358,13 +4368,16 @@ function renderDispatcher(){
   const tripRow = (t, i) => { const st = stageOf(t), rp = repairOf(t.plateNo);
       return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td><td class="n ed" data-f="mano">${esc(fuelText(t.mano))}</td><td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="ed" data-f="driver">${pLink(t.driver)}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}</tr>`; };
   const accHead = (a, nt, ni, nm) => `<tr class="acchd"><td colspan="${15 + MS_KEYS.length}"><div><b>${esc(a ? titleCase(a) : 'Not counted in an account')}</b> <span>· ${tripsTxt(nt)}${ni ? ` · ${ni} waiting shipment` : ''}${nm ? ` · ${nm} under maintenance` : ''}</span></div></td></tr>`;
+  const restHead = (cls, label, k, note) => `<tr class="${cls}"><td colspan="${15 + MS_KEYS.length}"><div><b>${label}</b> <span>· ${k} row${k===1?'':'s'} · ${note}</span></div></td></tr>`;
   let body = '', n = 0;
-  if(acc) body = list.map(t => tripRow(t, n++)).join('') + idleBlock(idleTrucks, n);
+  if(acc){ body = routeL.map(t => tripRow(t, n++)).join('') + idleBlock(idleTrucks, n); n += idleTrucks.length; }
   else SECS.forEach(sec => {
-    const ts = list.filter(t => secRank(secOf(t))===secRank(sec)), is = idleTrucks.filter(x => secRank(x.a.account||'')===secRank(sec));
+    const ts = routeL.filter(t => secRank(secOf(t))===secRank(sec)), is = idleTrucks.filter(x => secRank(x.a.account||'')===secRank(sec));
     if(!ts.length && !is.length) return;
     body += accHead(sec, xw(ts), is.filter(x => !x.rp).length, is.filter(x => x.rp).length) + ts.map(t => tripRow(t, n++)).join('') + idleBlock(is, n); n += is.length;
   });
+  if(garL.length) body += restHead('acchd garhd', 'GARAGE', garL.length, 'every garage status, all accounts, not counted as trips') + garL.map(t => tripRow(t, n++)).join('');
+  if(notL.length) body += restHead('acchd nothd', 'NOT A TRIP', notL.length, 'no-trip reasons and other statuses, not counted as trips') + notL.map(t => tripRow(t, n++)).join('');
   $('xList').innerHTML = list.length || idleTrucks.length ? `<div class="xl-wrap"><table class="xl" data-fz="0,1,2,3,4,5,6" data-fzp="0,3"><thead><tr><th>Next step</th><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th class="n">KMS</th><th class="n">Fuel (L)</th><th class="n">Budget</th><th>Driver</th><th>Helper</th><th>Helper 2</th><th>Status</th>${MS_KEYS.map(k => `<th>${esc(MS_LABEL[k])}</th>`).join('')}</tr></thead><tbody>${
     body}</tbody></table></div>` : `<div class="empty">Nothing to encode for ${esc(xRangeText())} with this filter.</div>`;
   freezeCols($('xList'));
