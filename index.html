@@ -290,6 +290,11 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .lw-item .lw-wait{font-weight:800;color:#B42318;white-space:nowrap}
 .lw-item small{color:var(--muted)}
 .lw-esc{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.esc-ask{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}.esc-ask .f{flex:1 1 220px;margin:0}.esc-ask textarea{width:100%;min-height:52px;resize:vertical;font:inherit}
+.mp-ph{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:4px}.mp-ph-pic{width:64px;height:64px;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;background:linear-gradient(145deg,#2E5BFF,#0A27B5);color:#fff;font-weight:800;font-size:20px;box-shadow:0 2px 8px rgba(10,31,143,.25)}
+.mp-ph-pic img{width:100%;height:100%;object-fit:cover;display:block}.mp-ph-pick{cursor:pointer}.mp-ph small{flex:1 1 100%}
+.hs-photo{flex:0 0 auto;width:72px;height:72px;border-radius:50%;overflow:hidden;box-shadow:0 2px 10px rgba(10,31,143,.3)}.hs-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.lw-item.dn-item{border-left-color:#16A34A}
 .lw-esc pre{flex:1 1 100%;margin:4px 0 0;background:#F6F8FC;border:1px solid var(--line);border-radius:8px;padding:8px;font:12.5px/1.45 ui-monospace,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere;user-select:all}
 .userchip .role{font-size:10.5px;font-weight:700;color:var(--road);border:1px solid var(--sky);border-radius:999px;padding:2px 8px}
 .subtabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
@@ -324,6 +329,9 @@ input.clash{border-color:var(--cancel);background:#FDF1F0}
 button.pstat{cursor:pointer;font-family:inherit}
 button.pstat[aria-pressed=true]{outline:2px solid var(--ink);outline-offset:1px}
 .odl{display:flex;flex-direction:column;gap:8px}
+.mp-extra{display:block;font-weight:500;color:var(--muted);font-size:11.5px;margin-top:2px;white-space:normal}
+.hs-contact{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 10px;font-size:13px;align-items:center}
+.hs-contact a{color:var(--road);font-weight:650;text-decoration:none}
 .plink{color:inherit;text-decoration:underline;text-decoration-style:dotted;text-decoration-color:rgba(46,91,255,.6);text-underline-offset:3px;cursor:pointer}
 .plink:hover,.plink:focus-visible{color:#2E5BFF;outline:none}
 .hs-range{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end;margin:0 0 10px}
@@ -1220,6 +1228,7 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 #clTbl td small,#clPays td small,#prTbl td small{display:block;color:var(--muted);font-size:10.5px}
 #clTbl .n,#clPays .n,#prTbl .n,.soa .n{text-align:right;font-variant-numeric:tabular-nums}
 #clTbl td,#clPays td,#prTbl td{min-width:70px;overflow-wrap:break-word}
+#clTbl td.c{min-width:0;width:34px;text-align:center;color:var(--muted)}#clTbl tr.cl-nokm td{background:rgba(220,38,38,.06)}#clTbl .linkbtn{background:none;border:0;padding:0;font:inherit;color:var(--accent,#2E5BFF);text-align:left;cursor:pointer;white-space:normal}
 .cl-rates input{width:100%;min-width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
 .cl-new span{display:block;font-size:10.5px;color:var(--muted);margin:4px 0 2px}
 .xh-tbl td small.cl-hset{color:var(--accent,#2E5BFF);font-weight:700}
@@ -1362,6 +1371,82 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 .clk b{font-size:15px;font-weight:800;letter-spacing:.01em}
 .clk span{font-size:11px;color:#B9C8F5;font-weight:600}
 .clk:empty{display:none}
+
+/* ---- Tabs as a menu (MANU 2026-10-28 "make this a menu") ---- */
+.tabmenu{position:relative;flex:none}
+.tabmenu-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:8px 14px 8px 12px;cursor:pointer;font:inherit;font-weight:700;font-size:13.5px;color:#0A1F6E;background:linear-gradient(180deg,#FFFFFF,#DCE5FF);box-shadow:inset 0 1px 0 #fff,0 2px 0 rgba(0,0,0,.25),0 8px 18px -6px rgba(0,0,0,.6)}
+.tabmenu-btn svg{width:18px;height:18px;flex:none}.tabmenu-btn .car{width:15px;height:15px;transition:transform .15s}
+.tabmenu.open .tabmenu-btn .car{transform:rotate(180deg)}
+.tabmenu-btn:active{transform:translateY(1px)}
+.top .tabmenu .tabs{display:none;position:absolute;top:calc(100% + 8px);right:0;left:auto;z-index:60;flex-direction:column;flex-wrap:nowrap;gap:2px;width:max-content;min-width:230px;max-width:calc(100vw - 28px);max-height:calc(100vh - 110px);overflow:auto;padding:6px;border-radius:16px;
+  background:linear-gradient(180deg,#0A27B5,#020A35);border:1px solid rgba(255,255,255,.18);box-shadow:0 22px 48px -12px rgba(0,0,0,.65)}
+.top .tabmenu.open .tabs{display:flex}
+.top .tabmenu .tab{flex:none;width:100%;text-align:left;white-space:normal;padding:10px 14px;border-radius:11px;font-size:14px}
+@media (max-width:700px){ .top-inner .tabmenu{order:1} .top-inner .userchip{order:3} .tabmenu-btn{padding:7px 12px 7px 10px} }
+
+/* ---- Smaller Dashboard parts, each on one row (MANU 2026-10-28 "make this smaller and just 1 row") ---- */
+.road{padding:12px 18px 12px;margin-bottom:12px}
+.road .big{font-size:28px}
+.road .side b{font-size:16px}
+@media (min-width:701px){ .road .side .secsave{display:inline-flex;margin:6px 0 0 auto} .road .lane{margin-top:6px} .road{padding-top:10px} }
+.road .side{top:10px}
+.lane{margin-top:10px;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);row-gap:0}
+.lane::before{top:17px}
+.stop{padding:0 2px}
+.stop .n{min-width:34px;height:34px;padding:0 6px;font-size:13.5px;border-width:2px}
+.stop .t{margin-top:4px;font-size:10.5px;line-height:1.2}
+.kstrip{margin-bottom:12px}
+.kstrip .kpis,.kstrip .alerts{gap:8px;margin-bottom:8px}
+.kpi{padding:8px 10px}
+.kpi .v{font-size:19px}
+.kpi .l{font-size:11px;margin-top:1px}
+.kpi .s{font-size:10px;margin-top:2px;line-height:1.35}
+.alert{padding:6px 9px;gap:8px}
+.alert b{font-size:17px}
+.alert span{font-size:11px;line-height:1.25}.alert small{font-size:10px}
+@media (min-width:1100px){
+  .kstrip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;align-items:stretch}
+  .kstrip .kpis,.kstrip .alerts{display:contents}
+  .kstrip .alert{flex-direction:column;align-items:flex-start;gap:2px;border-width:1px 1px 1px 4px}
+}
+@media (max-width:700px){
+  .lane{grid-auto-flow:row;grid-template-columns:repeat(4,minmax(0,1fr));row-gap:10px}
+  .lane::before{display:none}
+  .kstrip .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* ---- Trucks in garage (MANU 2026-10-28) ---- */
+.gar h3 .sub{font-weight:500;font-size:11.5px;color:var(--muted);margin-left:6px}
+.gar-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.gar-box{border:1px solid var(--line);border-left:4px solid #64748B;border-radius:12px;padding:8px 10px;background:#fff}
+.gar-box.zero{opacity:.6}
+.gar-h{display:flex;align-items:baseline;gap:8px}.gar-h b{font-size:20px;color:#0A1F8F}.gar-h span{font-weight:650;color:#0D1640}
+.gar-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.gar-t{display:inline-flex;flex-direction:column;padding:3px 8px;border-radius:8px;background:#EEF2FF;font-weight:650;font-size:12px;color:#0A1F8F;line-height:1.2}
+.gar-t small{font-weight:500;color:var(--muted);font-size:10.5px}
+.gar .hint{margin:6px 0 0}
+/* Live map (Protrack GPS, 2026-10-28) */
+.gps-mapbox{padding:0;overflow:hidden;margin-bottom:12px}
+#gpsMap{height:58vh;min-height:320px;width:100%;border-radius:inherit;background:#DCE6F5}
+#gpsMap img{max-width:none !important;max-height:none !important}
+#v-gps .bar .f.grow{flex:1 1 220px}
+.gps-maperr{padding:16px;margin:0}
+.gps-pin{background:none;border:0}
+.gps-pin .gps-dot{position:absolute;left:-9px;top:-9px}
+.gps-tag{position:absolute;left:12px;top:-11px;background:#fff;color:#0A1F8F;font:700 11px/1.3 system-ui,sans-serif;padding:1px 5px;border-radius:6px;box-shadow:0 1px 4px rgba(2,10,53,.35);white-space:nowrap}
+.gps-dot{display:inline-block;width:18px;height:18px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(2,10,53,.45);position:relative;flex:0 0 auto}
+.gps-dir{position:absolute;left:5px;top:-7px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:7px solid #0A1F8F;transform-origin:4px 14px}
+.gps-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
+.gps-row{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font:inherit;white-space:normal;overflow-wrap:anywhere}
+.gps-row.on{border-color:#2E5BFF;box-shadow:0 0 0 2px #2E5BFF inset}
+.gps-row .gps-dot{margin-top:2px}
+.gps-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.gps-sub{font-size:12.5px;color:var(--muted)}
+.gps-nolink{font-style:normal;font-size:11.5px;color:#B45309}
+.gps-sel{margin-bottom:12px;padding:12px}
+.gps-selhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.gps-selbar{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:8px}
+@media (max-width:700px){ #v-gps .bar .f.grow{flex:1 1 100%} #gpsMap{height:50vh} .gps-list{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -1431,7 +1516,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <div><h1>Operations Dashboard</h1><small>J. Magtalas Trucking Inc.</small></div>
       <div class="clk" id="topClock" title="Philippine time"></div>
     </div>
-    <nav class="tabs" role="tablist" id="tabs"></nav>
+    <div class="tabmenu" id="tabMenu"><button type="button" class="tabmenu-btn" id="tabMenuBtn" aria-haspopup="true" aria-expanded="false" aria-controls="tabs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span id="tabMenuCur">Menu</span><svg class="car" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><nav class="tabs" role="tablist" id="tabs"></nav></div>
     <div class="userchip"><button type="button" class="me-av empty" id="meAv" aria-label="My profile"></button><span class="nm"><b id="meName"></b></span><span class="role" id="meRole"></span>
       <button class="icon-btn onbtn" id="onBtn" type="button" hidden title="Who is signed in"></button>
       <button class="icon-btn obbtn" id="obBtn" type="button" hidden></button>
@@ -1468,8 +1553,8 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <div class="lane" id="lane"></div>
     </div>
     <div class="secrow"><button class="secsave" type="button" data-sec="kpis" data-title="Key numbers">Save key numbers</button></div>
-    <div class="kpis" id="kpis"></div>
-    <div class="alerts" id="alerts"></div>
+    <div class="kstrip" id="kstrip"><div class="kpis" id="kpis"></div><div class="alerts" id="alerts"></div></div>
+    <div class="panel gar" id="garPanel"><h3>Trucks in garage <span class="sub" id="garSub"></span></h3><div class="gar-row" id="garRow"></div></div>
     <div class="panel rem" id="remPanel" hidden></div>
     <div class="grid2">
       <div class="panel">
@@ -1682,6 +1767,26 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
     <div class="panel" style="padding:0" id="fmPanel"><div class="tbl-wrap"><table class="poptbl fm-tbl"><thead id="fmHead"><tr><th>Refuel</th><th>Trip</th><th class="n">Liters</th><th class="n">Km</th><th class="n">km/L</th></tr></thead><tbody id="fmBody"></tbody></table></div></div>
   </section>
 
+  <!-- ================= LIVE MAP (Protrack GPS, MANU 2026-10-28) ================= -->
+  <section class="view" id="v-gps">
+    <div class="bar">
+      <div class="chips" id="gpsChips"></div>
+      <label class="f grow gps-find">Find<input id="gpsFind" placeholder="Truck, plate, driver, destination" autocomplete="off"></label>
+    </div>
+    <p class="hint" id="gpsNote" style="margin:0 0 10px"></p>
+    <div class="panel gps-sel" id="gpsSel" hidden>
+      <div class="gps-selhead"><b id="gpsSelName"></b><button type="button" class="btn alt sm" id="gpsClose">Close</button></div>
+      <div class="gps-selbar">
+        <label class="f">Day<input type="date" id="gpsDay"></label>
+        <button type="button" class="btn sm" id="gpsRouteBtn">Show route</button>
+        <button type="button" class="btn alt sm" id="gpsTruckPop">Truck details</button>
+      </div>
+      <p class="hint" id="gpsSelInfo" style="margin:6px 0 0"></p>
+    </div>
+    <div class="panel gps-mapbox"><div id="gpsMap"><p class="hint gps-maperr">Opening the map…</p></div></div>
+    <div class="gps-list" id="gpsList"></div>
+  </section>
+
   <!-- ================= POD ================= -->
   <section class="view" id="v-pod">
     <div class="bar">
@@ -1799,6 +1904,9 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
           <label class="f">Date hired<input type="date" name="hired"></label>
           <label class="f">ID<input name="id" placeholder="Next number"></label>
           <label class="f">License expiry<input type="date" name="licExp"></label>
+          <label class="f">Contact number<input name="contact" type="tel" inputmode="tel" maxlength="60" placeholder="09XX XXX XXXX"></label>
+          <label class="f">Birthday<input type="date" name="birthday"></label>
+          <div class="f full mp-photo">Photo<div class="mp-ph"><span class="mp-ph-pic" id="mpPhPic"></span><label class="btn alt mp-ph-pick">Pick photo<input type="file" id="mpPhFile" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" hidden></label><button class="btn alt" type="button" id="mpPhDel" hidden>Remove photo</button><small class="dim" id="mpPhNote"></small></div></div>
           <div class="full" style="display:flex;gap:10px">
             <button class="btn" type="submit" id="mpSave">Add person</button>
             <button class="btn alt" type="button" id="mpReset">Clear</button>
@@ -1837,20 +1945,20 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
   <!-- ================= CLIENTS: contacts, rates, payments, statements of account, profit ================= -->
   <section class="view" id="v-clients">
     <div class="subtabs" id="clTabs">
-      <button class="chip" type="button" data-sub="book" aria-pressed="true">Clients &amp; rates</button>
+      <button class="chip" type="button" data-sub="book" aria-pressed="true">Routes &amp; distance</button>
       <button class="chip" type="button" data-sub="soa" aria-pressed="false">Statement of account</button>
       <button class="chip" type="button" data-sub="profit" aria-pressed="false" id="clProfitTab" hidden>Profit</button>
     </div>
     <div id="clBook">
       <div class="bar">
-        <label class="f grow">Find<input id="clFind" placeholder="Client, contact or route" autocomplete="off"></label>
+        <label class="f grow">Find<input id="clFind" placeholder="Source, destination or client" autocomplete="off"></label>
         <button class="btn alt" type="button" id="clPayBtn" hidden>Record payment</button>
         <button class="btn alt" type="button" id="clCsv">Generate report (CSV)</button>
       </div>
       <div class="kpis kpis4" id="clKpi"></div>
       <div class="chips" id="clChips" style="margin:-6px 0 10px"></div>
       <div class="hint-line" id="clNote" style="margin:0 0 10px"></div>
-      <div class="tbl-wrap" style="max-height:640px"><table id="clTbl"><thead><tr><th>Client</th><th>Account</th><th>Contact</th><th class="n">Routes with a rate</th><th class="n">Billed</th><th class="n">Paid</th><th class="n">Balance owed</th><th class="n">To bill</th></tr></thead><tbody></tbody></table></div>
+      <div class="tbl-wrap" style="max-height:640px"><table id="clTbl"><thead><tr><th class="c">#</th><th>Source</th><th>Destination</th><th>Client</th><th>KM (one way)</th></tr></thead><tbody></tbody></table></div>
       <!-- MANU 2026-10-21 "in client, show trip without distance yet, should be able to edit" -->
       <div class="panel" style="margin-top:14px" id="ndPanel">
         <h3 style="margin-top:0">Trips with no distance yet <small id="ndNote"></small></h3>
@@ -2044,7 +2152,7 @@ const MS_KEYS = ['srcArrive','loadStart','loadEnd','srcDepart','destArrive','unl
 const MS_COL = {srcArrive:12,loadStart:13,loadEnd:14,srcDepart:15,destArrive:16,unloadStart:17,unloadEnd:18,destDepart:19};
 const MS_LABEL = {srcArrive:'Source time in',loadStart:'Loading start',loadEnd:'Loading end',srcDepart:'Source time out',
   destArrive:'Destination time in',unloadStart:'Unloading start',unloadEnd:'Unloading end',destDepart:'Destination time out'};
-const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users'};
+const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',gps:'Live map',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users'};
 const NO_AUTH = ['login','getAppUrl'];
 
 const S = { sum:null, sumAt:0, sumView:'week', sumMeasure:'trips', topView:'p7', me:null, boot:null, trips:[], range:{}, tab:'', stageFilter:'', shown:150,
@@ -2081,6 +2189,13 @@ const GARAGE_KEYS = ['garage', 'garage meycauayan', 'garage canlubang', 'garage 
 const LANE_EXTRA = ['Garage', 'Garage loaded'];
 const isGarageLoaded = t => statusText(t).toLowerCase()==='garage loaded';
 const isActiveRow = t => isTrip(t) || isGarageLoaded(t);   // GARAGE LOADED: not a trip, but the truck counts as active (MANU 2026-10-13)
+/** Status choices with the garages together at the end (MANU 2026-10-28 "add status garage canlubang, garage meycauayan, garage san fernando"). */
+const GARAGE_PICK = ['GARAGE CANLUBANG', 'GARAGE MEYCAUAYAN', 'GARAGE SAN FERNANDO', 'GARAGE LOADED'];
+function statusOpts(list, cur){
+  const isG = x => /^garage\b/i.test(x), g = GARAGE_PICK.filter(x => !list.some(y => y.toUpperCase()===x)).concat(list.filter(isG));
+  const o = x => `<option ${x===cur ? 'selected' : ''}>${esc(x)}</option>`;
+  return list.filter(x => !isG(x)).map(o).join('') + `<optgroup label="Garage">${g.sort((a, b) => (GARAGE_PICK.indexOf(a.toUpperCase()) + 1 || 9) - (GARAGE_PICK.indexOf(b.toUpperCase()) + 1 || 9)).map(o).join('')}</optgroup>`;
+}
 const laneOf = t => { const s = statusText(t).toLowerCase(); return GARAGE_KEYS.includes(s) ? 'Garage' : s==='garage loaded' ? 'Garage loaded' : stageOf(t); };
 const isTrip = t => STAGES.includes(stageOf(t));
 const msDone = t => MS_KEYS.filter(k => t[k]).length;
@@ -2616,6 +2731,7 @@ function redrawAll(){
 function offerNextTrip(prev, up){
   if(S.tab!=='dispatcher' || !may('dispatchAdd') || !up || !up.truckNo) return;
   if(stageOf(prev)==='Completed' || stageOf(up)!=='Completed') return;
+  if(mayDone() && up.key) dnMark([up.key]);
   if(!$('pop').hidden || $('drawer').classList.contains('on')) return;
   const no = String(up.truckNo).trim(), d = TODAY();
   if(openTripOf(d, no)) return;
@@ -2627,6 +2743,52 @@ function offerNextTrip(prev, up){
     `<button class="btn alt" type="button" onclick="closePop()">Not now</button> <button class="btn alt" type="button" id="nextTripWait">Waiting for shipment</button> <button class="btn road" type="button" id="nextTripGo">+ Add trip</button>`);
   $('nextTripGo').onclick = () => { closePop(); openDispatchAdd(no); };
   $('nextTripWait').onclick = () => { closePop(); addNoRouteRow(d, no, 'waiting for shipment'); };
+}
+/**
+ * Supervisor and Team leader (MANU 2026-10-28 "when status is completed pop-up to supervisor and team leader to add another trip for
+ * the truck"): whoever completed it (a Dispatcher, or GENERAL DATABASE 2.0), a truck whose latest trip of yesterday or today is Completed
+ * with nothing after it pops up with + Add trip / Waiting for shipment. "Later" asks again in 30 minutes; a pick ends it for that trip.
+ */
+const DONE_ROLES = ['SUPERVISOR', 'TEAM LEADER'], DN = {trips:null};
+const mayDone = () => !!(S.me && DONE_ROLES.includes(S.me.role) && may('dispatchAdd'))
+  && !(typeof DEMO!=='undefined' && DEMO && (() => { try{ return localStorage.getItem('jmti_demo_done')!=='1'; }catch(e){ return true; } })());   // preview: only when a test asks (it would cover other checks)
+const dnKey = () => 'jmti_done_' + ((S.me && S.me.username) || '');
+function dnSeen(){ const o = lsGet(dnKey()); return o && typeof o==='object' ? o : {}; }
+function dnMark(keys, until){ const o = dnSeen(), now = Date.now();
+  Object.keys(o).forEach(k => { if(o[k] && o[k] < now - 3 * 864e5) delete o[k]; });   // old snoozes go
+  keys.forEach(k => { o[k] = until || 0; });
+  const ks = Object.keys(o); if(ks.length > 400) ks.slice(0, ks.length - 400).forEach(k => delete o[k]);
+  lsSet(dnKey(), o); }
+function loadDone(){
+  if(!mayDone()) return;
+  const t = TODAY(); call('getTrips', addDays(t, -1), t).then(l => { DN.trips = l || []; checkDone(); }).catch(() => {});
+}
+function doneList(){
+  if(!DN.trips) return [];
+  const seen = dnSeen(), now = Date.now(), y = addDays(TODAY(), -1);
+  return latestTrips(DN.trips.filter(t => t.date >= y)).filter(t => stageOf(t)==='Completed' && t.truckNo && t.key && !(t.key in seen && (seen[t.key]===0 || seen[t.key] > now)))
+    .sort((a, b) => (Number(a.truckNo) || 1e9) - (Number(b.truckNo) || 1e9) || String(a.truckNo).localeCompare(String(b.truckNo)));
+}
+function checkDone(){
+  if(!mayDone() || S.odLocked || !$('pop').hidden || $('drawer').classList.contains('on')) return;
+  const l = doneList(); if(!l.length) return;
+  const row = t => { const lt = lastTime(t);
+    return `<div class="lw-item dn-item"><div class="lw-top"><span><b>Truck ${esc(t.truckNo)}</b>${t.plateNo ? ' · ' + esc(t.plateNo) : ''}</span><span class="db-ok">Completed</span></div>
+      <div>${esc(t.customer || '—')} → ${esc(plainDest(t.destination) || '—')}</div><small>${esc(fmtDay(t.date))}${lt ? ' · ' + esc(clock12(lt.v)) : ''}${t.driver ? ' · ' + esc(t.driver) : ''}</small>
+      <div class="lw-esc"><button class="btn road" type="button" data-dnadd="${esc(t.key)}">+ Add trip</button><button class="btn alt" type="button" data-dnwait="${esc(t.key)}">Waiting for shipment</button></div></div>`; };
+  openPop(l.length===1 ? `Trip completed · Truck ${l[0].truckNo}` : `${l.length} trucks finished their trip`, 'Add the next trip for the truck, or mark it waiting for shipment.',
+    l.map(row).join(''), `<button class="btn alt" type="button" id="dnLater">Later</button>`);
+  $('pop').classList.add('donepop');
+  dnMark(l.map(t => t.key), Date.now() + 30 * 60000);   // Later or Close: asked again in 30 minutes
+  $('dnLater').onclick = () => closePop();
+  $('popBody').onclick = e => {
+    const a = e.target.closest('[data-dnadd]'), w = e.target.closest('[data-dnwait]'), t = l.find(x => x.key===(a || w || {}).dataset?.[a ? 'dnadd' : 'dnwait']);
+    if(!t) return;
+    dnMark([t.key]); closePop();
+    const no = String(t.truckNo).trim(), go = () => a ? (isCokeTruck(TODAY(), no) ? openDispatchAdd(no, {status:'on the way source', source:t.customer || ''}) : openDispatchAdd(no))
+      : addNoRouteRow(TODAY(), no, 'waiting for shipment');
+    if(S.tab!=='dispatcher'){ $('xDate').value = $('xTo').value = TODAY(); showTab('dispatcher'); setTimeout(go, 600); } else go();
+  };
 }
 /** Saves a row with no route for a truck (Waiting for shipment): not a trip, counted nowhere. */
 function addNoRouteRow(d, no, k){
@@ -2677,7 +2839,8 @@ function enterApp(me){
   $('askBtn').hidden = !ASK_ON;
   const tabs = me.tabs;
   $('tabs').innerHTML = tabs.filter(t => TAB_NAME[t]).map(t => `<button class="tab" role="tab" data-tab="${t}" type="button">${TAB_NAME[t]}</button>`).join('');   // a tab this page doesn't know is never shown as "undefined"
-  $('tabs').onclick = e => { const b = e.target.closest('.tab'); if(b) showTab(b.dataset.tab); };
+  $('tabs').onclick = e => { const b = e.target.closest('.tab'); if(b){ tabMenu(false); showTab(b.dataset.tab); } };
+  $('tabMenuBtn').onclick = e => { e.stopPropagation(); tabMenu(!$('tabMenu').classList.contains('open')); };
 
   initOnce();
   fillRoleOptions();
@@ -2761,6 +2924,8 @@ function initOnce(){
   setInterval(() => { if(S.tab==='dispatcher' && !document.hidden && S.boot && !$('drawer').classList.contains('on') && !$('cellEd')) loadDispatcher(); }, 60000);
   setInterval(() => { if(!document.hidden && S.boot) checkOverdue(); }, 10 * 60000);
   setInterval(() => { if(!document.hidden && S.boot) loadLw(); }, 10 * 60000);
+  setInterval(() => { if(!document.hidden && S.boot) loadDone(); }, 120000); setTimeout(() => { if(S.boot) loadDone(); }, 4000);
+  setInterval(() => { if(!document.hidden && S.boot) checkDone(); }, 15000);
   setInterval(chatTick, 1000); chatTick();
   document.addEventListener('visibilitychange', () => { if(!document.hidden){ CH.at = 0; chatTick(); } });   // back on screen: catch up at once
   setInterval(flushOutbox, 30000);
@@ -2846,12 +3011,21 @@ function openFirstTab(){ showTab(firstTab()); }
 /** A preloaded answer (from getInitial) while it is under a minute old, else a server call. */
 const preOr = (key, fn) => { const p = S[key]; S[key] = null; return p && Date.now() - p.at < 60000 ? Promise.resolve(p.v) : call(fn); };
 
+/** The tabs as a menu (MANU 2026-10-28 "make this a menu"): the button shows the open tab; tapping it lists every tab. */
+function tabMenu(open){
+  const m = $('tabMenu'); if(!m) return;
+  m.classList.toggle('open', !!open); $('tabMenuBtn').setAttribute('aria-expanded', !!open);
+  if(open){ const cur = m.querySelector('.tab[aria-selected="true"]'); if(cur) cur.focus({preventScroll:true}); }
+}
+document.addEventListener('click', e => { if($('tabMenu') && $('tabMenu').classList.contains('open') && !e.target.closest('#tabMenu')) tabMenu(false); });
+document.addEventListener('keydown', e => { if(e.key==='Escape' && $('tabMenu') && $('tabMenu').classList.contains('open')){ tabMenu(false); $('tabMenuBtn').focus(); } });
 function showTab(t){
   if(t==='dashboard') renderHello();
   if(t==='units') t = 'fleet';   // Fleet units became part of Fleet (MANU 2026-10-20)
   if(!can(t)) return;
   S.tab = t; store('jmti_tab_'+S.me.username, t);
   document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.tab===t));
+  $('tabMenuCur').textContent = TAB_NAME[t] || 'Menu';
   const view = t==='trips' ? 'dashboard' : t;   // Trip analytics = the Dashboard limited to trips
   document.body.classList.toggle('trips-only', t==='trips');
   if(t==='trips') S.sumMeasure = 'trips';
@@ -2859,7 +3033,7 @@ function showTab(t){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id==='v-'+view));
   if(t==='maintenance') return loadMaintenance();
   if(!S.boot && !['manpower','users'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
-  ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
+  ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, gps:loadGpsTab, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
   if(['dashboard','manpower'].includes(t) || (t==='fleet' && may('fleet'))) loadReminders();
 }
 
@@ -3157,6 +3331,25 @@ function renderLowPay(){
       + `<td class="n">${x.est ? pesoTxt(Math.round(x.est)) : '<span class="mp-idle">₱0</span>'}${x.none ? `<small>${fmtN(x.none)} at average rate</small>` : ''}</td></tr>`).join('')
     : '<tr><td colspan="4" class="empty-cell">No active people in this list.</td></tr>';
 }
+/**
+ * Trucks in each garage (MANU 2026-10-28 "add to the main dashbaord the count of trucks and what trucks are in each garage"):
+ * each truck's latest row in the Dashboard's dates and filters; a garage status puts it under that garage.
+ */
+const GAR_BOX = [['GARAGE CANLUBANG', 'Canlubang'], ['GARAGE MEYCAUAYAN', 'Meycauayan'], ['GARAGE SAN FERNANDO', 'San Fernando'], ['GARAGE', 'Garage, no place given'], ['GARAGE LOADED', 'Garage loaded (with cargo)']];
+function renderGarages(all){
+  const box = $('garRow'); if(!box) return;
+  const last = {};
+  all.forEach(t => { const k = String(t.truckNo || '').trim(); if(!k) return; const p = last[k]; if(!p || t.date > p.date || (t.date===p.date && (Number(t.row) || 0) >= (Number(p.row) || 0))) last[k] = t; });
+  const by = {}; GAR_BOX.forEach(([k]) => { by[k] = []; });
+  Object.values(last).forEach(t => { const st = statusText(t).toUpperCase(); if(by[st]) by[st].push(t); });
+  const n = Object.values(by).reduce((a, l) => a + l.length, 0), r = S.range || {};
+  $('garSub').textContent = `${n} truck${n===1 ? '' : 's'} · latest status ${r.from===r.to ? 'on ' + fmtDay(r.to) : 'from ' + fmtDay(r.from) + ' to ' + fmtDay(r.to)}`;
+  box.innerHTML = GAR_BOX.filter(([k], i) => i < 3 || by[k].length).map(([k, name]) => {
+    const l = by[k].sort((a, b) => (Number(a.truckNo) || 1e9) - (Number(b.truckNo) || 1e9) || String(a.truckNo).localeCompare(String(b.truckNo)));
+    return `<div class="gar-box${l.length ? '' : ' zero'}"><div class="gar-h"><b>${l.length}</b><span>${esc(name)}</span></div>`
+      + (l.length ? `<div class="gar-list">${l.map(t => `<span class="gar-t">${tLink(t.truckNo, 'Truck ' + t.truckNo)}${t.plateNo ? `<small>${esc(t.plateNo)}</small>` : ''}</span>`).join('')}</div>` : '<p class="hint">No truck here</p>') + `</div>`;
+  }).join('');
+}
 function renderDashboard(){
   if(!['dashboard','trips'].includes(S.tab)) return;
   const LY = S.cmp ? S.ly : null, lyOk = !!(LY && LY.trips && !LY.none);
@@ -3195,6 +3388,7 @@ function renderDashboard(){
   $('roadLy').innerHTML = vs(nTrips, lyN);
   $('lane').innerHTML = STAGES.concat(LANE_EXTRA).map(st => { const n = LANE_EXTRA.includes(st) ? all.filter(t => laneOf(t)===st).length : count(st); return `<button class="stop ${n?'':'zero'}" type="button" data-st="${st}" aria-pressed="${S.stageFilter===st}" style="--c:${colorOf(st)}"><span class="n">${fmtN(n)}</span><span class="t">${st}</span></button>`; }).join('');
   $('lane').onclick = e => { const b=e.target.closest('.stop'); if(b) openStagePop(b.dataset.st); };
+  renderGarages(all);
 
   const done = count('Completed');
   const trucksOut = new Set(all.filter(isActiveRow).map(t => t.truckNo || t.plateNo).filter(Boolean)).size;
@@ -4700,7 +4894,7 @@ function openDispatch(t){
   openPanel(t, `
     ${fedTrip(t) ? '<p class="hint fed-note">This trip comes from <b>GENERAL DATABASE 2.0</b>. Change its status, truck, route, shipment number and crew there. Times, remarks, budget and fuel save here.</p>' : ''}
     <div class="sec">Status</div>
-    <label class="f">${esc(hdr(8,'STATUS'))}<select data-k="status" id="drStatus"${(locked('status') && !odStatusOk(t)) || fedKey(t, 'status') ? ' disabled' : ''}>${statuses.map(s => `<option ${s===statusText(t)?'selected':''}>${esc(s)}</option>`).join('')}</select>
+    <label class="f">${esc(hdr(8,'STATUS'))}<select data-k="status" id="drStatus"${(locked('status') && !odStatusOk(t)) || fedKey(t, 'status') ? ' disabled' : ''}>${statusOpts(statuses, statusText(t))}</select>
       <span class="hint">${fedKey(t, 'status') ? 'The status comes from GENERAL DATABASE 2.0. Times below save without changing it.' : 'Filling in a time below sets the status for you. Pick one here for anything else (Gas Station, Garage…).'}</span></label>
     <div class="sec">Times</div>
     <div class="ms">${MS_KEYS.map(k => {
@@ -4773,7 +4967,7 @@ function openCellEditor(t, k, td){
   const list = {customer:'dlCustomers', destination:'dlDest', truckNo:'dlTrucks', plateNo:'dlPlates', driver:'dlDrivers', helper1:'dlHelpers', helper2:'dlHelpers'}[k];
   const statuses = S.boot.statuses.includes(statusText(t)) ? S.boot.statuses : [statusText(t)].concat(S.boot.statuses);
   const field = k==='status'
-    ? `<select id="ceVal" size="${Math.min(10, statuses.length)}">${statuses.map(x => `<option ${x===cur?'selected':''}>${esc(x)}</option>`).join('')}</select>`
+    ? `<select id="ceVal" size="${Math.min(12, statuses.length + 1)}">${statusOpts(statuses, cur)}</select>`
     : k==='destination' ? `<select id="ceVal">${destOptions(t.customer, cur)}</select>`
     : isTime ? `<input id="ceVal" type="datetime-local" value="${esc(cur)}">${!isIso(t[k]) && t[k] ? `<div class="hint">In the sheet: ${esc(t[k])}</div>` : ''}`
     : `<input id="ceVal" ${list ? `list="${list}"` : ''} value="${esc(cur)}" ${k==='kms' || k==='mano' || k==='budget' ? 'inputmode="decimal"' : ''} ${k==='mano' ? 'placeholder="Liters, e.g. 45.5"' : k==='budget' ? 'placeholder="Pesos, e.g. 2500"' : ''} autocomplete="off">`;
@@ -5401,6 +5595,9 @@ function initManpower(){
   $('scFrom').onchange = $('scTo').onchange = loadScores;
   $('scInc').onclick = () => openIncidentForm('', null);
   $('mpReset').onclick = resetPerson;
+  $('mpPhFile').onchange = async e => { const fl = e.target.files[0]; e.target.value = ''; if(!fl) return;
+    try{ MPH.set = await profilePrep(fl); mpPhShow(); }catch(err){ toast(err.message, true); } };
+  $('mpPhDel').onclick = () => { MPH.set = ''; mpPhShow(); };
 }
 function loadManpower(){
   loadMpRange(); loadScores();
@@ -5455,29 +5652,55 @@ function renderManpower(){
   const list = all.filter(mpPass[mpFilter] || mpPass.all).filter(p => !q || (p.full+' '+p.id).toLowerCase().includes(q)).sort(sorter);
   const lastCell = p => { if(p.status!=='ACTIVE' && !p.lastTrip) return '<span class="dim">—</span>'; const n = idleDays(p); if(n===null) return '<span class="mp-idle">No trip on record</span>';
     return `${esc(fmtDay(p.lastTrip))}<small class="${n >= MP_IDLE_DAYS && p.status==='ACTIVE' ? 'mp-idle' : ''}">${n<=0 ? 'today' : `no trip for ${n} day${n===1?'':'s'}`}</small>`; };
-  $('mpTbl').tBodies[0].innerHTML = list.length ? list.map(p => `<tr class="rowbtn" data-row="${p.row}"><td>${esc(p.id)}</td><td><b>${esc(p.full)}</b></td><td>${esc(p.position)}</td><td>${esc(p.hired ? fmtDay(p.hired) || p.hired : '')}</td><td>${esc(tenure(p.hired))}</td><td>${p.truck ? tLink(p.truck, 'Truck ' + p.truck) : (p.status==='ACTIVE' ? '<span class="mp-idle">Not assigned</span>' : '<span class="dim">—</span>')}</td><td>${lastCell(p)}</td><td>${licCell(p)}</td><td><span class="docstate ${p.status==='ACTIVE'?'ok':''}">${esc(p.status)}</span></td></tr>`).join('')
+  $('mpTbl').tBodies[0].innerHTML = list.length ? list.map(p => `<tr class="rowbtn" data-row="${p.row}"><td>${esc(p.id)}</td><td><b>${esc(p.full)}</b>${mpExtra(p)}</td><td>${esc(p.position)}</td><td>${esc(p.hired ? fmtDay(p.hired) || p.hired : '')}</td><td>${esc(tenure(p.hired))}</td><td>${p.truck ? tLink(p.truck, 'Truck ' + p.truck) : (p.status==='ACTIVE' ? '<span class="mp-idle">Not assigned</span>' : '<span class="dim">—</span>')}</td><td>${lastCell(p)}</td><td>${licCell(p)}</td><td><span class="docstate ${p.status==='ACTIVE'?'ok':''}">${esc(p.status)}</span></td></tr>`).join('')
     : `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">Nothing matches.</td></tr>`;
+}
+/** Contact number and birthday (MANU 2026-10-28 "ADD CONTACT NUMBER AND BIRTHDAY TO DRIVER AND HELPER DETAILS"). */
+const telHref = t => 'tel:' + String(t || '').split(/[,;/]/)[0].replace(/[^0-9+]/g, '');
+const ageOn = ymd => { const t = TODAY(); if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd || '')) return null; let a = Number(t.slice(0,4)) - Number(ymd.slice(0,4)); if(t.slice(5) < ymd.slice(5)) a--; return a; };
+function bdayTxt(ymd){ const a = ageOn(ymd); return a===null ? '' : `${fmtDay(ymd)} (${a} years old)${/^\d{4}-/.test(ymd) && bdayToday(ymd.slice(5)) ? ' ' + BDAY + ' today' : ''}`; }
+function mpExtra(p){
+  const bits = [p.contact ? '\ud83d\udcde ' + esc(p.contact) : '', p.birthday ? BDAY + ' ' + esc(bdayTxt(p.birthday)) : ''].filter(Boolean);
+  return bits.length ? `<small class="mp-extra">${bits.join(' · ')}</small>` : '';
 }
 function editPerson(p){
   if(!p) return; const f = $('mpForm'); f._edit = p;
-  f.last.value = p.last; f.first.value = p.first; f.position.value = p.position==='Helper'?'Helper':'Driver'; f.status.value = p.status; f.hired.value = /^\d{4}-/.test(p.hired) ? p.hired : ''; f.id.value = p.id; f.licExp.value = p.licExp || '';
+  f.last.value = p.last; f.first.value = p.first; f.position.value = p.position==='Helper'?'Helper':'Driver'; f.status.value = p.status; f.hired.value = /^\d{4}-/.test(p.hired) ? p.hired : ''; f.id.value = p.id; f.licExp.value = p.licExp || ''; f.contact.value = p.contact || ''; f.birthday.value = p.birthday || '';
   $('mpTitle').textContent = 'Edit ' + p.full; $('mpSave').textContent = 'Save changes';
+  MPH.set = undefined; MPH.cur = p.photo || ''; mpPhShow();
+  if(p.photo===undefined){ MPH.cur = ''; $('mpPhNote').textContent = 'Getting the photo…';
+    call('personPhoto', p.full).then(r => { if(f._edit!==p) return; MPH.cur = (r && r.photo) || ''; p.photo = MPH.cur; $('mpPhNote').textContent = ''; mpPhShow(); })
+      .catch(() => { if(f._edit===p) $('mpPhNote').textContent = ''; }); }
 }
-function resetPerson(){ const f = $('mpForm'); f.reset(); f._edit = null; $('mpTitle').textContent = 'Add driver or helper'; $('mpSave').textContent = 'Add person'; }
+/* Driver / helper photo (MANU 2026-10-28 "add photo"): square-cropped small JPEG like My profile; saved with the person (savePersonPhoto). */
+const MPH = {cur:'', set:undefined};
+function mpPhShow(){
+  const f = $('mpForm'), ph = MPH.set!==undefined ? MPH.set : MPH.cur, nm = [f.last.value, f.first.value].join(' ').trim();
+  $('mpPhPic').innerHTML = ph ? `<img src="${esc(ph)}" alt="Photo">` : `<span>${esc(nm.split(/[\s,]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?')}</span>`;
+  $('mpPhDel').hidden = !ph;
+  if(MPH.set!==undefined) $('mpPhNote').textContent = MPH.set ? 'New photo: press ' + $('mpSave').textContent + ' to keep it.' : 'Photo will be removed when you save.';
+}
+function resetPerson(){ const f = $('mpForm'); f.reset(); f._edit = null; $('mpTitle').textContent = 'Add driver or helper'; $('mpSave').textContent = 'Add person'; MPH.cur = ''; MPH.set = undefined; $('mpPhNote').textContent = ''; mpPhShow(); }
 async function savePerson(e){
   e.preventDefault();
   const f = e.target, ed = f._edit;
-  const p = {last:f.last.value, first:f.first.value, position:f.position.value, status:f.status.value, hired:f.hired.value, id:f.id.value.trim(), licExp:f.licExp.value};
+  const p = {last:f.last.value, first:f.first.value, position:f.position.value, status:f.status.value, hired:f.hired.value, id:f.id.value.trim(), licExp:f.licExp.value, contact:f.contact.value.trim(), birthday:f.birthday.value};
   if(ed){ p.row = ed.row; p.was = ed.full; }
   $('mpSave').disabled = true;
-  try{ S.people = await call('saveManpower', p, !ed); resetPerson(); renderManpower(); toast(ed ? 'Saved' : 'Added to MANPOWER'); if(S.boot) lsSet('jmti_boot', null); S.remAt = 0; loadReminders(); }
+  const full = `${p.last.trim().toUpperCase()} , ${p.first.trim().toUpperCase()}`;
+  // a renamed person keeps the photo: it is saved again under the new name
+  const ph = MPH.set!==undefined ? MPH.set : ed && MPH.cur && nameKey(ed.full)!==nameKey(full) ? MPH.cur : undefined;
+  try{ S.people = await call('saveManpower', p, !ed);
+    let phMsg = '';
+    if(ph!==undefined){ try{ await call('savePersonPhoto', full, ph); phMsg = ph ? ' · photo saved' : ' · photo removed'; }catch(err){ phMsg = ' · photo not saved: ' + err.message; } }
+    resetPerson(); renderManpower(); toast((ed ? 'Saved' : 'Added to MANPOWER') + phMsg, /not saved/.test(phMsg)); if(S.boot) lsSet('jmti_boot', null); S.remAt = 0; loadReminders(); }
   catch(err){ toast(err.message, true); }
   $('mpSave').disabled = false;
 }
 
 /* ===== Long waiting trips + ESCALATION text (MANU 2026-10-13) =====
  * The server lists trips of the last 14 days whose status hasn't changed for longer than its limit (at a site 6 h, on the
- * way 12 h, Clip Board 24 h). The top bar shows how many; the list has an ESCALATION button per trip that opens Viber with
+ * way 12 h, Clip Board 24 h). The top bar shows how many; the list has an ESCALATION button per trip that copies (since 2026-10-28; it used to open Viber) with
  * MANU's text (and copies it). Refreshed every 10 minutes; a status change in the app takes the trip off at once. */
 const mayLw = () => may('dispatch') || may('summary');
 function loadLw(){
@@ -5493,8 +5716,14 @@ function lwDur(since){
 const lwWait = st => { const s = String(st || '').trim().toLowerCase();
   return /^(on site|truck in) source$/.test(s) ? 'Waiting for loading' : /^(on site|truck in) destination$/.test(s) ? 'Waiting for unloading' : st; };
 const lwAtTxt = since => fmtDay(String(since).slice(0, 10)) + ' ' + clock12(since);
-const escText = x => ['ESCALATION', 'PLATE: ' + (x.plateNo || '—'), 'DESTINATION: ' + (x.place || '—'),
-  'TIME OF ARRIVAL: ' + lwAtTxt(x.since), 'STATUS: ' + lwDur(x.since) + ' (' + lwWait(x.status) + ')'].map(l => l.toUpperCase()).join('\n');
+// MANU 2026-10-28: signed by the sender ("thank you" + name of the user), with the crew and their contact numbers ("add driver and
+// helpers name with their contact numbers") and the issue the sender types ("ask for the escalator to type the issue")
+const escCrew = x => [['DRIVER', x.driver], ['HELPER', x.helper1], ['HELPER', x.helper2 && x.helper2!==x.helper1 ? x.helper2 : '']].filter(c => c[1])
+  .map(([r, n]) => `${r}: ${n} · ${(x.tel && x.tel[nameKey(n)]) || 'NO CONTACT NUMBER'}`);
+const escText = (x, issue) => ['ESCALATION', 'PLATE: ' + (x.plateNo || '—'), 'DESTINATION: ' + (x.place || '—'),
+  'TIME OF ARRIVAL: ' + lwAtTxt(x.since), 'STATUS: ' + lwDur(x.since) + ' (' + lwWait(x.status) + ')', ...escCrew(x),
+  ...(issue ? ['ISSUE: ' + String(issue).replace(/\s+/g, ' ').trim()] : []),
+  '', 'THANK YOU', (S.me && S.me.name) || ''].map(l => l.toUpperCase()).join('\n').trim();
 function renderLw(){
   const n = (S.lw || []).length, b = $('lwBtn');
   if(!b) return;
@@ -5524,28 +5753,32 @@ function openLw(){
   $('lwBtn').classList.remove('ring');
   renderLwPop();
 }
+/** ESCALATION tapped: first a box for the issue, then Copy escalation puts the full text on the clipboard. */
+function askEsc(i){
+  const b = document.querySelector(`[data-esc="${i}"]`); if(!b) return;
+  const box = b.parentNode; let f = box.querySelector('.esc-ask');
+  if(!f){ f = document.createElement('div'); f.className = 'esc-ask';
+    f.innerHTML = `<label class="f full">What is the issue?<textarea data-escissue="${i}" rows="2" maxlength="400" placeholder="Type the issue (e.g. waiting for unloading, no forklift)"></textarea></label><button class="btn road" type="button" data-escgo="${i}">Copy escalation</button>`;
+    box.appendChild(f); }
+  f.querySelector('textarea').focus();
+}
 async function sendEsc(i){
   const x = (S.lw || [])[i]; if(!x) return;
-  const t = escText(x), box = document.querySelector(`[data-esc="${i}"]`).parentNode;
+  const ta = document.querySelector(`[data-escissue="${i}"]`), issue = ta ? ta.value.trim() : '';
+  if(!issue){ if(ta) ta.focus(); return toast('Type the issue first.', true); }
+  const t = escText(x, issue), box = document.querySelector(`[data-esc="${i}"]`).parentNode;
   let pre = box.querySelector('pre'); if(!pre){ pre = document.createElement('pre'); box.appendChild(pre); } pre.textContent = t;
   const note = m => { const n = box.querySelector('[data-escnote]'); if(n) n.textContent = m; };
-  // Straight to Viber with the message (MANU 2026-10-14 "when this is clicked, go straight to viber app with the message"): Viber
-  // opens its forward screen with the text filled in, to pick the chat. The text is also copied, in case Viber is not on this device.
-  // The link is built without two slashes in a row: Apps Script cut the page at 'viber:' + two slashes (MANU 2026-10-14 15:21).
-  const copied = (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => true, () => false);
-  const a = document.createElement('a'); a.href = 'viber:' + '/'.repeat(2) + 'forward?text=' + encodeURIComponent(t); a.target = '_top'; a.rel = 'noopener';
-  document.body.appendChild(a); a.click(); a.remove();
-  note('Opening Viber…');
-  const ok = await copied;
-  setTimeout(() => {
-    if(document.hidden) return note(ok ? 'Sent to Viber. The message is also copied.' : 'Sent to Viber.');
-    if(ok){ note("If Viber didn't open, the message is copied: paste it in Viber."); return; }
-    const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
-    note("If Viber didn't open: press copy, then paste it in Viber.");
-  }, 1500);
+  // Copied only (MANU 2026-10-28 "do not automatically connects escalation to viber"; it used to open Viber's forward screen):
+  // the person pastes it in Viber or any chat themselves.
+  const ok = await (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => true, () => false);
+  if(ok){ note('Copied. Paste it in Viber or any chat.'); return; }
+  const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  note('Press copy, then paste it in Viber or any chat.');
 }
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-esc]'); if(b && $('pop').classList.contains('lwpop')) sendEsc(Number(b.dataset.esc));
+  const b = e.target.closest('[data-esc]'); if(b && $('pop').classList.contains('lwpop')) askEsc(Number(b.dataset.esc));
+  const g = e.target.closest('[data-escgo]'); if(g && $('pop').classList.contains('lwpop')) sendEsc(Number(g.dataset.escgo));
   if(e.target.closest('#lwBtn')) openLw();
   if(e.target.closest('#chatBtn') && !FAB.moved){ if(dockShown()) hideDock(); else openChat(); }
   if(e.target.closest('#chdHide')) hideDock();
@@ -5840,19 +6073,30 @@ function personPay(ok, span){
     + `<div class="hs-sec">Rate per trip</div>${payBandsHtml()}`;
   return {est, html};
 }
+/** The top of a person's pop-up: contact number (tap to call) and birthday with age. */
+function personPhotoHtml(p){
+  return p.photo ? `<div class="hs-photo"><img src="${esc(p.photo)}" alt="${esc(p.full || 'Photo')}"></div>` : '';
+}
+function personContact(p){
+  const tel = p.contact ? `<span>\ud83d\udcde <a href="${esc(telHref(p.contact))}" target="_top">${esc(p.contact)}</a></span>` : '<span class="dim">\ud83d\udcde No contact number yet</span>';
+  const bd = p.birthday ? `<span>${BDAY} ${esc(bdayTxt(p.birthday))}</span>` : '<span class="dim">' + BDAY + ' No birthday yet</span>';
+  return `<div class="hs-contact" id="hsContact">${personPhotoHtml(p)}${tel}${bd}</div>`;
+}
 async function showPersonHistory(p){
   if(!p) return;
   openPop(p.full, `${esc(p.position || 'Driver / helper')}${p.status ? ' · ' + esc(p.status) : ''}${p.truck ? ' · truck ' + esc(p.truck) + ' today' : ''}`, '<p class="hint">Loading trips…</p>',
     may('manpower') && p.row ? `<button class="btn alt" type="button" id="hsEdit">Edit person</button>` : '', true);
   if($('hsEdit')) $('hsEdit').onclick = () => { closePop(); showTab('manpower'); editPerson(p); $('mpForm').scrollIntoView({block:'nearest', behavior:'smooth'}); };
-  let trips;
-  try{ trips = await call('personHistory', p.full); }catch(e){ $('popBody').innerHTML = `<p class="hint">${esc(e.message)}</p>`; return; }
+  let trips, info = null;
+  try{ trips = await call('personHistory', p.full, true); }catch(e){ $('popBody').innerHTML = `<p class="hint">${esc(e.message)}</p>`; return; }
   if($('popTitle').textContent !== p.full) return;
+  if(trips && !Array.isArray(trips)){ info = trips.info; trips = trips.trips || []; }   // a Code.gs before 2026-10-28 sends only the trips
+  const pi = Object.assign({}, p, info || {}), card = personContact(pi);
   const k = nameKey(p.full);
   trips.forEach(t => { t._role = nameKey(t.driver)===k ? 'Driver' : 'Helper'; });
   setLegW(trips);   // round trips: 0.5 per leg (MANU 2026-10-13)
   const allOk = trips.filter(isTrip), lastAll = allOk[0] ? allOk[0].date : '';
-  $('popBody').innerHTML = hsBar(); hsOpen = '';
+  $('popBody').innerHTML = card + hsBar(); hsOpen = '';
   hsWire(trips.length ? trips[trips.length - 1].date : '', (f, to) => {
     const inR = trips.filter(t => t.date >= f && t.date <= to), st = histStats(inR), span = hsSpan(f, to);
     const asDriver = wsum(st.ok.filter(t => t._role==='Driver')), asHelper = st.n - asDriver, off = Math.max(0, span - st.days);
@@ -6125,7 +6369,7 @@ function secSaveBtns(){
 }
 /** The part a Save button belongs to, and its name without the notes beside it. */
 function secOf(btn){
-  if(btn.dataset.sec === 'kpis') return {el: $('kpis'), title: 'Key numbers'};
+  if(btn.dataset.sec === 'kpis') return {el: $('kstrip'), title: 'Key numbers'};
   const el = btn.closest('.road, .panel'), h = btn.closest('h2, h3');
   const title = btn.dataset.title || [...(h ? h.childNodes : [])].filter(n => n.nodeType === 3).map(n => n.textContent).join(' ').replace(/\s+/g, ' ').trim() || 'Dashboard';
   return {el, title};
@@ -6229,7 +6473,7 @@ const OB = {sending:false};
    every tab opens from what this phone kept (trips per date, lists, summary, chat) and the actions above wait in the
    outbox. Everything else (users, fleet, manpower, maintenance, accounting, clients, uploads) needs signal and says so. */
 const NET = {down:false};
-const READ_FNS = /^(get|list|routeHardList|fuelMonitor|fleetUnitsView|opsFund|truckDocs|truckDocFile|socialLinks|chatList|reminders|truckHistory|personHistory|acctData|payrollData|clientBook|statementOfAccount|profitReport|manpowerTripCounts|fleetWorkDays|longWaiting|overdue|idle)/;
+const READ_FNS = /^(get|list|routeHardList|fuelMonitor|fleetUnitsView|opsFund|truckDocs|truckDocFile|socialLinks|chatList|reminders|truckHistory|personHistory|personPhoto|acctData|payrollData|clientBook|statementOfAccount|profitReport|manpowerTripCounts|fleetWorkDays|longWaiting|overdue|idle)/;
 const syncAgo = () => { const t = Number(store('jmti_sync')); if(!t) return ''; const d = new Date(t); return ` (last updated ${fmtDay(ymdOf(d))} ${d.toTimeString().slice(0,5)})`; };
 const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const obKey = () => 'jmti_outbox_' + (S.me ? S.me.username : '');
@@ -7565,6 +7809,166 @@ function initFuelTab(){
   filterChips($('fmView'), [['refuel', 'Each refuel'], ['dest', 'Per destination']], 'refuel', v => { FM.view = v; renderFuel(); });
   $('fmBody').onclick = e => { const tr = e.target.closest('tr[data-fm]'); if(tr && !e.target.closest('a')) openFuelRefuel(tr.dataset.fm); };
 }
+/* ================= LIVE MAP (Protrack GPS, MANU 2026-10-28; Admin, Supervisor, Team leader, Dispatcher) =================
+   Code.gs (Gps.gs) gpsLive: every Protrack device with its latest position, kept 20 s on the server for everyone; gpsRoute: one truck's
+   route in a day. Each device is matched to a truck by its plate (Protrack plate number or device name), else by a truck number in the name.
+   The map is Leaflet with OpenStreetMap, loaded the first time the tab opens. The list refreshes every 30 s while the tab is open. */
+const GPS = {data:null, filter:'all', sel:'', route:null, map:null, layer:null, routeLayer:null, marks:{}, timer:0, leaflet:null, err:''};
+const GPS_REFRESH_MS = 30000, GPS_OFFLINE_MS = 60 * 60000;
+function gpsLeaflet(){
+  if(window.L && window.L.map) return Promise.resolve(window.L);
+  if(GPS.leaflet) return GPS.leaflet;
+  GPS.leaflet = new Promise((res, rej) => {
+    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    s.onload = () => res(window.L); s.onerror = () => { GPS.leaflet = null; rej(new Error('The map could not load. Check the signal and open the tab again.')); };
+    document.head.appendChild(s);
+  });
+  return GPS.leaflet;
+}
+/** The truck in the Fleet list for a Protrack device: plate first, then a truck number in the device name. */
+function gpsTruck(d){
+  const tr = (S.boot && S.boot.trucks) || [], pk = plateKey(d.plate), nk = plateKey(d.name);
+  let t = tr.find(x => x.plateNo && (plateKey(x.plateNo)===pk || plateKey(x.plateNo)===nk));
+  if(!t && nk) t = tr.find(x => x.plateNo && plateKey(x.plateNo).length >= 5 && nk.includes(plateKey(x.plateNo)));
+  if(!t){ const m = String(d.name || '').match(/(?:^|[^0-9A-Z])(?:T|TRUCK|UNIT|#)?\s{0,}0{0,}([0-9]{1,3})(?![0-9])/i); if(m) t = tr.find(x => String(x.truckNo).replace(/^0+/, '')===m[1]); }
+  return t || null;
+}
+/** moving / idle (engine on, stopped) / parked (engine off) / offline (no news for an hour) / nogps */
+function gpsState(d, now){
+  if(d.lat===null || d.lng===null) return 'nogps';
+  const last = Math.max(d.heart || 0, d.gps || 0);
+  if(!last || now - last > GPS_OFFLINE_MS) return 'offline';
+  if((d.speed || 0) >= 5) return 'moving';
+  return d.acc===1 ? 'idle' : 'parked';
+}
+const GPS_LABEL = {moving:'Moving', idle:'Stopped, engine on', parked:'Parked, engine off', offline:'Offline', nogps:'No GPS position'};
+const GPS_COLOR = {moving:'#16A34A', idle:'#F59E0B', parked:'#64748B', offline:'#DC2626', nogps:'#94A3B8'};
+function gpsRows(){
+  const d = GPS.data; if(!d) return [];
+  const now = Date.now(), today = S.gpsToday || [];
+  return d.trucks.map(x => {
+    const t = gpsTruck(x), no = t ? String(t.truckNo) : '', trip = no ? today.find(y => String(y.truckNo).trim()===no) : null;
+    return {...x, truck: t, no, plateNo: t ? t.plateNo : (x.plate || ''), st: gpsState(x, now), trip};
+  }).sort((a, b) => (a.no ? 0 : 1) - (b.no ? 0 : 1) || String(a.no || a.name).localeCompare(String(b.no || b.name), undefined, {numeric:true}));
+}
+function loadGpsTab(){
+  if(!$('gpsList')) return;
+  const day = TODAY();
+  if(!$('gpsDay').value) $('gpsDay').value = day;
+  $('gpsDay').max = day;
+  withTrips(day, day, list => { S.gpsToday = latestTrips(list); if(GPS.data) renderGps(); });
+  renderGps();
+  gpsLeaflet().then(() => { gpsMapInit(); setTimeout(() => GPS.map && GPS.map.invalidateSize(), 50); renderGps(); }).catch(e => { $('gpsMap').innerHTML = `<p class="hint gps-maperr">${esc(e.message)}</p>`; });
+  gpsFetch();
+  clearInterval(GPS.timer);
+  GPS.timer = setInterval(() => { if(S.tab!=='gps' || document.hidden){ if(S.tab!=='gps'){ clearInterval(GPS.timer); GPS.timer = 0; } return; } gpsFetch(); }, GPS_REFRESH_MS);
+}
+function gpsFetch(){
+  return call('gpsLive').then(d => { GPS.data = d; GPS.err = ''; renderGps(); })
+    .catch(e => { GPS.err = e.message; renderGps(); });
+}
+function gpsMapInit(){
+  if(GPS.map || !window.L || !$('gpsMap')) return;
+  $('gpsMap').innerHTML = '';
+  GPS.map = L.map('gpsMap', {zoomControl:true}).setView([14.6, 121.0], 9);   // Metro Manila until the trucks are in
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'&copy; OpenStreetMap'}).addTo(GPS.map);
+  GPS.layer = L.layerGroup().addTo(GPS.map);
+  GPS.fitted = false;
+}
+function gpsIcon(r){
+  const c = GPS_COLOR[r.st], rot = r.st==='moving' && r.course!==null ? `<i class="gps-dir" style="transform:rotate(${Number(r.course)}deg)"></i>` : '';
+  return L.divIcon({className:'gps-pin', iconSize:null, html:`<span class="gps-dot" style="background:${c}">${rot}</span><b class="gps-tag">${esc(r.no || r.name || r.plate)}</b>`});
+}
+function renderGps(){
+  if(!$('gpsList')) return;
+  const rows = gpsRows(), now = Date.now();
+  const cnt = k => rows.filter(r => k==='all' || r.st===k || (k==='stopped' && (r.st==='idle' || r.st==='parked'))).length;
+  counterChips($('gpsChips'), [['all','All',cnt('all')],['moving','Moving',cnt('moving')],['stopped','Stopped',cnt('stopped')],['offline','Offline',cnt('offline') + cnt('nogps')]], GPS.filter, v => { GPS.filter = v; renderGps(); });
+  const q = $('gpsFind').value.toLowerCase().trim();
+  const shown = rows.filter(r => GPS.filter==='all' || r.st===GPS.filter || (GPS.filter==='stopped' && (r.st==='idle' || r.st==='parked')) || (GPS.filter==='offline' && r.st==='nogps'))
+    .filter(r => !q || [r.no, r.plateNo, r.name, r.plate, r.trip && r.trip.driver, r.trip && r.trip.destination].some(v => String(v || '').toLowerCase().includes(q)));
+  if(GPS.err && !GPS.data){
+    const setup = /GPS_SETUP:/.test(GPS.err), msg = GPS.err.replace(/^.*?GPS(_SETUP)?:\s{0,}/, '');
+    $('gpsNote').innerHTML = esc(msg) + (setup && S.me && S.me.role==='ADMIN' ? ' Then run <b>testProtrack</b> once in the editor.' : '');
+    $('gpsList').innerHTML = ''; gpsDraw([]); return;
+  }
+  if(!GPS.data){ $('gpsNote').textContent = 'Getting the trucks from Protrack…'; $('gpsList').innerHTML = '<p class="empty-cell">Loading…</p>'; return; }
+  const linked = rows.filter(r => r.no).length;
+  $('gpsNote').textContent = `${rows.length} GPS device${rows.length===1 ? '' : 's'}, ${linked} matched to a truck. Updated ${agoText(GPS.data.at, now)}${GPS.data.old ? ' (Protrack is busy, showing the last positions)' : ''}${GPS.err ? ' · ' + GPS.err.replace(/^GPS:\s{0,}/, '') : ''}. Refreshes every 30 seconds. Tap a truck to see it and its route.`;
+  $('gpsList').innerHTML = shown.length ? shown.map(r => {
+    const last = Math.max(r.heart || 0, r.gps || 0), trip = r.trip;
+    const what = r.st==='moving' ? `Moving, ${Math.round(r.speed)} km/h` : GPS_LABEL[r.st];
+    return `<button type="button" class="gps-row${GPS.sel===r.imei ? ' on' : ''}" data-imei="${esc(r.imei)}">
+      <span class="gps-dot" style="background:${GPS_COLOR[r.st]}"></span>
+      <span class="gps-main"><b>${r.no ? 'Truck ' + esc(r.no) : esc(r.name || r.imei)}</b> ${esc(r.plateNo)}${r.no ? '' : ' <em class="gps-nolink">not matched to a truck</em>'}
+        <span class="gps-sub">${esc(what)}${last ? ' · ' + esc(agoText(last, now)) : ''}${r.todayKm!==null ? ' · ' + r.todayKm + ' km today' : ''}${r.fuel ? ' · fuel ' + r.fuel + ' L' : ''}</span>
+        ${trip ? `<span class="gps-sub">${esc(trip.customer || '')} → ${esc(trip.destination || '—')} · ${esc(statusText(trip) || 'Clip Board')}${trip.driver ? ' · ' + esc(trip.driver) : ''}</span>` : ''}
+      </span></button>`;
+  }).join('') : '<p class="empty-cell">No trucks here.</p>';
+  gpsDraw(shown);
+  renderGpsRoute();
+}
+function gpsDraw(rows){
+  if(!GPS.map) return;
+  GPS.layer.clearLayers(); GPS.marks = {};
+  const pts = [];
+  rows.filter(r => r.lat!==null && r.lng!==null).forEach(r => {
+    const m = L.marker([r.lat, r.lng], {icon: gpsIcon(r), zIndexOffset: GPS.sel===r.imei ? 1000 : 0}).addTo(GPS.layer);
+    m.on('click', () => gpsPick(r.imei, false));
+    GPS.marks[r.imei] = m; pts.push([r.lat, r.lng]);
+  });
+  if(!GPS.fitted && pts.length){ GPS.fitted = true; GPS.map.fitBounds(pts, {padding:[30, 30], maxZoom:13}); }
+}
+function gpsPick(imei, fly){
+  GPS.sel = GPS.sel===imei && fly ? '' : imei;
+  if(GPS.route && GPS.route.imei!==GPS.sel) gpsClearRoute();
+  renderGps();
+  const r = gpsRows().find(x => x.imei===GPS.sel);
+  if(r && GPS.map && r.lat!==null){ GPS.map.setView([r.lat, r.lng], Math.max(GPS.map.getZoom(), 14)); $('gpsMap').scrollIntoView({block:'nearest', behavior:'smooth'}); }
+}
+function gpsClearRoute(){ GPS.route = null; if(GPS.routeLayer){ GPS.routeLayer.remove(); GPS.routeLayer = null; } }
+function renderGpsRoute(){
+  const box = $('gpsSel'), r = gpsRows().find(x => x.imei===GPS.sel);
+  if(!r){ box.hidden = true; return; }
+  box.hidden = false;
+  const R = GPS.route, km = R && R.points ? gpsKm(R.points) : 0, top = R && R.points ? Math.max(0, ...R.points.map(p => p[3] || 0)) : 0;
+  $('gpsSelName').textContent = (r.no ? 'Truck ' + r.no : (r.name || r.imei)) + (r.plateNo ? ' · ' + r.plateNo : '');
+  $('gpsSelInfo').textContent = R && R.busy ? 'Getting the route…' : R && R.error ? R.error : R && R.points ? (R.points.length < 2 ? 'No route recorded on this day.' : `About ${km.toFixed(1)} km driven, top speed ${Math.round(top)} km/h, ${fmtTimeMs(R.points[0][2])} to ${fmtTimeMs(R.points[R.points.length - 1][2])}.`) : 'Pick a day and tap Show route.';
+  $('gpsTruckPop').hidden = !r.no;
+}
+const fmtTimeMs = ms => new Date(ms).toLocaleTimeString('en-PH', {hour:'numeric', minute:'2-digit', timeZone:'Asia/Manila'});
+function gpsKm(p){
+  let k = 0; const rad = Math.PI / 180;
+  for(let i = 1; i < p.length; i++){ const a = p[i - 1], b = p[i], dl = (b[0] - a[0]) * rad, dg = (b[1] - a[1]) * rad;
+    const h = Math.sin(dl / 2) ** 2 + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dg / 2) ** 2; k += 12742 * Math.asin(Math.min(1, Math.sqrt(h))); }
+  return k;
+}
+function gpsShowRoute(){
+  const imei = GPS.sel, day = $('gpsDay').value || TODAY(); if(!imei) return;
+  gpsClearRoute(); GPS.route = {imei, busy:true}; renderGpsRoute();
+  call('gpsRoute', imei, day, day).then(d => {
+    if(GPS.sel!==imei) return;
+    GPS.route = {imei, points: d.points || []};
+    if(GPS.map && window.L && GPS.route.points.length > 1){
+      const ll = GPS.route.points.map(p => [p[0], p[1]]);
+      GPS.routeLayer = L.layerGroup([
+        L.polyline(ll, {color:'#2E5BFF', weight:4, opacity:.85}),
+        L.circleMarker(ll[0], {radius:7, color:'#fff', weight:2, fillColor:'#16A34A', fillOpacity:1}).bindTooltip('Start ' + fmtTimeMs(GPS.route.points[0][2])),
+        L.circleMarker(ll[ll.length - 1], {radius:7, color:'#fff', weight:2, fillColor:'#DC2626', fillOpacity:1}).bindTooltip('End ' + fmtTimeMs(GPS.route.points[ll.length - 1][2]))
+      ]).addTo(GPS.map);
+      GPS.map.fitBounds(ll, {padding:[30, 30]});
+    }
+    renderGpsRoute();
+  }).catch(e => { if(GPS.sel!==imei) return; GPS.route = {imei, error: e.message.replace(/^GPS:\s{0,}/, '')}; renderGpsRoute(); });
+}
+$('gpsList') && ($('gpsList').onclick = e => { const b = e.target.closest('.gps-row'); if(b) gpsPick(b.dataset.imei, true); });
+$('gpsFind') && ($('gpsFind').oninput = () => renderGps());
+$('gpsRouteBtn') && ($('gpsRouteBtn').onclick = gpsShowRoute);
+$('gpsClose') && ($('gpsClose').onclick = () => { GPS.sel = ''; gpsClearRoute(); renderGps(); });
+$('gpsTruckPop') && ($('gpsTruckPop').onclick = () => { const r = gpsRows().find(x => x.imei===GPS.sel); if(r && r.no) openTruckPop(r.no); });
+$('gpsDay') && ($('gpsDay').onchange = () => { if(GPS.sel) gpsShowRoute(); });
+
 function loadFuelTab(){
   const f = $('fmFrom').value, t = $('fmTo').value, k = fmKey();
   if(!FM.data || FM.data._k !== k){ FM.data = null; renderFuel(); }
@@ -7755,7 +8159,9 @@ function initBook(){
   $('clPayBtn').onclick = () => openPayForm('');
   $('ndTbl').onclick = e => { const b = e.target.closest('[data-ndsave]'); if(b) saveNoDist(Number(b.dataset.ndsave)); };
   $('ndTbl').onkeydown = e => { const i = e.target.closest('input[data-nd]'); if(i && e.key==='Enter') saveNoDist(Number(i.dataset.nd)); };
-  $('clTbl').onclick = e => { const tr = e.target.closest('tr[data-client]'); if(!tr || !CL.data) return; const c = CL.data.clients.find(x => x.client===tr.dataset.client); if(c) openClientCard(c); };
+  $('clTbl').onclick = e => { const sv = e.target.closest('[data-rksave]'); if(sv) return saveBookKm(Number(sv.dataset.rksave));
+    const b = e.target.closest('[data-client]'); if(!b || !CL.data) return; const c = CL.data.clients.find(x => x.client===b.dataset.client); if(c) openClientCard(c); };
+  $('clTbl').onkeydown = e => { const i = e.target.closest('input[data-rk]'); if(i && e.key==='Enter') saveBookKm(Number(i.dataset.rk)); };
   $('clPays').onclick = e => { const tr = e.target.closest('tr[data-prow]'); if(!tr || !CL.data) return; const p = CL.data.payments.find(x => String(x.row)===tr.dataset.prow); if(p) openPayment(p); };
   bookRange($('soaRange'), (f, t) => { $('soaFrom').value = f; $('soaTo').value = t; loadSoa(); });
   bookRange($('prRange'), (f, t) => { $('prFrom').value = f; $('prTo').value = t; loadProfit(); });
@@ -7784,7 +8190,7 @@ function loadBook(){
 const ND = {data:null};
 function loadNoDist(){
   renderNoDist();
-  return call('noDistanceRoutes').then(d => { ND.data = d; renderNoDist(); }).catch(e => { if(!ND.data) $('ndNote').textContent = '· ' + e.message; });
+  return call('noDistanceRoutes').then(d => { ND.data = d; renderNoDist(); if(CL.sub==='book') renderBook(); }).catch(e => { if(!ND.data) $('ndNote').textContent = '· ' + e.message; });
 }
 function renderNoDist(){
   const d = ND.data, body = $('ndTbl') && $('ndTbl').tBodies[0]; if(!body) return;
@@ -7808,6 +8214,7 @@ async function saveNoDist(i){
     await call('saveRouteKm', [{source: r.source, destination: r.destination, km}]);
     if(S.boot && S.boot.km){ S.boot.km[nameKey(r.source) + '|' + nameKey(r.destination)] = km; if(S.boot.km['|' + nameKey(r.destination)]===undefined) S.boot.km['|' + nameKey(r.destination)] = km; }
     ND.data.routes.splice(i, 1); renderNoDist();
+    if(CL.rows){ const x = CL.rows.find(y => nameKey(y.r.source)===nameKey(r.source) && nameKey(y.r.destination)===nameKey(r.destination)); if(x) x.r.km = km; }
     toast(`${r.source} → ${plainDest(r.destination)}: ${fmtN(km)} km saved · ${plural(r.trips, 'trip')} now have a distance`);
     loadBook();
   }catch(e){ toast(e.message, true); btn.disabled = false; }
@@ -7820,32 +8227,56 @@ function afterBook(){
   if(S.tab!=='clients') return;
   if(CL.sub==='book'){ renderBook(); renderNoDist(); } else bookSub(CL.sub);
 }
-const BOOK_F = {all:['All clients', () => true], owed:['Balance owed', c => c.bal.owed > 0], tobill:['Trips to bill', c => c.bal.toBillTrips > 0], norate:['Routes with no rate', c => c.routes.some(r => r.rate===null)]};
+/* Routes & distance (MANU 2026-10-28 "no need for this, what i want is the list of all source and destination with kms, also show source
+   and destination without distance"): every CLIENT LIST route with its km, the ones with no km marked and their own chip. The client
+   billing table is gone; tapping a client still opens its card (contact, rates, payment). */
+const hasKm = r => Number(r.km) > 0;
+const BOOK_F = {all:['All routes', () => true], km:['With distance', x => hasKm(x.r)], nokm:['No distance yet', x => !hasKm(x.r)]};
+function bookRoutes(){
+  const d = CL.data; if(!d) return [];
+  return d.clients.flatMap(c => c.routes.map(r => ({r, c}))).sort((x, y) => x.r.source.localeCompare(y.r.source) || plainDest(x.r.destination).localeCompare(plainDest(y.r.destination)));
+}
 function renderBook(){
   if(S.tab!=='clients') return;
   const d = CL.data, q = $('clFind').value.toLowerCase().trim(), body = $('clTbl').tBodies[0];
-  if(!d){ body.innerHTML = '<tr><td colspan="8" class="empty-cell">Loading the clients…</td></tr>'; $('clPays').tBodies[0].innerHTML = ''; $('clKpi').innerHTML = ''; return; }
-  const found = d.clients.filter(c => !q || [c.client, c.account, c.info && c.info.contact, c.info && c.info.phone, ...c.routes.map(r => r.source + ' ' + r.destination)].join(' ').toLowerCase().includes(q));
+  if(!d){ body.innerHTML = '<tr><td colspan="5" class="empty-cell">Loading the routes…</td></tr>'; $('clPays').tBodies[0].innerHTML = ''; $('clKpi').innerHTML = ''; return; }
+  const all = CL.rows = bookRoutes();
+  const found = all.filter(x => !q || [x.r.source, x.r.destination, x.c.client].join(' ').toLowerCase().includes(q));
   if(!BOOK_F[CL.filter]) CL.filter = 'all';
-  const sum = f => found.reduce((a, c) => a + (Number(c.bal[f]) || 0), 0), keys = new Set(found.map(c => ckey(c.client)));
-  const rr = found.reduce((a, c) => a + c.routes.length, 0), nr = found.reduce((a, c) => a + c.routes.filter(r => r.rate===null).length, 0);
-  const pays = q ? d.payments.filter(p => keys.has(ckey(p.client))) : d.payments;
+  const nk = found.filter(x => !hasKm(x.r)).length, ndTrips = ND.data ? ND.data.routes.reduce((a, r) => a + r.trips, 0) : null;
   $('clKpi').innerHTML = kpiHtml([
-    [pesoTxt(sum('owed')), 'Balance owed', `${plural(found.filter(c => c.bal.owed > 0).length, 'client')} · billed trips minus payments`],
-    [pesoTxt(sum('toBill')), 'To bill', `${plural(sum('toBillTrips'), 'trip')} POD sent, not checked by Billing yet`],
-    [pesoTxt(sum('paid')), 'Payments received', `${plural(pays.filter(p => !p.status).length, 'payment')} recorded`],
-    [`${rr - nr} of ${rr}`, 'Routes with a rate', nr ? `${plural(nr, 'route')} with no rate yet` : 'Every route has a rate']]);
+    [fmtN(found.length), 'Routes', `source and destination pairs in the CLIENT LIST${q ? ' (found)' : ''}`],
+    [fmtN(found.length - nk), 'With distance', 'km saved for the route'],
+    [fmtN(nk), 'No distance yet', nk ? 'type the km in the list below' : 'every route has its km'],
+    [ndTrips===null ? '…' : fmtN(ndTrips), 'Trips with no distance', 'last year, see the list under the routes']]);
   counterChips($('clChips'), Object.keys(BOOK_F).map(k => [k, BOOK_F[k][0], found.filter(BOOK_F[k][1]).length]), CL.filter, f => { CL.filter = f; renderBook(); });
-  const list = found.filter(BOOK_F[CL.filter][1]);
-  const noRateTrips = found.reduce((a, c) => a + (c.bal.noRate || 0), 0);
-  $('clNote').textContent = (d.canEdit ? 'Tap a client to change its contact details and rates.' : 'View only. Tap a client to see its details and rates.')
-    + (noRateTrips ? ` ${plural(noRateTrips, 'billed or to-bill trip')} with no rate for its date, left out of the amounts.` : '');
-  const contact = c => !c.info ? '<span class="dim">Not added yet</span>' : c.info.contact || c.info.phone ? `${esc(c.info.contact || '')}${c.info.phone ? `<small>${esc(c.info.phone)}</small>` : ''}` : '—';
-  body.innerHTML = list.length ? list.map(c => { const wr = c.routes.filter(r => r.rate!==null).length; return `<tr class="rowbtn" data-client="${esc(c.client)}"><td><b>${esc(c.client)}</b></td><td>${esc(acctTxt(c.account))}</td><td>${contact(c)}</td><td class="n">${wr} of ${c.routes.length}</td><td class="n">${pesoTxt(c.bal.billed)}<small>${c.bal.billedTrips} trips</small></td><td class="n">${pesoTxt(c.bal.paid)}</td><td class="n">${c.bal.owed > 0 ? `<b class="db-left">${pesoTxt(c.bal.owed)}</b>` : c.bal.owed < 0 ? `<span class="db-ok">${pesoTxt(-c.bal.owed)} advance</span>` : '—'}</td><td class="n">${c.bal.toBillTrips ? `${pesoTxt(c.bal.toBill)}<small>${c.bal.toBillTrips} trips</small>` : '—'}</td></tr>`; }).join('')
-    : `<tr><td colspan="8" class="empty-cell">No client here.</td></tr>`;
+  const list = found.filter(BOOK_F[CL.filter][1]), ed = d.canEdit;
+  $('clNote').textContent = (ed ? 'Type or change a km and press Save: it goes to the CLIENT LIST, and trips on that route with blank KMS use it.' : 'View only.')
+    + ' Tap a client for its contact details and rates.';
+  body.innerHTML = list.length ? list.map((x, n) => { const r = x.r, i = all.indexOf(x), km = hasKm(r);
+    return `<tr${km ? '' : ' class="cl-nokm"'}><td class="c">${n + 1}</td><td><b>${esc(r.source)}</b></td><td>${esc(plainDest(r.destination))}</td>`
+      + `<td><button class="linkbtn" type="button" data-client="${esc(x.c.client)}">${esc(x.c.client)}</button></td>`
+      + `<td>${ed ? `<div class="nd-km"><input data-rk="${i}" inputmode="decimal" value="${km ? esc(r.km) : ''}" placeholder="${km ? 'km' : 'No distance'}" autocomplete="off" aria-label="KM"><button class="btn alt" type="button" data-rksave="${i}">Save</button></div>`
+        : km ? `${fmtN(r.km)} km` : '<span class="db-left">No distance yet</span>'}</td></tr>`; }).join('')
+    : `<tr><td colspan="5" class="empty-cell">${CL.filter==='nokm' && !q ? 'Every route has its distance.' : 'No route here.'}</td></tr>`;
+  const keys = new Set(found.map(x => ckey(x.c.client))), pays = q ? d.payments.filter(p => keys.has(ckey(p.client))) : d.payments;
   $('clPayNote').textContent = `· ${pays.length} recorded`;
   $('clPays').tBodies[0].innerHTML = pays.length ? pays.map(p => `<tr class="rowbtn${p.status ? ' db-cancel' : ''}" data-prow="${p.row}"><td>${esc(fmtDay(p.date))}</td><td>${esc(p.client)}</td><td class="n">${pesoTxt(p.amount)}</td><td>${esc(p.ref || '—')}</td><td>${esc(p.remarks || '')}</td><td>${esc(p.by)}<small>${esc(p.at)}</small></td><td>${p.status ? `<span class="tag-repair">Cancelled</span><small>${esc(String(p.status).replace(/^CANCELLED:?\s*/i, ''))}</small>` : '<span class="db-ok">Received</span>'}</td></tr>`).join('')
     : `<tr><td colspan="7" class="empty-cell">No payment recorded yet.</td></tr>`;
+}
+async function saveBookKm(i){
+  const x = CL.rows && CL.rows[i], inp = document.querySelector(`#clTbl input[data-rk="${i}"]`); if(!x || !inp) return;
+  const r = x.r, km = Number(inp.value.replace(/[^0-9.]/g, ''));
+  if(!(km > 0)) return toast('Type the distance in km.', true);
+  if(km===Number(r.km)) return toast('Nothing changed.');
+  const btn = document.querySelector(`#clTbl [data-rksave="${i}"]`); btn.disabled = true;
+  try{
+    await call('saveRouteKm', [{source: r.source, destination: r.destination, km}]);
+    r.km = km;
+    if(S.boot && S.boot.km) S.boot.km[nameKey(r.source) + '|' + nameKey(r.destination)] = km;
+    toast(`${r.source} → ${plainDest(r.destination)}: ${fmtN(km)} km saved`);
+    renderBook(); loadNoDist();
+  }catch(e){ toast(e.message, true); btn.disabled = false; }
 }
 /** A client's card: contact details and a rate per route; Admin, Billing and Accounting can change them (one Save). */
 function openClientCard(c){
@@ -7960,7 +8391,7 @@ function soaHtml(s){
       <div class="soa-to"><b>${esc(s.client)}</b>${i.contact ? `<div>Attention: ${esc(i.contact)}</div>` : ''}${i.address ? `<div>${esc(i.address)}</div>` : ''}${i.tin ? `<div>TIN ${esc(i.tin)}</div>` : ''}${i.phone || i.email ? `<div>${esc([i.phone, i.email].filter(Boolean).join(' · '))}</div>` : ''}</div></div>
     <p class="hint" style="margin:6px 0 10px">Period ${esc(fmtDay(s.from))} to ${esc(fmtDay(s.to))} · ${esc(acctTxt(s.account))}${due} · As of ${esc(s.printed)}</p>
     <div class="ds-sum soa-sum"><span>Balance brought forward <b>${pesoTxt(s.forward)}</b></span><span>Billed this period <b>${pesoTxt(s.billedTotal)}</b></span><span>Payments this period <b>${pesoTxt(s.paidTotal)}</b></span><span class="soa-due">Balance due <b>${pesoTxt(s.due)}</b></span></div>
-    ${s.noRate ? `<p class="hint" style="color:#B91C1C;margin:8px 0">${n(s.noRate, 'trip')} with no rate for its date, counted as ₱0. Add the rate in Clients &amp; rates. <button class="icon-btn" type="button" data-goclient="${esc(s.client)}">Open rates</button></p>` : ''}
+    ${s.noRate ? `<p class="hint" style="color:#B91C1C;margin:8px 0">${n(s.noRate, 'trip')} with no rate for its date, counted as ₱0. Add the rate in Routes &amp; distance (tap the client). <button class="icon-btn" type="button" data-goclient="${esc(s.client)}">Open rates</button></p>` : ''}
     <h4 style="margin:14px 0 6px">Billed trips · ${n(s.billed.length, 'trip')} · ${pesoTxt(s.billedTotal)}</h4>
     ${s.billed.length ? `<div class="tbl-wrap"><table class="poptbl soa-tbl">${head}<tbody>${tripRows(s.billed)}</tbody></table></div>` : '<p class="hint" style="margin:0">No billed trip in these dates.</p>'}
     <h4 style="margin:14px 0 6px">Payments · ${pesoTxt(s.paidTotal)}</h4>
@@ -8026,12 +8457,9 @@ function profitCsv(){
     d.trucks.map(x => [x.truckNo, x.plateNo, x.trips, x.noRate, x.revenue, x.budget, x.jo, x.joCost, x.profit, pct1(x.profit, x.revenue)]));
 }
 function bookCsv(){
-  const d = CL.data; if(!d) return toast('Still getting the clients.');
-  const rows = [];
-  d.clients.forEach(c => { const i = c.info || {};
-    (c.routes.length ? c.routes : [null]).forEach(r => rows.push([c.client, acctTxt(c.account), i.contact || '', i.phone || '', i.email || '', i.tin || '', i.terms || '', i.address || '',
-      r ? r.source : '', r ? plainDest(r.destination) : '', r ? r.km : '', r && r.rate!==null ? r.rate : '', r ? r.from : '', c.bal.billed, c.bal.paid, c.bal.owed, c.bal.toBill])); });
-  saveCsvFile(`Clients and rates ${TODAY()}.csv`, ['Client', 'Account', 'Contact', 'Phone', 'Email', 'TIN', 'Terms (days)', 'Address', 'Source', 'Destination', 'KM', 'Rate now', 'Rate since', 'Billed', 'Paid', 'Balance owed', 'To bill'], rows);
+  const d = CL.data; if(!d) return toast('Still getting the routes.');
+  saveCsvFile(`Routes and distance ${TODAY()}.csv`, ['Source', 'Destination', 'Client', 'Account', 'KM (one way)', 'Rate now', 'Rate since'],
+    bookRoutes().map(({r, c}) => [r.source, plainDest(r.destination), c.client, acctTxt(c.account), hasKm(r) ? r.km : 'NO DISTANCE', r.rate!==null ? r.rate : '', r.from || '']));
 }
 
 const DB = {filter:'tosend', data:null, key:''};
