@@ -998,6 +998,17 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .ch-file b{display:block;font-size:13.5px;overflow-wrap:anywhere}
 .ch-file small{display:block;font-size:11.5px;opacity:.8}
 .ch-st{font-size:11px;opacity:.85;margin-top:2px;text-align:right}
+.ch-emo{border-top:1px solid #E4E6EB;background:#fff;padding:6px 6px 4px;max-height:230px;display:flex;flex-direction:column;gap:4px}
+.ch-emo[hidden]{display:none}
+.ch-emo-tabs{display:flex;flex-wrap:wrap;gap:4px}
+.ch-emo-tab{border:0;background:#F0F2F5;color:#050505;border-radius:999px;padding:4px 10px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.ch-emo-tab[aria-pressed="true"]{background:#2E5BFF;color:#fff}
+.ch-emo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));overflow-y:auto;min-height:0}
+.ch-emo-e{border:0;background:none;font-size:25px;line-height:1;padding:7px 0;border-radius:10px;cursor:pointer}
+.ch-emo-e:hover,.ch-emo-e:focus-visible{background:#F0F2F5}
+#chEmoji[aria-pressed="true"]{color:#2E5BFF}
+.ch-m.emo{background:transparent !important;padding:0 2px}
+.ch-m.emo .ch-t{font-size:38px;line-height:1.15}
 .ms-comp{display:flex;align-items:flex-end;gap:2px;width:100%}
 .ms-comp textarea{flex:1;min-width:0;border-radius:20px;background:#F0F2F5;border:0;padding:9px 14px;resize:none;min-height:38px;max-height:120px;font:inherit;font-size:15px;line-height:1.3;box-shadow:none;margin:0 4px}
 .ms-send{color:#2E5BFF}
@@ -1084,6 +1095,65 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .tg-row:first-child{border-top:0}
 .ch-m.wait{opacity:.6}
 .ch-m.fail{opacity:1;background:#FEE2E2!important;color:#991B1B!important;border:1px solid #FCA5A5;font:inherit;text-align:left;cursor:pointer}
+/* Messenger look, seen / delivered and message actions (MANU 2026-10-28 "make it look like facebook messenger") */
+.ch-m.me:not(.has-file):not(.emo):not(.fail),.ch-m.me.has-file .ch-t,.ch-m.me .ch-file{background:#2E5BFF linear-gradient(180deg,#00A2FF 0%,#2E5BFF 50%,#7B3FF2 100%) fixed;color:#fff}
+.ch-col{display:flex;flex-direction:column;align-items:flex-start;max-width:76%;min-width:0}
+.ch-row.me .ch-col{align-items:flex-end}
+.ch-col .ch-m{max-width:100%}
+.ch-row.has-rx{margin-bottom:10px}
+.ch-lab{font-size:11.5px;color:#65676B;margin:8px 6px 2px;display:flex;align-items:center;gap:4px;white-space:normal;overflow-wrap:anywhere}
+.ch-lab svg{width:13px;height:13px;flex:none}
+.ch-req{max-width:100%;background:#F0F2F5;color:#65676B;border-radius:16px;padding:7px 12px 16px;margin-bottom:-11px;font:inherit;font-size:13px;line-height:1.3;cursor:pointer;border:0;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere}
+.ch-req.gone{font-style:italic;background:transparent;border:1px solid #CED0D4}
+.ch-m.del{background:transparent!important;border:1px solid #CED0D4;color:#65676B!important;font-style:italic;font-size:13.5px}
+.ch-rx{align-self:flex-end;margin:-8px 8px 0 0;position:relative;z-index:1;display:inline-flex;align-items:center;gap:1px;background:#fff;border:0;border-radius:999px;padding:1px 6px;font:inherit;font-size:13px;line-height:19px;box-shadow:0 1px 3px rgba(0,0,0,.22);cursor:pointer;color:#65676B;font-weight:600}
+.ch-rx span{margin-left:3px;font-size:12px}
+.ch-rx.mine{box-shadow:0 0 0 1.5px #2E5BFF,0 1px 3px rgba(0,0,0,.22)}
+.ch-acts{display:flex;align-items:center;visibility:hidden;align-self:center;flex:none}
+.ch-row:hover .ch-acts,.ch-row:focus-within .ch-acts{visibility:visible}
+.ch-acts button{border:0;background:transparent;color:#65676B;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;cursor:pointer;padding:0}
+.ch-acts button:hover{background:#F0F2F5}
+.ch-acts svg{width:17px;height:17px}
+@media (pointer:coarse){.ch-acts{display:none}.ch-m{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}}
+.ch-rc{display:flex;justify-content:flex-end;align-items:center;gap:3px;flex-wrap:wrap;margin:2px 0 4px;cursor:pointer;min-height:16px}
+.ch-rct{font-size:11.5px;color:#65676B;display:inline-flex;align-items:center;gap:3px;margin-right:2px;white-space:normal;overflow-wrap:anywhere}
+.ch-rct svg{width:13px;height:13px;flex:none;color:#2E5BFF}
+.ms-av.xs{width:15px;height:15px;font-size:6.5px;letter-spacing:0}
+.ch-rcn{font-size:10.5px;color:#65676B;font-weight:700}
+.ms-avw{position:relative;flex:none;display:inline-flex}
+.ms-avw.on::after{content:"";position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;background:#31A24C;border:2.5px solid #fff}
+.ms-like{font-size:23px;line-height:1}
+.ch-reply{width:100%;display:flex;align-items:flex-start;gap:8px;padding:6px 2px 6px 8px;border-top:1px solid #E4E6EB;margin:0 0 4px}
+.ch-reply[hidden]{display:none}
+.ch-rp-i{flex:none;color:#65676B;padding-top:2px}.ch-rp-i svg{width:16px;height:16px}
+.ch-rp-t{flex:1;min-width:0}
+.ch-rp-t b{display:block;font-size:13px;color:#050505;overflow-wrap:anywhere}
+.ch-rp-t small{display:block;font-size:12.5px;color:#65676B;white-space:pre-wrap;overflow-wrap:anywhere;max-height:3.9em;overflow:auto}
+.ch-m.flash{animation:chflash 1.4s}
+@keyframes chflash{0%,60%{box-shadow:0 0 0 3px #FFB800}100%{box-shadow:none}}
+.ch-sheet-bg{position:fixed;inset:0;z-index:75;background:rgba(0,0,0,.38);display:flex;align-items:flex-end;justify-content:center}
+.ch-sheet{background:#fff;color:#050505;width:100%;max-width:440px;max-height:86vh;overflow:auto;border-radius:18px 18px 0 0;padding:10px 10px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -6px 30px rgba(0,0,0,.25)}
+@media (min-width:701px){.ch-sheet-bg{align-items:center;padding:16px}.ch-sheet{border-radius:16px;padding-bottom:14px}}
+.ch-sh-rx{display:flex;justify-content:space-around;background:#fff;border-radius:999px;box-shadow:0 2px 12px rgba(0,0,0,.16);padding:6px;margin:2px 4px 10px}
+.ch-sh-rx button{border:0;background:transparent;font-size:28px;line-height:1;width:44px;height:44px;border-radius:50%;cursor:pointer;transition:transform .12s;padding:0}
+.ch-sh-rx button:hover{transform:scale(1.2)}
+.ch-sh-rx button[aria-pressed="true"]{background:#E7EEFF}
+.ch-sh-prev{font-size:13px;color:#65676B;padding:2px 8px 8px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:5.2em;overflow:auto}
+.ch-sh-it{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;padding:11px 10px;border-radius:10px;font:inherit;font-size:15px;font-weight:600;color:#050505;cursor:pointer;text-align:left}
+.ch-sh-it span{overflow-wrap:anywhere}
+.ch-sh-it:hover,.ch-sh-it:focus-visible{background:#F0F2F5}
+.ch-sh-it svg{width:21px;height:21px;flex:none}
+.ch-sh-it.warn{color:#E41E3F}
+.ch-sh-cancel{width:100%;margin-top:6px;border:0;background:#E4E6EB;color:#050505;border-radius:10px;padding:11px;font:inherit;font-weight:700;cursor:pointer}
+.ch-sh-head{display:flex;align-items:center;gap:8px;padding:2px 4px 8px}.ch-sh-head b{flex:1;font-size:17px;overflow-wrap:anywhere}
+.ch-sh-note{color:#65676B;padding:6px 8px;margin:0;font-size:14px}
+.ch-sheet input[type=search]{width:100%;border-radius:999px;background:#F0F2F5;border:0;padding:9px 14px;margin:0 0 6px;box-shadow:none;font:inherit}
+.ch-fw-list{display:flex;flex-direction:column}
+.ch-fw-row{display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:10px}
+.ch-fw-row[data-rxme]{cursor:pointer}.ch-fw-row[data-rxme]:hover{background:#F0F2F5}
+.ch-fw-send{flex:none;border:0;border-radius:8px;background:#E7EEFF;color:#0A27B5;font:inherit;font-weight:700;padding:7px 14px;cursor:pointer}
+.ch-fw-send:disabled{background:#E4E6EB;color:#65676B;cursor:default}
+.ch-rx-e{font-size:22px;flex:none}
 #lqTbl td small{display:block;color:var(--muted);font-size:11px;font-weight:600}
 /* driver scorecard (MANU 2026-10-13 "add 5") */
 #scTbl td small{display:block;color:var(--muted);font-size:11px;font-weight:600}
@@ -6162,7 +6232,7 @@ function openOutbox(){
    on screen (nothing while the phone is locked or the app is in the background; it catches up at once when it comes back).
    Each ask sends the chat version this phone has, so an ask with nothing new is cheap. After a failed ask it waits longer.
    A new message while the chat is closed shows a short notice. What you have read is kept on this phone. */
-const CH = {view:'list', out:[], sendQ:null, up:[], thumbs:{}, thumbWant:{}, typSig:'', msgs:[], users:[], groups:[], me:'', last:0, conv:'', loaded:false, busy:false, at:0, user:'', seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:''};
+const CH = {view:'list', out:[], sendQ:null, up:[], thumbs:{}, thumbWant:{}, typSig:'', msgs:[], users:[], groups:[], me:'', last:0, conv:'', loaded:false, busy:false, at:0, user:'', seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:'', reads:{}, rv:0, rdOk:false, rdSig:'', cs:0, act:null, actOff:0, actAt:0, re:null, seenSent:{}, seenQ:{}, hide:new Set(), hidePend:new Set()};
 const CH_OPEN_MS = 2000, CH_SHUT_MS = 10000;
 const chatOpen = () => dockShown() || (!$('pop').hidden && $('pop').classList.contains('chatpop'));
 /* Chat window on wide screens (1200 px and up): opens next to the floating chat button when it is tapped and closes with ✕ or
@@ -6298,8 +6368,8 @@ const convOf = m => !m.to ? '#team' : m.to.charAt(0)==='#' ? m.to : (m.from===CH
 const isGroup = c => c!=='#team' && String(c).charAt(0)==='#';
 const madeGroup = c => CH.groups.find(x => x.id===c && x.made);   // a group someone made (not a department group)
 const chatName = c => { if(c==='#team') return 'Team chat'; if(isGroup(c)){ const g = CH.groups.find(x => x.id===c); return g ? (g.made ? g.name : g.name + ' group') : /^#g\d+$/.test(c) ? 'Group' : c.slice(1).toUpperCase() + ' group'; } const x = CH.users.find(y => y.username===c); return x ? x.name : String(c).toUpperCase(); };
-function chatUnread(conv){ const r = lsGet(chatReadKey()) || {}; return CH.msgs.filter(m => m.from!==CH.me && (!conv || convOf(m)===conv) && m.id > (r[convOf(m)] || 0)).length; }
-function chatMarkRead(conv){ const r = lsGet(chatReadKey()) || {}, l = CH.msgs.filter(m => convOf(m)===conv); if(!l.length) return; r[conv] = l[l.length - 1].id; lsSet(chatReadKey(), r); }
+function chatUnread(conv){ const r = lsGet(chatReadKey()) || {}; return CH.msgs.filter(m => m.from!==CH.me && !m.del && !CH.hide.has(m.id) && (!conv || convOf(m)===conv) && m.id > (r[convOf(m)] || 0)).length; }
+function chatMarkRead(conv){ const r = lsGet(chatReadKey()) || {}, l = CH.msgs.filter(m => convOf(m)===conv); if(!l.length) return; r[conv] = Math.max(r[conv] || 0, l[l.length - 1].id); lsSet(chatReadKey(), r); chatSeenSend(conv); }
 function chatTick(){
   const b = $('chatBtn'); if(!b) return;
   syncDock();
@@ -6307,11 +6377,11 @@ function chatTick(){
   if(CH.user !== S.me.username) loadSoc();   // Viber and Messenger buttons: once per sign-in or page load
   if(CH.user !== S.me.username) setTimeout(flushOutbox, 2000);   // a new sign-in: send what waits from before
   if(CH.user !== S.me.username){
-    Object.assign(CH, {view:'list', full:false, g:null, out:[], sendQ:null, up:[], thumbs:{}, thumbWant:{}, typSig:'', msgs:[], users:[], groups:[], me:'', last:0, conv:'#team', loaded:false, busy:false, at:0, user:S.me.username, seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:''});
+    Object.assign(CH, {view:'list', full:false, g:null, out:[], sendQ:null, up:[], thumbs:{}, thumbWant:{}, typSig:'', msgs:[], users:[], groups:[], me:'', last:0, conv:'#team', loaded:false, busy:false, at:0, user:S.me.username, seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:'', reads:{}, rv:0, rdOk:false, rdSig:'', cs:0, act:null, actOff:0, actAt:0, re:null, seenSent:{}, seenQ:{}, hide:new Set(), hidePend:new Set()});
     const kept = lsGet('jmti_chat_' + CH.user); if(kept && kept.msgs) chatMerge({...kept, kept:true});   // what this phone kept: shows without signal
   }
   b.hidden = false; renderSoc();
-  if(chatOpen()) renderTyping();   // "… is typing" goes away on its own when the other person stops
+  if(chatOpen()){ renderTyping(); chatHead(); }   // "… is typing" goes away on its own when the other person stops; "Active now" ages
   if((document.hidden && !('setAppBadge' in navigator)) || CH.busy || navigator.onLine===false) return;
   const wait = (document.hidden ? 60000 : chatOpen() ? CH_OPEN_MS : CH_SHUT_MS) * Math.min(8, 2 ** CH.fail);   // in the background: once a minute, for the icon count   // after failed asks: 2x, 4x, up to 8x longer
   if(Date.now() - CH.at < wait) return;
@@ -6320,12 +6390,15 @@ function chatTick(){
 function chatPoll(){
   CH.busy = true; const u = CH.user;
   const full = !CH.full;   // the first ask after the page opens: the people and groups too (a kept copy may be from before groups)
-  return call('chatList', CH.last, CH.loaded && !full ? CH.v : '', full).then(d => { CH.fail = 0; if(CH.user===u){ if(full) CH.full = true; if(d.v) CH.v = String(d.v); chatMerge(d); } })
+  const opt = {cs:CH.cs || 0, rv:CH.rv || 0};   // the newest reaction / unsend and read receipt this phone has
+  if(Date.now() - CH.actAt > 30000){ opt.act = true; CH.actAt = Date.now(); }   // who is active: every 30 s
+  return call('chatList', CH.last, CH.loaded && !full ? CH.v : '', full, opt).then(d => { CH.fail = 0; if(CH.user===u){ if(full) CH.full = true; if(d.v) CH.v = String(d.v); chatMerge(d); if(d.rv!==undefined) CH.rv = Number(d.rv) || 0; } })
     .catch(() => { CH.fail = Math.min(3, CH.fail + 1); }).finally(() => { CH.busy = false; });
 }
 /** A short notice for messages that came in while the chat is closed (not for the first load or your own). */
 function chatNotice(fresh){
   if(!fresh.length) return;
+  fresh = fresh.filter(m => !m.del); if(!fresh.length) return;
   const m = fresh[fresh.length - 1], who = m.fromName || chatName(m.from), where = !m.to ? ' (team)' : isGroup(m.to) ? ` (${chatName(m.to)})` : '', what = msgBody(m);
   toast(fresh.length > 1 ? `💬 ${fresh.length} new messages · ${who}${where}: ${what}`.slice(0, 160) : `💬 ${who}${where}: ${what}`.slice(0, 160), false, 5000);
 }
@@ -6335,16 +6408,33 @@ function chatMerge(d){
   if(Array.isArray(d.typing)){ CH.typing = d.typing; CH.typAt = Date.now(); }
   CH.me = d.me || CH.me;
   const first = !CH.loaded, have = new Set(CH.msgs.map(m => m.id)), fresh = [];
-  CH.loaded = true; let added = 0;
-  (d.msgs || []).forEach(m => { if(!have.has(m.id)){ CH.msgs.push(m); added++; if(m.from!==CH.me) fresh.push(m); } });
+  CH.loaded = true; let added = 0, chg = 0;
+  const put = m => { const i = CH.msgs.findIndex(x => x.id===m.id); if(i >= 0 && JSON.stringify(CH.msgs[i])!==JSON.stringify(m)){ CH.msgs[i] = m; chg++; } };   // reacted to or unsent since
+  (d.msgs || []).forEach(m => { if(!have.has(m.id)){ CH.msgs.push(m); added++; if(m.from!==CH.me) fresh.push(m); } else put(m); });
+  (d.chg || []).forEach(put);
+  if(d.cs!==undefined) CH.cs = Math.max(CH.cs || 0, Number(d.cs) || 0);
+  if(d.act){ CH.act = d.act; CH.actOff = Date.now() - (Number(d.act.now) || Date.now()); }   // the phone's clock may differ from the server's
+  if(d.rv!==undefined) CH.rdOk = true;
   CH.msgs.sort((a, b) => a.id - b.id); if(CH.msgs.length > 600) CH.msgs = CH.msgs.slice(-600);
   if(CH.msgs.length) CH.last = Math.max(CH.last, CH.msgs[CH.msgs.length - 1].id);
   if(first && lsGet(chatReadKey())===null){ const r = {}; CH.msgs.forEach(m => { r[convOf(m)] = m.id; }); lsSet(chatReadKey(), r); }   // first time on this phone: older messages count as read
-  if(chatOpen() && CH.view!=='group'){ if(CH.view==='conv') chatMarkRead(CH.conv); if(first || added || d.users || d.groups) renderChat(); else renderTyping(); }
+  let rdNew = false;
+  if(d.reads){
+    Object.keys(d.reads).forEach(x => { CH.reads[x] = d.reads[x]; });
+    const mine = d.reads[CH.me];
+    if(mine){
+      const h = new Set([...(mine.h || []), ...CH.hidePend]); if([...h].sort().join()!==[...CH.hide].sort().join()){ CH.hide = h; chg++; }
+      const r = lsGet(chatReadKey()) || {}; let up = false;   // read on another phone: not new here either
+      Object.keys(mine.c || {}).forEach(c => { const id = (mine.c[c] || [0])[0]; if(id > (r[c] || 0)){ r[c] = id; up = true; } });
+      if(up) lsSet(chatReadKey(), r);
+    }
+    const sig = JSON.stringify(CH.reads); rdNew = sig!==CH.rdSig; CH.rdSig = sig;
+  }
+  if(chatOpen() && CH.view!=='group'){ if(CH.view==='conv') chatMarkRead(CH.conv); if(first || added || chg || rdNew || d.act || d.users || d.groups) renderChat(); else renderTyping(); }
   if(CH.view==='conv' && isGroup(CH.conv) && /^#g/.test(CH.conv) && CH.loaded && !d.kept && d.groups && !CH.groups.some(x => x.id===CH.conv)){ CH.view = 'list'; if(chatOpen()){ chatBuild(); renderChat(true); } }   // taken out of the group
   if(!first && !d.kept && !(chatOpen() && CH.view==='list')) chatNotice(fresh.filter(m => m.id > ((lsGet(chatReadKey()) || {})[convOf(m)] || 0)));   // with the chat open: only other conversations
   renderChatBtn();
-  if(d.msgs && d.msgs.length || d.users || d.groups) lsSet('jmti_chat_' + CH.user, {me:CH.me, users:CH.users, groups:CH.groups, msgs:CH.msgs.slice(-300)});
+  if(d.msgs && d.msgs.length || chg || d.users || d.groups) chatKeep();
 }
 /** "DISPATCHER is typing…" under the messages of the conversation shown: team typing in the team chat, one person's in theirs. */
 function renderTyping(){
@@ -6392,13 +6482,23 @@ const badgeAsk = () => 'setAppBadge' in navigator && window.Notification && Noti
   && /iPhone|iPad|iPod/.test(navigator.userAgent) && (navigator.standalone || matchMedia('(display-mode: standalone)').matches);
 const CHAT_SUB = 'Team chat is seen by everyone, a department group by that department plus Admin and Boss, and a message to one person only by the two of you.';
 const MS_ICON = {
+  smile: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="1.3" fill="currentColor"/><circle cx="15" cy="10" r="1.3" fill="currentColor"/><path d="M8 14.2c1 1.6 2.4 2.4 4 2.4s3-.8 4-2.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   people: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.8 19.5c.7-3.4 3.2-5.3 6.2-5.3s5.5 1.9 6.2 5.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M15.5 4.9a3.2 3.2 0 0 1 0 6.2M17.6 14.6c1.9.6 3.2 2.3 3.6 4.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
   photo: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="1.8" fill="currentColor"/><path d="M4.5 17.5l5-5 4 4 3-3 3.5 3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
   clip: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5l-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L9.7 17.2a1.7 1.7 0 0 1-2.4-2.4L15 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   send: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.4 20.4l17.5-7.6a.9.9 0 0 0 0-1.6L3.4 3.6a.9.9 0 0 0-1.3 1l1.9 6.6 9 .8-9 .8-1.9 6.6a.9.9 0 0 0 1.3 1z" fill="currentColor"/></svg>',
-  doc: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="currentColor" opacity=".28"/><path d="M14 2v5h5M8 13h8M8 17h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'};
+  doc: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="currentColor" opacity=".28"/><path d="M14 2v5h5M8 13h8M8 17h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  reply: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 8.2V4.5L3 11l7 6.5v-3.8c4.8 0 8.2 1.5 11 5-1.2-5.2-4.4-10-11-10.5z" fill="currentColor"/></svg>',
+  fwd: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8.2V4.5l7 6.5-7 6.5v-3.8c-4.8 0-8.2 1.5-11 5 1.2-5.2 4.4-10 11-10.5z" fill="currentColor"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4.8c0-.4.4-.8.8-.8h4.4c.4 0 .8.4.8.8V7M6.5 7l1 12.2c.1.9.8 1.6 1.7 1.6h5.6c.9 0 1.6-.7 1.7-1.6l1-12.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  hide: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1c.5-.1.9-.1 1.4-.1 5 0 8.5 4.2 9.6 7-.4 1-1.2 2.4-2.4 3.7M6.6 6.6C4.5 8 3 10.2 2.4 12c1.1 2.8 4.6 7 9.6 7 1.8 0 3.4-.5 4.8-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.4 12C3.5 9.2 7 5 12 5s8.5 4.2 9.6 7c-1.1 2.8-4.6 7-9.6 7s-8.5-4.2-9.6-7z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  more: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>',
+  sent: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7.5 12.3l3 3 6-6.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  dlv: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7.5 12.3l3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
 // what the photo and file pickers offer (spelled out: a slash followed by a star inside the page's code breaks Apps Script)
 const CH_PHOTO_TYPES = 'image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif';
 const CH_FILE_TYPES = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,' + CH_PHOTO_TYPES;
@@ -6408,8 +6508,8 @@ const chatHost = () => dockShown() ? {body:$('chdBody'), foot:$('chdFoot'), dock
 const fileSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round((n || 0) / 1024)) + ' KB';
 const fileKind = f => isImg(f.m) ? 'Photo' : ((String(f.n).match(/\.([a-z0-9]+)$/i) || ['', 'file'])[1]).toUpperCase();
 /** "📷 Photo · caption" / "📎 report.pdf" / the text: for the list, notices and previews. */
-const msgBody = m => m.file ? (isImg(m.file.m) ? '📷 Photo' : '📎 ' + m.file.n) + (m.text ? ' · ' + m.text : '') : m.text;
-const msgPreview = m => (m.from===CH.me ? 'You: ' : (!m.to || isGroup(m.to)) ? String(m.fromName || chatName(m.from)).split(/[ ,]+/)[0] + ': ' : '') + msgBody(m);
+const msgBody = m => m.del ? 'Message unsent' : m.file ? (isImg(m.file.m) ? '📷 Photo' : '📎 ' + m.file.n) + (m.text ? ' · ' + m.text : '') : m.text;
+const msgPreview = m => m.del ? delText(m) : (m.from===CH.me ? 'You: ' : (!m.to || isGroup(m.to)) ? String(m.fromName || chatName(m.from)).split(/[ ,]+/)[0] + ': ' : '') + msgBody(m);
 const atMin = at => { const t = String(at || ''); return Date.UTC(+t.slice(0, 4), +t.slice(5, 7) - 1, +t.slice(8, 10), +t.slice(11, 13) || 0, +t.slice(14, 16) || 0) / 60000; };
 const clock12 = at => { const h = +String(at).slice(11, 13), mi = String(at).slice(14, 16); return isNaN(h) ? '' : `${h % 12 || 12}:${mi} ${h < 12 ? 'AM' : 'PM'}`; };
 const shortWhen = at => String(at).slice(0, 10)===TODAY() ? clock12(at) : fmtDay(String(at).slice(0, 10)).replace(/, \d{4}$/, '');
@@ -6420,7 +6520,7 @@ function chatAv(c, sm, name){
   const n = String(name || chatName(c)).replace(/ group$/, ''), grp = c==='#team' || isGroup(c);
   const ini = c==='#team' ? 'ALL' : n.split(/[\s,&]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
   let h = 0; for(const ch of String(c)) h = (h * 31 + ch.charCodeAt(0)) % 360;
-  return `<span class="ms-av${grp ? ' grp' : ''}${sm ? ' sm' : ''}" style="--h:${c==='#team' ? 225 : c==='jmti-alerts' ? 38 : h}" aria-hidden="true">${esc(ini || '?')}</span>`;
+  return `<span class="ms-av${grp ? ' grp' : ''}${sm==='xs' ? ' xs' : sm ? ' sm' : ''}" style="--h:${c==='#team' ? 225 : c==='jmti-alerts' ? 38 : h}" aria-hidden="true">${esc(ini || '?')}</span>`;
 }
 /** Who is typing where: {'#team': 'DISPATCHER is typing…', 'admin': …}. */
 function convTyping(){
@@ -6441,18 +6541,25 @@ function chatBuild(){
   } else if(CH.view==='group'){
     return groupBuild(h, close);
   } else {
-    h.body.innerHTML = `<div class="ms-top"><button type="button" class="ms-ib" data-chback="1" title="All chats" aria-label="All chats">${MS_ICON.back}</button>${chatAv(CH.conv)}<div class="ms-name"><b id="chName">${esc(chatName(CH.conv))}</b><small>${esc(convSub(CH.conv))}</small></div>${madeGroup(CH.conv) ? `<button type="button" class="ms-ib" data-chgrp="1" title="Members" aria-label="Members">${MS_ICON.people}</button>` : ''}${close}</div>
+    h.body.innerHTML = `<div class="ms-top"><button type="button" class="ms-ib" data-chback="1" title="All chats" aria-label="All chats">${MS_ICON.back}</button>${avOn(chatAv(CH.conv), false, 'chAvW')}<div class="ms-name"><b id="chName">${esc(chatName(CH.conv))}</b><small id="chSub">${esc(convSub(CH.conv))}</small></div>${madeGroup(CH.conv) ? `<button type="button" class="ms-ib" data-chgrp="1" title="Members" aria-label="Members">${MS_ICON.people}</button>` : ''}${close}</div>
       <div class="ch-msgs" id="chMsgs"><p class="hint">Loading messages…</p></div>`;
     h.foot.innerHTML = `<div class="ch-typing" id="chTyping" aria-live="polite"></div>
+      <div class="ch-reply" id="chReply" hidden></div>
+      <div class="ch-emo" id="chEmo" hidden></div>
       <div class="ms-comp"><button type="button" class="ms-ib" id="chPhoto" title="Send a photo" aria-label="Send a photo">${MS_ICON.photo}</button><button type="button" class="ms-ib" id="chFile" title="Send a file" aria-label="Send a file">${MS_ICON.clip}</button>
         <textarea id="chText" rows="1" maxlength="1000" placeholder="Aa" aria-label="Message"></textarea>
+        <button type="button" class="ms-ib" id="chEmoji" title="Emoji" aria-label="Emoji" aria-pressed="false">${MS_ICON.smile}</button>
         <button type="button" class="ms-ib ms-send" id="chSendBtn" title="Send" aria-label="Send">${MS_ICON.send}</button>
         <input type="file" id="chPhotoIn" accept="${CH_PHOTO_TYPES}" multiple hidden><input type="file" id="chFileIn" accept="${CH_FILE_TYPES}" multiple hidden></div>`;
     const ta = $('chText');
-    ta.oninput = () => { ta.style.height = 'auto'; ta.style.height = Math.min(120, ta.scrollHeight) + 'px'; chatTypingPing(); };
+    ta.oninput = () => { ta.style.height = 'auto'; ta.style.height = Math.min(120, ta.scrollHeight) + 'px'; chatTypingPing(); chatSendIcon(); };
     ta.onblur = () => setTimeout(() => { if(!chatOpen()) chatTypingStop(); }, 300);
     ta.onkeydown = e => { if(e.key==='Enter' && !e.shiftKey && window.matchMedia('(pointer:fine)').matches){ e.preventDefault(); chatSendNow(); } };
-    $('chSendBtn').onclick = chatSendNow;
+    $('chSendBtn').onclick = () => chatSendNow(true);
+    $('chReply').onclick = e => { if(e.target.closest('[data-rpx]')){ CH.re = null; renderReplyBar(); } };
+    chatPress($('chMsgs')); chatSendIcon(); renderReplyBar(); chatHead();
+    $('chEmoji').onclick = () => emoToggle();
+    $('chEmo').onclick = e => { const t = e.target.closest('[data-emotab]'); if(t){ CH.emoTab = +t.dataset.emotab; emoPanel(); return; } const b = e.target.closest('[data-emo]'); if(b) emoAdd(b.dataset.emo); };
     $('chPhoto').onclick = () => $('chPhotoIn').click();
     $('chFile').onclick = () => $('chFileIn').click();
     $('chPhotoIn').onchange = $('chFileIn').onchange = e => { const fs = [...e.target.files].slice(0, 5); e.target.value = ''; fs.forEach(chatSendFile); };
@@ -6526,6 +6633,12 @@ async function groupSave(arg, done){
   finally{ g.busy = false; document.querySelectorAll('.cg-foot .btn').forEach(b => { b.disabled = false; }); }
 }
 function chatClick(e){
+  if(Date.now() - (CH.lpAt || 0) < 700) return;   // the tap that ends a long-press
+  const mo = e.target.closest('[data-chmore]'); if(mo) return chatMenu(+mo.dataset.chmore);
+  const rp = e.target.closest('[data-chreply]'); if(rp) return chatReplyTo(+rp.dataset.chreply);
+  const rx = e.target.closest('[data-chrx]'); if(rx) return chatRxList(+rx.dataset.chrx);
+  const sn = e.target.closest('[data-chseen]'); if(sn){ const m = CH.msgs.find(x => x.id===+sn.dataset.chseen); if(m) chatSeenList(m); return; }
+  const jp = e.target.closest('[data-chjump]'); if(jp) return chatJump(+jp.dataset.chjump);
   const rt = e.target.closest('[data-chretry]');
   if(rt){ const p = CH.out.find(x => x.ref===rt.dataset.chretry); if(p){ renderChat(); chatPush(p); renderChat(); } return; }
   if(e.target.closest('#chNewG')) return groupOpen('');
@@ -6540,7 +6653,7 @@ function chatClick(e){
 }
 /** Opens one conversation. */
 function chatGo(conv){
-  chatTypingStop(); CH.conv = conv; CH.view = 'conv';
+  chatTypingStop(); if(CH.conv!==conv) CH.re = null; CH.conv = conv; CH.view = 'conv';
   chatBuild(); chatMarkRead(conv); renderChat(true); renderChatBtn();
   if(window.matchMedia('(pointer:fine)').matches && $('chText')) $('chText').focus();
 }
@@ -6574,25 +6687,36 @@ function renderChat(force){
   if(!chatOpen() || CH.view==='group') return;
   if(CH.view==='list') return renderChatList();
   const box = $('chMsgs'); if(!box) return;
+  chatHead();
   const sc = chatHost().body, atEnd = force || sc.scrollHeight - sc.scrollTop - sc.clientHeight < 90;
-  const l = CH.msgs.filter(m => convOf(m)===CH.conv);
+  const l = CH.msgs.filter(m => convOf(m)===CH.conv && !CH.hide.has(m.id));
   const waitMsgs = outbox().filter(it => it.fn==='chatSend' && (it.args[0] || '#team')===CH.conv);   // typed without signal
   const ups = CH.up.filter(u => u.conv===CH.conv);   // photos and files being sent
   const oneToOne = CH.conv!=='#team' && !isGroup(CH.conv);
+  const outs = CH.out.filter(p => p.conv===CH.conv && !(p.st==='send' && l.some(m => m.from===CH.me && m.id > p.after && m.text===p.text)));
+  const rd = CH.rdOk ? chatReaders(CH.conv, l) : {}, lastM = l[l.length - 1];
+  const showSt = CH.rdOk && lastM && lastM.from===CH.me && !lastM.del && !outs.length && !waitMsgs.length && !ups.length;
+  const brk = m => !!(m && !m.del && (m.re || m.fwd));   // a reply or forward starts its own group of bubbles
   let html = '', prev = null;
   l.forEach((m, i) => {
     const mine = m.from===CH.me, next = l[i + 1], t = atMin(m.at);
     const sep = !prev || String(prev.at).slice(0, 10)!==String(m.at).slice(0, 10) || t - atMin(prev.at) >= 60;
-    const start = sep || prev.from!==m.from || t - atMin(prev.at) > 5;
+    const start = sep || prev.from!==m.from || t - atMin(prev.at) > 5 || brk(m);
     const nsep = !next || String(next.at).slice(0, 10)!==String(m.at).slice(0, 10) || atMin(next.at) - t >= 60;
-    const end = nsep || next.from!==m.from || atMin(next.at) - t > 5;
+    const end = nsep || next.from!==m.from || atMin(next.at) - t > 5 || brk(next);
     if(sep) html += `<div class="ch-day">${esc(sepWhen(m.at))}</div>`;
-    if(!mine && start && !oneToOne) html += `<div class="ch-who">${esc(m.fromName || chatName(m.from))}</div>`;
+    const lab = chatLabel(m, mine);
+    if(!mine && start && !oneToOne && !lab) html += `<div class="ch-who">${esc(m.fromName || chatName(m.from))}</div>`;
     const pos = start && end ? 'solo' : start ? 'first' : end ? 'last' : 'mid';
-    html += `<div class="ch-row${mine ? ' me' : ''}">${mine ? '' : end ? chatAv(m.from, true, m.fromName) : '<span class="ms-av sm sp"></span>'}<div class="ch-m${mine ? ' me' : ''}${m.from==='jmti-alerts' ? ' bot' : ''}${m.file ? ' has-file' : ''} ${pos}" title="${esc(sepWhen(m.at))}">${fileHtml(m)}${m.text ? `<div class="ch-t">${esc(m.text)}</div>` : ''}</div></div>`;
+    const bub = m.del ? `<div class="ch-m del ${pos}" data-id="${m.id}" title="${esc(sepWhen(m.at))}">${esc(delText(m))}</div>`
+      : `<div class="ch-m${mine ? ' me' : ''}${m.from==='jmti-alerts' ? ' bot' : ''}${m.file ? ' has-file' : ''}${!m.file && emoOnly(m.text) ? ' emo' : ''} ${pos}" data-id="${m.id}" title="${esc(sepWhen(m.at))}">${fileHtml(m)}${m.text ? `<div class="ch-t">${esc(m.text)}</div>` : ''}</div>`;
+    const col = `<div class="ch-col">${lab ? `<div class="ch-lab">${m.re ? MS_ICON.reply : MS_ICON.fwd}<span>${esc(lab)}</span></div>` : ''}${m.re && !m.del ? chatQuote(m) : ''}${bub}${m.del ? '' : rxPill(m)}</div>`;
+    const acts = `<span class="ch-acts">${m.del ? '' : `<button type="button" data-chmore="${m.id}" title="React" aria-label="React">${MS_ICON.smile}</button><button type="button" data-chreply="${m.id}" title="Reply" aria-label="Reply">${MS_ICON.reply}</button>`}<button type="button" data-chmore="${m.id}" title="More" aria-label="More">${MS_ICON.more}</button></span>`;
+    html += `<div class="ch-row${mine ? ' me' : ''}${m.rx && !m.del ? ' has-rx' : ''}">${mine ? acts + col : (end ? chatAv(m.from, true, m.fromName) : '<span class="ms-av sm sp"></span>') + col + acts}</div>`;
+    const st = showSt && m===lastM ? chatStatus(m) : null;
+    if(rd[m.id] || st) html += chatReceipt(m, rd[m.id], st);
     prev = m;
   });
-  const outs = CH.out.filter(p => p.conv===CH.conv && !(p.st==='send' && l.some(m => m.from===CH.me && m.id > p.after && m.text===p.text)));
   html += outs.map(p => p.st==='fail'
     ? `<div class="ch-row me"><button type="button" class="ch-m me fail solo" data-chretry="${esc(p.ref)}" title="${esc(p.err || '')}"><div class="ch-t">${esc(p.text)}</div><div class="ch-st">Not sent · tap to try again</div></button></div>`
     : `<div class="ch-row me"><div class="ch-m me wait solo"><div class="ch-t">${esc(p.text)}</div><div class="ch-st">Sending…</div></div></div>`).join('');
@@ -6627,7 +6751,7 @@ function chatLoadThumbs(){
 function renderChatList(){
   const box = $('chList'); if(!box) return;
   const q = ($('chFind') ? $('chFind').value : '').trim().toLowerCase();
-  const last = {}; CH.msgs.forEach(m => { last[convOf(m)] = m; });
+  const last = {}; CH.msgs.forEach(m => { if(!CH.hide.has(m.id)) last[convOf(m)] = m; });
   const typ = convTyping(); CH.typSig = JSON.stringify(typ);
   let convs = ['#team', ...CH.groups.map(g => g.id)];
   Object.keys(last).forEach(c => { if(!convs.includes(c)) convs.push(c); });
@@ -6635,18 +6759,313 @@ function renderChatList(){
     .filter(c => (chatName(c) + ' ' + ((CH.users.find(u => u.username===c) || {}).role || '')).toLowerCase().includes(q));
   convs.sort((a, b) => ((last[b] || {}).id || 0) - ((last[a] || {}).id || 0));
   box.innerHTML = convs.map(c => { const m = last[c], n = chatUnread(c);
-    return `<button type="button" class="ms-item${n ? ' unread' : ''}" data-conv="${esc(c)}">${chatAv(c)}<span class="ms-mid"><b>${esc(chatName(c))}</b><small>${typ[c] ? `<i class="ms-typ">${esc(typ[c])}</i>` : m ? esc(msgPreview(m)) + ' · ' + esc(shortWhen(m.at)) : esc(convSub(c))}</small></span>${n ? `<span class="ms-n">${n > 99 ? '99+' : n}</span>` : ''}</button>`; }).join('')
+    return `<button type="button" class="ms-item${n ? ' unread' : ''}" data-conv="${esc(c)}">${avOn(chatAv(c), c!=='#team' && !isGroup(c) && isActive(c))}<span class="ms-mid"><b>${esc(chatName(c))}</b><small>${typ[c] ? `<i class="ms-typ">${esc(typ[c])}</i>` : m ? esc(msgPreview(m)) + ' · ' + esc(shortWhen(m.at)) : esc(convSub(c))}</small></span>${n ? `<span class="ms-n">${n > 99 ? '99+' : n}</span>` : ''}</button>`; }).join('')
     || `<p class="hint" style="padding:12px">${q ? 'No one found.' : 'Loading chats…'}</p>`;
 }
 /* Sending shows at once (MANU 2026-10-14 "why does it take long to send message?"): the bubble appears as "Sending…" the
    moment Send is tapped and the box is ready for the next message; the server saves them one after another in order (each
    with its own ref, so a retry is never saved twice). A message the server refuses stays as "Not sent · tap to try again". */
-function chatSendNow(){
-  const ta = $('chText'), text = ta.value.trim(); if(!text) return;
+/**
+ * Emoji in the chat (MANU 2026-10-28 "add emoji to messaging"): the smile button by the message box opens a panel (Recent,
+ * Smileys, Hands, Work, Symbols); a tap adds the emoji where the cursor is. Recent ones are kept on this phone. A message of
+ * only one to three emoji shows big, like Messenger. The emoji are written as \u codes so a paste into Apps Script can't change them.
+ */
+const CH_EMOJI = [["Smileys", ["\ud83d\ude00", "\ud83d\ude03", "\ud83d\ude04", "\ud83d\ude01", "\ud83d\ude06", "\ud83d\ude05", "\ud83d\ude02", "\ud83e\udd23", "\ud83d\ude0a", "\ud83d\ude42", "\ud83d\ude09", "\ud83d\ude0d", "\ud83e\udd70", "\ud83d\ude18", "\ud83d\ude0e", "\ud83e\udd29", "\ud83e\udd14", "\ud83d\ude10", "\ud83d\ude11", "\ud83d\ude36", "\ud83d\ude44", "\ud83d\ude0f", "\ud83d\ude34", "\ud83d\ude22", "\ud83d\ude2d", "\ud83d\ude24", "\ud83d\ude20", "\ud83d\ude21", "\ud83e\udd2f", "\ud83d\ude31", "\ud83d\ude33", "\ud83e\udd7a", "\ud83d\ude07", "\ud83e\udd17", "\ud83e\udd2d", "\ud83d\ude2c", "\ud83e\udd12", "\ud83e\udd15", "\ud83e\udd75", "\ud83e\udd76", "\ud83d\ude37"]], ["Hands", ["\ud83d\udc4d", "\ud83d\udc4e", "\ud83d\udc4c", "\u270c\ufe0f", "\ud83e\udd1e", "\ud83d\udc4f", "\ud83d\ude4c", "\ud83d\ude4f", "\ud83d\udcaa", "\ud83d\udc4b", "\u270b", "\ud83e\udd1d", "\ud83d\udc4a", "\u270a", "\ud83d\udc46", "\ud83d\udc47", "\ud83d\udc49", "\ud83d\udc48"]], ["Work", ["\ud83d\ude9a", "\ud83d\ude9b", "\ud83d\udefb", "\u26fd", "\ud83d\udee3\ufe0f", "\ud83d\udea7", "\ud83c\udd7f\ufe0f", "\ud83d\udce6", "\ud83d\udccd", "\ud83d\uddfa\ufe0f", "\u23f0", "\u23f3", "\ud83d\udcc5", "\ud83d\udcdd", "\ud83d\udccb", "\ud83d\udcc4", "\ud83d\udcf7", "\ud83d\udcde", "\ud83d\udcb0", "\ud83d\udcb5", "\ud83e\uddfe", "\ud83d\udd27", "\ud83d\udee0\ufe0f", "\u2699\ufe0f", "\ud83d\udd0b"]], ["Symbols", ["\u2705", "\u274c", "\u26a0\ufe0f", "\u2757", "\u2753", "\ud83d\udcaf", "\ud83d\udd25", "\u2b50", "\u2764\ufe0f", "\ud83d\udc99", "\ud83d\udc9a", "\ud83d\udc9b", "\ud83c\udf89", "\ud83c\udd97", "\ud83c\udd98", "\ud83d\udd34", "\ud83d\udfe2", "\ud83d\udfe1", "\u2b06\ufe0f", "\u2b07\ufe0f", "\u27a1\ufe0f", "\u2b05\ufe0f"]]];
+const emoRecent = () => { const r = lsGet('jmti_emo_recent'); return Array.isArray(r) ? r : []; };
+function emoPanel(){
+  const box = $('chEmo'); if(!box) return;
+  const rec = emoRecent(), tabs = (rec.length ? [['Recent', rec]] : []).concat(CH_EMOJI), on = Math.min(CH.emoTab || 0, tabs.length - 1);
+  box.innerHTML = `<div class="ch-emo-tabs">${tabs.map((t, i) => `<button type="button" class="ch-emo-tab" data-emotab="${i}" aria-pressed="${i===on}">${esc(t[0])}</button>`).join('')}</div>`
+    + `<div class="ch-emo-grid">${tabs[on][1].map(e => `<button type="button" class="ch-emo-e" data-emo="${esc(e)}" aria-label="${esc(e)}">${esc(e)}</button>`).join('')}</div>`;
+}
+function emoToggle(open){
+  const box = $('chEmo'); if(!box) return;
+  box.hidden = open===undefined ? !box.hidden : !open;
+  if(!box.hidden) emoPanel();
+  const b = $('chEmoji'); if(b) b.setAttribute('aria-pressed', !box.hidden);
+}
+function emoAdd(e){
+  const ta = $('chText'); if(!ta) return;
+  const a = ta.selectionStart ?? ta.value.length, z = ta.selectionEnd ?? a;
+  if((ta.value.length - (z - a) + e.length) > 1000) return;
+  ta.setRangeText(e, a, z, 'end'); ta.oninput && ta.oninput();
+  lsSet('jmti_emo_recent', [e].concat(emoRecent().filter(x => x !== e)).slice(0, 24));
+  if(window.matchMedia('(pointer:fine)').matches) ta.focus();
+}
+/** Only 1 to 3 emoji (no letters or numbers): shown big. */
+const EMO_ONLY = /^(?:\p{Extended_Pictographic}|\p{Emoji_Modifier}|\p{Regional_Indicator}|\uFE0F|\u200D|\s)+$/u;
+function emoOnly(t){
+  t = String(t || '').trim(); if(!t || t.length > 40) return false;
+  try { if(!EMO_ONLY.test(t)) return false; } catch(e){ return false; }
+  const n = typeof Intl !== 'undefined' && Intl.Segmenter ? [...new Intl.Segmenter('en', {granularity:'grapheme'}).segment(t.replace(/\s+/g, ''))].length : [...t.replace(/\s+/g, '')].length;
+  return n <= 3;
+}
+
+/* ---- Seen, delivered, reply, forward, copy, unsend, reactions (MANU 2026-10-28 "show on chatbox who has seen the message, if
+   personal message, show if seen or delivered", "can reply, forward, copy and delete message", "make it look like facebook
+   messenger"). Read receipts come from the server (Code.gs chatReads_): in a one-to-one your last message shows Sent, Delivered
+   (it reached their phone) or Seen with the time; in the team chat and groups small pictures show how far each person has read,
+   and "Seen by …" sits under your last message. Long-press a message (right-click, or the buttons beside it on a computer) to
+   react, reply, forward, copy, unsend it (your own; Admin any) or remove it for you only. ---- */
+const CH_RX = ['👍', '❤️', '😆', '😮', '😢', '😠'];   // like, love, haha, wow, sad, angry (as in Code.gs CHAT_REACTS)
+const CH_ACTIVE_MS = 120000;
+const chFirst = n => String(n || '').split(/[ ,]+/).filter(Boolean)[0] || '';
+const whoFirst = u => u===CH.me ? 'You' : chFirst(chatName(u));
+const rdOf = (u, conv) => ((CH.reads[u] || {}).c || {})[conv] || null;   // [last message id seen, when (ms)]
+const actMs = u => CH.act && CH.act.at && CH.act.at[u] ? CH.act.at[u] + (CH.actOff || 0) : 0;
+function actText(u){
+  const a = actMs(u); if(!a) return '';
+  const d = Date.now() - a;
+  return d < CH_ACTIVE_MS ? 'Active now' : d < 3600000 ? `Active ${Math.round(d / 60000)}m ago` : d < 86400000 ? `Active ${Math.round(d / 3600000)}h ago` : '';
+}
+const isActive = u => actText(u)==='Active now';
+const avOn = (html, on, id) => `<span class="ms-avw${on ? ' on' : ''}"${id ? ` id="${id}"` : ''}>${html}</span>`;
+/** "9:41 AM" today, else "Oct 27, 9:41 AM" (Philippine time). */
+const msTime = ms => { const a = mnlAt(ms); return !a ? '' : a.slice(0, 10)===TODAY() ? clock12(a) : shortWhen(a) + ', ' + clock12(a); };
+const andList = n => n.length <= 3 ? n.join(', ').replace(/, ([^,]*)$/, ' and $1') : `${n.slice(0, 2).join(', ')} and ${n.length - 2} others`;
+/** People (not you, not the sender) who have seen message m, newest first: [[user, ms]]. */
+function chatSeenBy(m){
+  const conv = convOf(m), g = madeGroup(conv);
+  return Object.keys(CH.reads).filter(u => u!==CH.me && u!==m.from && (!g || g.members.includes(u)) && ((rdOf(u, conv) || [0])[0] || 0) >= m.id)
+    .map(u => [u, rdOf(u, conv)[1]]).sort((a, b) => b[1] - a[1]);
+}
+/** Where each person's "seen" picture goes: {message id: [[user, ms]]}, under the last message they have seen (not their own). */
+function chatReaders(conv, l){
+  const at = {}, g = madeGroup(conv);
+  Object.keys(CH.reads).forEach(u => {
+    if(u===CH.me || (g && !g.members.includes(u))) return;
+    const r = rdOf(u, conv); if(!r) return;
+    let m = null; for(let i = l.length - 1; i >= 0; i--) if(l[i].id <= r[0]){ m = l[i]; break; }
+    if(!m || m.from===u) return;
+    (at[m.id] = at[m.id] || []).push([u, r[1]]);
+  });
+  Object.keys(at).forEach(k => at[k].sort((a, b) => b[1] - a[1]));
+  return at;
+}
+/** Sent / Delivered / Seen 9:41 AM (one-to-one) or Sent / Seen by … (team and groups) for one of your messages. */
+function chatStatus(m){
+  const conv = convOf(m);
+  if(conv==='#team' || isGroup(conv)){ const by = chatSeenBy(m); return by.length ? {t:'Seen by ' + andList(by.map(x => whoFirst(x[0]))), k:'seen'} : {t:'Sent', k:'sent'}; }
+  const r = rdOf(conv, conv);
+  if(r && r[0] >= m.id) return {t:'Seen ' + msTime(r[1]), k:'seen'};
+  if(((CH.reads[conv] || {}).d || 0) >= m.id) return {t:'Delivered', k:'dlv'};
+  return {t:'Sent', k:'sent'};
+}
+/** "You replied to ANA" / "BEN forwarded a message" above a bubble. */
+function chatLabel(m, mine){
+  if(m.del) return '';
+  const who = mine ? 'You' : chFirst(m.fromName || chatName(m.from));
+  if(m.re) return `${who} replied to ${m.re.u===CH.me ? (mine ? 'yourself' : 'you') : m.re.u===m.from ? 'themself' : chFirst(m.re.n || chatName(m.re.u))}`;
+  if(m.fwd) return `${who} forwarded a message`;
+  return '';
+}
+function chatQuote(m){
+  const o = CH.msgs.find(x => x.id===m.re.id);
+  const t = m.re.del || (o && o.del) ? 'Message unsent' : (m.re.f==='photo' ? '📷 ' + (m.re.t && !/\.\w+$/.test(m.re.t) ? m.re.t : 'Photo') : m.re.f==='file' ? '📎 ' + m.re.t : m.re.t);
+  return `<button type="button" class="ch-req${m.re.del || (o && o.del) ? ' gone' : ''}" data-chjump="${m.re.id}" title="Show the message">${esc(t)}</button>`;
+}
+const delText = m => m.delBy ? 'Message removed by Admin' : m.from===CH.me ? 'You unsent a message' : `${chFirst(m.fromName || chatName(m.from))} unsent a message`;
+function rxPill(m){
+  const r = m.rx; if(!r) return '';
+  const l = Object.values(r); if(!l.length) return '';
+  const kinds = CH_RX.filter(e => l.includes(e)).concat(l.filter(e => !CH_RX.includes(e))).filter((e, i, a) => a.indexOf(e)===i).slice(0, 3);
+  const names = Object.keys(r).map(u => whoFirst(u));
+  return `<button type="button" class="ch-rx${r[CH.me] ? ' mine' : ''}" data-chrx="${m.id}" title="${esc(andList(names))}" aria-label="Reactions: ${esc(andList(names))}">${kinds.join('')}${l.length > 1 ? `<span>${l.length}</span>` : ''}</button>`;
+}
+/** The small row under a message: how far people have read (pictures) and, under your last message, the status. */
+function chatReceipt(m, who, st){
+  const pics = (who || []).slice(0, 6).map(x => chatAv(x[0], 'xs')).join('') + ((who || []).length > 6 ? `<span class="ch-rcn">+${who.length - 6}</span>` : '');
+  const tip = (who || []).map(x => `${chatName(x[0])} ${msTime(x[1])}`).join(', ');
+  const ic = st && st.k==='sent' ? MS_ICON.sent : st && st.k==='dlv' ? MS_ICON.dlv : '';
+  return `<div class="ch-rc" data-chseen="${m.id}"${tip ? ` title="Seen by ${esc(tip)}"` : ''}>${st ? `<span class="ch-rct ${st.k}">${ic}${esc(st.t)}</span>` : ''}${pics}</div>`;
+}
+/** Header under the name: "Active now · Dispatcher" for a person; the green dot on their picture. */
+function chatHead(){
+  const s = $('chSub'); if(!s) return;
+  const c = CH.conv, one = c!=='#team' && !isGroup(c), a = one ? actText(c) : '';
+  const t = one ? [a, convSub(c)].filter(Boolean).join(' · ') : convSub(c);
+  if(s.textContent!==t) s.textContent = t;
+  if($('chAvW')) $('chAvW').classList.toggle('on', one && a==='Active now');
+}
+/** Tells the server what you have seen of the conversation on screen (only while the app is on screen). */
+function chatSeenSend(conv){
+  if(document.hidden || !chatOpen() || CH.view!=='conv' || CH.conv!==conv || !CH.loaded) return;
+  const l = CH.msgs.filter(m => convOf(m)===conv); if(!l.length) return;
+  const id = l[l.length - 1].id;
+  if(id <= Math.max(CH.seenSent[conv] || 0, (rdOf(CH.me, conv) || [0])[0] || 0)) return;
+  CH.seenSent[conv] = id; CH.seenQ[conv] = id;
+  clearTimeout(CH.seenT); CH.seenT = setTimeout(chatSeenFlush, 350);
+}
+function chatSeenFlush(){
+  const q = CH.seenQ; CH.seenQ = {};
+  Object.keys(q).forEach(c => call('chatSeen', c, q[c]).catch(() => { if(CH.seenSent[c]===q[c]) CH.seenSent[c] = 0; }));
+}
+document.addEventListener('visibilitychange', () => { if(!document.hidden && S.me && chatOpen() && CH.view==='conv') chatSeenSend(CH.conv); });
+function chatKeep(){ lsSet('jmti_chat_' + CH.user, {me:CH.me, users:CH.users, groups:CH.groups, msgs:CH.msgs.slice(-300)}); }
+/** Puts a message the server sent back (after a reaction, unsend or forward) in place. */
+function chatPutMsg(n){
+  if(!n || !n.id) return;
+  const i = CH.msgs.findIndex(x => x.id===n.id);
+  if(i >= 0) CH.msgs[i] = n; else { CH.msgs.push(n); CH.msgs.sort((a, b) => a.id - b.id); }
+  renderChat(); renderChatBtn(); chatKeep();
+}
+/* ---- The sheet of actions (a bottom sheet on phones, a small card on computers) ---- */
+function chatSheet(html, onClick){
+  chatSheetClose();
+  const o = document.createElement('div'); o.className = 'ch-sheet-bg'; o.id = 'chSheet';
+  o.innerHTML = `<div class="ch-sheet" role="dialog" aria-modal="true">${html}</div>`;
+  o.onclick = e => { if(e.target===o || e.target.closest('[data-sh="close"]')) return chatSheetClose(); if(onClick) onClick(e); };
+  document.body.appendChild(o);
+  const f = o.querySelector('button'); if(f && window.matchMedia('(pointer:fine)').matches) try{ f.focus({preventScroll:true}); }catch(e){}
+}
+function chatSheetClose(){ const o = $('chSheet'); if(o) o.remove(); }
+document.addEventListener('keydown', e => { if(e.key==='Escape' && $('chSheet')){ e.preventDefault(); e.stopImmediatePropagation(); chatSheetClose(); } }, true);
+const shHead = t => `<div class="ch-sh-head"><b>${esc(t)}</b><button type="button" class="ms-ib dark" data-sh="close" title="Close" aria-label="Close">${MS_ICON.close}</button></div>`;
+const shPrev = m => `<div class="ch-sh-prev">${esc(m.del ? delText(m) : msgBody(m))}</div>`;
+function chatMenu(id){
+  const m = CH.msgs.find(x => x.id===id); if(!m || $('chSheet')) return;
+  const mine = m.from===CH.me, admin = !!(S.me && S.me.role==='ADMIN'), myRx = (m.rx || {})[CH.me] || '', conv = convOf(m), one = conv!=='#team' && !isGroup(conv);
+  const items = [];
+  if(!m.del){
+    items.push(['reply', MS_ICON.reply, 'Reply'], ['fwd', MS_ICON.fwd, 'Forward']);
+    items.push(['copy', MS_ICON.copy, m.text ? 'Copy' : 'Copy file name']);
+    if(!one || mine){ const st = mine ? chatStatus(m) : null, n = chatSeenBy(m).length; items.push(['seen', MS_ICON.eye, one ? st.t : n ? `Seen by ${n}` : 'Seen by no one yet']); }
+    if(mine || admin) items.push(['unsend', MS_ICON.trash, mine ? 'Unsend for everyone' : 'Remove for everyone (Admin)']);
+  }
+  items.push(['hide', MS_ICON.hide, 'Remove for you']);
+  chatSheet(`${m.del ? '' : `<div class="ch-sh-rx" role="group" aria-label="React">${CH_RX.map(e => `<button type="button" data-shrx="${e}" aria-pressed="${e===myRx}" aria-label="React ${e}">${e}</button>`).join('')}</div>`}${shPrev(m)}
+    <div class="ch-sh-list">${items.map(([k, ic, t]) => `<button type="button" class="ch-sh-it${k==='unsend' ? ' warn' : ''}" data-sh="${k}">${ic}<span>${esc(t)}</span></button>`).join('')}</div>
+    <button type="button" class="ch-sh-cancel" data-sh="close">Cancel</button>`, e => {
+    const r = e.target.closest('[data-shrx]'); if(r){ chatSheetClose(); return chatReactDo(m.id, r.dataset.shrx===myRx ? '' : r.dataset.shrx); }
+    const b = e.target.closest('[data-sh]'); if(!b) return;
+    const k = b.dataset.sh;
+    if(k==='reply'){ chatSheetClose(); return chatReplyTo(m.id); }
+    if(k==='fwd') return chatForwardOpen(m);
+    if(k==='copy'){ chatSheetClose(); return chatCopy(m.text || (m.file ? m.file.n : '')); }
+    if(k==='seen') return chatSeenList(m);
+    if(k==='hide'){ chatSheetClose(); return chatHideDo(m); }
+    if(k==='unsend') return chatSheet(`${shHead(mine ? 'Unsend for everyone?' : 'Remove for everyone?')}${shPrev(m)}<p class="ch-sh-note">${mine ? 'It is taken back for everyone in this chat. They see "You unsent a message".' : 'Everyone in this chat sees "Message removed by Admin".'}</p>
+      <button type="button" class="ch-sh-it warn" data-sh="yes">${MS_ICON.trash}<span>${mine ? 'Unsend' : 'Remove'}</span></button><button type="button" class="ch-sh-cancel" data-sh="close">Cancel</button>`,
+      e2 => { if(e2.target.closest('[data-sh="yes"]')){ chatSheetClose(); chatUnsendDo(m); } });
+  });
+}
+async function chatReactDo(id, emo){
+  const m = CH.msgs.find(x => x.id===id); if(!m) return;
+  const old = m.rx ? {...m.rx} : null, rx = {...(m.rx || {})};
+  if(emo) rx[CH.me] = emo; else delete rx[CH.me];
+  if(Object.keys(rx).length) m.rx = rx; else delete m.rx;
+  renderChat();
+  try{ chatPutMsg(await call('chatReact', id, emo)); }
+  catch(e){ if(old) m.rx = old; else delete m.rx; renderChat(); toast(e.message, true); }
+}
+async function chatUnsendDo(m){
+  try{ chatPutMsg(await call('chatUnsend', m.id)); toast(m.from===CH.me ? 'Message unsent' : 'Message removed for everyone'); if(CH.re && CH.re.id===m.id){ CH.re = null; renderReplyBar(); } }
+  catch(e){ toast(e.message, true); }
+}
+async function chatHideDo(m){
+  CH.hidePend.add(m.id); CH.hide.add(m.id); renderChat(); renderChatBtn();
+  try{ const r = await call('chatHide', m.id); if(r && r.h) CH.hide = new Set(r.h); toast('Removed for you'); }
+  catch(e){ CH.hide.delete(m.id); toast(e.message, true); }
+  finally{ CH.hidePend.delete(m.id); renderChat(); renderChatBtn(); }
+}
+function chatCopy(t){
+  const done = () => toast('Copied');
+  const old = () => {
+    const ta = document.createElement('textarea'); ta.value = t; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta); ta.select(); let ok = false; try{ ok = document.execCommand('copy'); }catch(e){ ok = false; }
+    ta.remove(); ok ? done() : toast('This phone could not copy the message.', true);
+  };
+  try{ if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t).then(done, old); }catch(e){}
+  old();
+}
+function chatReplyTo(id){
+  const m = CH.msgs.find(x => x.id===id); if(!m || m.del) return;
+  CH.re = m; renderReplyBar();
+  const ta = $('chText'); if(ta) ta.focus();
+}
+function renderReplyBar(){
+  const el = $('chReply'); if(!el) return;
+  if(!CH.re || convOf(CH.re)!==CH.conv){ el.hidden = true; el.innerHTML = ''; return; }
+  const m = CH.re;
+  el.hidden = false;
+  el.innerHTML = `<span class="ch-rp-i">${MS_ICON.reply}</span><div class="ch-rp-t"><b>Replying to ${esc(m.from===CH.me ? 'yourself' : m.fromName || chatName(m.from))}</b><small>${esc(msgBody(m))}</small></div><button type="button" class="ms-ib" data-rpx="1" title="Cancel the reply" aria-label="Cancel the reply">${MS_ICON.close}</button>`;
+}
+function chatJump(id){
+  const el = document.querySelector(`#chMsgs .ch-m[data-id="${id}"]`);
+  if(!el) return toast('That message is older than what this phone has.');
+  try{ el.scrollIntoView({block:'center', behavior:'smooth'}); }catch(e){ el.scrollIntoView(); }
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+function chatForwardOpen(m){
+  const sent = new Set();
+  const draw = () => {
+    const box = $('chFwdL'); if(!box) return;
+    const q = ($('chFwdQ') ? $('chFwdQ').value : '').trim().toLowerCase(), last = {};
+    CH.msgs.forEach(x => { last[convOf(x)] = x.id; });
+    const l = [...new Set(['#team', ...CH.groups.map(g => g.id), ...Object.keys(last), ...CH.users.map(u => u.username)])]
+      .filter(c => c!==CH.me && (!q || (chatName(c) + ' ' + ((CH.users.find(u => u.username===c) || {}).role || '')).toLowerCase().includes(q)))
+      .sort((a, b) => (last[b] || 0) - (last[a] || 0));
+    box.innerHTML = l.map(c => `<div class="ch-fw-row">${avOn(chatAv(c, true), c!=='#team' && !isGroup(c) && isActive(c))}<span class="ms-mid"><b>${esc(chatName(c))}</b><small>${esc(convSub(c))}</small></span><button type="button" class="ch-fw-send" data-fw="${esc(c)}"${sent.has(c) ? ' disabled' : ''}>${sent.has(c) ? 'Sent' : 'Send'}</button></div>`).join('')
+      || `<p class="ch-sh-note">${q ? 'No one found.' : 'Loading people…'}</p>`;
+  };
+  chatSheet(`${shHead('Forward')}${shPrev(m)}<input id="chFwdQ" type="search" placeholder="Search people and groups" aria-label="Search people and groups" autocomplete="off"><div class="ch-fw-list" id="chFwdL"></div>`, async e => {
+    const b = e.target.closest('[data-fw]'); if(!b || b.disabled) return;
+    const to = b.dataset.fw; b.disabled = true; b.textContent = 'Sending…';
+    try{
+      const n = await call('chatForward', m.id, to==='#team' ? '' : to, 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+      if(n && n.file && m.file && CH.thumbs[m.file.id]) CH.thumbs[n.file.id] = CH.thumbs[m.file.id];
+      sent.add(to); chatPutMsg(n); b.textContent = 'Sent';
+    }catch(err){ b.disabled = false; b.textContent = 'Send'; toast(err.message, true); }
+  });
+  $('chFwdQ').oninput = draw; draw();
+}
+function chatSeenList(m){
+  const conv = convOf(m), one = conv!=='#team' && !isGroup(conv);
+  if(one){ const st = chatStatus(m); return chatSheet(`${shHead('Message status')}${shPrev(m)}<p class="ch-sh-note">${esc(st.t)}${st.k==='dlv' ? ' (it reached their phone, not opened yet)' : st.k==='sent' ? ' (not on their phone yet)' : ''}</p>`); }
+  const by = chatSeenBy(m);
+  chatSheet(`${shHead(by.length ? `Seen by ${by.length}` : 'Seen by')}${shPrev(m)}<div class="ch-fw-list">${by.map(([u, t]) => `<div class="ch-fw-row">${avOn(chatAv(u, true), isActive(u))}<span class="ms-mid"><b>${esc(chatName(u))}</b><small>Seen ${esc(msTime(t))}</small></span></div>`).join('') || '<p class="ch-sh-note">No one has seen it yet.</p>'}</div>`);
+}
+function chatRxList(id){
+  const m = CH.msgs.find(x => x.id===id); if(!m || !m.rx) return;
+  const l = Object.keys(m.rx).sort((a, b) => (b===CH.me) - (a===CH.me));
+  chatSheet(`${shHead('Reactions')}<div class="ch-fw-list">${l.map(u => `<div class="ch-fw-row${u===CH.me ? ' me' : ''}"${u===CH.me ? ' data-rxme="1" role="button" tabindex="0"' : ''}>${chatAv(u, true)}<span class="ms-mid"><b>${esc(u===CH.me ? 'You' : chatName(u))}</b>${u===CH.me ? '<small>Tap to remove</small>' : ''}</span><span class="ch-rx-e">${m.rx[u]}</span></div>`).join('')}</div>`,
+    e => { if(e.target.closest('[data-rxme]')){ chatSheetClose(); chatReactDo(m.id, ''); } });
+}
+/** Long-press on a phone (480 ms without moving) opens the actions; right-click does on a computer. */
+function chatPress(box){
+  let lp = null;
+  box.addEventListener('pointerdown', e => {
+    const b = e.target.closest('.ch-m[data-id]'); if(!b || e.pointerType==='mouse') return;
+    const st = {x:e.clientX, y:e.clientY};
+    st.t = setTimeout(() => { st.fired = true; CH.lpAt = Date.now(); try{ if(navigator.vibrate) navigator.vibrate(12); }catch(x){} chatMenu(+b.dataset.id); }, 480);
+    lp = st;
+  });
+  box.addEventListener('pointermove', e => { if(lp && Math.hypot(e.clientX - lp.x, e.clientY - lp.y) > 10){ clearTimeout(lp.t); lp = null; } });
+  const end = () => { if(lp){ clearTimeout(lp.t); lp = null; } };
+  box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
+  box.addEventListener('contextmenu', e => { const b = e.target.closest('.ch-m[data-id]'); if(!b) return; e.preventDefault(); end(); if(Date.now() - (CH.lpAt || 0) > 900) chatMenu(+b.dataset.id); });
+}
+/** The send button is a 👍 while the box is empty, like Messenger. */
+function chatSendIcon(){
+  const b = $('chSendBtn'), ta = $('chText'); if(!b || !ta) return;
+  const like = !ta.value.trim();
+  if(b.dataset.like===String(like)) return;
+  b.dataset.like = String(like);
+  b.innerHTML = like ? `<span class="ms-like" aria-hidden="true">${CH_RX[0]}</span>` : MS_ICON.send;
+  b.title = like ? 'Send a like' : 'Send'; b.setAttribute('aria-label', b.title);
+}
+
+/** like = the send button was tapped: with an empty box it sends a 👍. */
+function chatSendNow(like){
+  const ta = $('chText'); let text = ta.value.trim();
+  if(!text){ if(like!==true || ta.value) return; text = CH_RX[0]; }
   CH.typSent = 0;   // the server clears "typing" when the message is saved
-  const p = {conv: CH.conv, text, ref: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), after: CH.last, st: 'send'};
+  const re = CH.re && convOf(CH.re)===CH.conv && !CH.re.del ? CH.re.id : 0;
+  const p = {conv: CH.conv, text, ref: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), after: CH.last, st: 'send', re};
   CH.out.push(p);
   ta.value = ''; ta.style.height = ''; ta.focus();
+  CH.re = null; renderReplyBar(); chatSendIcon();
+  emoToggle(false);
   renderChat(true);
   chatPush(p);
 }
@@ -6655,10 +7074,11 @@ function chatPush(p){
   CH.sendQ = (CH.sendQ || Promise.resolve()).then(async () => {
     if(!CH.out.includes(p)) return;   // signed out meanwhile
     try{
-      const m = await callQ('chatSend', p.conv==='#team' ? '' : p.conv, p.text, p.ref);
+      const m = await callQ('chatSend', p.conv==='#team' ? '' : p.conv, p.text, p.ref, p.re || 0);
       CH.out = CH.out.filter(x => x!==p);
       if(!CH.msgs.some(x => x.id===m.id)) CH.msgs.push(m);
-      CH.msgs.sort((a, b) => a.id - b.id); CH.last = Math.max(CH.last, m.id);
+      CH.msgs.sort((a, b) => a.id - b.id);   // CH.last stays: the next ask also brings a message someone sent just before this one
+      CH.seenSent[p.conv] = Math.max(CH.seenSent[p.conv] || 0, m.id);   // the server marks your own message seen by you
       if(CH.conv===p.conv) chatMarkRead(p.conv);
       if(!CH.out.some(x => x.st==='send')) setTimeout(() => { if(!CH.busy){ CH.at = Date.now(); chatPoll(); } }, 300);   // brings in anything sent just before (and keeps ids in order)
     }catch(e){
