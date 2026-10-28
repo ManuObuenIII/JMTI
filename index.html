@@ -38,9 +38,12 @@ if ('serviceWorker' in navigator) {
   function send(fn, args){
     return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
       .catch(function(){ throw new Error('No connection to the server. Check the internet and try again.'); })
-      .then(function(r){ return r.text(); })
-      .then(function(t){
-        var j; try { j = JSON.parse(t); } catch (e) { throw new Error('The server did not answer properly. Check that the web app is deployed with access "Anyone", then try again.'); }
+      .then(function(r){ return r.text().then(function(t){ return { st: r.status, t: t }; }); })
+      .then(function(x){
+        var t = x.t, j; try { j = JSON.parse(t); } catch (e) {
+          if (x.st === 429 || x.st === 503 || /too many|simultaneous|busy|try again later/i.test(t)) throw new Error('The server is busy right now. Try again in a moment.');
+          throw new Error('The server did not answer properly. Check that the web app is deployed with access "Anyone", then try again.');
+        }
         if (!j.ok) throw new Error(/^Unknown request/.test(j.error) ? 'The server code is out of date (missing ' + fn + '). Paste the latest Code.gs, save it, then deploy a New version.' : j.error);
         return j.v;
       });
@@ -953,6 +956,7 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .ms-find{padding:4px 12px 8px}
 .ms-find input{width:100%;border-radius:999px;background:#F0F2F5;border:0;padding:9px 14px;box-shadow:none}
 .ms-find.row{display:flex;gap:8px;align-items:center}.ms-find.row input{flex:1;min-width:0}
+.ms-find.top{position:sticky;top:0;z-index:3;background:#fff;padding-top:10px}
 .ms-newg{flex:none;border:0;border-radius:999px;background:#E7EEFF;color:#0A27B5;font:inherit;font-weight:700;font-size:13px;padding:8px 12px;cursor:pointer;white-space:nowrap}
 .ms-newg:hover{background:#D6E2FF}
 /* Make a chat group (MANU 2026-10-14 "add create chatgroup") */
@@ -2001,7 +2005,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
   <a class="ms" id="msBtn" data-soc="messenger" target="_blank" rel="noopener" hidden aria-label="Messenger" title="Messenger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C7 3 3.5 6.6 3.5 11.2c0 2.5 1.1 4.6 2.9 6.1V21l3.1-1.7c.8.2 1.6.3 2.5.3 5 0 8.5-3.6 8.5-8.3S17 3 12 3z" fill="#fff"/><path d="M6.8 13.9l3-4.7 2.6 2 2.9-2-3 4.7-2.6-2z" fill="#3B6BFF"/></svg></a>
 </div>
 <aside class="askbox" id="askBox" hidden aria-label="Ask JMTI"><div class="chd-head"><b>Ask JMTI<small>Answers only from this app's data, what your role can see</small></b><button type="button" id="askNew" class="ask-new" title="Start over">New</button><button type="button" id="askHide" title="Close" aria-label="Close">✕</button></div><div class="ask-body" id="askBody"></div><form class="ask-foot" id="askForm"><textarea id="askQ" rows="2" maxlength="1500" placeholder="Ask about trips, trucks, people…" aria-label="Your question"></textarea><button type="submit" id="askSend" class="btn">Ask</button></form></aside>
-<aside class="chdock" id="chatDock" hidden aria-label="Chat"><div class="chd-head"><b>Chats<small>Team, department groups and one-to-one</small></b><button type="button" id="chdHide" title="Close the chat" aria-label="Close">✕</button></div><div class="chd-body" id="chdBody"></div><div class="chd-foot" id="chdFoot"></div></aside>
+<aside class="chdock" id="chatDock" hidden aria-label="Chat"><div class="chd-body" id="chdBody"></div><div class="chd-foot" id="chdFoot"></div></aside>
 <div class="pop" id="pop" hidden>
   <div class="popbox" role="dialog" aria-modal="true" aria-labelledby="popTitle">
     <div class="pophead"><div><h3 id="popTitle"></h3><small id="popSub"></small></div><div class="popbtns"><button class="icon-btn" id="popPdf" type="button" hidden>Save PDF</button><button class="icon-btn" id="popClose" type="button">Close</button></div></div>
@@ -2274,11 +2278,32 @@ function callServer(fn, ...args){
     };
     const done = v => { if(NET.down){ NET.down = false; renderOutbox(); } resolve(v); };
     if (!LIVE) return setTimeout(() => { if(!navigator.onLine) return fail(new Error('NetworkError: Connection failure due to HTTP 0')); try{ done(DEMO[fn](...a)); }catch(e){ fail(e); } }, 450);
-    const run = google.script.run.withSuccessHandler(done).withFailureHandler(fail);
-    // A page newer than the deployed Code.gs: say so plainly instead of "[fn] is not a function".
-    if (typeof run[fn] !== 'function') return reject(new Error('The server code is out of date (missing ' + fn + '). Paste the latest Code.gs, save it, then deploy a New version.'));
-    run[fn](...a);
+    // 30 people at once (MANU 2026-10-28): when Google is busy (its 30 at-once runs are full) or another save holds the sheet,
+    // the same call is tried again after a short random wait, up to 3 times, before anyone sees an error.
+    let n = 0;
+    const go = () => {
+      const run = google.script.run.withSuccessHandler(done).withFailureHandler(e => {
+        const tries = RETRY_SKIP.test(fn) ? 0 : 3;
+        if(n < tries && mayRetry(fn, e)){ n++; return setTimeout(go, 500 * 2 ** (n - 1) * (1 + Math.random())); }
+        fail(e);
+      });
+      // A page newer than the deployed Code.gs: say so plainly instead of "[fn] is not a function".
+      if (typeof run[fn] !== 'function') return reject(new Error('The server code is out of date (missing ' + fn + '). Paste the latest Code.gs, save it, then deploy a New version.'));
+      run[fn](...a);
+    };
+    go();
   });
+}
+/** Busy answers: refused before anything ran (or the save never got the sheet), so even a save is safe to send again. */
+const BUSY_RE = /app is busy|server is busy|simultaneous invocations|too many (simultaneous|concurrent)|Service invoked too many times|Lock timeout|another process was holding the lock/i;
+/** Reads may also be asked again after a passing server hiccup or a dropped answer (with signal). */
+const READ_RETRY_RE = /Service (Spreadsheets|Drive|Cache|Properties)?.{0,40}(timed out|failed|unavailable|error)|Internal error|server error occurred|try again later|did not answer properly/i;
+const RETRY_SKIP = /^(chatList|whoOnline|chatTyping)$/;   // asked again on their own every few seconds anyway
+function mayRetry(fn, e){
+  const msg = String((e && e.message) || e);
+  if(BUSY_RE.test(msg)) return true;
+  if(!READ_FNS.test(fn)) return false;
+  return READ_RETRY_RE.test(msg) || (isNetErr(msg) && navigator.onLine!==false);
 }
 
 /* ===== This browser keeps a copy of what it reads (MANU 2026-10-14 "even though data is saved in Drive, it should be saved in browser cache") =====
@@ -2945,7 +2970,7 @@ function rangeChips(el, onPick){
   el._mark = (f,t) => { const P = presets(); el.querySelectorAll('.chip').forEach(c => { const p=P[c.dataset.i]; c.setAttribute('aria-pressed', p[1]===f && p[2]===t); }); };
   return presets();
 }
-/** Who is signed in (MANU 2026-10-28 "show who is logged in", "and what position"): Admin and Boss see how many are on now
+/** Who is signed in (MANU 2026-10-28 "show who is logged in", "and what position"; every user since "ALSO OTHER USERS SHOULD BE ABLE TO SEE WHO ARE ONLINE"): everyone sees how many are on now
     in the top bar (asked once a minute while the app is on screen); tapping it lists everyone with their position (role), when
     they were last active and their last sign-in. Code.gs whoOnline: anyone whose app called the server in the last 2 minutes. */
 const ON = {at:0, data:null, busy:false};
@@ -2972,6 +2997,7 @@ const agoText = (ms, now) => { const m = Math.max(0, Math.round((now - ms) / 600
 function openOnline(){
   const d = ON.data;
   if(!d){ onlineLoad().then(x => { if(x) openOnline(); }); return; }
+  if(Date.now() - ON.at > 60000) onlineLoad();   // shows what it has, then the fresh list (onlineLoad redraws the open list)
   const on = d.users.filter(u => u.online), lately = d.users.filter(u => !u.online && u.at), rest = d.users.filter(u => !u.at);
   const row = u => `<tr><td><span class="ondot${u.online ? '' : ' off'}"></span> <b>${esc(u.name || u.username)}</b><br><small>${esc(u.username)}</small></td><td>${esc(u.role)}</td>`
     + `<td>${u.at ? esc(agoText(u.at, d.now)) + ' <small>· ' + esc(clock12(mnlAt(u.at))) + '</small>' : '<small>not in the last 6 hours</small>'}`
@@ -2985,7 +3011,8 @@ function openOnline(){
   $('pop').dataset.kind = 'online';
   const r = $('onRefresh'); if(r) r.onclick = () => { ON.at = 0; onlineLoad(); };
 }
-setInterval(() => { if(S.me && TOKEN && mayOnline() && !document.hidden && Date.now() - ON.at > 60000) onlineLoad(); }, 5000);
+// Admin and Boss once a minute; everyone else every 2 minutes (30 people at once, MANU 2026-10-28), and at once when they open the list
+setInterval(() => { if(S.me && TOKEN && mayOnline() && !document.hidden && Date.now() - ON.at > (may('viewAll') || S.me.role==='ADMIN' ? 60000 : 120000)) onlineLoad(); }, 5000);
 
 /** Clock at the top (MANU 2026-10-28 "add clock at the top"), in Philippine time. When the date changes while the app is open
     (left open overnight, or back from the background next morning), dates that ended on the old day move to the new one
@@ -6583,11 +6610,11 @@ function convTyping(){
 }
 /** Draws the chat into the pop-up or the desktop dock: the list of chats (CH.view 'list') or one conversation ('conv'). */
 function chatBuild(){
-  const h = chatHost(), close = h.dock ? '' : `<button type="button" class="ms-ib dark" data-chclose="1" title="Close" aria-label="Close">${MS_ICON.close}</button>`;
+  // no title bar (MANU 2026-10-28 "REMOVE THE HEADER, NO NEED FOR THAT"): the close button sits in the search row and the conversation bar
+  const close = `<button type="button" class="ms-ib dark" data-chclose="1" title="Close the chat" aria-label="Close the chat">${MS_ICON.close}</button>`, h = chatHost();
   if(CH.view==='list'){
-    h.body.innerHTML = `${h.dock ? '' : `<div class="ms-top"><span class="ms-title">Chats</span>${close}</div>`}
-      ${badgeAsk() ? '<div style="padding:8px 12px 0"><button class="btn alt" type="button" id="chBadge">Show the count on the app icon</button></div>' : ''}
-      <div class="ms-find row"><input id="chFind" type="search" placeholder="Search people and groups" aria-label="Search people and groups" autocomplete="off"><button type="button" class="ms-newg" id="chNewG" title="Make a group chat">+ New group</button></div>
+    h.body.innerHTML = `${badgeAsk() ? '<div style="padding:8px 12px 0"><button class="btn alt" type="button" id="chBadge">Show the count on the app icon</button></div>' : ''}
+      <div class="ms-find row top"><input id="chFind" type="search" placeholder="Search" aria-label="Search people and groups" autocomplete="off"><button type="button" class="ms-newg" id="chNewG" title="Make a group chat">+ New group</button>${close}</div>
       <div class="ms-list" id="chList"></div>`;
     h.foot.innerHTML = '';
     $('chFind').oninput = renderChatList;
@@ -6701,7 +6728,7 @@ function chatClick(e){
   if(CH.view==='group') return;
   const c = e.target.closest('[data-conv]'); if(c) return chatGo(c.dataset.conv);
   if(e.target.closest('[data-chback]')){ chatTypingStop(); CH.view = 'list'; chatBuild(); renderChat(true); return; }
-  if(e.target.closest('[data-chclose]')){ chatTypingStop(); closePop(true); return; }
+  if(e.target.closest('[data-chclose]')){ chatTypingStop(); if(dockShown()) hideDock(); else closePop(true); return; }
   const im = e.target.closest('.ch-img[data-fid]'); if(im) return viewFile(im.dataset.fid, im.dataset.n, 'chatFile');
   const f = e.target.closest('.ch-file[data-fid]'); if(f) return chatOpenFile(f.dataset.fid, f.dataset.n, f.dataset.m);
 }
