@@ -1095,6 +1095,51 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .tg-row:first-child{border-top:0}
 .ch-m.wait{opacity:.6}
 .ch-m.fail{opacity:1;background:#FEE2E2!important;color:#991B1B!important;border:1px solid #FCA5A5;font:inherit;text-align:left;cursor:pointer}
+/* My profile (MANU 2026-10-28 "users can update their profile, add photo …", "add birthday and motto in life") */
+.ms-av.ph{background:#E4E6EB;overflow:hidden;padding:0}
+.ms-av img{width:100%;height:100%;object-fit:cover;display:block}
+.ch-avb{border:0;background:transparent;padding:0;cursor:pointer;flex:none;display:inline-flex;border-radius:50%}
+.ms-top .ms-name[data-chprof]{cursor:pointer}
+.me-av{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.7);padding:0;overflow:hidden;background:linear-gradient(180deg,#2E5BFF,#0A27B5);color:#fff;font:inherit;font-weight:800;font-size:12px;cursor:pointer;display:grid;place-items:center;position:relative;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.me-av img{width:100%;height:100%;object-fit:cover;display:block}
+.me-av.empty::after{content:"+";position:absolute;right:-1px;bottom:-1px;width:14px;height:14px;border-radius:50%;background:#31A24C;color:#fff;font-size:12px;line-height:13px;font-weight:800;border:1.5px solid #fff}
+.hello{display:flex;align-items:center;gap:14px;margin:0 0 14px;padding:12px 16px;border-radius:16px;background:linear-gradient(135deg,#0A27B5,#020A35);color:#fff;box-shadow:0 6px 18px rgba(2,10,53,.25)}
+.hello[hidden]{display:none}
+.hello-av{border:0;background:transparent;padding:0;cursor:pointer;flex:none;border-radius:50%}
+.hello-av .ms-av{width:58px;height:58px;font-size:19px;border:2px solid rgba(255,255,255,.75)}
+.hello-t{min-width:0;display:flex;flex-direction:column;gap:2px}
+.hello-t b{font-size:17px;overflow-wrap:anywhere}
+.hello-t small{color:#BFD0FF;font-size:12px}
+.hello-t q{font-style:italic;color:#E6ECFF;font-size:13.5px;overflow-wrap:anywhere}
+.hello-t .lnk{background:none;border:0;padding:0;color:#9EC1FF;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;text-align:left}
+.hello-bd{font-size:13px;font-weight:700;color:#FFD966;overflow-wrap:anywhere}
+.pf-form{display:flex;flex-direction:column;gap:10px}
+.pf-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.pf-photo{width:104px;height:104px;border-radius:50%;overflow:hidden;background:linear-gradient(180deg,#2E5BFF,#0A27B5);color:#fff;display:grid;place-items:center;font-size:32px;font-weight:800;flex:none;box-shadow:0 4px 14px rgba(2,10,53,.25)}
+.pf-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.pf-btns{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-width:0}
+.pf-btns small{overflow-wrap:anywhere}
+.pf-form textarea{width:100%;resize:vertical}
+.pf-view{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:4px 8px 8px}
+.pf-view .pf-photo.big{width:120px;height:120px;font-size:38px;margin-bottom:4px}
+.pf-view b{font-size:18px;overflow-wrap:anywhere}.pf-view small{color:#65676B;overflow-wrap:anywhere}
+.pf-view q{font-style:italic;color:#050505;overflow-wrap:anywhere;margin:4px 0}
+.pf-bd{color:#B45309;font-weight:700;font-size:13.5px}
+.pf-view .btn{margin-top:6px}
+/* Birthday pop-up (MANU 2026-10-28 "make the birthday greetings pop-up to all users, show the photo with the greetings") */
+.bd-wrap{position:relative;display:flex;flex-direction:column;gap:14px;padding:6px 0 4px;overflow:hidden;border-radius:14px;background:linear-gradient(180deg,#FFF7E6,#FFFFFF 70%)}
+.bd-fx{position:absolute;inset:0;pointer-events:none}
+.bd-fx i{position:absolute;top:-30px;font-style:normal;font-size:22px;animation:bdfall linear infinite;opacity:.9}
+@keyframes bdfall{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(620px) rotate(320deg)}}
+@media (prefers-reduced-motion:reduce){.bd-fx{display:none}}
+.bd-card{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:12px 12px 8px}
+.bd-card + .bd-card{border-top:1px dashed #F5B700}
+.bd-ph{width:150px;height:150px;font-size:46px;border:4px solid #F5B700;box-shadow:0 6px 22px rgba(245,183,0,.45)}
+.bd-card b{font-size:20px;color:#0A1F8F;overflow-wrap:anywhere}
+.bd-card small{color:#65676B;overflow-wrap:anywhere}
+.bd-card q{font-style:italic;color:#3B2600;overflow-wrap:anywhere}
+.bd-from{margin:4px 0 0;font-weight:700;color:#B45309}
+.bd-card .btn{margin-top:4px}
 /* Messenger look, seen / delivered and message actions (MANU 2026-10-28 "make it look like facebook messenger") */
 .ch-m.me:not(.has-file):not(.emo):not(.fail),.ch-m.me.has-file .ch-t,.ch-m.me .ch-file{background:#2E5BFF linear-gradient(180deg,#00A2FF 0%,#2E5BFF 50%,#7B3FF2 100%) fixed;color:#fff}
 .ch-col{display:flex;flex-direction:column;align-items:flex-start;max-width:76%;min-width:0}
@@ -1383,7 +1428,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <div class="clk" id="topClock" title="Philippine time"></div>
     </div>
     <nav class="tabs" role="tablist" id="tabs"></nav>
-    <div class="userchip"><span class="nm"><b id="meName"></b></span><span class="role" id="meRole"></span>
+    <div class="userchip"><button type="button" class="me-av empty" id="meAv" aria-label="My profile"></button><span class="nm"><b id="meName"></b></span><span class="role" id="meRole"></span>
       <button class="icon-btn onbtn" id="onBtn" type="button" hidden title="Who is signed in"></button>
       <button class="icon-btn obbtn" id="obBtn" type="button" hidden></button>
       <button class="icon-btn bellbtn" id="lwBtn" type="button" hidden aria-label="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v3.6L4.3 15.4A1 1 0 0 0 5.2 17h13.6a1 1 0 0 0 .9-1.6L18 12.6V9a6 6 0 0 0-6-6z" fill="currentColor"/><path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><b id="lwN" class="bell-n" hidden>0</b></button>
@@ -1398,6 +1443,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
     <span id="loadErrMsg"></span><button class="icon-btn" id="loadRetry" type="button">Try again</button></div>
   <!-- ================= DASHBOARD ================= -->
   <section class="view" id="v-dashboard">
+    <div class="hello" id="helloCard" hidden></div>
     <div class="bar">
       <div class="chips" id="rangeChips"></div>
       <label class="f">From<input type="date" id="dFrom"></label>
@@ -2379,6 +2425,8 @@ $('pwForm').onsubmit = async e => {
   $('pwBtn').disabled = false;
 };
 $('pwChangeBtn').onclick = () => showPwForm(false);
+$('meAv').onclick = () => openProfile();
+$('helloCard').onclick = e => { if(e.target.closest('[data-myprof]')) openProfile(); };
 $('logoutBtn').onclick = () => { call('logout').catch(()=>{}); signOut(''); };
 /* ===== Ask JMTI (MANU 2026-10-14 "integrate ai question and answer inside but only to get information inside the system") =====
  * Questions go to askJmti (Code.gs), which lets the AI read the app's data with this person's sign-in: it sees only what the role's
@@ -2427,6 +2475,7 @@ function signOut(msg){
   S.boot = null; S.me = null; S.bootOk = false;
   hideDock(); $('chatBtn').hidden = true; $('socFab').hidden = true; SOC.user = ''; if(!$('pop').hidden && $('pop').classList.contains('chatpop')) closePop(true);   // the chat pop-up closes too
   askReset(); $('askBox').hidden = true; $('askBtn').hidden = true;
+  PF.mine = null; PF.user = ''; if($('helloCard')) $('helloCard').hidden = true;
   showLogin(msg);
 }
 
@@ -2599,7 +2648,7 @@ function enterApp(me){
   document.body.classList.toggle('viewonly', may('viewAll'));   // BOSS: every tab, no edit buttons
   $('loginScreen').hidden = true; $('app').hidden = false; $('loadErr').hidden = true;
   $('meName').textContent = me.name; $('meRole').textContent = me.role;
-  onlineStart();
+  onlineStart(); profileStart(); setTimeout(() => bdayCheck(0), 2500);
   $('askBtn').hidden = !ASK_ON;
   const tabs = me.tabs;
   $('tabs').innerHTML = tabs.filter(t => TAB_NAME[t]).map(t => `<button class="tab" role="tab" data-tab="${t}" type="button">${TAB_NAME[t]}</button>`).join('');   // a tab this page doesn't know is never shown as "undefined"
@@ -2773,6 +2822,7 @@ function openFirstTab(){ showTab(firstTab()); }
 const preOr = (key, fn) => { const p = S[key]; S[key] = null; return p && Date.now() - p.at < 60000 ? Promise.resolve(p.v) : call(fn); };
 
 function showTab(t){
+  if(t==='dashboard') renderHello();
   if(t==='units') t = 'fleet';   // Fleet units became part of Fleet (MANU 2026-10-20)
   if(!can(t)) return;
   S.tab = t; store('jmti_tab_'+S.me.username, t);
@@ -2950,6 +3000,7 @@ function dayRolled(old, now){
   if(S.range && S.range.to === old){ S.range.from = addDays(S.range.from, n); S.range.to = addDays(S.range.to, n); }
   S.sumAt = 0;
   if(S.me && S.tab) showTab(S.tab);
+  if(S.me) setTimeout(() => bdayCheck(0), 1500);   // a new day: its birthdays
 }
 function clockTick(){
   const o = mnlNow(), el = $('topClock');
@@ -3378,7 +3429,7 @@ function renderNoTrip(){
 }
 /** pdf = true on information pop-ups: shows Save PDF (MANU). Forms and report pickers leave it out. */
 function openPop(title, sub, body, foot, pdf){
-  $('pop').classList.remove('lwpop', 'chatpop'); delete $('pop').dataset.kind;
+  $('pop').classList.remove('lwpop', 'chatpop', 'bdpop'); delete $('pop').dataset.kind;
   $('popBody').onclick = null; $('popBody').onchange = null;   // a new pop-up never runs the last one's handlers
   $('popTitle').textContent = title; $('popSub').innerHTML = sub || ''; $('popBody').innerHTML = body; $('popFoot').innerHTML = foot || '';
   $('popPdf').hidden = !pdf;
@@ -6403,7 +6454,8 @@ function chatNotice(fresh){
   toast(fresh.length > 1 ? `💬 ${fresh.length} new messages · ${who}${where}: ${what}`.slice(0, 160) : `💬 ${who}${where}: ${what}`.slice(0, 160), false, 5000);
 }
 function chatMerge(d){
-  if(d.users) CH.users = d.users;
+  if(d.users){ CH.users = d.users; setTimeout(() => { profileWant(); renderHello(); }, 0); }
+  if(d.pfv!==undefined){ if(CH.pfv && String(d.pfv)!==CH.pfv) CH.full = false; CH.pfv = String(d.pfv); }   // someone changed their profile: ask for the people again
   if(d.groups) CH.groups = d.groups;
   if(Array.isArray(d.typing)){ CH.typing = d.typing; CH.typAt = Date.now(); }
   CH.me = d.me || CH.me;
@@ -6520,7 +6572,8 @@ function chatAv(c, sm, name){
   const n = String(name || chatName(c)).replace(/ group$/, ''), grp = c==='#team' || isGroup(c);
   const ini = c==='#team' ? 'ALL' : n.split(/[\s,&]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
   let h = 0; for(const ch of String(c)) h = (h * 31 + ch.charCodeAt(0)) % 360;
-  return `<span class="ms-av${grp ? ' grp' : ''}${sm==='xs' ? ' xs' : sm ? ' sm' : ''}" style="--h:${c==='#team' ? 225 : c==='jmti-alerts' ? 38 : h}" aria-hidden="true">${esc(ini || '?')}</span>`;
+  const ph = !grp && photoOf(c);   // the person's own photo (My profile), else initials
+  return `<span class="ms-av${grp ? ' grp' : ''}${sm==='xs' ? ' xs' : sm ? ' sm' : ''}${ph ? ' ph' : ''}" style="--h:${c==='#team' ? 225 : c==='jmti-alerts' ? 38 : h}" aria-hidden="true">${ph ? `<img src="${esc(ph)}" alt="">` : esc(ini || '?')}</span>`;
 }
 /** Who is typing where: {'#team': 'DISPATCHER is typing…', 'admin': …}. */
 function convTyping(){
@@ -6541,7 +6594,7 @@ function chatBuild(){
   } else if(CH.view==='group'){
     return groupBuild(h, close);
   } else {
-    h.body.innerHTML = `<div class="ms-top"><button type="button" class="ms-ib" data-chback="1" title="All chats" aria-label="All chats">${MS_ICON.back}</button>${avOn(chatAv(CH.conv), false, 'chAvW')}<div class="ms-name"><b id="chName">${esc(chatName(CH.conv))}</b><small id="chSub">${esc(convSub(CH.conv))}</small></div>${madeGroup(CH.conv) ? `<button type="button" class="ms-ib" data-chgrp="1" title="Members" aria-label="Members">${MS_ICON.people}</button>` : ''}${close}</div>
+    h.body.innerHTML = `<div class="ms-top"><button type="button" class="ms-ib" data-chback="1" title="All chats" aria-label="All chats">${MS_ICON.back}</button>${CH.conv!=='#team' && !isGroup(CH.conv) ? `<button type="button" class="ch-avb" data-chprof="${esc(CH.conv)}" aria-label="Profile">${avOn(chatAv(CH.conv), false, 'chAvW')}</button>` : avOn(chatAv(CH.conv), false, 'chAvW')}<div class="ms-name"${CH.conv!=='#team' && !isGroup(CH.conv) ? ` data-chprof="${esc(CH.conv)}"` : ''}><b id="chName">${esc(chatName(CH.conv))}${isBday(CH.conv) ? ' ' + BDAY : ''}</b><small id="chSub">${esc(convSub(CH.conv))}</small></div>${madeGroup(CH.conv) ? `<button type="button" class="ms-ib" data-chgrp="1" title="Members" aria-label="Members">${MS_ICON.people}</button>` : ''}${close}</div>
       <div class="ch-msgs" id="chMsgs"><p class="hint">Loading messages…</p></div>`;
     h.foot.innerHTML = `<div class="ch-typing" id="chTyping" aria-live="polite"></div>
       <div class="ch-reply" id="chReply" hidden></div>
@@ -6639,6 +6692,7 @@ function chatClick(e){
   const rx = e.target.closest('[data-chrx]'); if(rx) return chatRxList(+rx.dataset.chrx);
   const sn = e.target.closest('[data-chseen]'); if(sn){ const m = CH.msgs.find(x => x.id===+sn.dataset.chseen); if(m) chatSeenList(m); return; }
   const jp = e.target.closest('[data-chjump]'); if(jp) return chatJump(+jp.dataset.chjump);
+  const pf = e.target.closest('[data-chprof]'); if(pf && CH.view!=='group') return openProfileView(pf.dataset.chprof);
   const rt = e.target.closest('[data-chretry]');
   if(rt){ const p = CH.out.find(x => x.ref===rt.dataset.chretry); if(p){ renderChat(); chatPush(p); renderChat(); } return; }
   if(e.target.closest('#chNewG')) return groupOpen('');
@@ -6712,7 +6766,7 @@ function renderChat(force){
       : `<div class="ch-m${mine ? ' me' : ''}${m.from==='jmti-alerts' ? ' bot' : ''}${m.file ? ' has-file' : ''}${!m.file && emoOnly(m.text) ? ' emo' : ''} ${pos}" data-id="${m.id}" title="${esc(sepWhen(m.at))}">${fileHtml(m)}${m.text ? `<div class="ch-t">${esc(m.text)}</div>` : ''}</div>`;
     const col = `<div class="ch-col">${lab ? `<div class="ch-lab">${m.re ? MS_ICON.reply : MS_ICON.fwd}<span>${esc(lab)}</span></div>` : ''}${m.re && !m.del ? chatQuote(m) : ''}${bub}${m.del ? '' : rxPill(m)}</div>`;
     const acts = `<span class="ch-acts">${m.del ? '' : `<button type="button" data-chmore="${m.id}" title="React" aria-label="React">${MS_ICON.smile}</button><button type="button" data-chreply="${m.id}" title="Reply" aria-label="Reply">${MS_ICON.reply}</button>`}<button type="button" data-chmore="${m.id}" title="More" aria-label="More">${MS_ICON.more}</button></span>`;
-    html += `<div class="ch-row${mine ? ' me' : ''}${m.rx && !m.del ? ' has-rx' : ''}">${mine ? acts + col : (end ? chatAv(m.from, true, m.fromName) : '<span class="ms-av sm sp"></span>') + col + acts}</div>`;
+    html += `<div class="ch-row${mine ? ' me' : ''}${m.rx && !m.del ? ' has-rx' : ''}">${mine ? acts + col : (end ? `<button type="button" class="ch-avb" data-chprof="${esc(m.from)}" aria-label="Profile of ${esc(m.fromName || chatName(m.from))}">${chatAv(m.from, true, m.fromName)}</button>` : '<span class="ms-av sm sp"></span>') + col + acts}</div>`;
     const st = showSt && m===lastM ? chatStatus(m) : null;
     if(rd[m.id] || st) html += chatReceipt(m, rd[m.id], st);
     prev = m;
@@ -6759,7 +6813,7 @@ function renderChatList(){
     .filter(c => (chatName(c) + ' ' + ((CH.users.find(u => u.username===c) || {}).role || '')).toLowerCase().includes(q));
   convs.sort((a, b) => ((last[b] || {}).id || 0) - ((last[a] || {}).id || 0));
   box.innerHTML = convs.map(c => { const m = last[c], n = chatUnread(c);
-    return `<button type="button" class="ms-item${n ? ' unread' : ''}" data-conv="${esc(c)}">${avOn(chatAv(c), c!=='#team' && !isGroup(c) && isActive(c))}<span class="ms-mid"><b>${esc(chatName(c))}</b><small>${typ[c] ? `<i class="ms-typ">${esc(typ[c])}</i>` : m ? esc(msgPreview(m)) + ' · ' + esc(shortWhen(m.at)) : esc(convSub(c))}</small></span>${n ? `<span class="ms-n">${n > 99 ? '99+' : n}</span>` : ''}</button>`; }).join('')
+    return `<button type="button" class="ms-item${n ? ' unread' : ''}" data-conv="${esc(c)}">${avOn(chatAv(c), c!=='#team' && !isGroup(c) && isActive(c))}<span class="ms-mid"><b>${esc(chatName(c))}${c!=='#team' && !isGroup(c) && isBday(c) ? ' ' + BDAY : ''}</b><small>${typ[c] ? `<i class="ms-typ">${esc(typ[c])}</i>` : m ? esc(msgPreview(m)) + ' · ' + esc(shortWhen(m.at)) : esc(convSub(c))}</small></span>${n ? `<span class="ms-n">${n > 99 ? '99+' : n}</span>` : ''}</button>`; }).join('')
     || `<p class="hint" style="padding:12px">${q ? 'No one found.' : 'Loading chats…'}</p>`;
 }
 /* Sending shows at once (MANU 2026-10-14 "why does it take long to send message?"): the bubble appears as "Sending…" the
@@ -7055,6 +7109,160 @@ function chatSendIcon(){
   b.title = like ? 'Send a like' : 'Send'; b.setAttribute('aria-label', b.title);
 }
 
+/* ================= MY PROFILE (MANU 2026-10-28 "users can update their profile, add photo so it shows on their dasboard and
+   in chatgroup", "add birthday and motto in life") =================
+   Tap your picture at the top: photo (made square and small on the phone), birthday and motto in life (Code.gs saveProfile).
+   Your photo shows at the top of every screen, on the Dashboard welcome card and on your messages in the chat; everyone's
+   photo shows in the chat. Others see the birthday's month and day only, with a 🎂 by the name on the day. Photos are kept on
+   this phone by version (jmti_ph) so each is fetched once. */
+const PF = {mine:null, ph:{}, want:{}, busy:false, user:''};
+const PF_KEY = 'jmti_ph';
+const BDAY = '🎂';
+(() => { try{ const k = JSON.parse(localStorage.getItem(PF_KEY) || '{}'); Object.keys(k).forEach(u => { if(Array.isArray(k[u])) PF.ph[u] = k[u]; }); }catch(e){} })();
+function pfKeep(){ try{ localStorage.setItem(PF_KEY, JSON.stringify(PF.ph)); }catch(e){} }
+/** The photo of a user (data URL) or ''. */
+const photoOf = u => { if(S.me && u===S.me.username) return (PF.mine && PF.mine.photo) || ''; const x = PF.ph[u]; return x ? x[1] : ''; };
+const userOf = u => CH.users.find(x => x.username===u) || null;
+const bdayToday = mmdd => !!mmdd && TODAY().slice(5)===mmdd;
+const isBday = u => S.me && u===S.me.username ? !!(PF.mine && PF.mine.birthday && bdayToday(PF.mine.birthday.slice(5))) : bdayToday((userOf(u) || {}).b);
+const bdayText = mmdd => { if(!mmdd) return ''; const [m, d] = mmdd.split('-').map(Number); return ['January','February','March','April','May','June','July','August','September','October','November','December'][m - 1] + ' ' + d; };
+function profileStart(){
+  const u = S.me.username;
+  if(PF.user!==u){ PF.user = u; PF.mine = lsGet('jmti_prof_' + u) || null; }
+  renderMeAv(); renderHello();
+  call('myProfile').then(p => { if(!S.me || S.me.username!==u) return; PF.mine = p; lsSet('jmti_prof_' + u, p); renderMeAv(); renderHello(); if(chatOpen()) renderChat(); }).catch(() => {});
+}
+function renderMeAv(){
+  const b = $('meAv'); if(!b || !S.me) return;
+  const p = photoOf(S.me.username);
+  b.innerHTML = p ? `<img src="${esc(p)}" alt="">` : esc(String(S.me.name || '?').split(/[\s,]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase());
+  b.classList.toggle('empty', !p);
+  b.title = 'My profile: photo, birthday and motto';
+}
+/** Fetches the photos the chat needs that this phone doesn't have (or has an older version of). */
+function profileWant(){
+  const need = CH.users.filter(u => u.pv && (!PF.ph[u.username] || PF.ph[u.username][0]!==u.pv) && !PF.want[u.username + ':' + u.pv]).map(u => u.username);
+  let gone = false; CH.users.forEach(u => { if(!u.pv && PF.ph[u.username]){ delete PF.ph[u.username]; gone = true; } });
+  if(gone){ pfKeep(); if(chatOpen()) renderChat(); }
+  if(!need.length || navigator.onLine===false) return;
+  need.forEach(u => { PF.want[u + ':' + userOf(u).pv] = 1; });
+  call('profilePhotos', need.slice(0, 80)).then(r => {
+    need.forEach(u => { const x = userOf(u); if(x && r && r[u]) PF.ph[u] = [x.pv, r[u]]; });
+    pfKeep(); if(chatOpen()) renderChat(); renderHello();
+  }).catch(() => { need.forEach(u => { const x = userOf(u); if(x) delete PF.want[u + ':' + x.pv]; }); });
+}
+/** "Good morning, ANA" with your photo and motto, and today's birthdays (Dashboard tab). */
+function renderHello(){
+  const el = $('helloCard'); if(!el || !S.me) return;
+  const p = PF.mine || {}, h = +((mnlAt(Date.now()) || 'T12').split('T')[1].slice(0, 2)), first = chFirst(S.me.name);
+  const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  const mine = p.birthday && bdayToday(p.birthday.slice(5));
+  const others = CH.users.filter(u => bdayToday(u.b)).map(u => u.name);
+  el.innerHTML = `<button type="button" class="hello-av" data-myprof="1" title="My profile">${chatAv(S.me.username, false, S.me.name)}</button>
+    <div class="hello-t"><b>${mine ? `Happy birthday, ${esc(first)}! ${BDAY}` : `${greet}, ${esc(first)}`}</b><small>${esc(titleCase(S.me.role))}</small>
+    ${p.motto ? `<q>${esc(p.motto)}</q>` : `<button type="button" class="lnk" data-myprof="1">Add your photo, birthday and motto in life</button>`}
+    ${others.length ? `<span class="hello-bd">${BDAY} Birthday today: ${esc(andList(others))}</span>` : ''}</div>`;
+  el.hidden = false;
+}
+/** Square-crops and shrinks a picked photo to 160 px (smaller if needed) so it fits in one sheet cell. */
+function profilePrep(file){
+  return new Promise((resolve, reject) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const side = Math.min(img.width, img.height), sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+      const draw = (px, q) => { const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, px, px); x.drawImage(img, sx, sy, side, side, 0, 0, px, px); return c.toDataURL('image/jpeg', q); };
+      let d = draw(160, .82); if(d.length > 38000) d = draw(128, .7); if(d.length > 38000) d = draw(96, .6);
+      resolve(d);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('This photo could not be opened here. Try a JPEG or PNG photo.')); };
+    img.src = url;
+  });
+}
+function openProfile(){
+  if(!S.me) return;
+  const p = PF.mine || {}, st = {photo: undefined};
+  const pic = () => { const ph = st.photo!==undefined ? st.photo : (p.photo || ''); return ph ? `<img src="${esc(ph)}" alt="Your photo">` : `<span>${esc(String(S.me.name || '?').split(/[\s,]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase())}</span>`; };
+  openPop('My profile', 'Your photo shows at the top and in the chat. Everyone in the app can see your photo, motto and birthday (month and day only).', `
+    <div class="pf-form">
+      <div class="pf-top"><div class="pf-photo" id="pfPic">${pic()}</div>
+        <div class="pf-btns"><button type="button" class="btn alt" id="pfPick">${p.photo ? 'Change photo' : 'Add a photo'}</button><button type="button" class="btn alt" id="pfDel"${p.photo ? '' : ' hidden'}>Remove photo</button>
+        <input type="file" id="pfIn" accept="${CH_PHOTO_TYPES}" hidden><small class="dim">${esc(S.me.name)} · ${esc(titleCase(S.me.role))}</small></div></div>
+      <label class="f full">Birthday<input type="date" id="pfBday" value="${esc(p.birthday || '')}" min="1930-01-01" max="${TODAY()}"></label>
+      <label class="f full">Motto in life<textarea id="pfMotto" maxlength="150" rows="2" placeholder="e.g. Safety first, always on time">${esc(p.motto || '')}</textarea></label>
+      <small class="dim" id="pfN"></small>
+    </div>`, `<button class="btn alt" type="button" id="pfBack">Back</button> <button class="btn road" type="button" id="pfSave">Save</button>`);
+  const cnt = () => { $('pfN').textContent = `${$('pfMotto').value.length} / 150`; }; cnt();
+  $('pfMotto').oninput = cnt;
+  $('pfBack').onclick = () => closePop();
+  $('pfPick').onclick = () => $('pfIn').click();
+  $('pfIn').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if(!f) return;
+    try{ st.photo = await profilePrep(f); $('pfPic').innerHTML = pic(); $('pfDel').hidden = false; $('pfPick').textContent = 'Change photo'; }
+    catch(err){ toast(err.message, true); }
+  };
+  $('pfDel').onclick = () => { st.photo = ''; $('pfPic').innerHTML = pic(); $('pfDel').hidden = true; $('pfPick').textContent = 'Add a photo'; };
+  $('pfSave').onclick = async () => {
+    const b = $('pfSave'); b.disabled = true; b.textContent = 'Saving…';
+    try{
+      const arg = {birthday: $('pfBday').value, motto: $('pfMotto').value.trim()};
+      if(st.photo!==undefined) arg.photo = st.photo;
+      const r = await call('saveProfile', arg);
+      PF.mine = r; lsSet('jmti_prof_' + S.me.username, r);
+      renderMeAv(); renderHello(); if(chatOpen()) renderChat();
+      closePop(); toast('Profile saved');
+    }catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Save'; }
+  };
+}
+/**
+ * Birthday pop-up (MANU 2026-10-28 "make the birthday greetings pop-up to all users, show the photo with the greetings"): when
+ * someone's birthday is today (Code.gs birthdaysToday), everyone sees it once that day on this phone (jmti_bdpop_<user>), with the
+ * photo, position, motto and a button that opens a chat with a greeting typed in. The celebrant sees their own greeting.
+ * It waits while another pop-up is open (the overdue warning, a form) and tries again every 5 s for a minute.
+ */
+const BD_FX = ['\ud83c\udf89', '\ud83c\udf88', '\ud83c\udf82', '\u2728', '\ud83c\udf8a', '\ud83c\udf81'];
+function bdayCheck(tries){
+  if(!S.me || !TOKEN || navigator.onLine===false) return;
+  const key = 'jmti_bdpop_' + S.me.username, day = TODAY();
+  if(lsGet(key)===day) return;
+  const later = () => { if(tries < 12) setTimeout(() => bdayCheck(tries + 1), 5000); };
+  if(!$('pop').hidden || $('chSheet') || document.hidden) return later();
+  call('birthdaysToday').then(r => {
+    if(!S.me || !r || !Array.isArray(r.list) || !r.list.length || lsGet(key)===day) return;
+    if(!$('pop').hidden || $('chSheet') || document.hidden) return later();
+    lsSet(key, day); bdayPop(r.list);
+  }).catch(() => {});
+}
+function bdayPop(list){
+  const ini = n => esc(String(n || '?').split(/[\s,]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase());
+  const fx = Array.from({length: 18}, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-delay:${(i % 6) * .45}s;animation-duration:${3.2 + (i % 4) * .6}s">${BD_FX[i % BD_FX.length]}</i>`).join('');
+  const mine = list.some(x => x.me), others = list.filter(x => !x.me);
+  const cards = list.map(x => `<div class="bd-card${x.me ? ' me' : ''}"><div class="pf-photo bd-ph">${x.photo ? `<img src="${esc(x.photo)}" alt="Photo of ${esc(x.name)}">` : `<span>${ini(x.name)}</span>`}</div>
+      <b>${x.me ? `Happy birthday, ${esc(chFirst(x.name))}! ${BDAY}` : `Happy birthday, ${esc(x.name)}! ${BDAY}`}</b><small>${esc(titleCase(x.role))}</small>
+      ${x.motto ? `<q>${esc(x.motto)}</q>` : ''}
+      ${x.me ? '<p class="bd-from">From all of us at JMTI, have a wonderful day!</p>' : `<button type="button" class="btn road" data-bdgreet="${esc(x.username)}">Send a birthday greeting</button>`}</div>`).join('');
+  openPop(mine && !others.length ? 'Happy birthday!' : `Birthday today ${BDAY}`, mine && !others.length ? '' : (others.length > 1 ? 'Let\'s greet our colleagues today.' : 'Let\'s greet our colleague today.'),
+    `<div class="bd-wrap"><div class="bd-fx" aria-hidden="true">${fx}</div>${cards}</div>`, `<button class="btn alt" type="button" onclick="closePop()">Close</button>`);
+  $('pop').classList.add('bdpop');
+  $('popBody').onclick = e => {
+    const b = e.target.closest('[data-bdgreet]'); if(!b) return;
+    const u = b.dataset.bdgreet; closePop();
+    openChat(u);
+    setTimeout(() => { const ta = $('chText'); if(ta && !ta.value){ ta.value = 'Happy birthday! ' + BDAY + BD_FX[0]; if(ta.oninput) ta.oninput(); ta.focus(); } }, 60);
+  };
+}
+/** Someone's profile, from the chat: photo, position, active, birthday and motto. */
+function openProfileView(u){
+  if(S.me && u===S.me.username) return openProfile();
+  const x = userOf(u); if(!x) return;
+  const a = actText(u), bd = bdayToday(x.b);
+  chatSheet(`${shHead('Profile')}<div class="pf-view"><div class="pf-photo big">${photoOf(u) ? `<img src="${esc(photoOf(u))}" alt="">` : `<span>${esc(x.name.split(/[\s,]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase())}</span>`}</div>
+    <b>${esc(x.name)}${bd ? ' ' + BDAY : ''}</b><small>${esc(titleCase(x.role))}${a ? ' · ' + esc(a) : ''}</small>
+    ${x.m ? `<q>${esc(x.m)}</q>` : ''}
+    ${x.b ? `<span class="pf-bd">${BDAY} ${bd ? 'Birthday today!' : 'Birthday: ' + esc(bdayText(x.b))}</span>` : ''}
+    ${CH.view==='conv' && CH.conv===u ? '' : `<button type="button" class="btn" data-pfmsg="1">Message</button>`}</div>`,
+    e => { if(e.target.closest('[data-pfmsg]')){ chatSheetClose(); if(chatOpen()) chatGo(u); else openChat(u); } });
+}
 /** like = the send button was tapped: with an empty box it sends a 👍. */
 function chatSendNow(like){
   const ta = $('chText'); let text = ta.value.trim();
