@@ -1394,11 +1394,11 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 .top .tabmenu.open .tabs{display:flex}
 .top .tabmenu .tab{flex:none;width:100%;text-align:left;white-space:normal;padding:10px 14px;border-radius:11px;font-size:14px}
 @media (max-width:700px){ .top-inner .tabmenu{order:1} .top-inner .userchip{order:3} .tabmenu-btn{padding:7px 12px 7px 10px} }
-/* the menu sits on its own line right under the logo (MANU 2026-10-29 "put menu at the bottom of the logo"); the list opens from the left */
+/* the menu comes first, before the logo, on the same line (MANU 2026-10-29 "move the menu before the logo"); the list opens from the left */
 .top-inner{flex-wrap:wrap!important}
-.top-inner .tabmenu{order:5;flex:1 0 100%;display:flex;justify-content:flex-start;margin-top:-4px}
+.top-inner .tabmenu{order:-1;flex:none;display:flex;align-items:center;margin:0}
 .top .tabmenu .tabs{left:0;right:auto}
-@media (max-width:700px){ .top-inner .tabmenu{order:1;margin-top:0} }
+@media (max-width:700px){ .top-inner{align-items:center} .top-inner .brand{display:contents} .top-inner .tabmenu{order:-1} .top-inner .hello.tb{order:8;flex:1 1 100%} .top-inner .userchip{order:9} }
 
 /* ---- Smaller Dashboard parts, each on one row (MANU 2026-10-28 "make this smaller and just 1 row") ---- */
 .road{padding:12px 18px 12px;margin-bottom:12px}
@@ -3314,7 +3314,7 @@ const GAR_BOX = [['GARAGE CANLUBANG', 'Canlubang'], ['GARAGE MEYCAUAYAN', 'Meyca
 function renderGarages(all){
   const box = $('garRow'); if(!box) return;
   const last = {};
-  all.forEach(t => { const k = String(t.truckNo || '').trim(); if(!k) return; const p = last[k]; if(!p || t.date > p.date || (t.date===p.date && (Number(t.row) || 0) >= (Number(p.row) || 0))) last[k] = t; });
+  all.forEach(t => { const k = String(t.truckNo || '').trim(); if(!k) return; const p = last[k]; if(!p || rowNewer(t, p)) last[k] = t; });
   const by = {}; GAR_BOX.forEach(([k]) => { by[k] = []; });
   Object.values(last).forEach(t => { const st = statusText(t).toUpperCase(); if(by[st]) by[st].push(t); });
   const n = Object.values(by).reduce((a, l) => a + l.length, 0), r = S.range || {};
@@ -3687,7 +3687,7 @@ function openKpiPop(k){
     const act = activeTrucks();
     const list = k==='trucks' ? act : S.boot.trucks.filter(t => !truckActive(t) || !onTrip[String(t.truckNo)]);
     const rows = list.slice().sort((a,b) => (onTrip[String(b.truckNo)] ? 1 : 0) - (onTrip[String(a.truckNo)] ? 1 : 0) || String(a.truckNo).localeCompare(String(b.truckNo), undefined, {numeric:true})).map(t => {
-      const my = onTrip[String(t.truckNo)] || [], last = my.slice().sort((p,q) => { const a = lastTime(p), b = lastTime(q); return (a ? a.v : '') < (b ? b.v : '') ? -1 : 1; }).pop();
+      const my = onTrip[String(t.truckNo)] || [], last = my.reduce((b, x) => !b || rowNewer(x, b) ? x : b, null);
       const rp = repairOf(t.plateNo), crew = (S.assign[TODAY()] || []).find(a => String(a.truckNo)===String(t.truckNo));
       const state = !truckActive(t) ? `<span class="docstate">INACTIVE</span><small>${esc(t.remarks || '')}</small>` : last ? `<span class="pill" style="--c:${colorOf(stageOf(last))}">${esc(statusText(last))}</span><small>${tripsTxt(wsum(my, legW))} · ${esc(last.customer)} → ${esc(last.destination || '—')}</small>` : rp ? `${mntTag(rp, 1)}<small>${esc(repairText(rp))}</small>` : '<span class="dim">No trip</span>';
       return `<tr><td><b>${tLink(t.truckNo)}</b><small>${esc(t.plateNo)}</small></td><td>${state}</td><td>${crew && crew.driver ? pLink(crew.driver) : '<span class="dim">No crew</span>'}<small>${esc(crew && crew.account ? titleCase(crew.account) : '')}</small></td><td>${esc(sinceText((S.boot.lastTrip || {})[t.truckNo] || ''))}</td></tr>`;
@@ -4283,11 +4283,23 @@ function loadDispatcher(){
   // 3 days either side too, so a round trip's other leg is found (as on the Dashboard); S.xTrips keeps the picked dates only
   return withTrips(addDays(f,-3), addDays(t,3), list => { const [f2, t2] = xRange(); if(f2!==f || t2!==t) return; S.xCtx = list; S.xTrips = list.filter(x => x.date >= f && x.date <= t); renderDispatcher(); }, $('xList'));
 }
-/** Each truck's latest trip in a list: latest date, then latest recorded time, then the lower sheet row. */
+/**
+ * Is row p newer than row q of the same truck? Latest date; on the same date the latest recorded time when both have one, else the
+ * later sheet row: a trip added after another one finished (On the way source, Clip Board: no time yet) is the newer one
+ * (MANU 2026-10-29: trucks 22, 39, 63 on the way source still showed WAITING FOR SHIPMENT from the trip they had completed).
+ */
+function rowNewer(p, q){
+  if(p.date !== q.date) return p.date > q.date;
+  const a = lastTime(p), b = lastTime(q);
+  if(a && b && a.v !== b.v) return a.v > b.v;
+  const rn = t => t._pending || !Number(t.row) ? Infinity : Number(t.row);   // not saved yet: the newest
+  return rn(p) > rn(q);
+}
+/** Each truck's latest trip in a list (rowNewer). */
 function latestTrips(list){
-  const lt = t => { const x = lastTime(t); return x ? x.v : ''; }, best = {};
+  const best = {};
   list.forEach(t => { const u = String(t.truckNo || t.plateNo || '').trim(); if(!u) return; const b = best[u];
-    if(!b || t.date > b.date || (t.date === b.date && (lt(t) > lt(b) || (lt(t) === lt(b) && (t.row||0) > (b.row||0))))) best[u] = t; });
+    if(!b || rowNewer(t, b)) best[u] = t; });
   return list.filter(t => Object.values(best).includes(t));
 }
 function renderAccountBoard(acc, d, trucks){
@@ -4300,8 +4312,7 @@ function renderAccountBoard(acc, d, trucks){
   const cards = trucks.map(no => {
     const a = (S.assign[d] || []).find(x => String(x.truckNo)===no) || {};
     const mine = pool.filter(t => String(t.truckNo).trim()===no && isActiveRow(t));
-    const lt = t => { const x = lastTime(t); return x ? x.v : ''; };
-    const t = mine.slice().sort((p,q) => (lt(p) < lt(q) ? -1 : lt(p) > lt(q) ? 1 : (p.row||0) - (q.row||0))).pop();
+    const t = mine.reduce((b, x) => !b || rowNewer(x, b) ? x : b, null);
     const hold = holdOf(a.plateNo || plateFor(no));
     if(!t && hold) return {sort: 10, html: `<div class="xcard idle mnt" style="--c:#DC2626"><div class="top"><b>${esc(no)}</b><span class="tag-repair">UNDER MAINTENANCE</span></div><small>${esc(repairText(hold))}</small><small>${esc(a.driver || 'No driver')}</small><small>${esc(sinceText((S.boot.lastTrip||{})[no] || ''))}</small></div>`};
     if(!t) return {sort: 9, html: `<div class="xcard idle${may('dispatchAdd') ? ' rowbtn' : ''}" data-idle="${esc(no)}" ${may('dispatchAdd') ? 'title="Add a trip for this truck" role="button" tabindex="0"' : ''}><div class="top"><b>${esc(no)}</b><span class="dim">${esc(a.plateNo || plateFor(no))}</span></div><span>${xRange()[0]===xRange()[1] ? 'No trip on this date' : 'No trip in these dates'}</span><small>${esc(a.driver || 'No driver')}</small><small>${esc(sinceText((S.boot.lastTrip||{})[no] || ''))}</small></div>`};
@@ -4320,11 +4331,10 @@ function renderAccountBoard(acc, d, trucks){
     const b = e.target.closest('[data-st]'); if(!b) return;
     const st = b.dataset.st, sub = `${titleCase(acc)} · ${xRangeText()}`;
     if(st==='All'){
-      const lt = t => { const x = lastTime(t); return x ? x.v : ''; };
       const rows = trucks.map(no => {
         const a = (S.assign[d] || []).find(x => String(x.truckNo)===no) || {};
         const mine = accTrips.filter(t => String(t.truckNo).trim()===no);
-        const t = mine.slice().sort((p,q) => lt(p) < lt(q) ? -1 : lt(p) > lt(q) ? 1 : (p.row||0) - (q.row||0)).pop();
+        const t = mine.reduce((b, x) => !b || rowNewer(x, b) ? x : b, null);
         const x = t ? lastTime(t) : null;
         return `<tr ${t ? `class="rowbtn" data-key="${esc(t.key)}"` : ''}><td><b>${tLink(no)}</b><small>${plLink(a.plateNo || plateFor(no))}</small></td><td>${a.driver ? pLink(a.driver) : '—'}<small>${[a.helper1, a.helper2].filter(Boolean).map(n => pLink(n)).join(' · ')}</small></td><td>${t ? `<span class="pill" style="--c:${colorOf(stageOf(t))}">${esc(statusText(t))}</span>${xw(mine) > 1 ? `<small>${tripsTxt(xw(mine))}</small>` : ''}` : '<span class="dim">No trip</span>'}</td><td>${t ? `${esc(t.customer)}<small>→ ${esc(t.destination || '—')}</small>` : esc(sinceText((S.boot.lastTrip || {})[no] || ''))}</td><td>${x ? `${esc(MS_LABEL[x.k])}<small>${esc(fmtTime(x.v))}</small>` : ''}</td></tr>`;
       }).join('');
@@ -4585,9 +4595,8 @@ function openTruckPlanReport(){
 function truckPlanReportRows(acc, assign, trips){
   const now = Date.now(), want = acc ? acctSec(acc) : null;
   const tkey = v => String(v || '').trim().toUpperCase();
-  const last = t => { const x = lastTime(t); return x ? x.v : ''; };
-  // most recent trip: latest trip date, then latest recorded time, then the lowest sheet row
-  const newer = (p, q) => p.date !== q.date ? (p.date > q.date ? p : q) : last(p) !== last(q) ? (last(p) > last(q) ? p : q) : ((p.row||0) >= (q.row||0) ? p : q);
+  // most recent trip: rowNewer (latest date, then the latest recorded time when both have one, else the later sheet row)
+  const newer = (p, q) => rowNewer(q, p) ? q : p;
   // trips dated tomorrow count in any status (MANU): a started one is the truck's latest; one still at Clip Board shows only
   // when the truck has no open trip now (so a truck unloading today keeps that status)
   const today = TODAY(), cur = {}, next = {}, latest = {};
@@ -4778,11 +4787,7 @@ function renderDispatcher(){
   // All lists every trip from the From to the To date (MANU 2026-10-08); "Latest status" shows each truck's latest trip only
   const latestOnly = f==='latest';
   if(latestOnly){
-    const lt = t => { const x = lastTime(t); return x ? x.v : ''; };
-    const best = {};
-    S.xTrips.forEach(t => { const u = String(t.truckNo || t.plateNo || '').trim(); if(!u) return; const b = best[u];
-      if(!b || t.date > b.date || (t.date === b.date && (lt(t) > lt(b) || (lt(t) === lt(b) && (t.row||0) > (b.row||0))))) best[u] = t; });
-    Object.values(best).forEach(t => { latestKey[t.key] = 1; });
+    latestTrips(S.xTrips).forEach(t => { latestKey[t.key] = 1; });
   }
   const list = S.xTrips.filter(t => {
     if(latestOnly && !latestKey[t.key]) return false;
