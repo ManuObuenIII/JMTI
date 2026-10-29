@@ -1125,6 +1125,17 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .hello-t q{font-style:italic;color:#E6ECFF;font-size:13.5px;overflow-wrap:anywhere}
 .hello-t .lnk{background:none;border:0;padding:0;color:#9EC1FF;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;text-align:left}
 .hello-bd{font-size:13px;font-weight:700;color:#FFD966;overflow-wrap:anywhere}
+/* compact in the top bar (MANU 2026-10-29) */
+.top .hello.tb{margin:0;padding:4px 12px 4px 5px;gap:9px;border-radius:14px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.18);max-width:440px;min-width:0;flex:0 1 auto}
+.top .hello.tb .hello-av .ms-av{width:38px;height:38px;font-size:14px;border-width:1.5px}
+.top .hello.tb .hello-t{gap:0;line-height:1.25}
+.top .hello.tb .hello-t b{font-size:13.5px}
+.top .hello.tb .hello-t small{display:none}
+.top .hello.tb .hello-t q{font-size:11.5px;color:#D6E0FF}
+.top .hello.tb .hello-t .lnk{font-size:11.5px}
+.top .hello.tb .hello-bd{font-size:11.5px}
+@media (max-width:700px){ .top .brand{flex-wrap:wrap} .top .hello.tb{flex:1 1 100%;max-width:none;order:9;padding:4px 10px;border-radius:11px} .top .hello.tb .hello-av{display:none}
+  .top .hello.tb .hello-t{display:block;font-size:12px;line-height:1.35} .top .hello.tb .hello-t b{font-size:12.5px;margin-right:6px} .top .hello.tb .hello-t q,.top .hello.tb .hello-bd{display:inline;margin-right:6px} }
 .pf-form{display:flex;flex-direction:column;gap:10px}
 .pf-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .pf-photo{width:104px;height:104px;border-radius:50%;overflow:hidden;background:linear-gradient(180deg,#2E5BFF,#0A27B5);color:#fff;display:grid;place-items:center;font-size:32px;font-weight:800;flex:none;box-shadow:0 4px 14px rgba(2,10,53,.25)}
@@ -1498,6 +1509,8 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <img class="logo-copy" alt="JMTI">
       <div><h1>Operations Dashboard</h1><small>J. Magtalas Trucking Inc.</small></div>
       <div class="clk" id="topClock" title="Philippine time"></div>
+      <!-- welcome card in the top bar, right after the clock (MANU 2026-10-29 screenshot: "move this after the date and time") -->
+      <div class="hello tb" id="helloCard" hidden></div>
     </div>
     <div class="tabmenu" id="tabMenu"><button type="button" class="tabmenu-btn" id="tabMenuBtn" aria-haspopup="true" aria-expanded="false" aria-controls="tabs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span id="tabMenuCur">Menu</span><svg class="car" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><nav class="tabs" role="tablist" id="tabs"></nav></div>
     <div class="userchip"><button type="button" class="me-av empty" id="meAv" aria-label="My profile"></button><span class="nm"><b id="meName"></b></span><span class="role" id="meRole"></span>
@@ -1528,8 +1541,6 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
       <button class="icon-btn" id="dReport" type="button">Generate report</button>
       <button class="icon-btn" id="dRefresh" type="button">Refresh</button>
     </div>
-    <!-- welcome card after the dates (MANU 2026-10-29 "move this after the date and time") -->
-    <div class="hello" id="helloCard" hidden></div>
     <div class="road">
       <h2 id="roadTitle">On the road now</h2>
       <p class="big" id="roadBig">0<span>trucks moving</span></p>
@@ -2984,7 +2995,7 @@ function tabMenu(open){
 document.addEventListener('click', e => { if($('tabMenu') && $('tabMenu').classList.contains('open') && !e.target.closest('#tabMenu')) tabMenu(false); });
 document.addEventListener('keydown', e => { if(e.key==='Escape' && $('tabMenu') && $('tabMenu').classList.contains('open')){ tabMenu(false); $('tabMenuBtn').focus(); } });
 function showTab(t){
-  if(t==='dashboard') renderHello();
+  renderHello();   // in the top bar on every tab since 2026-10-29
   if(t==='units') t = 'fleet';   // Fleet units became part of Fleet (MANU 2026-10-20)
   if(!can(t)) return;
   S.tab = t; store('jmti_tab_'+S.me.username, t);
@@ -7386,7 +7397,7 @@ function profileWant(){
     pfKeep(); if(chatOpen()) renderChat(); renderHello();
   }).catch(() => { need.forEach(u => { const x = userOf(u); if(x) delete PF.want[u + ':' + x.pv]; }); });
 }
-/** "Good morning, ANA" with your photo and motto, and today's birthdays (Dashboard tab). */
+/** "Good morning, ANA" with your photo and motto, and today's birthdays (top bar, after the clock). */
 function renderHello(){
   const el = $('helloCard'); if(!el || !S.me) return;
   const p = PF.mine || {}, h = +((mnlAt(Date.now()) || 'T12').split('T')[1].slice(0, 2)), first = chFirst(S.me.name);
