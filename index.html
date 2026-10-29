@@ -1383,6 +1383,11 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 .top .tabmenu.open .tabs{display:flex}
 .top .tabmenu .tab{flex:none;width:100%;text-align:left;white-space:normal;padding:10px 14px;border-radius:11px;font-size:14px}
 @media (max-width:700px){ .top-inner .tabmenu{order:1} .top-inner .userchip{order:3} .tabmenu-btn{padding:7px 12px 7px 10px} }
+/* the menu sits on its own line right under the logo (MANU 2026-10-29 "put menu at the bottom of the logo"); the list opens from the left */
+.top-inner{flex-wrap:wrap!important}
+.top-inner .tabmenu{order:5;flex:1 0 100%;display:flex;justify-content:flex-start;margin-top:-4px}
+.top .tabmenu .tabs{left:0;right:auto}
+@media (max-width:700px){ .top-inner .tabmenu{order:1;margin-top:0} }
 
 /* ---- Smaller Dashboard parts, each on one row (MANU 2026-10-28 "make this smaller and just 1 row") ---- */
 .road{padding:12px 18px 12px;margin-bottom:12px}
@@ -1425,28 +1430,6 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 .gar-t{display:inline-flex;flex-direction:column;padding:3px 8px;border-radius:8px;background:#EEF2FF;font-weight:650;font-size:12px;color:#0A1F8F;line-height:1.2}
 .gar-t small{font-weight:500;color:var(--muted);font-size:10.5px}
 .gar .hint{margin:6px 0 0}
-/* Live map (Protrack GPS, 2026-10-28) */
-.gps-mapbox{padding:0;overflow:hidden;margin-bottom:12px}
-#gpsMap{height:58vh;min-height:320px;width:100%;border-radius:inherit;background:#DCE6F5}
-#gpsMap img{max-width:none !important;max-height:none !important}
-#v-gps .bar .f.grow{flex:1 1 220px}
-.gps-maperr{padding:16px;margin:0}
-.gps-pin{background:none;border:0}
-.gps-pin .gps-dot{position:absolute;left:-9px;top:-9px}
-.gps-tag{position:absolute;left:12px;top:-11px;background:#fff;color:#0A1F8F;font:700 11px/1.3 system-ui,sans-serif;padding:1px 5px;border-radius:6px;box-shadow:0 1px 4px rgba(2,10,53,.35);white-space:nowrap}
-.gps-dot{display:inline-block;width:18px;height:18px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(2,10,53,.45);position:relative;flex:0 0 auto}
-.gps-dir{position:absolute;left:5px;top:-7px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:7px solid #0A1F8F;transform-origin:4px 14px}
-.gps-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
-.gps-row{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font:inherit;white-space:normal;overflow-wrap:anywhere}
-.gps-row.on{border-color:#2E5BFF;box-shadow:0 0 0 2px #2E5BFF inset}
-.gps-row .gps-dot{margin-top:2px}
-.gps-main{display:flex;flex-direction:column;gap:2px;min-width:0}
-.gps-sub{font-size:12.5px;color:var(--muted)}
-.gps-nolink{font-style:normal;font-size:11.5px;color:#B45309}
-.gps-sel{margin-bottom:12px;padding:12px}
-.gps-selhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.gps-selbar{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:8px}
-@media (max-width:700px){ #v-gps .bar .f.grow{flex:1 1 100%} #gpsMap{height:50vh} .gps-list{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -1765,26 +1748,6 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
     <p class="hint" id="fmNote" style="margin:0 0 10px"></p>
     <div class="kpis" id="fmKpis"></div>
     <div class="panel" style="padding:0" id="fmPanel"><div class="tbl-wrap"><table class="poptbl fm-tbl"><thead id="fmHead"><tr><th>Refuel</th><th>Trip</th><th class="n">Liters</th><th class="n">Km</th><th class="n">km/L</th></tr></thead><tbody id="fmBody"></tbody></table></div></div>
-  </section>
-
-  <!-- ================= LIVE MAP (Protrack GPS, MANU 2026-10-28) ================= -->
-  <section class="view" id="v-gps">
-    <div class="bar">
-      <div class="chips" id="gpsChips"></div>
-      <label class="f grow gps-find">Find<input id="gpsFind" placeholder="Truck, plate, driver, destination" autocomplete="off"></label>
-    </div>
-    <p class="hint" id="gpsNote" style="margin:0 0 10px"></p>
-    <div class="panel gps-sel" id="gpsSel" hidden>
-      <div class="gps-selhead"><b id="gpsSelName"></b><button type="button" class="btn alt sm" id="gpsClose">Close</button></div>
-      <div class="gps-selbar">
-        <label class="f">Day<input type="date" id="gpsDay"></label>
-        <button type="button" class="btn sm" id="gpsRouteBtn">Show route</button>
-        <button type="button" class="btn alt sm" id="gpsTruckPop">Truck details</button>
-      </div>
-      <p class="hint" id="gpsSelInfo" style="margin:6px 0 0"></p>
-    </div>
-    <div class="panel gps-mapbox"><div id="gpsMap"><p class="hint gps-maperr">Opening the map…</p></div></div>
-    <div class="gps-list" id="gpsList"></div>
   </section>
 
   <!-- ================= POD ================= -->
@@ -2152,7 +2115,7 @@ const MS_KEYS = ['srcArrive','loadStart','loadEnd','srcDepart','destArrive','unl
 const MS_COL = {srcArrive:12,loadStart:13,loadEnd:14,srcDepart:15,destArrive:16,unloadStart:17,unloadEnd:18,destDepart:19};
 const MS_LABEL = {srcArrive:'Source time in',loadStart:'Loading start',loadEnd:'Loading end',srcDepart:'Source time out',
   destArrive:'Destination time in',unloadStart:'Unloading start',unloadEnd:'Unloading end',destDepart:'Destination time out'};
-const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',gps:'Live map',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users'};
+const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users'};
 const NO_AUTH = ['login','getAppUrl'];
 
 const S = { sum:null, sumAt:0, sumView:'week', sumMeasure:'trips', topView:'p7', me:null, boot:null, trips:[], range:{}, tab:'', stageFilter:'', shown:150,
@@ -3033,7 +2996,7 @@ function showTab(t){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id==='v-'+view));
   if(t==='maintenance') return loadMaintenance();
   if(!S.boot && !['manpower','users'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
-  ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, gps:loadGpsTab, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
+  ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
   if(['dashboard','manpower'].includes(t) || (t==='fleet' && may('fleet'))) loadReminders();
 }
 
@@ -7809,166 +7772,6 @@ function initFuelTab(){
   filterChips($('fmView'), [['refuel', 'Each refuel'], ['dest', 'Per destination']], 'refuel', v => { FM.view = v; renderFuel(); });
   $('fmBody').onclick = e => { const tr = e.target.closest('tr[data-fm]'); if(tr && !e.target.closest('a')) openFuelRefuel(tr.dataset.fm); };
 }
-/* ================= LIVE MAP (Protrack GPS, MANU 2026-10-28; Admin, Supervisor, Team leader, Dispatcher) =================
-   Code.gs (Gps.gs) gpsLive: every Protrack device with its latest position, kept 20 s on the server for everyone; gpsRoute: one truck's
-   route in a day. Each device is matched to a truck by its plate (Protrack plate number or device name), else by a truck number in the name.
-   The map is Leaflet with OpenStreetMap, loaded the first time the tab opens. The list refreshes every 30 s while the tab is open. */
-const GPS = {data:null, filter:'all', sel:'', route:null, map:null, layer:null, routeLayer:null, marks:{}, timer:0, leaflet:null, err:''};
-const GPS_REFRESH_MS = 30000, GPS_OFFLINE_MS = 60 * 60000;
-function gpsLeaflet(){
-  if(window.L && window.L.map) return Promise.resolve(window.L);
-  if(GPS.leaflet) return GPS.leaflet;
-  GPS.leaflet = new Promise((res, rej) => {
-    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
-    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
-    s.onload = () => res(window.L); s.onerror = () => { GPS.leaflet = null; rej(new Error('The map could not load. Check the signal and open the tab again.')); };
-    document.head.appendChild(s);
-  });
-  return GPS.leaflet;
-}
-/** The truck in the Fleet list for a Protrack device: plate first, then a truck number in the device name. */
-function gpsTruck(d){
-  const tr = (S.boot && S.boot.trucks) || [], pk = plateKey(d.plate), nk = plateKey(d.name);
-  let t = tr.find(x => x.plateNo && (plateKey(x.plateNo)===pk || plateKey(x.plateNo)===nk));
-  if(!t && nk) t = tr.find(x => x.plateNo && plateKey(x.plateNo).length >= 5 && nk.includes(plateKey(x.plateNo)));
-  if(!t){ const m = String(d.name || '').match(/(?:^|[^0-9A-Z])(?:T|TRUCK|UNIT|#)?\s{0,}0{0,}([0-9]{1,3})(?![0-9])/i); if(m) t = tr.find(x => String(x.truckNo).replace(/^0+/, '')===m[1]); }
-  return t || null;
-}
-/** moving / idle (engine on, stopped) / parked (engine off) / offline (no news for an hour) / nogps */
-function gpsState(d, now){
-  if(d.lat===null || d.lng===null) return 'nogps';
-  const last = Math.max(d.heart || 0, d.gps || 0);
-  if(!last || now - last > GPS_OFFLINE_MS) return 'offline';
-  if((d.speed || 0) >= 5) return 'moving';
-  return d.acc===1 ? 'idle' : 'parked';
-}
-const GPS_LABEL = {moving:'Moving', idle:'Stopped, engine on', parked:'Parked, engine off', offline:'Offline', nogps:'No GPS position'};
-const GPS_COLOR = {moving:'#16A34A', idle:'#F59E0B', parked:'#64748B', offline:'#DC2626', nogps:'#94A3B8'};
-function gpsRows(){
-  const d = GPS.data; if(!d) return [];
-  const now = Date.now(), today = S.gpsToday || [];
-  return d.trucks.map(x => {
-    const t = gpsTruck(x), no = t ? String(t.truckNo) : '', trip = no ? today.find(y => String(y.truckNo).trim()===no) : null;
-    return {...x, truck: t, no, plateNo: t ? t.plateNo : (x.plate || ''), st: gpsState(x, now), trip};
-  }).sort((a, b) => (a.no ? 0 : 1) - (b.no ? 0 : 1) || String(a.no || a.name).localeCompare(String(b.no || b.name), undefined, {numeric:true}));
-}
-function loadGpsTab(){
-  if(!$('gpsList')) return;
-  const day = TODAY();
-  if(!$('gpsDay').value) $('gpsDay').value = day;
-  $('gpsDay').max = day;
-  withTrips(day, day, list => { S.gpsToday = latestTrips(list); if(GPS.data) renderGps(); });
-  renderGps();
-  gpsLeaflet().then(() => { gpsMapInit(); setTimeout(() => GPS.map && GPS.map.invalidateSize(), 50); renderGps(); }).catch(e => { $('gpsMap').innerHTML = `<p class="hint gps-maperr">${esc(e.message)}</p>`; });
-  gpsFetch();
-  clearInterval(GPS.timer);
-  GPS.timer = setInterval(() => { if(S.tab!=='gps' || document.hidden){ if(S.tab!=='gps'){ clearInterval(GPS.timer); GPS.timer = 0; } return; } gpsFetch(); }, GPS_REFRESH_MS);
-}
-function gpsFetch(){
-  return call('gpsLive').then(d => { GPS.data = d; GPS.err = ''; renderGps(); })
-    .catch(e => { GPS.err = e.message; renderGps(); });
-}
-function gpsMapInit(){
-  if(GPS.map || !window.L || !$('gpsMap')) return;
-  $('gpsMap').innerHTML = '';
-  GPS.map = L.map('gpsMap', {zoomControl:true}).setView([14.6, 121.0], 9);   // Metro Manila until the trucks are in
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'&copy; OpenStreetMap'}).addTo(GPS.map);
-  GPS.layer = L.layerGroup().addTo(GPS.map);
-  GPS.fitted = false;
-}
-function gpsIcon(r){
-  const c = GPS_COLOR[r.st], rot = r.st==='moving' && r.course!==null ? `<i class="gps-dir" style="transform:rotate(${Number(r.course)}deg)"></i>` : '';
-  return L.divIcon({className:'gps-pin', iconSize:null, html:`<span class="gps-dot" style="background:${c}">${rot}</span><b class="gps-tag">${esc(r.no || r.name || r.plate)}</b>`});
-}
-function renderGps(){
-  if(!$('gpsList')) return;
-  const rows = gpsRows(), now = Date.now();
-  const cnt = k => rows.filter(r => k==='all' || r.st===k || (k==='stopped' && (r.st==='idle' || r.st==='parked'))).length;
-  counterChips($('gpsChips'), [['all','All',cnt('all')],['moving','Moving',cnt('moving')],['stopped','Stopped',cnt('stopped')],['offline','Offline',cnt('offline') + cnt('nogps')]], GPS.filter, v => { GPS.filter = v; renderGps(); });
-  const q = $('gpsFind').value.toLowerCase().trim();
-  const shown = rows.filter(r => GPS.filter==='all' || r.st===GPS.filter || (GPS.filter==='stopped' && (r.st==='idle' || r.st==='parked')) || (GPS.filter==='offline' && r.st==='nogps'))
-    .filter(r => !q || [r.no, r.plateNo, r.name, r.plate, r.trip && r.trip.driver, r.trip && r.trip.destination].some(v => String(v || '').toLowerCase().includes(q)));
-  if(GPS.err && !GPS.data){
-    const setup = /GPS_SETUP:/.test(GPS.err), msg = GPS.err.replace(/^.*?GPS(_SETUP)?:\s{0,}/, '');
-    $('gpsNote').innerHTML = esc(msg) + (setup && S.me && S.me.role==='ADMIN' ? ' Then run <b>testProtrack</b> once in the editor.' : '');
-    $('gpsList').innerHTML = ''; gpsDraw([]); return;
-  }
-  if(!GPS.data){ $('gpsNote').textContent = 'Getting the trucks from Protrack…'; $('gpsList').innerHTML = '<p class="empty-cell">Loading…</p>'; return; }
-  const linked = rows.filter(r => r.no).length;
-  $('gpsNote').textContent = `${rows.length} GPS device${rows.length===1 ? '' : 's'}, ${linked} matched to a truck. Updated ${agoText(GPS.data.at, now)}${GPS.data.old ? ' (Protrack is busy, showing the last positions)' : ''}${GPS.err ? ' · ' + GPS.err.replace(/^GPS:\s{0,}/, '') : ''}. Refreshes every 30 seconds. Tap a truck to see it and its route.`;
-  $('gpsList').innerHTML = shown.length ? shown.map(r => {
-    const last = Math.max(r.heart || 0, r.gps || 0), trip = r.trip;
-    const what = r.st==='moving' ? `Moving, ${Math.round(r.speed)} km/h` : GPS_LABEL[r.st];
-    return `<button type="button" class="gps-row${GPS.sel===r.imei ? ' on' : ''}" data-imei="${esc(r.imei)}">
-      <span class="gps-dot" style="background:${GPS_COLOR[r.st]}"></span>
-      <span class="gps-main"><b>${r.no ? 'Truck ' + esc(r.no) : esc(r.name || r.imei)}</b> ${esc(r.plateNo)}${r.no ? '' : ' <em class="gps-nolink">not matched to a truck</em>'}
-        <span class="gps-sub">${esc(what)}${last ? ' · ' + esc(agoText(last, now)) : ''}${r.todayKm!==null ? ' · ' + r.todayKm + ' km today' : ''}${r.fuel ? ' · fuel ' + r.fuel + ' L' : ''}</span>
-        ${trip ? `<span class="gps-sub">${esc(trip.customer || '')} → ${esc(trip.destination || '—')} · ${esc(statusText(trip) || 'Clip Board')}${trip.driver ? ' · ' + esc(trip.driver) : ''}</span>` : ''}
-      </span></button>`;
-  }).join('') : '<p class="empty-cell">No trucks here.</p>';
-  gpsDraw(shown);
-  renderGpsRoute();
-}
-function gpsDraw(rows){
-  if(!GPS.map) return;
-  GPS.layer.clearLayers(); GPS.marks = {};
-  const pts = [];
-  rows.filter(r => r.lat!==null && r.lng!==null).forEach(r => {
-    const m = L.marker([r.lat, r.lng], {icon: gpsIcon(r), zIndexOffset: GPS.sel===r.imei ? 1000 : 0}).addTo(GPS.layer);
-    m.on('click', () => gpsPick(r.imei, false));
-    GPS.marks[r.imei] = m; pts.push([r.lat, r.lng]);
-  });
-  if(!GPS.fitted && pts.length){ GPS.fitted = true; GPS.map.fitBounds(pts, {padding:[30, 30], maxZoom:13}); }
-}
-function gpsPick(imei, fly){
-  GPS.sel = GPS.sel===imei && fly ? '' : imei;
-  if(GPS.route && GPS.route.imei!==GPS.sel) gpsClearRoute();
-  renderGps();
-  const r = gpsRows().find(x => x.imei===GPS.sel);
-  if(r && GPS.map && r.lat!==null){ GPS.map.setView([r.lat, r.lng], Math.max(GPS.map.getZoom(), 14)); $('gpsMap').scrollIntoView({block:'nearest', behavior:'smooth'}); }
-}
-function gpsClearRoute(){ GPS.route = null; if(GPS.routeLayer){ GPS.routeLayer.remove(); GPS.routeLayer = null; } }
-function renderGpsRoute(){
-  const box = $('gpsSel'), r = gpsRows().find(x => x.imei===GPS.sel);
-  if(!r){ box.hidden = true; return; }
-  box.hidden = false;
-  const R = GPS.route, km = R && R.points ? gpsKm(R.points) : 0, top = R && R.points ? Math.max(0, ...R.points.map(p => p[3] || 0)) : 0;
-  $('gpsSelName').textContent = (r.no ? 'Truck ' + r.no : (r.name || r.imei)) + (r.plateNo ? ' · ' + r.plateNo : '');
-  $('gpsSelInfo').textContent = R && R.busy ? 'Getting the route…' : R && R.error ? R.error : R && R.points ? (R.points.length < 2 ? 'No route recorded on this day.' : `About ${km.toFixed(1)} km driven, top speed ${Math.round(top)} km/h, ${fmtTimeMs(R.points[0][2])} to ${fmtTimeMs(R.points[R.points.length - 1][2])}.`) : 'Pick a day and tap Show route.';
-  $('gpsTruckPop').hidden = !r.no;
-}
-const fmtTimeMs = ms => new Date(ms).toLocaleTimeString('en-PH', {hour:'numeric', minute:'2-digit', timeZone:'Asia/Manila'});
-function gpsKm(p){
-  let k = 0; const rad = Math.PI / 180;
-  for(let i = 1; i < p.length; i++){ const a = p[i - 1], b = p[i], dl = (b[0] - a[0]) * rad, dg = (b[1] - a[1]) * rad;
-    const h = Math.sin(dl / 2) ** 2 + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dg / 2) ** 2; k += 12742 * Math.asin(Math.min(1, Math.sqrt(h))); }
-  return k;
-}
-function gpsShowRoute(){
-  const imei = GPS.sel, day = $('gpsDay').value || TODAY(); if(!imei) return;
-  gpsClearRoute(); GPS.route = {imei, busy:true}; renderGpsRoute();
-  call('gpsRoute', imei, day, day).then(d => {
-    if(GPS.sel!==imei) return;
-    GPS.route = {imei, points: d.points || []};
-    if(GPS.map && window.L && GPS.route.points.length > 1){
-      const ll = GPS.route.points.map(p => [p[0], p[1]]);
-      GPS.routeLayer = L.layerGroup([
-        L.polyline(ll, {color:'#2E5BFF', weight:4, opacity:.85}),
-        L.circleMarker(ll[0], {radius:7, color:'#fff', weight:2, fillColor:'#16A34A', fillOpacity:1}).bindTooltip('Start ' + fmtTimeMs(GPS.route.points[0][2])),
-        L.circleMarker(ll[ll.length - 1], {radius:7, color:'#fff', weight:2, fillColor:'#DC2626', fillOpacity:1}).bindTooltip('End ' + fmtTimeMs(GPS.route.points[ll.length - 1][2]))
-      ]).addTo(GPS.map);
-      GPS.map.fitBounds(ll, {padding:[30, 30]});
-    }
-    renderGpsRoute();
-  }).catch(e => { if(GPS.sel!==imei) return; GPS.route = {imei, error: e.message.replace(/^GPS:\s{0,}/, '')}; renderGpsRoute(); });
-}
-$('gpsList') && ($('gpsList').onclick = e => { const b = e.target.closest('.gps-row'); if(b) gpsPick(b.dataset.imei, true); });
-$('gpsFind') && ($('gpsFind').oninput = () => renderGps());
-$('gpsRouteBtn') && ($('gpsRouteBtn').onclick = gpsShowRoute);
-$('gpsClose') && ($('gpsClose').onclick = () => { GPS.sel = ''; gpsClearRoute(); renderGps(); });
-$('gpsTruckPop') && ($('gpsTruckPop').onclick = () => { const r = gpsRows().find(x => x.imei===GPS.sel); if(r && r.no) openTruckPop(r.no); });
-$('gpsDay') && ($('gpsDay').onchange = () => { if(GPS.sel) gpsShowRoute(); });
-
 function loadFuelTab(){
   const f = $('fmFrom').value, t = $('fmTo').value, k = fmKey();
   if(!FM.data || FM.data._k !== k){ FM.data = null; renderFuel(); }
