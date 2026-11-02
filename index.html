@@ -1475,6 +1475,12 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
   .top,.glass{-webkit-backdrop-filter:none;backdrop-filter:none}
   header.top{background:rgba(4,16,74,.94)}
 }
+
+/* find boxes: Add trip source / destination (MANU 2026-11-02) */
+.fbox{margin-top:4px;max-height:260px;overflow-y:auto;background:#fff;border:1px solid #C9D6FF;border-radius:12px;box-shadow:0 8px 22px rgba(10,31,143,.18)}
+.fbox-i{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-bottom:1px solid #EEF2FF;background:none;color:#0A1F8F;font:inherit;font-size:14px;font-weight:500;line-height:1.35;white-space:normal;overflow-wrap:anywhere;cursor:pointer}
+.fbox-i:hover,.fbox-i:focus{background:#EEF3FF}
+.fbox-n{padding:10px 12px;color:#64748B;font-size:13px;font-weight:400;white-space:normal}
 </style>
 </head>
 <body>
@@ -4290,8 +4296,8 @@ function openDispatchAdd(truckNo, opt){
       <label class="f">Driver<input id="naDrv" readonly placeholder="From Truck assignment"></label>
       <label class="f">Helper<input id="naH1" readonly></label>
       <label class="f">Helper 2<input id="naH2" readonly></label>
-      <label class="f full naRoute">Source<input id="naSrc" list="dlCustomers" autocomplete="off" value="${esc(opt.source || '')}"></label>
-      <label class="f full naRoute"><span id="naDstLbl">Destination</span><select id="naDst">${destOptions(opt.source || '', '')}</select></label>
+      <label class="f full naRoute">Source<input id="naSrc" autocomplete="off" placeholder="Type to find the source" value="${esc(opt.source || '')}"><div class="fbox" id="naSrcL" hidden></div></label>
+      <label class="f full naRoute"><span id="naDstLbl">Destination</span><input id="naDstQ" autocomplete="off" placeholder="Type to find the destination"><div class="fbox" id="naDstL" hidden></div><select id="naDst" hidden>${destOptions(opt.source || '', '')}</select></label>
       <label class="f full">Remarks<textarea id="naRem"></textarea></label>
       <div class="full hint" id="naInfo"></div>
     </div>`, `<button class="btn" id="naSave" type="button">Add trip</button>`);
@@ -4326,7 +4332,13 @@ function openDispatchAdd(truckNo, opt){
   $('naTruck').oninput = fill;
   if(truckNo) $('naTruck').value = truckNo;
   loadDay();
-  $('naSrc').oninput = () => { $('naDst').innerHTML = destOptions($('naSrc').value.trim(), ''); };
+  // Source and destination are find boxes (MANU 2026-11-02 "source and destination should be search/find")
+  const setDests = () => { $('naDst').innerHTML = destOptions($('naSrc').value.trim(), ''); $('naDstQ').value = '';
+    $('naDstQ').placeholder = destsOf($('naSrc').value.trim()).length ? 'Type to find the destination' : ($('naSrc').value.trim() ? 'No destinations for this source in CLIENT LIST' : 'Pick the source first'); };
+  findBox($('naSrc'), $('naSrcL'), () => S.boot.customers || [], v => { $('naSrc').value = v; setDests(); $('naDstQ').focus(); }, setDests);
+  findBox($('naDstQ'), $('naDstL'), () => destsOf($('naSrc').value.trim()), v => { $('naDstQ').value = v; $('naDst').value = v; }, () => {
+    const q = $('naDstQ').value.trim(), hit = destsOf($('naSrc').value.trim()).find(v => nameKey(v)===nameKey(q)); $('naDst').value = hit || ''; });
+  setDests();
   $('naSave').onclick = () => {
     const d = day(), no = $('naTruck').value.trim().toUpperCase();
     if(!d) return toast('Pick the trip date.', true);
@@ -4359,6 +4371,25 @@ function openTripOf(d, no){
 }
 /** Destinations of a source in CLIENT LIST, for a destination picker. */
 const destsOf = customer => { const c = S.boot.customers.find(x => nameKey(x)===nameKey(customer)); return c ? [...new Set(S.boot.destinations[c] || [])].sort() : []; };
+/** A type-to-find list under an input (MANU 2026-11-02): every word typed must be in the choice; tap a choice to pick it.
+ *  list() gives the choices, pick(v) runs on a tap, typed() on every key. Text wraps, nothing is cut off. */
+function findBox(inp, box, list, pick, typed){
+  const words = q => String(q || '').toUpperCase().split(/\s+/).map(w => w.replace(/[^A-Z0-9Ñ]/g, '')).filter(Boolean);
+  const show = () => {
+    const ws = words(inp.value), all = list(), hit = all.filter(v => { const k = String(v).toUpperCase().replace(/[^A-Z0-9Ñ ]/g, ''); return ws.every(w => k.replace(/ /g, '').includes(w)); });
+    const exact = all.some(v => nameKey(v)===nameKey(inp.value));
+    if(!all.length || (exact && hit.length===1)){ box.hidden = true; return; }
+    box.innerHTML = hit.length ? hit.slice(0, 200).map(v => `<button type="button" class="fbox-i" data-v="${esc(v)}">${esc(v)}</button>`).join('') + (hit.length > 200 ? `<div class="fbox-n">${hit.length - 200} more: type more words</div>` : '')
+      : '<div class="fbox-n">Nothing found. Check the spelling, or add it in Clients → + Add route.</div>';
+    box.hidden = false;
+    setTimeout(() => { try{ box.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(e){} }, 60);   // the list shows above the phone keyboard
+  };
+  inp.addEventListener('input', () => { if(typed) typed(); show(); });
+  inp.addEventListener('focus', show);
+  inp.addEventListener('blur', () => setTimeout(() => { box.hidden = true; }, 200));
+  box.addEventListener('mousedown', e => e.preventDefault());   // keeps the keyboard open while tapping
+  box.addEventListener('click', e => { const b = e.target.closest('.fbox-i'); if(!b) return; box.hidden = true; pick(b.dataset.v); });
+}
 const destOptions = (customer, cur) => { const l = destsOf(customer);
   return l.length ? `<option value="">Pick the destination…</option>` + l.map(v => `<option value="${esc(v)}" ${nameKey(v)===nameKey(cur)?'selected':''}>${esc(v)}</option>`).join('')
     : `<option value="">${customer ? 'No destinations for this source in CLIENT LIST' : 'Pick the source first'}</option>`; };
