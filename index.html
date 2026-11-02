@@ -1454,6 +1454,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 .gar-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
 .gar-box{border:1px solid var(--line);border-left:4px solid #64748B;border-radius:12px;padding:8px 10px;background:#fff}
 .gar-box.zero{opacity:.6}
+.gar-t .gar-ld{color:#0369A1;font-weight:800}
 .gar-h{display:flex;align-items:baseline;gap:8px}.gar-h b{font-size:20px;color:#0A1F8F}.gar-h span{font-weight:650;color:#0D1640}
 .gar-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .gar-t{display:inline-flex;flex-direction:column;padding:3px 8px;border-radius:8px;background:#EEF2FF;font-weight:650;font-size:12px;color:#0A1F8F;line-height:1.2}
@@ -2214,7 +2215,7 @@ function statusOpts(list, cur){
   return list.filter(x => !isG(x)).map(o).join('') + `<optgroup label="Garage">${g.sort((a, b) => (GARAGE_PICK.indexOf(a.toUpperCase()) + 1 || 9) - (GARAGE_PICK.indexOf(b.toUpperCase()) + 1 || 9)).map(o).join('')}</optgroup>`;
 }
 const laneOf = t => { const s = statusText(t).toLowerCase(); return GARAGE_KEYS.includes(s) ? 'Garage' : isGarageLoaded(t) ? 'Garage loaded' : stageOf(t); };
-const isTrip = t => STAGES.includes(stageOf(t));
+const isTrip = t => STAGES.includes(stageOf(t)) || isGarageLoaded(t);   // GARAGE LOADED counts as a trip (MANU 2026-11-02)
 const msDone = t => MS_KEYS.filter(k => t[k]).length;
 const plateKey = p => String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const repairOf = plate => (S.boot && S.boot.repairs && S.boot.repairs[plateKey(plate)]) || null;
@@ -3410,19 +3411,20 @@ function renderLowPay(){
  * Trucks in each garage (MANU 2026-10-28 "add to the main dashbaord the count of trucks and what trucks are in each garage"):
  * each truck's latest row in the Dashboard's dates and filters; a garage status puts it under that garage.
  */
-const GAR_BOX = [['GARAGE CANLUBANG', 'Canlubang'], ['GARAGE MEYCAUAYAN', 'Meycauayan'], ['GARAGE SAN FERNANDO', 'San Fernando'], ['GARAGE LOADED CANLUBANG', 'Loaded · Canlubang'], ['GARAGE LOADED MEYCAUAYAN', 'Loaded · Meycauayan'], ['GARAGE LOADED SAN FERNANDO', 'Loaded · San Fernando'], ['GARAGE', 'Garage, no place given'], ['GARAGE LOADED', 'Garage loaded (with cargo), no place given']];
+const GAR_BOX = [['GARAGE CANLUBANG', 'Canlubang'], ['GARAGE MEYCAUAYAN', 'Meycauayan'], ['GARAGE SAN FERNANDO', 'San Fernando'], ['GARAGE', 'Garage, no place given'], ['GARAGE LOADED', 'Garage loaded (with cargo), no place given']];
 function renderGarages(all){
   const box = $('garRow'); if(!box) return;
   const last = {};
   all.forEach(t => { const k = String(t.truckNo || '').trim(); if(!k) return; const p = last[k]; if(!p || rowNewer(t, p)) last[k] = t; });
   const by = {}; GAR_BOX.forEach(([k]) => { by[k] = []; });
-  Object.values(last).forEach(t => { const st = statusText(t).toUpperCase(); if(by[st]) by[st].push(t); });
+  // GARAGE LOADED <place> goes in that place's box, marked Loaded (MANU 2026-11-02 "even garage loaded must be included here")
+  Object.values(last).forEach(t => { const st = statusText(t).toUpperCase().replace(/\s+/g, ' '), k = by[st] ? st : st.replace(/^GARAGE LOADED (?=\S)/, 'GARAGE '); if(by[k]) by[k].push(t); });
   const n = Object.values(by).reduce((a, l) => a + l.length, 0), r = S.range || {};
   $('garSub').textContent = `${n} truck${n===1 ? '' : 's'} · latest status ${r.from===r.to ? 'on ' + fmtDay(r.to) : 'from ' + fmtDay(r.from) + ' to ' + fmtDay(r.to)}`;
-  box.innerHTML = GAR_BOX.filter(([k], i) => i < 6 || by[k].length).map(([k, name]) => {
+  box.innerHTML = GAR_BOX.filter(([k], i) => i < 3 || by[k].length).map(([k, name]) => {
     const l = by[k].sort((a, b) => (Number(a.truckNo) || 1e9) - (Number(b.truckNo) || 1e9) || String(a.truckNo).localeCompare(String(b.truckNo)));
     return `<div class="gar-box${l.length ? '' : ' zero'}"><div class="gar-h"><b>${l.length}</b><span>${esc(name)}</span></div>`
-      + (l.length ? `<div class="gar-list">${l.map(t => `<span class="gar-t">${tLink(t.truckNo, 'Truck ' + t.truckNo)}${t.plateNo ? `<small>${esc(t.plateNo)}</small>` : ''}</span>`).join('')}</div>` : '<p class="hint">No truck here</p>') + `</div>`;
+      + (l.length ? `<div class="gar-list">${l.map(t => `<span class="gar-t">${tLink(t.truckNo, 'Truck ' + t.truckNo)}${t.plateNo ? `<small>${esc(t.plateNo)}</small>` : ''}${k!=='GARAGE LOADED' && isGarageLoaded(t) ? '<small class="gar-ld">Loaded</small>' : ''}</span>`).join('')}</div>` : '<p class="hint">No truck here</p>') + `</div>`;
   }).join('');
 }
 function renderDashboard(){
@@ -4352,7 +4354,7 @@ function openDispatchAdd(truckNo, opt){
     const d = day(), no = $('naTruck').value.trim().toUpperCase();
     if(!d) return toast('Pick the trip date.', true);
     if(!no || !plateFor(no)) return toast('Pick a truck from the list.', true);
-    if(openTripOf(d, no)) return toast(`Truck ${no} already has an open trip on ${fmtDay(d)}. Open that trip instead.`, true);
+    { const o = openTripOf(d, no); if(o) return toast(GARAGE_KEYS.includes(statusText(o).toLowerCase()) ? `Truck ${no} is in ${statusText(o)} on ${fmtDay(d)}. Change that row's status instead.` : `Truck ${no} already has an open trip on ${fmtDay(d)}. Open that trip instead.`, true); }
     const k = stKey(), noRoute = NO_ROUTE_ST.includes(k), hold = holdOf(plateFor(no));
     if(hold && !NO_ROUTE_ST.includes(k) && k!=='waiting for shipment') return toast(`Truck ${no} is under maintenance (${hold.jo}, ${joClassText(hold)}). Only roadworthy trucks and Minor (roadworthy) job orders can be dispatched.`, true);
     let route = {customer:'', destination:''};
@@ -4376,7 +4378,7 @@ function openDispatchAdd(truckNo, opt){
 /** An open trip (planned or on the road) of a truck on a date, from the trips already loaded. */
 function openTripOf(d, no){
   const list = TC[rk(d,d)] || S.xCtx || S.xTrips;
-  return list.find(t => String(t.truckNo).trim().toUpperCase()===String(no).trim().toUpperCase() && t.date===d && isTrip(t) && !DONE_ST.includes(stageOf(t))) || null;
+  return list.find(t => String(t.truckNo).trim().toUpperCase()===String(no).trim().toUpperCase() && t.date===d && ((isTrip(t) && !DONE_ST.includes(stageOf(t))) || GARAGE_KEYS.includes(statusText(t).toLowerCase()))) || null;   // a truck in a garage blocks Add trip too (MANU 2026-11-02)
 }
 /** Destinations of a source in CLIENT LIST, for a destination picker. */
 const destsOf = customer => { const c = S.boot.customers.find(x => nameKey(x)===nameKey(customer)); return c ? [...new Set(S.boot.destinations[c] || [])].sort() : []; };
@@ -4969,7 +4971,7 @@ function renderDispatcher(){
     if(!ts.length && !is.length) return;
     body += accHead(sec, xw(ts), is.filter(x => !x.rp).length, is.filter(x => x.rp).length) + ts.map(t => tripRow(t, n++)).join('') + idleBlock(is, n); n += is.length;
   });
-  if(garL.length) body += restHead('acchd garhd', 'GARAGE', garL.length, 'every garage status, all accounts, not counted as trips') + garL.map(t => tripRow(t, n++)).join('');
+  if(garL.length) body += restHead('acchd garhd', 'GARAGE', garL.length, 'every garage status, all accounts, not counted as trips; garage loaded stays on its route') + garL.map(t => tripRow(t, n++)).join('');
   if(notL.length) body += restHead('acchd nothd', 'NOT A TRIP', notL.length, 'no-trip reasons and other statuses, not counted as trips') + notL.map(t => tripRow(t, n++)).join('');
   $('xList').innerHTML = list.length || idleTrucks.length ? `<div class="xl-wrap"><table class="xl" data-fz="0,1,2,3,4,5,6" data-fzp="0,3"><thead><tr><th>Next step</th><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th class="n">KMS</th><th class="n">Fuel (L)</th><th class="n">Budget</th><th>Driver</th><th>Helper</th><th>Helper 2</th><th>Status</th>${MS_KEYS.map(k => `<th>${esc(MS_LABEL[k])}</th>`).join('')}</tr></thead><tbody>${
     body}</tbody></table></div>` : `<div class="empty">Nothing to encode for ${esc(xRangeText())} with this filter.</div>`;
