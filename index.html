@@ -1961,6 +1961,7 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
     <div id="clBook">
       <div class="bar">
         <label class="f grow">Find<input id="clFind" placeholder="Source, destination or client" autocomplete="off"></label>
+        <button class="btn" type="button" id="clAddRoute" hidden>+ Add route</button>
         <button class="btn alt" type="button" id="clPayBtn" hidden>Record payment</button>
         <button class="btn alt" type="button" id="clCsv">Generate report (CSV)</button>
       </div>
@@ -8074,6 +8075,7 @@ function initBook(){
   $('clFind').oninput = renderBook;
   $('clCsv').onclick = bookCsv;
   $('clPayBtn').onclick = () => openPayForm('');
+  $('clAddRoute').onclick = openAddRoute;
   $('ndTbl').onclick = e => { const b = e.target.closest('[data-ndsave]'); if(b) saveNoDist(Number(b.dataset.ndsave)); };
   $('ndTbl').onkeydown = e => { const i = e.target.closest('input[data-nd]'); if(i && e.key==='Enter') saveNoDist(Number(i.dataset.nd)); };
   $('clTbl').onclick = e => { const sv = e.target.closest('[data-rksave]'); if(sv) return saveBookKm(Number(sv.dataset.rksave));
@@ -8138,7 +8140,7 @@ async function saveNoDist(i){
 }
 function afterBook(){
   const d = CL.data;
-  $('clProfitTab').hidden = !d.canProfit; $('clPayBtn').hidden = !d.canEdit;
+  $('clProfitTab').hidden = !d.canProfit; $('clPayBtn').hidden = !d.canEdit; $('clAddRoute').hidden = !d.canEdit;
   const sel = $('soaClient'), cur = sel.value;
   sel.innerHTML = '<option value="">Pick the client</option>' + d.clients.map(c => `<option value="${esc(c.client)}" ${c.client===cur ? 'selected' : ''}>${esc(c.client)}</option>`).join('');
   if(S.tab!=='clients') return;
@@ -8246,6 +8248,48 @@ function openClientCard(c){
       closePop(); afterBook();
       toast([infoChanged ? 'Contact details saved' : '', rates.length ? `${rates.length} rate${rates.length===1 ? '' : 's'} saved` : '', kms.length ? `${kms.length} distance${kms.length===1 ? '' : 's'} saved` : ''].filter(Boolean).join(' · '));
     }catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Save'; }
+  };
+}
+/** Clients → Routes & distance: "+ Add route" (MANU 2026-11-02 "user should be able to add source, destination and distance"):
+ *  a new CLIENT LIST row (source | CLIENT | place | km), for every role that edits the Clients tab. A new client can be added here too. */
+function openAddRoute(){
+  const d = CL.data; if(!d) return toast('Still getting the routes. Try again in a moment.');
+  const names = [...new Set(d.clients.map(c => c.client))].sort();
+  openPop('Add route', 'A new source and destination with its distance. It goes to the CLIENT LIST and shows in Add trip at once.', `
+    <div class="form">
+      <label class="f full">Source<input id="arSrc" list="dlCustomers" autocomplete="off" placeholder="Pick or type a new source"></label>
+      <label class="f full">Client<select id="arCl"><option value="">Pick the client…</option>${names.map(n => `<option>${esc(n)}</option>`).join('')}<option value="__new">+ New client…</option></select></label>
+      <label class="f full" id="arNewW" hidden>New client name<input id="arNew" autocomplete="off" placeholder="e.g. CENTURY"></label>
+      <label class="f full" id="arAcctW" hidden>Account<select id="arAcct"><option value="">Pick the account…</option>${CLIENT_ACCTS.map(a => `<option value="${esc(a)}">${esc(acctTxt(a))}</option>`).join('')}</select></label>
+      <label class="f full">Destination<input id="arDst" autocomplete="off" placeholder="Place only, e.g. Century Pasig"></label>
+      <label class="f">Distance (KM, one way)<input id="arKm" inputmode="decimal" autocomplete="off"></label>
+      <p class="hint full" id="arPrev" style="margin:0"></p>
+    </div>`,
+    `<button class="btn alt" type="button" onclick="closePop()">Cancel</button> <button class="btn road" type="button" id="arSave">Add route</button>`);
+  const isNew = () => $('arCl').value==='__new';
+  const client = () => (isNew() ? $('arNew').value : $('arCl').value).replace(/\|/g, ' ').replace(/\s+/g, ' ').trim().toUpperCase();
+  const prev = () => { const c = client(), pl = placeOf($('arDst').value), src = $('arSrc').value.trim();
+    $('arPrev').textContent = src && c && pl ? `Saves: ${src} → ${c} | ${pl}${Number($('arKm').value) > 0 ? ' · ' + $('arKm').value.trim() + ' km' : ''}` : ''; };
+  $('arCl').onchange = () => { $('arNewW').hidden = $('arAcctW').hidden = !isNew(); prev(); };
+  ['arSrc', 'arNew', 'arDst', 'arKm'].forEach(id => { $(id).oninput = prev; });
+  $('arSave').onclick = async () => {
+    const src = $('arSrc').value.trim(), c = client(), pl = placeOf($('arDst').value), km = Number($('arKm').value.replace(/[^0-9.]/g, ''));
+    if(!src) return toast('Type the source.', true);
+    if(!c) return toast(isNew() ? 'Type the new client name.' : 'Pick the client.', true);
+    if(isNew() && !$('arAcct').value) return toast('Pick the account for the new client.', true);
+    if(!pl) return toast('Type the destination (the place).', true);
+    if(!(km > 0)) return toast('Type the distance in km.', true);
+    const btn = $('arSave'); btn.disabled = true; btn.textContent = 'Saving…';
+    try{
+      if(isNew() && !names.some(n => nameKey(n)===nameKey(c))) await call('saveClient', {client:c, account:$('arAcct').value});
+      const dest = `${c} | ${pl}`;
+      await call('saveRoute', {origin:src, client:c, destination:dest, km});
+      if(S.boot){ if(S.boot.km){ S.boot.km[nameKey(src) + '|' + nameKey(dest)] = km; if(S.boot.km['|' + nameKey(dest)]===undefined) S.boot.km['|' + nameKey(dest)] = km; }
+        learnNames({customer:src, destination:dest}); }
+      CL.data = await call('clientBook'); loadNoDist();
+      closePop(); afterBook();
+      toast(`Added: ${src} → ${dest} · ${fmtN(km)} km`);
+    }catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Add route'; }
   };
 }
 function openPayForm(client){
