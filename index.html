@@ -3518,7 +3518,8 @@ function renderDashboard(){
   renderTable();
 }
 
-const ACC_COLORS = ['#D9372B','#1C9AD6','#7C8AA0','#9A6BD1','#E39A1B'];
+const ACC_COLORS = ['#D9372B','#1C9AD6','#7C8AA0','#C3CCD8','#9A6BD1','#E39A1B'];   // 4th: Not counted in an account (light grey)
+const NOT_COUNTED_ACC = 'NOT COUNTED IN AN ACCOUNT';
 const accColor = i => ACC_COLORS[i % ACC_COLORS.length];
 const fmtH = h => h===null || h===undefined ? '—' : h < 1 ? `${Math.round(h*60)} min` : `${h.toFixed(1)} h`;
 const fmt1 = n => n===null || n===undefined || !isFinite(n) ? '—' : (Math.round(n*10)/10).toLocaleString('en-PH');
@@ -3650,12 +3651,12 @@ function renderTargets(){
   const any = Object.keys(t).some(k => t[k] > 0);
   $('tgBody').innerHTML = (any ? '' : `<p class="hint-line" style="margin:0 0 6px">No targets set for ${esc(monthName(p.month))} yet.${d.canEdit ? ' Tap Set targets.' : ' Admin sets them.'}</p>`)
     + tgLine('ALL TRIPS', p.total, t['ALL TRIPS'] || 0, p, true)
-    + s.accounts.map(a => tgLine(a, p.acc[a] ? p.acc[a].trips : 0, t[String(a).toUpperCase()] || 0, p)).join('')
+    + s.accounts.filter(a => a !== NOT_COUNTED_ACC).map(a => tgLine(a, p.acc[a] ? p.acc[a].trips : 0, t[String(a).toUpperCase()] || 0, p)).join('')
     + `<p class="hint-line" style="margin:8px 0 0">Trips counted like the Account summary: round trips 0.5 per leg, Sundays and holidays are not working days. The dark line on a bar is where the month should be by today.</p>`;
 }
 function openTargetForm(month){
   const s = S.sum, d = TG.data; if(!s || !d) return toast('Still loading the targets. Try again in a moment.');
-  const accs = ['ALL TRIPS'].concat(s.accounts.map(a => String(a).toUpperCase()));
+  const accs = ['ALL TRIPS'].concat(s.accounts.filter(a => a !== NOT_COUNTED_ACC).map(a => String(a).toUpperCase()));
   const fill = m => { const t = (d.targets && d.targets[m]) || {}; accs.forEach((a, i) => { $('tgIn' + i).value = t[a] ? t[a] : ''; }); };
   openPop('Set monthly targets', 'Trips each account should make in the month. Leave a box empty for no target.', `
     <div class="form">
