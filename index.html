@@ -3685,11 +3685,11 @@ function renderInsights(P, full){
     const cur = P[P.length-1], prev = P[P.length-2];
     if(cur){
       const pace = Math.round(perDay(cur) * (cur.monthWorkDays || cur.monthDays));
-      out.push(`<b>${esc(monthName(cur.month,'long'))} so far:</b> ${cur.total} trips in ${workDays(cur)} working days (${fmt1(perDay(cur))} a working day) — on pace for about <b>${pace}</b> trips` + (prev ? `, vs ${prev.total} in ${esc(monthName(prev.month,'long'))}.` : '.'));
+      out.push(`<b>${esc(monthName(cur.month,'long'))} so far:</b> ${fmtN(cur.total)} trips in ${workDays(cur)} working day${workDays(cur)===1?'':'s'} (${fmt1(perDay(cur))} a working day) — on pace for about <b>${pace}</b> trips` + (prev ? `, vs ${fmtN(prev.total)} in ${esc(monthName(prev.month,'long'))}.` : '.'));
     }
     if(full.length){
       const best = full.slice().sort((a,b) => b.total - a.total)[0];
-      out.push(`<b>Busiest month:</b> ${esc(monthName(best.month))} with ${best.total} trips, ${fmt1(best.trucks)} active trucks a day.`);
+      out.push(`<b>Busiest month:</b> ${esc(monthName(best.month))} with ${fmtN(best.total)} trips, ${fmt1(best.trucks)} active trucks a day.`);
     }
     if(cur && prev) accs.forEach(a => {
       const a1 = cur.acc[a].trips / Math.max(1, workDays(cur)), a0 = prev.acc[a].trips / Math.max(1, workDays(prev));
