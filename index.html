@@ -2235,10 +2235,11 @@ const CELL_RO = ['plateNo','kms'];   // Truck Plan cells never edited by hand: p
 const locked = k => !may('dispatch') ? true : may('routeOnly') ? !['customer','destination'].includes(k) : OPS_LOCKED.includes(k) && !may('dispatchAll');   // SUPERVISOR: source, destination and plate only
 /** Trips from GENERAL DATABASE 2.0 (S.boot.feed, Code.gs feed_): from feed.row down, the fields in feed.keys come from 2.0's formula
  *  and the app can't change them (typing there would break the formula). Times, remarks, budget, fuel, POD and billing still save. */
-const fedTrip = t => { const F = S.boot && S.boot.feed; if(!(t && t.row && F && Number(t.row) >= F.row)) return false;
+const feedOf = () => S.boot && (S.boot.feed || S.boot.feedOct);   // feedOct: October trips synced from 2.0 (Code.gs bootstrap_)
+const fedTrip = t => { const F = feedOf(); if(!(t && t.row && F && Number(t.row) >= F.row)) return false;
   return !F.end || (Number(t.row) <= F.end && !!t.date && t.date < F.cutoff); };   // after the stop: October trips only (Code.gs fedRow_)
 const feedLive = () => !!(S.boot && S.boot.feed && !S.boot.feed.end);   // the 2.0 formula is still in GENERAL: no new rows
-const fedKey = (t, k) => fedTrip(t) && (S.boot.feed.keys || []).includes(k);
+const fedKey = (t, k) => fedTrip(t) && (feedOf().keys || []).includes(k);
 const FED_NAMES = {date:'date', truckNo:'truck', plateNo:'plate', customer:'source', destination:'destination', kms:'KMS', shipmentNo:'shipment number', status:'status', driver:'crew', helper1:'crew', helper2:'crew'};
 const fedMsg = k => `This trip comes from GENERAL DATABASE 2.0, so change its ${FED_NAMES[k] || k} there.`;
 function feedAddPop(){
@@ -4904,8 +4905,8 @@ function billingCsv(){
 function renderDispatcher(){
   if(S.tab!=='dispatcher') return;
   $('xAddBtn').hidden = !may('dispatchAdd');
-  $('xFeedNote').hidden = !S.boot.feed;
-  if(S.boot.feed && S.boot.feed.end) $('xFeedNote').innerHTML = 'October trips come from <b>GENERAL DATABASE 2.0</b>: change their status, truck, route and crew there (it shows here within a minute). Trips from November on are added and changed here.';   // GENERAL gets its newest trips from 2.0 (Code.gs feed_)
+  $('xFeedNote').hidden = !feedOf();
+  if(feedOf() && feedOf().end) $('xFeedNote').innerHTML = 'October trips come from <b>GENERAL DATABASE 2.0</b>: change their status, truck, route and crew there (it shows here within a minute). Trips from November on are added and changed here.';   // GENERAL gets its newest trips from 2.0 (Code.gs feed_)
   const q = $('xFind').value.toLowerCase().trim(), f = S.xFilter;
   const acc = $('xAcct').value, d = xRange()[1];
   const accTrucks = acc ? (S.assign[d] || []).filter(a => a.account===acc).map(a => String(a.truckNo)) : null;
