@@ -2201,6 +2201,7 @@ const isActiveRow = t => isTrip(t) || isGarageLoaded(t);   // GARAGE LOADED: not
 /** Status choices with the garages together at the end (MANU 2026-10-28 "add status garage canlubang, garage meycauayan, garage san fernando"). */
 const GARAGE_PICK = ['GARAGE CANLUBANG', 'GARAGE MEYCAUAYAN', 'GARAGE SAN FERNANDO', 'GARAGE LOADED'];
 function statusOpts(list, cur){
+  list = list.filter(x => x.toUpperCase() !== 'GARAGE' || x === cur);   // plain "Garage" only shows on a trip that already has it (MANU 2026-11-02)
   const isG = x => /^garage\b/i.test(x), g = GARAGE_PICK.filter(x => !list.some(y => y.toUpperCase()===x)).concat(list.filter(isG));
   const o = x => `<option ${x===cur ? 'selected' : ''}>${esc(x)}</option>`;
   return list.filter(x => !isG(x)).map(o).join('') + `<optgroup label="Garage">${g.sort((a, b) => (GARAGE_PICK.indexOf(a.toUpperCase()) + 1 || 9) - (GARAGE_PICK.indexOf(b.toUpperCase()) + 1 || 9)).map(o).join('')}</optgroup>`;
@@ -4266,7 +4267,9 @@ function quickNext(t, k){
  * from PLATE and Truck assignment, and change when the truck changes), the source, then one of that source's destinations.
  */
 /** Add trip status choices (MANU 16:45/16:46): Coca Cola accounts start at the source; other accounts at Clip Board, Garage or Waiting for shipment. */
-const ADD_ST_COKE = ['on the way source', 'on site source', 'clip board'].concat(GARAGE_KEYS), ADD_ST_OTHER = ['clip board'].concat(GARAGE_KEYS, ['waiting for shipment']);
+/* plain "Garage" is not offered, only a garage with its place (MANU 2026-11-02); old Garage rows still read as garage (GARAGE_KEYS) */
+const ADD_GARAGES = GARAGE_KEYS.filter(k => k !== 'garage');
+const ADD_ST_COKE = ['on the way source', 'on site source', 'clip board'].concat(ADD_GARAGES), ADD_ST_OTHER = ['clip board'].concat(ADD_GARAGES, ['waiting for shipment']);
 const NO_ROUTE_ST = GARAGE_KEYS.concat(['waiting for shipment']), SRC_ONLY_ST = ['on the way source', 'on site source'];
 const stName = k => k==='clip board' ? S.boot.planned : (S.boot.statuses || []).find(v => v.toLowerCase()===k) || k.replace(/\b\w/g, c => c.toUpperCase());
 const isCokeTruck = (d, no) => { const c = crewFor(d, no); return !!c && [0, 1].includes(acctSec(c.account || '')); };
