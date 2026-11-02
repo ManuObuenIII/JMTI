@@ -2203,17 +2203,17 @@ const colorOf = st => STAGE_COLOR[st] || 'var(--muted)';
 /** Garage counters on the Dashboard track (MANU 2026-10-08): any garage status = Garage; GARAGE LOADED = parked with cargo. Not trips. */
 const GARAGE_KEYS = ['garage', 'garage meycauayan', 'garage canlubang', 'garage san fernando'];
 const LANE_EXTRA = ['Garage', 'Garage loaded'];
-const isGarageLoaded = t => statusText(t).toLowerCase()==='garage loaded';
+const isGarageLoaded = t => /^garage loaded\b/i.test(statusText(t));   // also GARAGE LOADED MEYCAUAYAN / CANLUBANG / SAN FERNANDO (MANU 2026-11-02)
 const isActiveRow = t => isTrip(t) || isGarageLoaded(t);   // GARAGE LOADED: not a trip, but the truck counts as active (MANU 2026-10-13)
 /** Status choices with the garages together at the end (MANU 2026-10-28 "add status garage canlubang, garage meycauayan, garage san fernando"). */
-const GARAGE_PICK = ['GARAGE CANLUBANG', 'GARAGE MEYCAUAYAN', 'GARAGE SAN FERNANDO', 'GARAGE LOADED'];
+const GARAGE_PICK = ['GARAGE CANLUBANG', 'GARAGE MEYCAUAYAN', 'GARAGE SAN FERNANDO', 'GARAGE LOADED CANLUBANG', 'GARAGE LOADED MEYCAUAYAN', 'GARAGE LOADED SAN FERNANDO', 'GARAGE LOADED'];
 function statusOpts(list, cur){
   list = list.filter(x => x.toUpperCase() !== 'GARAGE' || x === cur);   // plain "Garage" only shows on a trip that already has it (MANU 2026-11-02)
   const isG = x => /^garage\b/i.test(x), g = GARAGE_PICK.filter(x => !list.some(y => y.toUpperCase()===x)).concat(list.filter(isG));
   const o = x => `<option ${x===cur ? 'selected' : ''}>${esc(x)}</option>`;
   return list.filter(x => !isG(x)).map(o).join('') + `<optgroup label="Garage">${g.sort((a, b) => (GARAGE_PICK.indexOf(a.toUpperCase()) + 1 || 9) - (GARAGE_PICK.indexOf(b.toUpperCase()) + 1 || 9)).map(o).join('')}</optgroup>`;
 }
-const laneOf = t => { const s = statusText(t).toLowerCase(); return GARAGE_KEYS.includes(s) ? 'Garage' : s==='garage loaded' ? 'Garage loaded' : stageOf(t); };
+const laneOf = t => { const s = statusText(t).toLowerCase(); return GARAGE_KEYS.includes(s) ? 'Garage' : isGarageLoaded(t) ? 'Garage loaded' : stageOf(t); };
 const isTrip = t => STAGES.includes(stageOf(t));
 const msDone = t => MS_KEYS.filter(k => t[k]).length;
 const plateKey = p => String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -3410,7 +3410,7 @@ function renderLowPay(){
  * Trucks in each garage (MANU 2026-10-28 "add to the main dashbaord the count of trucks and what trucks are in each garage"):
  * each truck's latest row in the Dashboard's dates and filters; a garage status puts it under that garage.
  */
-const GAR_BOX = [['GARAGE CANLUBANG', 'Canlubang'], ['GARAGE MEYCAUAYAN', 'Meycauayan'], ['GARAGE SAN FERNANDO', 'San Fernando'], ['GARAGE', 'Garage, no place given'], ['GARAGE LOADED', 'Garage loaded (with cargo)']];
+const GAR_BOX = [['GARAGE CANLUBANG', 'Canlubang'], ['GARAGE MEYCAUAYAN', 'Meycauayan'], ['GARAGE SAN FERNANDO', 'San Fernando'], ['GARAGE LOADED CANLUBANG', 'Loaded · Canlubang'], ['GARAGE LOADED MEYCAUAYAN', 'Loaded · Meycauayan'], ['GARAGE LOADED SAN FERNANDO', 'Loaded · San Fernando'], ['GARAGE', 'Garage, no place given'], ['GARAGE LOADED', 'Garage loaded (with cargo), no place given']];
 function renderGarages(all){
   const box = $('garRow'); if(!box) return;
   const last = {};
@@ -3419,7 +3419,7 @@ function renderGarages(all){
   Object.values(last).forEach(t => { const st = statusText(t).toUpperCase(); if(by[st]) by[st].push(t); });
   const n = Object.values(by).reduce((a, l) => a + l.length, 0), r = S.range || {};
   $('garSub').textContent = `${n} truck${n===1 ? '' : 's'} · latest status ${r.from===r.to ? 'on ' + fmtDay(r.to) : 'from ' + fmtDay(r.from) + ' to ' + fmtDay(r.to)}`;
-  box.innerHTML = GAR_BOX.filter(([k], i) => i < 3 || by[k].length).map(([k, name]) => {
+  box.innerHTML = GAR_BOX.filter(([k], i) => i < 6 || by[k].length).map(([k, name]) => {
     const l = by[k].sort((a, b) => (Number(a.truckNo) || 1e9) - (Number(b.truckNo) || 1e9) || String(a.truckNo).localeCompare(String(b.truckNo)));
     return `<div class="gar-box${l.length ? '' : ' zero'}"><div class="gar-h"><b>${l.length}</b><span>${esc(name)}</span></div>`
       + (l.length ? `<div class="gar-list">${l.map(t => `<span class="gar-t">${tLink(t.truckNo, 'Truck ' + t.truckNo)}${t.plateNo ? `<small>${esc(t.plateNo)}</small>` : ''}</span>`).join('')}</div>` : '<p class="hint">No truck here</p>') + `</div>`;
@@ -8327,9 +8327,9 @@ function openAddRoute(){
       await call('saveRoute', {origin:src, client:c, destination:dest, km});
       if(S.boot){ if(S.boot.km){ S.boot.km[nameKey(src) + '|' + nameKey(dest)] = km; if(S.boot.km['|' + nameKey(dest)]===undefined) S.boot.km['|' + nameKey(dest)] = km; }
         learnNames({customer:src, destination:dest}); }
-      CL.data = await call('clientBook'); loadNoDist();
-      closePop(); afterBook();
-      toast(`Added: ${src} → ${dest} · ${fmtN(km)} km`);
+      // the pop-up closes as soon as the route is saved; the Clients list refreshes behind it (MANU 2026-11-02 "its loading a long time")
+      closePop(); toast(`Added: ${src} → ${dest} · ${fmtN(km)} km`);
+      call('clientBook').then(d => { CL.data = d; loadNoDist(); afterBook(); }).catch(() => {});
     }catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Add route'; }
   };
 }
