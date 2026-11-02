@@ -2205,7 +2205,10 @@ const colorOf = st => STAGE_COLOR[st] || 'var(--muted)';
 const GARAGE_KEYS = ['garage', 'garage meycauayan', 'garage canlubang', 'garage san fernando'];
 const LANE_EXTRA = ['Garage', 'Garage loaded'];
 const isGarageLoaded = t => /^garage loaded\b/i.test(statusText(t));   // also GARAGE LOADED MEYCAUAYAN / CANLUBANG / SAN FERNANDO (MANU 2026-11-02)
-const isActiveRow = t => isTrip(t) || isGarageLoaded(t);   // GARAGE LOADED: not a trip, but the truck counts as active (MANU 2026-10-13)
+const isActiveRow = t => isTrip(t) || isGarageLoaded(t);
+/** Garage (with place), UNDER MAINTENANCE, WAITING CREW: not trips, but an open status that holds the truck (MANU 2026-11-02 "active status and should be included to open trip"). */
+const HOLD_ST = ['garage', 'garage meycauayan', 'garage canlubang', 'garage san fernando', 'under maintenance', 'waiting crew'];
+const isHoldRow = t => HOLD_ST.includes(statusText(t).toLowerCase().replace(/\s+/g, ' ').trim());   // GARAGE LOADED: not a trip, but the truck counts as active (MANU 2026-10-13)
 /** Status choices with the garages together at the end (MANU 2026-10-28 "add status garage canlubang, garage meycauayan, garage san fernando"). */
 const GARAGE_PICK = ['GARAGE CANLUBANG', 'GARAGE MEYCAUAYAN', 'GARAGE SAN FERNANDO', 'GARAGE LOADED CANLUBANG', 'GARAGE LOADED MEYCAUAYAN', 'GARAGE LOADED SAN FERNANDO', 'GARAGE LOADED'];
 function statusOpts(list, cur){
@@ -4355,7 +4358,7 @@ function openDispatchAdd(truckNo, opt){
     const d = day(), no = $('naTruck').value.trim().toUpperCase();
     if(!d) return toast('Pick the trip date.', true);
     if(!no || !plateFor(no)) return toast('Pick a truck from the list.', true);
-    { const o = openTripOf(d, no); if(o) return toast(GARAGE_KEYS.includes(statusText(o).toLowerCase()) ? `Truck ${no} is in ${statusText(o)} on ${fmtDay(d)}. Change that row's status instead.` : `Truck ${no} already has an open trip on ${fmtDay(d)}. Open that trip instead.`, true); }
+    { const o = openTripOf(d, no); if(o) return toast(isHoldRow(o) ? `Truck ${no} is in ${statusText(o)} on ${fmtDay(d)}. Change that row's status instead.` : `Truck ${no} already has an open trip on ${fmtDay(d)}. Open that trip instead.`, true); }
     const k = stKey(), noRoute = NO_ROUTE_ST.includes(k), hold = holdOf(plateFor(no));
     if(hold && !NO_ROUTE_ST.includes(k) && k!=='waiting for shipment') return toast(`Truck ${no} is under maintenance (${hold.jo}, ${joClassText(hold)}). Only roadworthy trucks and Minor (roadworthy) job orders can be dispatched.`, true);
     let route = {customer:'', destination:''};
@@ -4379,7 +4382,7 @@ function openDispatchAdd(truckNo, opt){
 /** An open trip (planned or on the road) of a truck on a date, from the trips already loaded. */
 function openTripOf(d, no){
   const list = TC[rk(d,d)] || S.xCtx || S.xTrips;
-  return list.find(t => String(t.truckNo).trim().toUpperCase()===String(no).trim().toUpperCase() && t.date===d && ((isTrip(t) && !DONE_ST.includes(stageOf(t))) || GARAGE_KEYS.includes(statusText(t).toLowerCase()))) || null;   // a truck in a garage blocks Add trip too (MANU 2026-11-02)
+  return list.find(t => String(t.truckNo).trim().toUpperCase()===String(no).trim().toUpperCase() && t.date===d && ((isTrip(t) && !DONE_ST.includes(stageOf(t))) || isHoldRow(t))) || null;   // a truck in a garage blocks Add trip too (MANU 2026-11-02)
 }
 /** Destinations of a source in CLIENT LIST, for a destination picker. */
 const destsOf = customer => { const c = S.boot.customers.find(x => nameKey(x)===nameKey(customer)); return c ? [...new Set(S.boot.destinations[c] || [])].sort() : []; };
@@ -4732,13 +4735,14 @@ function truckPlanReportRows(acc, assign, trips){
   // trips dated tomorrow count in any status (MANU): a started one is the truck's latest; one still at Clip Board shows only
   // when the truck has no open trip now (so a truck unloading today keeps that status)
   const today = TODAY(), cur = {}, next = {}, latest = {};
-  trips.forEach(t => { if(!isActiveRow(t)) return; const k = tkey(t.truckNo); if(!k) return; const m = t.date > today ? next : cur; m[k] = m[k] ? newer(m[k], t) : t; });
+  trips.forEach(t => { if(!isActiveRow(t) && !isHoldRow(t)) return; const k = tkey(t.truckNo); if(!k) return; const m = t.date > today ? next : cur; m[k] = m[k] ? newer(m[k], t) : t; });
   new Set([...Object.keys(cur), ...Object.keys(next)]).forEach(k => {
     const c = cur[k], n = next[k];
     latest[k] = n && (stageOf(n) !== 'Planned' || !c || DONE_ST.includes(stageOf(c))) ? n : (c || n);
   });
   return (assign || []).filter(a => a.account && (want===null || acctSec(a.account)===want)).map(a => {
-    const no = String(a.truckNo).trim(), t = latest[tkey(no)] || null, gl = !!t && isGarageLoaded(t), st = t ? (gl ? 'Garage loaded' : stageOf(t)) : '';
+    const no = String(a.truckNo).trim(), t = latest[tkey(no)] || null, gl = !!t && isGarageLoaded(t), hd = !!t && isHoldRow(t), st = t ? (gl ? 'Garage loaded' : hd ? 'Hold' : stageOf(t)) : '';
+    const hk = hd ? statusText(t).toLowerCase() : '', hgrp = !hd ? '' : hk==='under maintenance' ? 'mnt' : hk==='waiting crew' ? 'crew' : 'gar';
     let wait = '', since = '', ms = -1;
     const waited = v => { const dt = toDate(v); if(!dt) return ''; ms = now - dt; return durText(ms); };
     const hold = holdOf(a.plateNo || plateFor(no));
@@ -4751,6 +4755,7 @@ function truckPlanReportRows(acc, assign, trips){
       const e = t ? lastTime(t) : null; since = e ? waited(e.v) : '';
       if(!since){ const n = daysSince(t ? t.date : (S.boot.lastTrip || {})[no] || ''); if(n){ since = n + ' d'; ms = n * 864e5; } }
     }
+    else if(hd){ wait = statusText(t).toUpperCase(); const n = daysSince(t.date); if(n){ since = n + ' d'; ms = n * 864e5; } }   // garage / under maintenance / waiting crew: since that row's date
     else if(st === 'At Source'){ wait = 'WAITING FOR LOADING'; since = waited(t.srcArrive); }
     else if(st === 'At Destination'){ wait = 'WAITING FOR UNLOADING'; since = waited(t.destArrive); }
     const lt = (S.boot.lastTrip || {})[no];
@@ -4763,8 +4768,8 @@ function truckPlanReportRows(acc, assign, trips){
     r._wcolor = mnt ? '#B91C1C' : wait === 'WAITING FOR SHIPMENT' ? '#B45309' : wait ? '#0F766E' : '';
     r._wait = wait ? ms : -1;
     r._sec = acctSec(a.account);
-    r._grp = gl ? 'garage' : open ? (TP_GROUPS.find(g => g.stages.includes(st)) || {}).key || 'road' : mnt ? 'mnt' : 'ship';
-    r._st = gl ? STAGES.length : open ? STAGES.indexOf(st) : 99;
+    r._grp = gl ? 'garage' : hd ? hgrp : open ? (TP_GROUPS.find(g => g.stages.includes(st)) || {}).key || 'road' : mnt ? 'mnt' : 'ship';
+    r._st = gl || hd ? STAGES.length : open ? STAGES.indexOf(st) : 99;
     r._route = open ? (t.customer || '') + ' → ' + (t.destination || '(no destination)') : '';
     return r;
   });
@@ -4777,6 +4782,8 @@ const TP_GROUPS = [
   {key:'road', label:'In transit', stages:['In Transit'], color:'var(--transit)'},
   {key:'atdst', label:'At destination / unloading', stages:['At Destination','Unloading'], color:'var(--site)'},
   {key:'garage', label:'Garage loaded', stages:[], color:'#0EA5E9'},   // loaded, parked in a garage: counts as active (MANU 2026-10-13)
+  {key:'gar', label:'Garage', stages:[], color:'#64748B'},   // GARAGE <place>: an open status, holds the truck (MANU 2026-11-02)
+  {key:'crew', label:'Waiting crew', stages:[], color:'#0F766E'},
   {key:'ship', label:'Waiting shipment', stages:[], color:'#B45309'},
   {key:'mnt', label:'Under maintenance', stages:[], color:'#B91C1C'}
 ];
@@ -4798,12 +4805,13 @@ function truckPlanLayout(rows, acc){
       TP_GROUPS.forEach(g => { const gs = rs.filter(r => r._grp === g.key).sort(byWait); if(gs.length) out.push({_head:true, level:1, text: g.label.toUpperCase(), sub: n(gs.length)}, ...gs); });
     } else {
       const routes = {};
-      rs.filter(r => !['ship','mnt','garage'].includes(r._grp)).forEach(r => (routes[r._route] = routes[r._route] || []).push(r));
+      rs.filter(r => !['ship','mnt','garage','gar','crew'].includes(r._grp)).forEach(r => (routes[r._route] = routes[r._route] || []).push(r));
       Object.values(routes).map(g => g.sort((p, q) => p._st - q._st || byWait(p, q)))
         .sort((a, b) => a[0]._st - b[0]._st || a[0]._route.localeCompare(b[0]._route))
         .forEach(g => out.push({_head:true, level:1, text: g[0]._route, sub: n(g.length)}, ...g));
       const gar = rs.filter(r => r._grp === 'garage').sort(byWait);
       if(gar.length) out.push({_head:true, level:1, text:'GARAGE LOADED', sub: n(gar.length)}, ...gar);
+      [['gar', 'GARAGE'], ['crew', 'WAITING CREW']].forEach(([k, label]) => { const g = rs.filter(r => r._grp === k).sort(byWait); if(g.length) out.push({_head:true, level:1, text: label, sub: n(g.length)}, ...g); });
       const ship = rs.filter(r => r._grp === 'ship').sort(byWait);
       if(ship.length) out.push({_head:true, level:1, text:'WAITING SHIPMENT', sub: n(ship.length)}, ...ship);
       const mnt = rs.filter(r => r._grp === 'mnt').sort(byWait);
