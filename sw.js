@@ -1,12 +1,11 @@
 // JMTI app on the phone (MANU 2026-10-13): the app page and its fonts and libraries are kept on the phone, so the app
-// opens with no signal. Each open asks GitHub for the page first (MANU 2026-10-14 "github link is still not updated"),
-// so a new version shows at once; when GitHub doesn't answer within 3 seconds or there is no signal, the kept page opens,
-// and if a newer page arrives after that, the open page is told (it shows a Reload button).
+// opens with no signal. Since 2026-11-02 (MANU "faster user experience") the kept page opens at once, with no wait for
+// GitHub; GitHub is asked in the background, and when it has a newer page that page is kept and the open app is told
+// (it switches by itself when that is safe, see build_gh.py). Before, each open waited up to 3 seconds for GitHub.
 // Data (script.google.com) is never kept here: the app asks the server for it every time.
-const CACHE = 'jmti-app-v2';
+const CACHE = 'jmti-app-v3';
 const SHELL = ['./', 'manifest.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 const LIBS = /^https:\/\/(fonts\.googleapis\.com|fonts\.gstatic\.com|cdnjs\.cloudflare\.com)\//;
-const WAIT_MS = 3000;
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'no-cache' })))).then(() => self.skipWaiting()));
@@ -41,13 +40,10 @@ self.addEventListener('fetch', e => {
     const id = e.resultingClientId || e.clientId;
     e.respondWith((async () => {
       const kept = await caches.match('./');
-      const net = fresh();
-      if (!kept) return net;
-      const first = await Promise.race([net.catch(() => null), new Promise(r => setTimeout(() => r(null), WAIT_MS))]);
-      if (first && first.ok) return first;
-      // slow or no signal: open the kept page now; if GitHub answers later with a different page, offer Reload
+      if (!kept) return fresh();   // first open on this phone
       const old = await kept.clone().text();
-      e.waitUntil(net.then(async res => { if (res.ok && (await res.clone().text()) !== old) await tell(id, 'jmti-updated'); }).catch(() => {}));
+      // the kept page now; GitHub's answer is kept for the next open, and the open app hears of a change
+      e.waitUntil(fresh().then(async res => { if (res.ok && (await res.clone().text()) !== old) await tell(id, 'jmti-updated'); }).catch(() => {}));
       return kept;
     })());
     return;

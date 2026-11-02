@@ -12,17 +12,33 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JMTI">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
 <script>
-/* Keeps the app on the phone (sw.js). When GitHub has a newer page, a bar offers to reload into it. */
+/* Keeps the app on the phone (sw.js): it opens at once from the kept page. When GitHub has a newer page (MANU 2026-11-02
+   "faster user experience"), the app switches to it by itself: at once on the sign-in screen, otherwise the next time the
+   app goes to the background with nothing open or typed; a bar also offers Reload. */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(function(){});
+  var swNew = false;
+  var swSafe = function(){
+    var g = function(id){ return document.getElementById(id); }, app = g('app'), d = g('drawer'), p = g('pop'), t = g('chText');
+    if (!app || app.hidden) { var f = g('loginForm'); return !f || !Array.prototype.some.call(f.querySelectorAll('input'), function(i){ return i.value; }); }
+    return !(d && d.classList.contains('on')) && !(p && !p.hidden) && !g('cellEd') && !(t && t.value.trim());
+  };
+  var swGo = function(){ if (swNew && swSafe()) location.reload(); };
+  document.addEventListener('visibilitychange', function(){ if (document.hidden) swGo(); });
   navigator.serviceWorker.addEventListener('message', function(e){
-    if (e.data !== 'jmti-updated' || document.getElementById('swNew')) return;
+    if (e.data !== 'jmti-updated') return;
+    swNew = true;
+    var app = document.getElementById('app');
+    if (!app || app.hidden) return swGo();   // sign-in screen: switch now
+    if (document.getElementById('swNew')) return;
     var b = document.createElement('div'); b.id = 'swNew';
     b.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:99999;background:#0A1F8F;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.3);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100vw - 32px)';
-    b.innerHTML = '<span>A new version of the app is ready.</span>';
-    var r = document.createElement('button'); r.type = 'button'; r.textContent = 'Reload';
-    r.style.cssText = 'background:#fff;color:#0A1F8F;border:0;border-radius:8px;padding:6px 12px;font:700 14px system-ui,sans-serif';
+    b.innerHTML = '<span>A new version of the app is ready. It switches by itself when you leave the app.</span>';
+    var r = document.createElement('button'); r.type = 'button'; r.textContent = 'Reload now';
+    r.style.cssText = 'background:#fff;color:#0A1F8F;border:0;border-radius:8px;padding:6px 12px;font:700 14px system-ui,sans-serif;flex:none';
     r.onclick = function(){ location.reload(); };
     b.appendChild(r); document.body.appendChild(b);
   });
@@ -36,6 +52,7 @@ if ('serviceWorker' in navigator) {
   if (!/github\.io$/.test(location.hostname) || (window.google && google.script)) return;
   window.JMTI_API = API;
   function send(fn, args){
+    var t0 = Date.now();
     return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
       .catch(function(){ throw new Error('No connection to the server. Check the internet and try again.'); })
       .then(function(r){ return r.text().then(function(t){ return { st: r.status, t: t }; }); })
@@ -44,6 +61,7 @@ if ('serviceWorker' in navigator) {
           if (x.st === 429 || x.st === 503 || /too many|simultaneous|busy|try again later/i.test(t)) throw new Error('The server is busy right now. Try again in a moment.');
           throw new Error('The server did not answer properly. Check that the web app is deployed with access "Anyone", then try again.');
         }
+        if (window.JMTI_SPDADD) window.JMTI_SPDADD(fn, Date.now() - t0, j.ms);   // speed log: total time and the server's part
         if (!j.ok) throw new Error(/^Unknown request/.test(j.error) ? 'The server code is out of date (missing ' + fn + '). Paste the latest Code.gs, save it, then deploy a New version.' : j.error);
         return j.v;
       });
@@ -1441,6 +1459,22 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 .gar-t{display:inline-flex;flex-direction:column;padding:3px 8px;border-radius:8px;background:#EEF2FF;font-weight:650;font-size:12px;color:#0A1F8F;line-height:1.2}
 .gar-t small{font-weight:500;color:var(--muted);font-size:10.5px}
 .gar .hint{margin:6px 0 0}
+/* Smoother on phones (MANU 2026-11-02 "faster user experience"): the same look, less redrawing while scrolling.
+   The app's background sits on its own fixed layer instead of background-attachment:fixed (repainted on every scroll step),
+   blur is dropped where the box is solid white anyway (Truck Plan table) and on phones' top bar, and the drifting logos
+   pause while the page scrolls. */
+body:has(#app:not([hidden])){background:transparent}
+body:has(#app:not([hidden]))::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:
+    linear-gradient(118deg,transparent 0 31%,rgba(150,175,255,.18) 31.5%,rgba(225,234,255,.70) 38%,rgba(246,249,255,.92) 45%,rgba(214,226,255,.55) 53%,rgba(120,150,240,.22) 56%,transparent 57%),
+    linear-gradient(62deg,transparent 0 12%,rgba(40,80,240,.35) 18%,transparent 27%),
+    radial-gradient(120% 90% at 85% 10%,#0B2BD0 0%,transparent 55%),
+    linear-gradient(135deg,#020A35 0%,#061A86 30%,#0A27B5 50%,#061A86 72%,#020A35 100%)}
+.xl-wrap{-webkit-backdrop-filter:none;backdrop-filter:none}
+html.scrolling #bgFx .bglogo{animation-play-state:paused}
+@media (max-width:700px){
+  .top,.glass{-webkit-backdrop-filter:none;backdrop-filter:none}
+  header.top{background:rgba(4,16,74,.94)}
+}
 </style>
 </head>
 <body>
@@ -2366,7 +2400,8 @@ function callServer(fn, ...args){
       if(/^AUTH:/.test(msg) || /AUTH:/.test(msg)) { signOut(msg.replace(/^.*AUTH:\s{0,}/,'')); }
       reject(new Error(msg.replace(/^Error:\s{0,}/,'').replace(/^.*AUTH:\s{0,}/,'')));
     };
-    const done = v => { if(NET.down){ NET.down = false; renderOutbox(); } resolve(v); };
+    const t0 = Date.now();
+    const done = v => { if(NET.down){ NET.down = false; renderOutbox(); } if(!window.JMTI_API) spdAdd(fn, Date.now() - t0); resolve(v); };   // the GitHub app's own notes come from its fetch (with the server's part)
     if (!LIVE) return setTimeout(() => { if(!navigator.onLine) return fail(new Error('NetworkError: Connection failure due to HTTP 0')); try{ done(DEMO[fn](...a)); }catch(e){ fail(e); } }, 450);
     // 30 people at once (MANU 2026-10-28): when Google is busy (its 30 at-once runs are full) or another save holds the sheet,
     // the same call is tried again after a short random wait, up to 3 times, before anyone sees an error.
@@ -2384,6 +2419,12 @@ function callServer(fn, ...args){
     go();
   });
 }
+/** Speed log (MANU 2026-11-02 "faster user experience"): how long each server call took, sent a few at a time with the chat
+    check (at most once a minute) and added up per hour in the SPEED LOG tab. [request, total ms, server ms or -1]. */
+const SPD = {list:[], sent:Date.now() - 50000};
+function spdAdd(fn, ms, srv){ if(SPD.list.length < 200 && fn) SPD.list.push([String(fn), Math.round(ms), srv == null || isNaN(srv) ? -1 : Math.round(srv)]); }
+function spdTake(){ SPD.sent = Date.now(); return SPD.list.splice(0, 40); }
+window.JMTI_SPDADD = spdAdd;
 /** Busy answers: refused before anything ran (or the save never got the sheet), so even a save is safe to send again. */
 const BUSY_RE = /app is busy|server is busy|simultaneous invocations|too many (simultaneous|concurrent)|Service invoked too many times|Lock timeout|another process was holding the lock/i;
 /** Reads may also be asked again after a passing server hiccup or a dropped answer (with signal). */
@@ -2403,7 +2444,7 @@ function mayRetry(fn, e){
  * (POD scans, chat photos and files) open from the browser after that. Some tabs show the saved copy at once and swap in the fresh one.
  * The sheet in Drive stays the master copy: each fresh answer replaces the saved one. Signing out clears it.
  * Trips per date, sign-in data, Fleet, Manpower, Dashboard summary, targets, chat and Maintenance were already kept (localStorage). */
-const RC_SKIP = /^(chatList|getInitial|getTrips|getAccountSummary|getTargets)$/;   // kept their own way (the Dashboard marks an old summary itself)
+const RC_SKIP = /^(chatList|getInitial|getTrips|getTripDays|getAccountSummary|getTargets)$/;   // kept their own way (the Dashboard marks an old summary itself)
 const RC_FILES = /^(getPodFile|chatFile)$/;   // files never change: opened from the browser first
 const RC_MAX = 500, RC_MAX_FILES = 60, RC_FILE_MB = 8;
 const rcOk = fn => RC_FILES.test(fn) || fn==='chatThumbs' || (READ_FNS.test(fn) && !RC_SKIP.test(fn));
@@ -2497,7 +2538,7 @@ function lsSet(k, v){
     }
   }
 }
-function lsClearData(){ try{ Object.keys(localStorage).filter(k => /^jmti_(t_|tkeys|d_|dkeys|boot|fleet|people|sum|rem)/.test(k)).forEach(k => localStorage.removeItem(k)); }catch(e){} }
+function lsClearData(){ try{ Object.keys(localStorage).filter(k => /^jmti_(t_|tkeys|d_|dkeys|dh|boot|fleet|people|sum|rem)/.test(k)).forEach(k => localStorage.removeItem(k)); }catch(e){} }
 
 let pendingPw = '';
 function showLogin(msg){
@@ -2607,8 +2648,10 @@ const DAY_KEEP = 45, DAY_SPAN = 62;
 const dayList = (f,t) => { if(!f || !t || f > t) return null; const out = []; for(let d = f; d <= t && out.length <= DAY_SPAN; d = addDays(d,1)) out.push(d); return out.length > DAY_SPAN ? null : out; };
 function dayKeys(){ return lsGet('jmti_dkeys') || []; }
 function dayGet(d){ return lsGet('jmti_d_'+d); }
-function daySave(days){   // days: {date: trips}
+function daySave(days, marks){   // days: {date: trips}; marks: the server's marks of those dates (fetchDays), else they are dropped
   let keys = dayKeys().filter(d => !(d in days)).concat(Object.keys(days).sort());
+  const dh = lsGet('jmti_dh') || {};
+  Object.keys(days).forEach(d => { if(marks && marks[d] && !days[d].some(x => x._pending)) dh[d] = marks[d]; else delete dh[d]; });
   const drop = d => { keys = keys.filter(x => x !== d); try{ localStorage.removeItem('jmti_d_'+d); }catch(e){} };
   while(keys.length > DAY_KEEP) drop(keys[0]);
   Object.keys(days).forEach(d => {
@@ -2624,6 +2667,8 @@ function daySave(days){   // days: {date: trips}
     }
   });
   lsSet('jmti_dkeys', keys);
+  Object.keys(dh).forEach(d => { if(!keys.includes(d)) delete dh[d]; });
+  lsSet('jmti_dh', dh);
 }
 function cachedTrips(f,t){
   const k = rk(f,t); if(TC[k]) return TC[k];
@@ -2646,8 +2691,36 @@ function putTrips(f,t,list){
 }
 function fetchTrips(f,t){
   const k = rk(f,t); if(INFLIGHT[k]) return INFLIGHT[k];
-  const p = call('getTrips', f, t).then(list => putTrips(f,t,list)).finally(() => { delete INFLIGHT[k]; });
+  const days = dayList(f,t);
+  const p = (days && !TD.off ? fetchDays(f, t, days) : call('getTrips', f, t).then(list => putTrips(f,t,list))).finally(() => { delete INFLIGHT[k]; });
   return (INFLIGHT[k] = p);
+}
+/**
+ * Only the dates that changed (Faster, MANU 2026-11-02): the phone sends the server's mark of each date it keeps (jmti_dh)
+ * and gets back only the dates whose trips differ; the rest come from the kept copies. A mark is kept only while the kept
+ * date is exactly the server's copy: any change made on this phone (daySave without marks) drops it, so that date comes whole.
+ */
+const TD = {off:false};
+function fetchDays(f, t, days){
+  const marks = lsGet('jmti_dh') || {}, kept = new Set(dayKeys()), have = {};
+  days.forEach(d => { if(marks[d] && kept.has(d)) have[d] = marks[d]; });
+  return call('getTripDays', f, t, have).then(r => {
+    const got = (r && r.d) || {}, h = (r && r.h) || {}, parts = [];
+    for(const d of days){
+      if(got[d]){ parts.push(got[d]); continue; }
+      const l = have[d] && h[d] === have[d] ? dayGet(d) : null;
+      if(!Array.isArray(l)) return call('getTrips', f, t).then(list => putTrips(f,t,list));   // a kept date went missing: ask for all
+      parts.push(l);
+    }
+    const fresh = {}; Object.keys(got).forEach(d => { if(days.includes(d)) fresh[d] = got[d]; });
+    if(Object.keys(fresh).length) daySave(fresh, h);
+    const k = rk(f,t), list = overlay([].concat(...parts), f, t);
+    TC[k] = list; FRESH[k] = Date.now(); store('jmti_sync', String(Date.now()));
+    return list;
+  }).catch(e => {
+    if(/missing getTripDays|Unknown request/.test(e.message || '')){ TD.off = true; return call('getTrips', f, t).then(list => putTrips(f,t,list)); }   // Code.gs not updated yet
+    throw e;
+  });
 }
 function withTrips(f,t,draw,el){
   const c = cachedTrips(f,t);
@@ -2734,10 +2807,13 @@ function dnMark(keys, until){ const o = dnSeen(), now = Date.now();
   keys.forEach(k => { o[k] = until || 0; });
   const ks = Object.keys(o); if(ks.length > 400) ks.slice(0, ks.length - 400).forEach(k => delete o[k]);
   lsSet(dnKey(), o); }
-function loadDone(){
-  if(!mayDone()) return;
-  const t = TODAY(); call('getTrips', addDays(t, -1), t).then(l => { DN.trips = l || []; checkDone(); }).catch(() => {});
+function loadDone(alone){
+  if(!mayDone()){ DN.want = null; return; }
+  const t = TODAY(), want = [addDays(t, -1), t];
+  if(!alone){ if(!DN.want){ DN.want = want; DN.wantAt = Date.now(); } return; }   // rides along with the next chat check
+  DN.want = null; call('getTrips', ...want).then(doneGot).catch(() => {});
 }
+function doneGot(l){ DN.want = null; DN.trips = l || []; checkDone(); }
 function doneList(){
   if(!DN.trips) return [];
   const seen = dnSeen(), now = Date.now(), y = addDays(TODAY(), -1);
@@ -2802,7 +2878,9 @@ async function start(){
   if(!TOKEN) return showLogin();
   let me = null; try{ me = JSON.parse(store('jmti_me')||'null'); }catch(e){}
   if(!me) return showLogin();
+  SPD.direct = 1;   // opened already signed in: the open times below mean something
   enterApp(me);
+  requestAnimationFrame(() => setTimeout(() => spdAdd('(app open, saved data shown)', performance.now()), 0));   // speed log: page start to first screen
 }
 
 function enterApp(me){
@@ -2869,6 +2947,7 @@ function loadBoot(){
   if(k0 !== kt) hold(kt, got.then(() => TC[kt] || []));
   if(!S.boot) $('main').classList.add('loading');
   first.then(r => {
+    if(SPD.direct && !SPD.boot){ SPD.boot = 1; spdAdd('(app open, fresh data shown)', performance.now()); }
     r.boot.today = today; r.boot._user = me.username; S.bootOk = true;
     lsSet('jmti_boot', r.boot);
     S.assign[today] = r.assign;
@@ -3122,18 +3201,19 @@ function rangeChips(el, onPick){
 /** Who is signed in (MANU 2026-10-28 "show who is logged in", "and what position"; every user since "ALSO OTHER USERS SHOULD BE ABLE TO SEE WHO ARE ONLINE"): everyone sees how many are on now
     in the top bar (asked once a minute while the app is on screen); tapping it lists everyone with their position (role), when
     they were last active and their last sign-in. Code.gs whoOnline: anyone whose app called the server in the last 2 minutes. */
-const ON = {at:0, data:null, busy:false};
+const ON = {at:0, data:null, busy:false, want:0};
 const mayOnline = () => may('online') || may('viewAll');
 function onlineStart(){
   const b = $('onBtn'); if(!b) return;
   ON.data = null; ON.at = 0; b.hidden = !mayOnline(); b.innerHTML = '<span class="ondot"></span>Online';
   b.onclick = openOnline;
-  if(mayOnline()) onlineLoad();
+  if(mayOnline()) ON.want = Date.now() - 15000;   // the first chat check brings it (alone after 5 s if not)
 }
+function onlineGot(d){ ON.data = d; ON.at = Date.now(); ON.want = 0; onlineBtn(); if(!$('pop').hidden && $('pop').dataset.kind==='online') openOnline(); return d; }
 function onlineLoad(){
   if(!mayOnline() || ON.busy || !TOKEN) return Promise.resolve(ON.data);
   ON.busy = true;
-  return call('whoOnline').then(d => { ON.data = d; ON.at = Date.now(); onlineBtn(); if(!$('pop').hidden && $('pop').dataset.kind==='online') openOnline(); return d; })
+  return call('whoOnline').then(onlineGot)
     .catch(() => ON.data).finally(() => { ON.busy = false; });
 }
 function onlineBtn(){
@@ -3161,7 +3241,12 @@ function openOnline(){
   const r = $('onRefresh'); if(r) r.onclick = () => { ON.at = 0; onlineLoad(); };
 }
 // Admin and Boss once a minute; everyone else every 2 minutes (30 people at once, MANU 2026-10-28), and at once when they open the list
-setInterval(() => { if(S.me && TOKEN && mayOnline() && !document.hidden && Date.now() - ON.at > (may('viewAll') || S.me.role==='ADMIN' ? 60000 : 120000)) onlineLoad(); }, 5000);
+// The list rides along with the next chat check (one call instead of two, Faster 2026-11-02); asked alone only when that hasn't brought it within 20 s.
+setInterval(() => {
+  if(!S.me || !TOKEN || document.hidden) return;
+  if(mayOnline() && Date.now() - ON.at > (may('viewAll') || S.me.role==='ADMIN' ? 60000 : 120000)){ if(!ON.want) ON.want = Date.now(); else if(Date.now() - ON.want > 20000){ ON.want = Date.now(); onlineLoad(); } }
+  if(DN.want && Date.now() - DN.wantAt > 20000) loadDone(true);
+}, 5000);
 
 /** Clock at the top (MANU 2026-10-28 "add clock at the top"), in Philippine time. When the date changes while the app is open
     (left open overnight, or back from the background next morning), dates that ended on the old day move to the new one
@@ -6694,7 +6779,16 @@ function chatPoll(){
   const full = !CH.full;   // the first ask after the page opens: the people and groups too (a kept copy may be from before groups)
   const opt = {cs:CH.cs || 0, rv:CH.rv || 0};   // the newest reaction / unsend and read receipt this phone has
   if(Date.now() - CH.actAt > 30000){ opt.act = true; CH.actAt = Date.now(); }   // who is active: every 30 s
-  return call('chatList', CH.last, CH.loaded && !full ? CH.v : '', full, opt).then(d => { CH.fail = 0; if(CH.user===u){ if(full) CH.full = true; if(d.v) CH.v = String(d.v); chatMerge(d); if(d.rv!==undefined) CH.rv = Number(d.rv) || 0; } })
+  // riding along (Faster, 2026-11-02): who is online, the trips of the "trip completed" pop-up, the speed notes
+  const ride = {on: !!(ON.want && mayOnline()), done: DN.want};
+  if(ride.on) opt.on = 1;
+  if(ride.done) opt.done = ride.done;
+  const spd = SPD.list.length && Date.now() - SPD.sent > 60000 ? spdTake() : null;
+  if(spd) opt.spd = spd;
+  return call('chatList', CH.last, CH.loaded && !full ? CH.v : '', full, opt).then(d => { CH.fail = 0;
+      if(ride.on && d.online) onlineGot(d.online);
+      if(ride.done && d.done && DN.want === ride.done) doneGot(d.done);
+      if(CH.user===u){ if(full) CH.full = true; if(d.v) CH.v = String(d.v); chatMerge(d); if(d.rv!==undefined) CH.rv = Number(d.rv) || 0; } })
     .catch(() => { CH.fail = Math.min(3, CH.fail + 1); }).finally(() => { CH.busy = false; });
 }
 /** A short notice for messages that came in while the chat is closed (not for the first load or your own). */
@@ -9332,6 +9426,7 @@ function payrollCsv(){
 }
 /* PAYROLL-END */
 
+const DEMO_RIDES = [], DEMO_DAYS = [];   // test notes (preview only)
 const DEMO = null;   // the sample-data preview is only in the full copy (not deployed)
 
 document.querySelectorAll('.logo-copy').forEach(i => i.src = $('logoMain').src);
@@ -9384,6 +9479,9 @@ start();
       }
       const sync = () => { const inApp = app && !app.hidden; host.classList.toggle('inapp', inApp); imgs.forEach(im => { const u = inApp ? blue : white; if(im.src !== u) im.src = u; }); };
       sync(); if(app) new MutationObserver(sync).observe(app, {attributes:true, attributeFilter:['hidden']});
+      // the logos hold still while anything scrolls (page or a table), so scrolling gets the phone's full speed (2026-11-02)
+      let scT = 0; const root = document.documentElement;
+      document.addEventListener('scroll', () => { if(!scT) root.classList.add('scrolling'); clearTimeout(scT); scT = setTimeout(() => { scT = 0; root.classList.remove('scrolling'); }, 300); }, {capture:true, passive:true});
     };
     const go = () => setTimeout(make, 1500);   // after the first screen is drawn (Faster loading)
     if(src.complete && src.naturalWidth) go(); else src.addEventListener('load', go, {once:true});
