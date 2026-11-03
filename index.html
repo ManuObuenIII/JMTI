@@ -64,7 +64,9 @@ if ('serviceWorker' in navigator) {
           throw new Error('The server did not answer properly. Check that the web app is deployed with access "Anyone", then try again.');
         }
         if (window.JMTI_SPDADD) window.JMTI_SPDADD(fn, Date.now() - t0, j.ms);   // speed log: total time and the server's part
-        if (!j.ok) throw new Error(/^Unknown request/.test(j.error) ? 'The server code is out of date (missing ' + fn + '). Paste the latest Code.gs, save it, then deploy a New version.' : j.error);
+        // an answer without ok/error is not from JMTI's Code.gs (MANU 2026-11-03: another project's code was deployed and every call said only "Error")
+        if (!('ok' in j)) throw new Error('The server is not running the JMTI code (' + fn + ' got a reply from other code). In Apps Script "JMTI DASH", paste the JMTI Code.gs and Index.html, save, then deploy a New version.');
+        if (!j.ok) throw new Error(/^Unknown request/.test(j.error) ? 'The server code is out of date (missing ' + fn + '). Paste the latest Code.gs, save it, then deploy a New version.' : (j.error && !/^(Error|undefined|null)?$/i.test(String(j.error).trim()) ? j.error : 'The server failed on ' + fn + ' without saying why.'));
         return j.v;
       });
   }
@@ -2434,7 +2436,8 @@ function callServer(fn, ...args){
         err.net = true; return reject(err);
       }
       if(/^AUTH:/.test(msg) || /AUTH:/.test(msg)) { signOut(msg.replace(/^.*AUTH:\s{0,}/,'')); }
-      reject(new Error(msg.replace(/^Error:\s{0,}/,'').replace(/^.*AUTH:\s{0,}/,'')));
+      const m2 = msg.replace(/^Error:\s{0,}/,'').replace(/^.*AUTH:\s{0,}/,'').trim();
+      reject(new Error(/^(Error|undefined|null)?$/i.test(m2) ? 'The server failed on ' + fn + ' without saying why.' : m2));   // says which request failed (MANU 2026-11-03 bare "Error")
     };
     const t0 = Date.now();
     const done = v => { if(NET.down){ NET.down = false; renderOutbox(); } if(!window.JMTI_API) spdAdd(fn, Date.now() - t0); resolve(v); };   // the GitHub app's own notes come from its fetch (with the server's part)
@@ -3009,7 +3012,7 @@ function loadBoot(){
   }).catch(e => {
     if(e.net && S.boot){ toast('No signal. Showing what this phone saved' + syncAgo() + '.', false, 5000); return; }
     $('loadErr').hidden = false;
-    $('loadErrMsg').textContent = e.net ? 'No signal, and this phone has no saved trip data yet. Open the app once with signal.' : 'Could not load the trip data: ' + e.message;
+    $('loadErrMsg').textContent = e.net ? 'No signal, and this phone has no saved trip data yet. Open the app once with signal.' : 'Could not load the trip data (getInitial): ' + e.message;
   }).finally(() => $('main').classList.remove('loading'));
 }
 
