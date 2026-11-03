@@ -1703,7 +1703,7 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
   <!-- ================= TRUCK ASSIGNMENT ================= -->
   <section class="view" id="v-assign">
     <div class="bar">
-      <label class="f">Crew from<input type="date" id="aDate"></label>
+      <label class="f" hidden>Crew from<input type="date" id="aDate"></label><!-- no date (MANU 2026-11-03 "truck assignment doesnt need a date"): always the current crew, saved from today -->
       <label class="f grow">Find<input id="aFind" placeholder="Truck, plate, driver, helper"></label>
       <label class="f">Account<select id="aAcct"><option value="">All accounts</option><option>COCA COLA CANLUBANG PLANT</option><option>COCA COLA SAN FERNANDO</option><option>OTHER ACCOUNTS</option><option value="none">No account yet</option></select></label>
       <button class="btn alt" id="aReport" type="button">Generate report</button>
@@ -2816,14 +2816,22 @@ function offerNextTrip(prev, up){
   if(mayDone() && up.key) dnMark([up.key]);
   if(!$('pop').hidden || $('drawer').classList.contains('on')) return;
   const no = String(up.truckNo).trim(), d = TODAY();
-  if(openTripOf(d, no)) return;
+  // MANU 2026-11-03 "add trip pops up but cannot submit... truck already has an open trip": the pop-up must look at TODAY's
+  // trips (fresh from the server, even when Truck Plan shows other dates) and Add trip must be for TODAY, not the From date
+  fetchTrips(d, d).catch(() => {}).then(() => {
+    if(!$('pop').hidden || $('drawer').classList.contains('on')) return;
+    if(openTripOf(d, no)) return;
+    offerNextTripGo(up, no, d);
+  });
+}
+function offerNextTripGo(up, no, d){
   // Coca Cola Canlubang / San Fernando (MANU 16:45): straight to Add trip at On the way source, same source as the trip just completed
-  if(isCokeTruck(d, no)) return openDispatchAdd(no, {status:'on the way source', source:up.customer || ''});
+  if(isCokeTruck(d, no)) return openDispatchAdd(no, {status:'on the way source', source:up.customer || '', date:d});
   // other accounts: Clip Board / Garage (Add trip) or Waiting for shipment (MANU 16:46)
   openPop(`Trip completed · Truck ${no}`, `${esc(up.customer || '')} → ${esc(up.destination || '—')}`,
     `<p style="margin:0">What is next for <b>Truck ${esc(no)}</b>${up.plateNo ? ' · ' + esc(up.plateNo) : ''}? Add its next trip (${esc(S.boot.planned)} or Garage), or mark it waiting for shipment.</p>`,
     `<button class="btn alt" type="button" onclick="closePop()">Not now</button> <button class="btn alt" type="button" id="nextTripWait">Waiting for shipment</button> <button class="btn road" type="button" id="nextTripGo">+ Add trip</button>`);
-  $('nextTripGo').onclick = () => { closePop(); openDispatchAdd(no); };
+  $('nextTripGo').onclick = () => { closePop(); openDispatchAdd(no, {date:d}); };
   $('nextTripWait').onclick = () => { closePop(); addNoRouteRow(d, no, 'waiting for shipment'); };
 }
 /**
@@ -2870,7 +2878,7 @@ function checkDone(){
     const a = e.target.closest('[data-dnadd]'), w = e.target.closest('[data-dnwait]'), t = l.find(x => x.key===(a || w || {}).dataset?.[a ? 'dnadd' : 'dnwait']);
     if(!t) return;
     dnMark([t.key]); closePop();
-    const no = String(t.truckNo).trim(), go = () => a ? (isCokeTruck(TODAY(), no) ? openDispatchAdd(no, {status:'on the way source', source:t.customer || ''}) : openDispatchAdd(no))
+    const no = String(t.truckNo).trim(), go = () => a ? (isCokeTruck(TODAY(), no) ? openDispatchAdd(no, {status:'on the way source', source:t.customer || '', date:TODAY()}) : openDispatchAdd(no, {date:TODAY()}))
       : addNoRouteRow(TODAY(), no, 'waiting for shipment');
     if(S.tab!=='dispatcher'){ $('xDate').value = $('xTo').value = TODAY(); showTab('dispatcher'); setTimeout(go, 600); } else go();
   };
@@ -2985,7 +2993,8 @@ function loadBoot(){
     if(SPD.direct && !SPD.boot){ SPD.boot = 1; spdAdd('(app open, fresh data shown)', performance.now()); }
     r.boot.today = today; r.boot._user = me.username; S.bootOk = true;
     lsSet('jmti_boot', r.boot);
-    S.assign[today] = r.assign;
+    if(r.assignOn===today) S.assign[today] = r.assign;   // only when it is today's crew (an older server sent the From date's crew)
+    else call('getAssignments', today).then(l => { S.assign[today] = l; redrawAll(); if(S.tab==='assign') renderAssign(); }).catch(() => {});
     S.me = r.me; store('jmti_me', JSON.stringify(r.me));
     const wasEmpty = !S.boot; S.boot = r.boot;
     fillLists();
@@ -3983,6 +3992,7 @@ const A_GROUPS = [...A_ACCOUNTS.map((a, i) => [a, titleCase(a), ['#DC2626','#0EA
 const aGroupOf = c => A_ACCOUNTS.includes(c.account) ? c.account : 'none';
 const hasCrew = c => !!(c && (c.driver || c.helper1 || c.helper2));
 function autoFillAssign(d, trucks){
+  return;   // OFF (MANU 2026-11-03 "assignment is manually changed"): no crew filled in from the last trip
   S.aAuto = S.aAuto || {};
   if(S.aAuto[d] || !S.assign[d]) return;
   S.aAuto[d] = true;
@@ -4017,6 +4027,7 @@ function noteAssignAcct(d, saved){
   TRIP_W = {}; lsSet('jmti_boot', S.boot);
 }
 function loadAssign(){
+  $('aDate').value = TODAY();   // always today's (current) crew
   const d = $('aDate').value; $('aDate')._last = d;
   if(S.assign[d]) renderAssign();
   else $('aTbl').classList.add('loading');
@@ -4316,7 +4327,7 @@ const isCokeTruck = (d, no) => { const c = crewFor(d, no); return !!c && [0, 1].
 function openDispatchAdd(truckNo, opt){
   if(feedLive()) return feedAddPop();   // a new row would land under the 2.0 formula (the server refuses it too)
   opt = opt || {};
-  const [rf, rt] = xRange(), d0 = TODAY() >= rf && TODAY() <= rt ? TODAY() : rf;   // today when it is in the range, else the From date
+  const [rf, rt] = xRange(), d0 = opt.date || (TODAY() >= rf && TODAY() <= rt ? TODAY() : rf);   // the date asked for (next trip: today), else today when it is in the range, else the From date
   ensureCrew(d0);
   openPanel({key:'new', date:d0, truckNo:'', plateNo:'', customer:'', destination:'', status:S.boot.planned}, `
     <p class="hint" style="margin-top:0">For a truck with no open trip on that date. Plate and crew fill in from PLATE and Truck assignment; KMS from CLIENT LIST.</p>
@@ -4376,7 +4387,7 @@ function openDispatchAdd(truckNo, opt){
     const d = day(), no = $('naTruck').value.trim().toUpperCase();
     if(!d) return toast('Pick the trip date.', true);
     if(!no || !plateFor(no)) return toast('Pick a truck from the list.', true);
-    { const o = openTripOf(d, no); if(o) return toast(isHoldRow(o) ? `Truck ${no} is in ${statusText(o)} on ${fmtDay(d)}. Change that row's status instead.` : `Truck ${no} already has an open trip on ${fmtDay(d)}. Open that trip instead.`, true); }
+    { const o = openTripOf(d, no); if(o){ toast(isHoldRow(o) ? `Truck ${no} is in ${statusText(o)} on ${fmtDay(d)}. Change that row's status instead.` : `Truck ${no} already has an open trip on ${fmtDay(d)}. It is open now.`, true); closeDrawer(); return setTimeout(() => openDispatch(o), 250); } }
     const k = stKey(), noRoute = NO_ROUTE_ST.includes(k), hold = holdOf(plateFor(no));
     if(hold && !NO_ROUTE_ST.includes(k) && k!=='waiting for shipment') return toast(`Truck ${no} is under maintenance (${hold.jo}, ${joClassText(hold)}). Only roadworthy trucks and Minor (roadworthy) job orders can be dispatched.`, true);
     let route = {customer:'', destination:''};
@@ -4393,7 +4404,8 @@ function openDispatchAdd(truckNo, opt){
     const [f, t] = xRange();
     PENDING[temp.key] = temp; applyLocal(temp);
     callQ('dispatchAddTrip', {...data, ref:temp.key}).then(up => { delete PENDING[temp.key]; applyLocal(up, temp.key); toast(`Trip ${up.tripId} added for ${fmtDay(d)}` + (d < f || d > t ? ' (outside the dates shown)' : '')); })
-      .catch(err => { if(err.queued){ obKeepTrip(err.queued, temp); toast(err.message, false, 5000); return; } delete PENDING[temp.key]; removeLocal(temp.key); toast('Not added: ' + err.message, true); });
+      .catch(err => { if(err.queued){ obKeepTrip(err.queued, temp); toast(err.message, false, 5000); return; } delete PENDING[temp.key]; removeLocal(temp.key); toast('Not added: ' + err.message, true);
+        if(/already has an open trip|is in .* on this date/i.test(err.message || '')){ const k = rk(d, d); delete TC[k]; fetchTrips(d, d).then(() => { const o = openTripOf(d, no); if(o && !$('drawer').classList.contains('on')) openDispatch(o); }).catch(() => {}); } });
   };
   setTimeout(() => (!truckNo ? $('naTruck') : NO_ROUTE_ST.includes(stKey()) ? $('naSave') : $('naSrc')).focus(), 230);
 }
