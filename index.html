@@ -1594,6 +1594,7 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
     <div class="secrow"><button class="secsave" type="button" data-sec="kpis" data-title="Key numbers">Save key numbers</button></div>
     <div class="kstrip" id="kstrip"><div class="kpis" id="kpis"></div><div class="alerts" id="alerts"></div></div>
     <div class="panel gar" id="garPanel"><h3>Trucks in garage <span class="sub" id="garSub"></span></h3><div class="gar-row" id="garRow"></div></div>
+    <div class="panel gar" id="noTripPanel"><h3>Trucks without a trip <span class="sub" id="noTripSub"></span><button class="secsave" type="button" id="noTripJpg" data-ready="1" title="Download this list as a JPEG picture">JPEG report</button></h3><div class="gar-row" id="noTripRow"></div></div>
     <div class="panel rem" id="remPanel" hidden></div>
     <div class="grid2">
       <div class="panel">
@@ -3462,6 +3463,38 @@ function renderGarages(all){
       + (l.length ? `<div class="gar-list">${l.map(t => `<span class="gar-t">${tLink(t.truckNo, 'Truck ' + t.truckNo)}${t.plateNo ? `<small>${esc(t.plateNo)}</small>` : ''}${k!=='GARAGE LOADED' && isGarageLoaded(t) ? '<small class="gar-ld">Loaded</small>' : ''}</span>`).join('')}</div>` : '<p class="hint">No truck here</p>') + `</div>`;
   }).join('');
 }
+/**
+ * MANU 2026-11-03 "SHOW IN DASHBOARD INACTIVE TRUCKS WITHOUT TRIP": every truck in PLATE with no trip in the dates shown,
+ * in two boxes: ACTIVE trucks (idle) and trucks marked INACTIVE in PLATE, each with its last trip date and days since.
+ * Uses what the Dashboard already has (PLATE list and last trip from sign-in, the trips shown): no extra server call.
+ */
+function renderIdleTrucks(){
+  const box = $('noTripRow'); if(!box || !S.boot) return;
+  // MANU 2026-11-03 "DOWNLOADABLE REPORT IS JPEG": straight to the JPEG picture (name, account, dates on top), no PDF choice
+  const jb = $('noTripJpg'); if(jb && !jb.onclick){ if(!jb.querySelector('svg')) jb.insertAdjacentHTML('afterbegin', SEC_ICON);
+    jb.onclick = e => { e.stopPropagation(); if(jb.disabled) return; jb.disabled = true; const was = jb.innerHTML; jb.lastChild.textContent = 'Making…';
+      Promise.resolve(secShot($('noTripPanel'), 'Trucks without a trip', secFilters(), 'jpg')).finally(() => { jb.disabled = false; jb.innerHTML = was; }); }; }
+  const had = new Set((S.trips || []).filter(isTrip).map(t => String(t.truckNo || '').trim()));
+  const last = S.boot.lastTrip || {}, today = TODAY(), r = S.range || {};
+  const ago = d => { if(!d) return null; const [a, b] = [d, today].map(x => { const [y, m, dd] = x.split('-').map(Number); return Date.UTC(y, m - 1, dd); }); return Math.max(0, Math.round((b - a) / 864e5)); };
+  const latest = {}; (S.trips || []).forEach(t => { const k = String(t.truckNo || '').trim(); if(k && (!latest[k] || rowNewer(t, latest[k]))) latest[k] = t; });
+  const rows = (S.boot.trucks || []).filter(t => t.truckNo && !had.has(String(t.truckNo).trim()))
+    .map(t => ({t, last: last[t.truckNo] || '', days: ago(last[t.truckNo]), st: latest[t.truckNo] ? statusText(latest[t.truckNo]) : ''}))
+    .sort((a, b) => (b.days === null ? 1e9 : b.days) - (a.days === null ? 1e9 : a.days) || (Number(a.t.truckNo) || 1e9) - (Number(b.t.truckNo) || 1e9));
+  // MANU 2026-11-03 "ACTIVE TRUCKS WITH NO TRIP MEANS TRUCKS WITH CREWS": active = has a crew in Truck assignment (current crew);
+  // inactive = no crew (also trucks marked INACTIVE in PLATE)
+  const crew = S.assign[TODAY()] || [];
+  if(!S.assign[TODAY()] && !renderIdleTrucks.asked){ renderIdleTrucks.asked = 1; call('getAssignments', TODAY()).then(l => { S.assign[TODAY()] = l; renderIdleTrucks(); }).catch(() => {}); }
+  const hasCrewNo = no => crew.some(a => String(a.truckNo)===String(no) && (a.driver || a.helper1 || a.helper2));
+  const groups = [['ACTIVE', 'Active trucks (with crew), no trip'], ['INACTIVE', 'Inactive trucks (no crew)']];
+  const isAct = x => String(x.t.status || 'ACTIVE').toUpperCase() !== 'INACTIVE' && hasCrewNo(x.t.truckNo);
+  $('noTripSub').textContent = `${rows.length} truck${rows.length===1 ? '' : 's'} · no trip ${r.from===r.to ? 'on ' + fmtDay(r.to) : 'from ' + fmtDay(r.from) + ' to ' + fmtDay(r.to)}`;
+  box.innerHTML = groups.map(([k, name]) => {
+    const l = rows.filter(x => (k==='ACTIVE') === isAct(x));
+    return `<div class="gar-box${l.length ? '' : ' zero'}"><div class="gar-h"><b>${l.length}</b><span>${esc(name)}</span></div>`
+      + (l.length ? `<div class="gar-list">${l.map(x => `<span class="gar-t">${tLink(x.t.truckNo, 'Truck ' + x.t.truckNo)}${x.t.plateNo ? `<small>${esc(x.t.plateNo)}</small>` : ''}<small>${x.last ? `Last trip ${esc(fmtDay(x.last))} · ${x.days} day${x.days===1 ? '' : 's'} ago` : 'No trip on record'}</small>${x.st ? `<small>${esc(x.st)}</small>` : ''}</span>`).join('')}</div>` : '<p class="hint">Every truck here had a trip</p>') + `</div>`;
+  }).join('');
+}
 function renderDashboard(){
   if(!['dashboard','trips'].includes(S.tab)) return;
   const LY = S.cmp ? S.ly : null, lyOk = !!(LY && LY.trips && !LY.none);
@@ -3501,6 +3534,7 @@ function renderDashboard(){
   $('lane').innerHTML = STAGES.concat(LANE_EXTRA).map(st => { const n = LANE_EXTRA.includes(st) ? all.filter(t => laneOf(t)===st).length : count(st); return `<button class="stop ${n?'':'zero'}" type="button" data-st="${st}" aria-pressed="${S.stageFilter===st}" style="--c:${colorOf(st)}"><span class="n">${fmtN(n)}</span><span class="t">${st}</span></button>`; }).join('');
   $('lane').onclick = e => { const b=e.target.closest('.stop'); if(b) openStagePop(b.dataset.st); };
   renderGarages(all);
+  renderIdleTrucks();
 
   const done = count('Completed');
   const trucksOut = new Set(all.filter(isActiveRow).map(t => t.truckNo || t.plateNo).filter(Boolean)).size;
