@@ -1759,6 +1759,7 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
     <div class="bar">
       <label class="f">From<input type="date" id="xDate"></label>
       <label class="f">To<input type="date" id="xTo"></label>
+      <button class="btn alt" type="button" id="xRefresh" title="Get the newest trips from the server now">↻ Refresh</button>
       <button class="btn" type="button" id="xAddBtn" hidden>+ Add trip</button>
       <button class="btn alt" type="button" id="xDisbBtn" hidden>+ Disbursement</button>
       <span class="x-fund" id="xFund" hidden></span>
@@ -3017,11 +3018,15 @@ function initOnce(){
   initDashboard(); initFleet(); initAssign(); initPlanner(); initDispatcher(); initHardTab(); initFuelTab(); initUnits(); initPod(); initBilling(); initBook(); initDisb(); initAcct(); initPayroll(); initManpower(); initUsers();
   initDrawer();
   $('loadRetry').onclick = loadBoot;
-  setInterval(() => { if(['dashboard','trips'].includes(S.tab) && !document.hidden && S.boot) loadDashboard(true); }, 60000);
+  // Fewer Google calls (MANU 2026-11-03 "make it fast and doesnt consume the google calls"): once the server sends the trips
+  // changed mark (tripsMark), a change refreshes the tab within seconds, so the timed refresh is only a 5 minute safety net,
+  // and the overdue / long waiting lists ask again after 10 minutes only when trips changed (else every 30 minutes, for the clock)
+  const quiet = (job, ms) => { const j = TV.jobs[job] || (TV.jobs[job] = {at:Date.now(), n:TV.n}); if(!TV.v) return true; if(Date.now() - j.at >= ms * 3 || (TV.n !== j.n && Date.now() - j.at >= ms)){ j.at = Date.now(); j.n = TV.n; return true; } return false; };
+  setInterval(() => { if(['dashboard','trips'].includes(S.tab) && !document.hidden && S.boot && (!TV.v || quiet('dash', 100000))) loadDashboard(true); }, 60000);
   // the dispatcher list refreshes itself so everyone sees each other's updates (skipped while a trip or cell is open)
-  setInterval(() => { if(S.tab==='dispatcher' && !document.hidden && S.boot && !$('drawer').classList.contains('on') && !$('cellEd')) loadDispatcher(); }, 60000);
-  setInterval(() => { if(!document.hidden && S.boot) checkOverdue(); }, 10 * 60000);
-  setInterval(() => { if(!document.hidden && S.boot) loadLw(); }, 10 * 60000);
+  setInterval(() => { if(S.tab==='dispatcher' && !document.hidden && S.boot && !$('drawer').classList.contains('on') && !$('cellEd') && (!TV.v || quiet('plan', 100000))) loadDispatcher(); }, 60000);
+  setInterval(() => { if(!document.hidden && S.boot && quiet('od', 10 * 60000)) checkOverdue(); }, 10 * 60000);
+  setInterval(() => { if(!document.hidden && S.boot && quiet('lw', 10 * 60000)) loadLw(); }, 10 * 60000);
   setInterval(() => { if(!document.hidden && S.boot) loadDone(); }, 120000); setTimeout(() => { if(S.boot) loadDone(); }, 4000);
   setInterval(() => { if(!document.hidden && S.boot) checkDone(); }, 15000);
   setInterval(chatTick, 1000); chatTick();
@@ -4278,6 +4283,7 @@ function initDispatcher(){
   $('xTo').onchange = () => { if($('xTo').value && $('xDate').value > $('xTo').value) $('xDate').value = $('xTo').value; loadDispatcher(); };
   $('xFind').oninput = renderDispatcher;
   $('xAddBtn').onclick = () => openDispatchAdd();
+  $('xRefresh').onclick = refreshTruckPlan;
   $('xDisbBtn').onclick = () => openOpsForm('DISB', {});
   $('xReport').onclick = openTruckPlanReport;
   $('xAcct').onchange = () => { const d = xRange()[1]; if(!S.assign[d]) call('getAssignments', d).then(l => { S.assign[d] = l; renderDispatcher(); }).catch(e => toast(e.message, true)); renderDispatcher(); };
@@ -4408,6 +4414,19 @@ function openDispatchAdd(truckNo, opt){
         if(/already has an open trip|is in .* on this date/i.test(err.message || '')){ const k = rk(d, d); delete TC[k]; fetchTrips(d, d).then(() => { const o = openTripOf(d, no); if(o && !$('drawer').classList.contains('on')) openDispatch(o); }).catch(() => {}); } });
   };
   setTimeout(() => (!truckNo ? $('naTruck') : NO_ROUTE_ST.includes(stKey()) ? $('naSave') : $('naSrc')).focus(), 230);
+}
+/** Truck Plan "↻ Refresh" (MANU 2026-11-03 "ADD A MANUAL REFRESH IN TRUCKPLAN"): the shown dates come whole from the server
+ *  now, not from this phone's kept copy; the crew and the ops fund too. */
+function refreshTruckPlan(){
+  const b = $('xRefresh'); if(b.disabled) return;
+  const [f, t] = xRange(), cf = addDays(f, -3), ct = addDays(t, 3);
+  const dh = lsGet('jmti_dh') || {}; Object.keys(dh).forEach(d => { if(d >= cf && d <= ct) delete dh[d]; }); lsSet('jmti_dh', dh);   // whole dates, not only changes
+  Object.keys(TC).forEach(k => { const [a, z] = k.split('|'); if(a <= ct && z >= cf) delete TC[k]; });
+  Object.keys(FRESH).forEach(k => { delete FRESH[k]; });
+  delete S.assign[t]; OPS.fundAt = 0; TV.due = false;
+  b.disabled = true; b.textContent = '↻ Refreshing…';
+  Promise.resolve(loadDispatcher()).then(() => toast('Truck Plan is up to date.')).catch(e => toast(e.message, true))
+    .finally(() => { b.disabled = false; b.textContent = '↻ Refresh'; });
 }
 /** An open trip (planned or on the road) of a truck on a date, from the trips already loaded. */
 function openTripOf(d, no){
@@ -6721,7 +6740,7 @@ function openOutbox(){
    Each ask sends the chat version this phone has, so an ask with nothing new is cheap. After a failed ask it waits longer.
    A new message while the chat is closed shows a short notice. What you have read is kept on this phone. */
 const CH = {view:'list', out:[], sendQ:null, up:[], thumbs:{}, thumbWant:{}, typSig:'', msgs:[], users:[], groups:[], me:'', last:0, conv:'', loaded:false, busy:false, at:0, user:'', seenN:0, v:'', fail:0, typing:[], typAt:0, typSent:0, typTo:'', reads:{}, rv:0, rdOk:false, rdSig:'', cs:0, act:null, actOff:0, actAt:0, re:null, seenSent:{}, seenQ:{}, hide:new Set(), hidePend:new Set()};
-const CH_OPEN_MS = 2000, CH_SHUT_MS = 10000;
+const CH_OPEN_MS = 4000, CH_SHUT_MS = 10000;   // chat open: every 4 s (was 2 s; 30 people at once, MANU 2026-11-03)
 const chatOpen = () => dockShown() || (!$('pop').hidden && $('pop').classList.contains('chatpop'));
 /* Chat window on wide screens (1200 px and up): opens next to the floating chat button when it is tapped and closes with ✕ or
    another tap; the page stays usable around it. Narrower screens use the pop-up. (MANU 2026-10-14: not fixed any more.) */
@@ -6875,12 +6894,36 @@ function chatTick(){
   if(Date.now() - CH.at < wait) return;
   CH.at = Date.now(); chatPoll();
 }
+/**
+ * Real time trips (MANU 2026-11-03 "truckplan takes a long time to sync, i want to make it real time"): every chat check
+ * (10 s, 2 s with the chat open) brings the server's trips changed mark. When it moves, someone saved a trip (or the sheet was
+ * edited): the tab showing trips gets only the changed dates again right away, instead of waiting for the 60 s refresh.
+ * While a trip pop-up or a cell edit is open it waits and refreshes when that closes.
+ */
+const TV = {v:'', due:false, n:0, jobs:{}};
+function tripsMark(v){
+  // each phone waits a random 0-8 s, so 30 phones don't all ask the server in the same second after one save (30 people at once)
+  if(TV.v && v !== TV.v){ if(!TV.due) TV.at = Date.now() + Math.random() * 8000; TV.due = true; TV.n++; }
+  TV.v = v;
+  tripsRefreshDue();
+}
+function tripsRefreshDue(){
+  if(!TV.due || document.hidden || !S.boot || Date.now() < (TV.at || 0)) return;
+  if(!$('drawer').classList.contains('on') && !$('cellEd') && !Object.keys(PENDING).length){
+    const fn = {dispatcher:loadDispatcher, dashboard:() => loadDashboard(true), trips:() => loadDashboard(true), pod:loadPod, billing:loadBilling}[S.tab];
+    TV.due = false;
+    Object.keys(FRESH).forEach(k => { delete FRESH[k]; });   // ask the server, not the copy fetched moments ago
+    if(fn) fn();
+  }
+}
+setInterval(tripsRefreshDue, 2000);
 function chatPoll(){
   CH.busy = true; const u = CH.user;
   const full = !CH.full;   // the first ask after the page opens: the people and groups too (a kept copy may be from before groups)
   const opt = {cs:CH.cs || 0, rv:CH.rv || 0};   // the newest reaction / unsend and read receipt this phone has
   if(Date.now() - CH.actAt > 30000){ opt.act = true; CH.actAt = Date.now(); }   // who is active: every 30 s
   // riding along (Faster, 2026-11-02): who is online, the trips of the "trip completed" pop-up, the speed notes
+  opt.tv = 1;   // ask for the trips changed mark (real time Truck Plan)
   const ride = {on: !!(ON.want && mayOnline()), done: DN.want};
   if(ride.on) opt.on = 1;
   if(ride.done) opt.done = ride.done;
@@ -6889,6 +6932,7 @@ function chatPoll(){
   return call('chatList', CH.last, CH.loaded && !full ? CH.v : '', full, opt).then(d => { CH.fail = 0;
       if(ride.on && d.online) onlineGot(d.online);
       if(ride.done && d.done && DN.want === ride.done) doneGot(d.done);
+      if(d.tv!==undefined) tripsMark(String(d.tv));
       if(CH.user===u){ if(full) CH.full = true; if(d.v) CH.v = String(d.v); chatMerge(d); if(d.rv!==undefined) CH.rv = Number(d.rv) || 0; } })
     .catch(() => { CH.fail = Math.min(3, CH.fail + 1); }).finally(() => { CH.busy = false; });
 }
@@ -8864,6 +8908,8 @@ function loadOpsFund(){
   if(!on) return;
   if(!OPS.fund) OPS.fund = lsGet('jmti_opsfund');
   renderOpsFund();
+  if(Date.now() - (OPS.fundAt || 0) < 60000) return;   // fewer Google calls: Truck Plan refreshes often now
+  OPS.fundAt = Date.now();
   call('opsFund').then(f => { OPS.fund = f; lsSet('jmti_opsfund', f); renderOpsFund(); }).catch(() => {});
 }
 function renderOpsFund(){
