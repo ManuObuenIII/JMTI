@@ -1825,6 +1825,7 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
       <label class="f grow">Find<input id="podFind" placeholder="Truck, plate, shipment, customer"></label>
       <button class="btn alt" type="button" id="podReport">Generate report</button>
       <button class="btn alt" type="button" id="podCsv">Download CSV</button>
+      <button class="btn alt" type="button" id="podRefresh" title="Load the newest POD data from the sheet">↻ Refresh</button>
     </div>
     <div class="kpis kpis4" id="podKpi"></div>
     <div class="chips" id="podChips" style="margin:-6px 0 14px"></div>
@@ -4496,6 +4497,18 @@ function refreshTruckPlan(){
   Promise.resolve(loadDispatcher()).then(() => toast('Truck Plan is up to date.')).catch(e => toast(e.message, true))
     .finally(() => { b.disabled = false; b.textContent = '↻ Refresh'; });
 }
+/** POD "↻ Refresh" (MANU 2026-11-04 "add a refresh button in POD"): drops the kept copies of the POD dates and reloads them from the server. */
+function refreshPod(){
+  const b = $('podRefresh'); if(b.disabled) return;
+  const f = $('podFrom').value, t = $('podTo').value;
+  const dh = lsGet('jmti_dh') || {}; Object.keys(dh).forEach(d => { if(d >= f && d <= t) delete dh[d]; }); lsSet('jmti_dh', dh);
+  Object.keys(TC).forEach(k => { const [a, z] = k.split('|'); if(a <= t && z >= f) delete TC[k]; });
+  Object.keys(FRESH).forEach(k => { delete FRESH[k]; });
+  TV.due = false;
+  b.disabled = true; b.textContent = '↻ Refreshing…';
+  Promise.resolve(loadPod()).then(() => toast('POD is up to date.')).catch(e => toast(e.message, true))
+    .finally(() => { b.disabled = false; b.textContent = '↻ Refresh'; });
+}
 /** An open trip (planned or on the road) of a truck on a date, from the trips already loaded. */
 function openTripOf(d, no){
   const list = TC[rk(d,d)] || S.xCtx || S.xTrips;
@@ -5331,6 +5344,7 @@ function initPod(){
   $('podFind').oninput = $('podAcct').onchange = $('podCust').onchange = renderPod;
   $('podReport').onclick = openPodReport;
   $('podCsv').onclick = podCsv;
+  $('podRefresh').onclick = refreshPod;
   $('podList').onclick = e => {
     if(e.target.closest('#podBulk')) return bulkCheck('pod');
     const c=e.target.closest('[data-key]'); if(!c) return;
