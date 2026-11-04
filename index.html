@@ -2431,8 +2431,8 @@ function roundTrips(trips){
 const isCokePlace = v => /COCACOLA/.test(nameKey(placeOf(v)));
 const cokeToCoke = t => isCokePlace(t.customer) && isCokePlace(t.destination);
 /** Trip type (MANU 2026-11-04 "if source is coca cola and destination is also coca cola that is a T1 trip other wise a T2 trip"): T1 = 0.5, T2 = 1. */
-const tripType = t => cokeToCoke(t) ? 'T1' : 'T2';
-const ttTag = t => `<span class="ttag ${tripType(t)==='T1' ? 't1' : 't2'}" title="${tripType(t)==='T1' ? 'T1 trip: Coca Cola to Coca Cola, counts 0.5' : 'T2 trip: counts 1'}">${tripType(t)}</span>`;
+const tripType = t => !isCokePlace(t.customer) ? '' : cokeToCoke(t) ? 'T1' : 'T2';   // only Coca Cola source trips have a type (MANU 2026-11-04 "T2 and T1 trips only apply for coca cola")
+const ttTag = t => !tripType(t) ? '' : `<span class="ttag ${tripType(t)==='T1' ? 't1' : 't2'}" title="${tripType(t)==='T1' ? 'T1 trip: Coca Cola to Coca Cola, counts 0.5' : 'T2 trip: Coca Cola to a customer, counts 1'}">${tripType(t)}</span>`;
 /** TUKOD is half a trip (MANU 2026-11-02), and so is the On Site Destination trip added after it ("TUKOD FROM …" remarks). */
 const tkH = t => (statusText(t).toLowerCase()==='tukod' || /^TUKOD FROM /i.test(String(t.remarks || '').trim())) ? 0.5 : 1;
 const halfW = (w, h) => { if(h===1) return w; const o = {}; Object.keys(w).forEach(a => { o[a] = w[a] * h; }); return o; };
@@ -3066,7 +3066,7 @@ function loadBoot(){
     if(r.assignOn===today) S.assign[today] = r.assign;   // only when it is today's crew (an older server sent the From date's crew)
     else call('getAssignments', today).then(l => { S.assign[today] = l; redrawAll(); if(S.tab==='assign') renderAssign(); }).catch(() => {});
     S.me = r.me; store('jmti_me', JSON.stringify(r.me));
-    const wasEmpty = !S.boot; S.boot = r.boot;
+    const wasEmpty = !S.boot; S.boot = r.boot; S.bootAt = Date.now();
     fillLists();
     if(wasEmpty) showTab(S.tab); else { redrawAll(); if(S.tab==='assign') renderAssign(); }
     S.odPre = r.od ? {at: Date.now(), v: r.od} : null;   // overdue list and idle trucks came with it (dispatch roles)
@@ -4436,7 +4436,8 @@ const NO_ROUTE_ST = GARAGE_KEYS.concat(['waiting for shipment'], ADD_NOTRIP), SR
 const stName = k => k==='clip board' ? S.boot.planned : (S.boot.statuses || []).find(v => v.toLowerCase()===k) || k.replace(/\b\w/g, c => c.toUpperCase());
 const isCokeTruck = (d, no) => { const c = crewFor(d, no); return !!c && [0, 1].includes(acctSec(c.account || '')); };
 function openDispatchAdd(truckNo, opt){
-  if(feedLive()) return feedAddPop();   // a new row would land under the 2.0 formula (the server refuses it too)
+  if(feedLive()) return feedAddPop();
+  refreshRoutes();   // routes added anywhere show in the source/destination boxes (MANU 2026-11-04: within 5 seconds)   // a new row would land under the 2.0 formula (the server refuses it too)
   opt = opt || {};
   const [rf, rt] = xRange(), d0 = opt.date || (TODAY() >= rf && TODAY() <= rt ? TODAY() : rf);   // the date asked for (next trip: today), else today when it is in the range, else the From date
   ensureCrew(d0);
@@ -4522,6 +4523,31 @@ function openDispatchAdd(truckNo, opt){
 }
 /** Truck Plan "↻ Refresh" (MANU 2026-11-03 "ADD A MANUAL REFRESH IN TRUCKPLAN"): the shown dates come whole from the server
  *  now, not from this phone's kept copy; the crew and the ops fund too. */
+/** Fresh lists from the server (CLIENT LIST routes, customers, trucks, crew): MANU 2026-11-04 "when source and destination is added,
+ *  even if you refresh it doesn't show at truckplan add trip unless you sign out and sign in". Truck Plan ↻ Refresh, Add trip
+ *  (at most every 2 minutes) and a route saved in Clients call it; returns a promise. */
+function refreshBoot(minAge){
+  if(!S.boot || !TOKEN) return Promise.resolve();
+  if(minAge && Date.now() - (S.bootAt || 0) < minAge) return Promise.resolve();
+  if(refreshBoot.p) return refreshBoot.p;
+  S.bootAt = Date.now();
+  return refreshBoot.p = call('getBootstrap').then(b => {
+    if(!b || !S.me) return;
+    b.today = TODAY(); b._user = S.me.username; S.boot = b; lsSet('jmti_boot', b); fillLists();
+  }).catch(() => {}).finally(() => { refreshBoot.p = null; });
+}
+/** Only CLIENT LIST (sources, destinations, km), fresh from the sheet: on every Add trip and source/destination cell open. */
+function refreshRoutes(){
+  if(!S.boot || !TOKEN) return Promise.resolve(false);
+  if(refreshRoutes.p) return refreshRoutes.p;
+  return refreshRoutes.p = call('getClientLists').then(c => {
+    if(!c || !S.boot || !c.customers) return false;
+    const same = JSON.stringify(c.destinations) === JSON.stringify(S.boot.destinations) && JSON.stringify(c.customers) === JSON.stringify(S.boot.customers);
+    Object.assign(S.boot, {customers: c.customers, destinations: c.destinations, km: c.km}); lsSet('jmti_boot', S.boot);
+    if(!same) fillLists();
+    return !same;
+  }).catch(() => false).finally(() => { refreshRoutes.p = null; });
+}
 function refreshTruckPlan(){
   const b = $('xRefresh'); if(b.disabled) return;
   const [f, t] = xRange(), cf = addDays(f, -3), ct = addDays(t, 3);
@@ -4530,7 +4556,7 @@ function refreshTruckPlan(){
   Object.keys(FRESH).forEach(k => { delete FRESH[k]; });
   delete S.assign[t]; OPS.fundAt = 0; TV.due = false;
   b.disabled = true; b.textContent = '↻ Refreshing…';
-  Promise.resolve(loadDispatcher()).then(() => toast('Truck Plan is up to date.')).catch(e => toast(e.message, true))
+  Promise.all([loadDispatcher(), refreshBoot()]).then(() => toast('Truck Plan is up to date.')).catch(e => toast(e.message, true))
     .finally(() => { b.disabled = false; b.textContent = '↻ Refresh'; });
 }
 /** POD "↻ Refresh" (MANU 2026-11-04 "add a refresh button in POD"): drops the kept copies of the POD dates and reloads them from the server. */
@@ -5197,7 +5223,7 @@ function openDispatch(t){
         <span class="hint">${ro('date') ? (fedKey(t, 'date') ? 'The date comes from GENERAL DATABASE 2.0.' : 'Your role can\'t move the trip date.') : `Pick another date to move this trip there (up to ${DATE_MOVE_DAYS} days either way). Trip ID, times and crew stay the same.`}</span></label>
       <label class="f full">${esc(hdr(4,'Source'))}<input data-k="customer" list="dlCustomers" value="${esc(t.customer||'')}"${fedKey(t, 'customer') ? ' readonly' : ''}></label>
       <label class="f full">${esc(hdr(5,'Destination'))}<input data-k="destination" list="dlDest" value="${esc(t.destination||'')}"${fedKey(t, 'destination') ? ' readonly' : ''}></label>
-      ${isTrip(t) ? `<p class="hint full" style="margin:0">Trip type: ${ttTag(t)} ${tripType(t)==='T1' ? 'Coca Cola → Coca Cola, counts 0.5 trip' : 'counts 1 trip'}${tkH(t) < 1 ? ' (TUKOD: half of that)' : ''}</p>` : ''}
+      ${isTrip(t) ? `<p class="hint full" style="margin:0">${tripType(t) ? 'Trip type: ' + ttTag(t) + ' ' : 'Not a Coca Cola trip: '}${tripType(t)==='T1' ? 'Coca Cola → Coca Cola, counts 0.5 trip' : 'counts 1 trip'}${tkH(t) < 1 ? ' (TUKOD: half of that)' : ''}</p>` : ''}
       ${field('shipmentNo',7,'Shipment no')}
       ${field('kms',6,'KMS','inputmode="decimal"')}
       ${field('budget',22,'Budget','inputmode="decimal"')}
@@ -5261,6 +5287,8 @@ function openCellEditor(t, k, td){
   td.classList.add('sel');
   const isTime = MS_KEYS.includes(k);
   if(k==='destination') fillDest(t.customer || '');
+  if(k==='customer' || k==='destination') refreshRoutes().then(ch => { const v = $('ceVal'); if(!ch || !v || !$('cellEd')) return;   // newest CLIENT LIST
+    if(k==='destination' && v.tagName==='SELECT'){ const cur = v.value; v.innerHTML = destOptions(t.customer, cur); v.value = cur; } });
   const label = isTime ? MS_LABEL[k] : ({date:'Trip date', customer:'Source', destination:'Destination', truckNo:'Truck #', plateNo:'Plate number', shipmentNo:'Shipment number', kms:'KMS', mano:'Fuel (liters)', budget:'Budget (₱)', remarks:'Remarks', driver:'Driver', helper1:'Helper', helper2:'Helper 2', status:'Status'})[k];
   const cur = isTime ? (isIso(t[k]) ? t[k].slice(0,16) : '') : (k==='kms' ? (t.kms || tripKm(t)) : (k==='status' ? statusText(t) : (t[k] || '')));
   const isDate = k==='date';   // the trip moves to the picked date (MANU 2026-11-02); the trip ID and crew stay
@@ -5911,7 +5939,7 @@ async function saveRoute(e){
     S.routes = await call('saveRoute', route);
     const key = nameKey(route.origin)+'|'+nameKey(route.destination);
     S.boot.km[key] = Number(route.km); if(S.boot.km['|'+nameKey(route.destination)]===undefined) S.boot.km['|'+nameKey(route.destination)] = Number(route.km); learnNames({customer:route.origin, destination:route.destination}); lsSet('jmti_boot', S.boot);
-    resetRoute(); renderRoutes(); toast(ed ? 'Route saved' : 'Added to CLIENT LIST');
+    resetRoute(); renderRoutes(); toast(ed ? 'Route saved' : 'Added to CLIENT LIST'); refreshBoot();
   }catch(err){ toast(err.message, true); }
   $('rSave').disabled = false;
 }
@@ -8707,7 +8735,7 @@ function openAddRoute(){
       if(S.boot){ if(S.boot.km){ S.boot.km[nameKey(src) + '|' + nameKey(dest)] = km; if(S.boot.km['|' + nameKey(dest)]===undefined) S.boot.km['|' + nameKey(dest)] = km; }
         learnNames({customer:src, destination:dest}); }
       // the pop-up closes as soon as the route is saved; the Clients list refreshes behind it (MANU 2026-11-02 "its loading a long time")
-      closePop(); toast(`Added: ${src} → ${dest} · ${fmtN(km)} km`);
+      closePop(); toast(`Added: ${src} → ${dest} · ${fmtN(km)} km`); refreshBoot();
       call('clientBook').then(d => { CL.data = d; loadNoDist(); afterBook(); }).catch(() => {});
     }catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Add route'; }
   };
