@@ -5392,9 +5392,9 @@ function renderPod(){
   S.podReady = ready;
   const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips in Waiting docs have scanned documents.</span><button class="btn road" type="button" id="podBulk">Mark all ${ready.length} ENDORSED TO BILLING</button></div>` : '';
   const docCell = t => t.podAt ? `<span class="docstate ok">Sent ${esc(t.podAt.slice(0,10))}</span>` : `<span class="docstate wait">${files(t).length ? files(t).length+' file(s) · to check' : 'No documents'}</span>`;
-  $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th>Driver</th><th>Helpers</th><th>Documents</th><th>POD remarks</th><th>Status</th></tr></thead><tbody>` +
+  $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th>Driver</th><th>Helpers</th><th>POD remarks</th><th>Documents</th><th>Status</th></tr></thead><tbody>` +
     list.map((t,i) => {
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.podFilter==='completed' ? 'No trip endorsed to billing in these dates.' : 'Nothing left to check here.'}</div>`;
   freezeCols($('podList'));
 }
@@ -5475,10 +5475,10 @@ function podCsv(){
   if(!l.length) return toast('No trips shown to download.', true);
   const chip = ({tocheck:'All to check', pending:'Pending', waitdocs:'Waiting docs', recvdocs:'Received documents', tukod:'Tukod', completed:'Endorsed to Billing'})[S.podFilter] || '';
   saveCsvFile(`POD ${chip} ${$('podFrom').value} to ${$('podTo').value}.csv`.replace(/\s+/g, ' '),
-    ['#', 'Trip date', 'Trip ID', 'Truck', 'Plate', 'Customer', 'Destination', 'Shipment', 'Driver', 'Helpers', 'Documents', 'POD remarks', 'Status', 'Status updated'],
+    ['#', 'Trip date', 'Trip ID', 'Truck', 'Plate', 'Customer', 'Destination', 'Shipment', 'Driver', 'Helpers', 'POD remarks', 'Documents', 'Status', 'Status updated', 'Updated by'],
     l.map((t, i) => [i + 1, t.date, t.tripId || '', t.truckNo || '', t.plateNo || '', t.customer || '', t.destination || '', t.shipmentNo || '', t.driver || '',
-      [t.helper1, t.helper2].filter(Boolean).join(', '), t.podAt ? 'Sent ' + String(t.podAt).slice(0, 10) : files(t).length ? files(t).length + ' file(s)' : 'No documents',
-      t.pod || '', podSt(t), t.podUpdAt ? podWhen(t.podUpdAt) : '']));
+      [t.helper1, t.helper2].filter(Boolean).join(', '), t.pod || '', t.podAt ? 'Sent ' + String(t.podAt).slice(0, 10) : files(t).length ? files(t).length + ' file(s)' : 'No documents',
+      podSt(t), t.podUpdAt ? podWhen(t.podUpdAt) : '', t.podUpdBy || '']));
 }
 function openPod(t){
   if(!t) return;
@@ -5502,7 +5502,7 @@ function openPod(t){
     const pod = $('podRemarks').value.trim().toUpperCase();
     if(checked===true) status = POD_DONE;
     const next = {...t, pod};
-    if(status!==undefined){ next.finalStatus = status; next.podUpdAt = nowStamp(); }
+    if(status!==undefined){ next.finalStatus = status; next.podUpdAt = nowStamp(); next.podUpdBy = S.me.name; }
     if(status===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; }
     if(checked===false){ next.podAt = ''; next.podBy = ''; next.finalStatus = ''; }
     closeDrawer();
@@ -5570,7 +5570,7 @@ function openPodStatus(t, td){
     const st = b.dataset.st; closeCellEditor();
     if(st===podSt(t)) return toast('Nothing changed');
     if(st===POD_DONE && !files(t).length && !confirm('No scanned document is uploaded for this trip. Mark ENDORSED TO BILLING and send to billing anyway?')) return;
-    const next = {...t, finalStatus: st, podUpdAt: nowStamp()}; if(st===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; }
+    const next = {...t, finalStatus: st, podUpdAt: nowStamp(), podUpdBy: S.me.name}; if(st===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; }
     saveOptimistic(next, t, () => callQ('podSave', refOf(t), {status: st}), () => st===POD_DONE ? 'ENDORSED TO BILLING — moved to billing' : 'Status: ' + st);
   };
   if($('podUndo')) $('podUndo').onclick = () => send(false);
