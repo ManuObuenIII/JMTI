@@ -2434,7 +2434,7 @@ const cokeToCoke = t => isCokePlace(t.customer) && isCokePlace(t.destination);
 const tripType = t => !isCokePlace(t.customer) ? '' : cokeToCoke(t) ? 'T1' : 'T2';   // only Coca Cola source trips have a type (MANU 2026-11-04 "T2 and T1 trips only apply for coca cola")
 const ttTag = t => !tripType(t) ? '' : `<span class="ttag ${tripType(t)==='T1' ? 't1' : 't2'}" title="${tripType(t)==='T1' ? 'T1 trip: Coca Cola to Coca Cola, counts 0.5' : 'T2 trip: Coca Cola to a customer, counts 1'}">${tripType(t)}</span>`;
 /** TUKOD is half a trip (MANU 2026-11-02), and so is the On Site Destination trip added after it ("TUKOD FROM …" remarks). */
-const tkH = t => (statusText(t).toLowerCase()==='tukod' || /^TUKOD FROM /i.test(String(t.remarks || '').trim())) ? 0.5 : 1;
+const tkH = t => statusText(t).toLowerCase()==='tukod' ? 0.5 : 1;   // the trip made after TUKOD counts 1 (MANU 2026-11-04)
 const halfW = (w, h) => { if(h===1) return w; const o = {}; Object.keys(w).forEach(a => { o[a] = w[a] * h; }); return o; };
 const tripW = t => halfW(TRIP_W[t.key] ? TRIP_W[t.key].w : tripAcctW(t), tkH(t));
 /** Trip counts (MANU 2026-10-13): a round trip is 1 trip, each leg 0.5, everywhere trips are counted.
