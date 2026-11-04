@@ -1492,6 +1492,10 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
 .ttag{display:inline-block;font:800 10px/1 inherit;letter-spacing:.04em;padding:3px 6px;border-radius:6px;vertical-align:middle;margin:0 2px}.ttag.t1{background:#E0E7FF;color:#1E3A8A;border:1px solid #A5B4FC}.ttag.t2{background:#DCFCE7;color:#14532D;border:1px solid #86EFAC}
 .pst-at{display:block;margin-top:3px;font-size:10.5px;color:var(--muted);white-space:nowrap}
 
+#shPanel .sh-find input,#shPanel .sh-find select{width:100%;box-sizing:border-box}
+.sh-find{display:flex;flex-direction:column;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.sh-find-row{display:flex;gap:8px;flex-wrap:wrap}.sh-find-row .f{flex:1;min-width:110px}
+td.xrem{min-width:180px;white-space:pre-wrap;word-break:break-word}
 td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700}
 /* Shift endorsement notepad (MANU 2026-11-04) */
 .sh-fab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:35;border:0;border-radius:12px 0 0 12px;padding:14px 8px;background:#0A27B5;color:#fff;font:700 12.5px/1 inherit;cursor:pointer;box-shadow:0 6px 18px rgba(2,10,53,.35)}
@@ -1503,6 +1507,8 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
 .sh-body textarea{width:100%;min-height:150px;box-sizing:border-box}
 .sh-note{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px;background:rgba(46,91,255,.04)}
 .sh-note .m{font-size:11.5px;color:var(--muted);margin-bottom:6px}
+.sh-who{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--ink);margin-bottom:8px;padding-bottom:6px;border-bottom:1px dashed var(--line)}
+.sh-note .m:empty{display:none}
 .sh-note .t{white-space:pre-wrap;word-break:break-word;font-size:13.5px}
 .sh-sec{font-weight:700;font-size:12.5px;color:var(--ink);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.4px}
 @media print{.sh-fab,.sh-panel{display:none!important}}
@@ -4394,6 +4400,8 @@ function initDispatcher(){
     const nb = e.target.closest('[data-next]');
     if(nb && !view) return quickNext(t, nb.dataset.next);
     const td = e.target.closest('td.ed');
+    // MANU 2026-11-04 "when budget cell is clicked, it should pop-up disbursement": the Disbursement form for this trip's crew
+    if(td && td.dataset.f==='budget' && may('opsDisburse') && !$('xDisbBtn').hidden) return openOpsForm('DISB', {trip: t});
     if(td && !view) return openCellEditor(t, td.dataset.f, td);
     openDispatch(t);
   };
@@ -5114,7 +5122,7 @@ function renderDispatcher(){
   const byTruck = (a,b) => String(a.truckNo).localeCompare(String(b.truckNo),undefined,{numeric:true}) || String(a.date).localeCompare(String(b.date));
   const garL = list.filter(t => !onRoute(t) && isGar(t)).sort((a,b) => statusText(a).localeCompare(statusText(b)) || byTruck(a,b));
   const notL = list.filter(t => !onRoute(t) && !isGar(t)).sort(byTruck), routeL = list.filter(onRoute);
-  const head = groupRoutes(routeL, byTrip, () => true, 15 + MS_KEYS.length, acc ? null : t => secRank(secOf(t)));   // blue route title on every route, all accounts (MANU)
+  const head = groupRoutes(routeL, byTrip, () => true, 16 + MS_KEYS.length, acc ? null : t => secRank(secOf(t)));   // blue route title on every route, all accounts (MANU)
   const tm = v => v ? esc(toDate(v) ? toDate(v).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : v) : '';
   // every truck assigned to an account (or to the picked account) with no trip that day, grouped by account at the end
   const assignedNos = accTrucks || (S.assign[d] || []).filter(a => a.account).map(a => String(a.truckNo));
@@ -5122,15 +5130,15 @@ function renderDispatcher(){
     .map(no => { const a = (S.assign[d] || []).find(x => String(x.truckNo)===no) || {}; return {no, a, rp: holdOf(a.plateNo || plateFor(no))}; })
     .filter(({no, a}) => !q || [no, a.plateNo, a.driver, a.helper1, a.helper2].join(' ').toLowerCase().includes(q)) : [];
     idleTrucks.sort((x,y) => secRank(x.a.account||'') - secRank(y.a.account||'') || (x.rp ? 1 : 0) - (y.rp ? 1 : 0) || x.no.localeCompare(y.no,undefined,{numeric:true}));
-  const idleHead = (acct, n, mnt) => mnt ? `<tr class="routehd mnthd"><td colspan="${15 + MS_KEYS.length}"><div><b>UNDER MAINTENANCE</b> <span>· ${n} truck${n===1?'':'s'} · open Major or Minor job order, can't be dispatched</span></div></td></tr>`
-    : `<tr class="routehd"><td colspan="${15 + MS_KEYS.length}"><div><b>WAITING SHIPMENT</b> <span>· ${n} truck${n===1?'':'s'}${may('dispatchAdd') ? ' · tap a truck to add a trip' : ''}</span></div></td></tr>`;
-  const mntRow = ({no, a, rp}, n) => `<tr class="idle mnt" style="--c:#DC2626"><td class="nx"></td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td colspan="2"><span class="tag-repair">UNDER MAINTENANCE</span> · ${esc(repairText(rp))}${rp.description ? `<small>${esc(rp.description)}</small>` : ''}</td><td colspan="4"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Under maintenance</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}</tr>`;
-  const idleRow = ({no, a}, n) => `<tr class="idle${may('dispatchAdd') ? ' rowbtn' : ''}" data-idle="${esc(no)}" ${may('dispatchAdd') ? 'title="Add a trip for this truck"' : ''} style="--c:#94A3B8"><td class="nx">${may('dispatchAdd') ? '<button class="nextbtn add" type="button">＋ Add trip</button>' : ''}</td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td class="dim">${xRange()[0]===xRange()[1] ? 'No trip on this date' : 'No trip in these dates'}</td><td class="dim">${esc(sinceText((S.boot.lastTrip || {})[no] || ''))}${may('dispatchAdd') ? ' · <b>tap to add a trip</b>' : ''}</td><td colspan="4"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Waiting shipment</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}</tr>`;
+  const idleHead = (acct, n, mnt) => mnt ? `<tr class="routehd mnthd"><td colspan="${16 + MS_KEYS.length}"><div><b>UNDER MAINTENANCE</b> <span>· ${n} truck${n===1?'':'s'} · open Major or Minor job order, can't be dispatched</span></div></td></tr>`
+    : `<tr class="routehd"><td colspan="${16 + MS_KEYS.length}"><div><b>WAITING SHIPMENT</b> <span>· ${n} truck${n===1?'':'s'}${may('dispatchAdd') ? ' · tap a truck to add a trip' : ''}</span></div></td></tr>`;
+  const mntRow = ({no, a, rp}, n) => `<tr class="idle mnt" style="--c:#DC2626"><td class="nx"></td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td colspan="2"><span class="tag-repair">UNDER MAINTENANCE</span> · ${esc(repairText(rp))}${rp.description ? `<small>${esc(rp.description)}</small>` : ''}</td><td colspan="4"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Under maintenance</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}<td></td></tr>`;
+  const idleRow = ({no, a}, n) => `<tr class="idle${may('dispatchAdd') ? ' rowbtn' : ''}" data-idle="${esc(no)}" ${may('dispatchAdd') ? 'title="Add a trip for this truck"' : ''} style="--c:#94A3B8"><td class="nx">${may('dispatchAdd') ? '<button class="nextbtn add" type="button">＋ Add trip</button>' : ''}</td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td class="dim">${xRange()[0]===xRange()[1] ? 'No trip on this date' : 'No trip in these dates'}</td><td class="dim">${esc(sinceText((S.boot.lastTrip || {})[no] || ''))}${may('dispatchAdd') ? ' · <b>tap to add a trip</b>' : ''}</td><td colspan="4"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Waiting shipment</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}<td></td></tr>`;
   const idleBlock = (items, start) => items.map((x, i) => (i===0 || (items[i-1].a.account||'') !== (x.a.account||'') || !!items[i-1].rp !== !!x.rp ? idleHead(x.a.account, items.filter(y => (y.a.account||'')===(x.a.account||'') && !!y.rp === !!x.rp).length, !!x.rp) : '') + (x.rp ? mntRow(x, start + i + 1) : idleRow(x, start + i + 1))).join('');
   const tripRow = (t, i) => { const st = stageOf(t), rp = repairOf(t.plateNo);
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="ed" data-f="driver">${pLink(t.driver)}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}</tr>`; };
-  const accHead = (a, nt, ni, nm) => `<tr class="acchd"><td colspan="${15 + MS_KEYS.length}"><div><b>${esc(a ? titleCase(a) : 'Not counted in an account')}</b> <span>· ${tripsTxt(nt)}${ni ? ` · ${ni} waiting shipment` : ''}${nm ? ` · ${nm} under maintenance` : ''}</span></div></td></tr>`;
-  const restHead = (cls, label, k, note) => `<tr class="${cls}"><td colspan="${15 + MS_KEYS.length}"><div><b>${label}</b> <span>· ${k} row${k===1?'':'s'} · ${note}</span></div></td></tr>`;
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="ed" data-f="driver">${pLink(t.driver)}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}<td class="ed xrem" data-f="remarks">${esc(t.remarks || '')}</td></tr>`; };   // Remarks last (MANU 2026-11-04 "in truckplan, add remarks at the last column")
+  const accHead = (a, nt, ni, nm) => `<tr class="acchd"><td colspan="${16 + MS_KEYS.length}"><div><b>${esc(a ? titleCase(a) : 'Not counted in an account')}</b> <span>· ${tripsTxt(nt)}${ni ? ` · ${ni} waiting shipment` : ''}${nm ? ` · ${nm} under maintenance` : ''}</span></div></td></tr>`;
+  const restHead = (cls, label, k, note) => `<tr class="${cls}"><td colspan="${16 + MS_KEYS.length}"><div><b>${label}</b> <span>· ${k} row${k===1?'':'s'} · ${note}</span></div></td></tr>`;
   let body = '', n = 0;
   if(acc){ body = routeL.map(t => tripRow(t, n++)).join('') + idleBlock(idleTrucks, n); n += idleTrucks.length; }
   else SECS.forEach(sec => {
@@ -5140,7 +5148,7 @@ function renderDispatcher(){
   });
   if(garL.length) body += restHead('acchd garhd', 'GARAGE', garL.length, 'every garage status, all accounts, not counted as trips; garage loaded stays on its route') + garL.map(t => tripRow(t, n++)).join('');
   if(notL.length) body += restHead('acchd nothd', 'NOT A TRIP', notL.length, 'no-trip reasons and other statuses, not counted as trips') + notL.map(t => tripRow(t, n++)).join('');
-  $('xList').innerHTML = list.length || idleTrucks.length ? `<div class="xl-wrap"><table class="xl" data-fz="0,1,2,3,4,5,6" data-fzp="0,3"><thead><tr><th>Next step</th><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th class="n">KMS</th><th class="n">Fuel (L)</th><th class="n">Budget</th><th>Driver</th><th>Helper</th><th>Helper 2</th><th>Status</th>${MS_KEYS.map(k => `<th>${esc(MS_LABEL[k])}</th>`).join('')}</tr></thead><tbody>${
+  $('xList').innerHTML = list.length || idleTrucks.length ? `<div class="xl-wrap"><table class="xl" data-fz="0,1,2,3,4,5,6" data-fzp="0,3"><thead><tr><th>Next step</th><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th class="n">KMS</th><th class="n">Fuel (L)</th><th class="n">Budget</th><th>Driver</th><th>Helper</th><th>Helper 2</th><th>Status</th>${MS_KEYS.map(k => `<th>${esc(MS_LABEL[k])}</th>`).join('')}<th>Remarks</th></tr></thead><tbody>${
     body}</tbody></table></div>` : `<div class="empty">Nothing to encode for ${esc(xRangeText())} with this filter.</div>`;
   freezeCols($('xList'));
 }
@@ -5253,7 +5261,7 @@ function openCellEditor(t, k, td){
   td.classList.add('sel');
   const isTime = MS_KEYS.includes(k);
   if(k==='destination') fillDest(t.customer || '');
-  const label = isTime ? MS_LABEL[k] : ({date:'Trip date', customer:'Source', destination:'Destination', truckNo:'Truck #', plateNo:'Plate number', shipmentNo:'Shipment number', kms:'KMS', mano:'Fuel (liters)', budget:'Budget (₱)', driver:'Driver', helper1:'Helper', helper2:'Helper 2', status:'Status'})[k];
+  const label = isTime ? MS_LABEL[k] : ({date:'Trip date', customer:'Source', destination:'Destination', truckNo:'Truck #', plateNo:'Plate number', shipmentNo:'Shipment number', kms:'KMS', mano:'Fuel (liters)', budget:'Budget (₱)', remarks:'Remarks', driver:'Driver', helper1:'Helper', helper2:'Helper 2', status:'Status'})[k];
   const cur = isTime ? (isIso(t[k]) ? t[k].slice(0,16) : '') : (k==='kms' ? (t.kms || tripKm(t)) : (k==='status' ? statusText(t) : (t[k] || '')));
   const isDate = k==='date';   // the trip moves to the picked date (MANU 2026-11-02); the trip ID and crew stay
   const list = {customer:'dlCustomers', destination:'dlDest', truckNo:'dlTrucks', plateNo:'dlPlates', driver:'dlDrivers', helper1:'dlHelpers', helper2:'dlHelpers'}[k];
@@ -5433,6 +5441,17 @@ function renderPod(){
 const SH = {data: null};
 const shSeenKey = () => 'jmti_sh_seen_' + (S.me ? S.me.username : '');
 const shLabel = (d, sh) => `${fmtDay(d)} · ${sh==='NIGHT' ? 'Night shift (6 PM–6 AM)' : 'Day shift (6 AM–6 PM)'}`;
+/** Search all endorsements on the server (every date, not only the last 14 days). */
+function shiftSearch(){
+  if(!(SH.q || SH.from || SH.to || SH.shift)) return shiftRender();
+  $('shClear').hidden = false; $('shMain').hidden = true;
+  $('shRes').innerHTML = '<div class="empty">Searching…</div>';
+  call('searchShiftNotes', SH.q, SH.from, SH.to, SH.shift).then(r => {
+    if(!$('shRes')) return;
+    $('shRes').innerHTML = `<div class="sh-sec">Search results · ${r.total}${r.total > r.notes.length ? ' (newest ' + r.notes.length + ' shown)' : ''}</div>` +
+      (r.notes.length ? r.notes.map(SH.card).join('') : '<p class="hint">No endorsement matches.</p>');
+  }).catch(e => { $('shRes').innerHTML = `<div class="empty">${esc(e.message)}</div>`; });
+}
 function shiftStart(){
   const b = $('shBtn'); b.hidden = !may('shiftNote'); $('shPanel').hidden = true; SH.data = null;
   if(b.hidden) return;
@@ -5452,7 +5471,7 @@ function shiftOpen(){
 }
 function shiftRender(){
   const r = SH.data, notes = r.notes;
-  const card = n => `<div class="sh-note"><div class="m"><b>${esc(n.name)}</b> · ${esc(titleCase(n.role))} · submitted ${esc(podWhen(n.at))}</div><div class="t">${esc(n.text)}</div></div>`;
+  const card = n => `<div class="sh-note"><div class="m"></div><div class="sh-who"><span>Added by <b>${esc(n.name)}</b> (${esc(titleCase(n.role))})</span><span>🕒 <b>${esc(podWhen(n.at))}</b></span></div><div class="t">${esc(n.text)}</div></div>`;
   const of = (d, sh) => notes.filter(n => n.date===d && n.shift===sh);
   const prev = of(r.prev.date, r.prev.shift), cur = of(r.now.date, r.now.shift);
   const older = notes.filter(n => !((n.date===r.prev.date && n.shift===r.prev.shift) || (n.date===r.now.date && n.shift===r.now.shift)));
@@ -5461,11 +5480,21 @@ function shiftRender(){
     : `<label class="f">Your endorsement to the next shift<textarea id="shText" placeholder="Pending trucks, issues, instructions for the next shift">${esc(draft)}</textarea></label>
        <div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn road" type="button" id="shSubmit">Submit endorsement</button></div>
        <p class="hint">Once submitted it can't be changed. The next shift reads it here.</p>`;
-  $('shBody').innerHTML = `<div class="sh-sec">From the previous shift</div><div class="hint" style="margin:-4px 0 8px">${esc(shLabel(r.prev.date, r.prev.shift))}</div>
+  $('shBody').innerHTML = `<div class="sh-find">
+      <input id="shQ" placeholder="Search endorsements (truck, name, words)" value="${esc(SH.q || '')}">
+      <div class="sh-find-row"><label class="f">From<input type="date" id="shFrom" value="${esc(SH.from || '')}"></label><label class="f">To<input type="date" id="shTo" value="${esc(SH.to || '')}"></label>
+      <label class="f">Shift<select id="shShift"><option value="">Both</option><option value="DAY" ${SH.shift==='DAY' ? 'selected' : ''}>Day</option><option value="NIGHT" ${SH.shift==='NIGHT' ? 'selected' : ''}>Night</option></select></label></div>
+      <div class="sh-find-row"><button class="btn alt" type="button" id="shGo">Search</button><button class="btn alt" type="button" id="shClear" ${SH.q || SH.from || SH.to || SH.shift ? '' : 'hidden'}>Clear</button></div>
+    </div><div id="shRes"></div><div id="shMain"><div class="sh-sec">From the previous shift</div><div class="hint" style="margin:-4px 0 8px">${esc(shLabel(r.prev.date, r.prev.shift))}</div>
     ${prev.length ? prev.map(card).join('') : '<p class="hint">No endorsement from the previous shift.</p>'}
     <div class="sh-sec">This shift</div><div class="hint" style="margin:-4px 0 8px">${esc(shLabel(r.now.date, r.now.shift))}</div>
     ${cur.map(card).join('')}${form}
-    ${older.length ? `<div class="sh-sec">Earlier (last 14 days)</div>` + older.map(n => card(n).replace('<div class="m">', `<div class="m">${esc(shLabel(n.date, n.shift))}<br>`)).join('') : ''}`;
+    ${older.length ? `<div class="sh-sec">Earlier (last 14 days)</div>` + older.map(n => card(n).replace('<div class="m">', `<div class="m">${esc(shLabel(n.date, n.shift))}<br>`)).join('') : ''}</div>`;
+  SH.card = n => card(n).replace('<div class="m">', `<div class="m">${esc(shLabel(n.date, n.shift))}<br>`);
+  const go = () => { SH.q = $('shQ').value.trim(); SH.from = $('shFrom').value; SH.to = $('shTo').value; SH.shift = $('shShift').value; shiftSearch(); };
+  $('shGo').onclick = go; $('shQ').onkeydown = e => { if(e.key==='Enter') go(); };
+  $('shClear').onclick = () => { SH.q = SH.from = SH.to = SH.shift = ''; shiftRender(); };
+  if(SH.q || SH.from || SH.to || SH.shift) shiftSearch();
   const latest = prev.concat(cur).reduce((a, n) => n.at > a ? n.at : a, '');
   if(latest) lsSet(shSeenKey(), latest);
   $('shDot').hidden = true;
