@@ -698,6 +698,7 @@ table.xl tr.routehd.mnthd span{color:#B91C1C}
 .fm-tbl tr.fm-r{cursor:pointer}
 .fm-tbl tr.fm-sec td{background:#1E3A8A;color:#fff;font-size:13.5px;white-space:normal}
 .fm-tbl tr.fm-sec td span{color:#DBEAFE;font-weight:500}
+.fm-over td{background:#FEF2F2}
 .fm-low{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#FEE2E2;color:#B91C1C;font-size:11px;font-weight:700}
 .fm-open{color:#64748B;font-weight:500}
 table.xl tbody tr.acchd.garhd td{background:#E2E8F0;color:#1E293B;border-color:#CBD5E1}
@@ -1512,6 +1513,18 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
 .sh-note .t{white-space:pre-wrap;word-break:break-word;font-size:13.5px}
 .sh-sec{font-weight:700;font-size:12.5px;color:var(--ink);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.4px}
 @media print{.sh-fab,.sh-panel{display:none!important}}
+
+/* System health (review 2026-11-04) */
+.sysh{margin:0 0 12px;padding:10px 14px;border-radius:14px;background:var(--card,#fff);border:1px solid rgba(10,39,181,.18)}
+.sysh summary{cursor:pointer;line-height:1.5}
+.sysh-bad{color:#B91C1C}
+.sysh-bar{height:8px;border-radius:6px;background:rgba(10,39,181,.12);margin:8px 0;overflow:hidden}
+.sysh-bar span{display:block;height:100%;background:#2E5BFF}.sysh-bar span.bad{background:#B91C1C}
+
+/* Endorsement read + edit (review 2026-11-04) */
+.sh-read{margin-top:6px;font-size:12.5px;line-height:1.6;color:inherit;opacity:.9}
+.sh-read .sh-rd{padding:3px 10px;font-size:12px;margin-left:4px}
+.sh-edit{width:100%;box-sizing:border-box;min-height:90px;margin-top:8px}
 </style>
 </head>
 <body>
@@ -1790,6 +1803,7 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <button class="btn alt" type="button" id="xRefresh" title="Get the newest trips from the server now">↻ Refresh</button>
       <button class="btn" type="button" id="xAddBtn" hidden>+ Add trip</button>
       <button class="btn alt" type="button" id="xDisbBtn" hidden>+ Disbursement</button>
+      <button class="btn alt" type="button" id="xDelBtn" hidden title="Trips deleted from Truck Plan, with a button to put each one back">Deleted trips</button>
       <span class="x-fund" id="xFund" hidden></span>
       <label class="f">Account<select id="xAcct"><option value="">All accounts</option><option>COCA COLA CANLUBANG PLANT</option><option>COCA COLA SAN FERNANDO</option><option>OTHER ACCOUNTS</option></select></label>
       <label class="f grow">Find<input id="xFind" placeholder="Truck, plate, customer, driver, shipment"></label>
@@ -1846,6 +1860,7 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <label class="f grow">Find<input id="podFind" placeholder="Truck, plate, shipment, customer"></label>
       <button class="btn alt" type="button" id="podReport">Generate report</button>
       <button class="btn alt" type="button" id="podCsv">Download CSV</button>
+      <button class="btn alt" type="button" id="podLateBtn" title="Completed trips still waiting for documents">Late documents</button>
       <button class="btn alt" type="button" id="podRefresh" title="Load the newest POD data from the sheet">↻ Refresh</button>
     </div>
     <div class="kpis kpis4" id="podKpi"></div>
@@ -1980,6 +1995,7 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
 
   <!-- ================= USERS ================= -->
   <section class="view" id="v-users">
+    <div class="sysh" id="sysHealth" hidden></div>
     <div class="cols2">
       <div>
         <div class="bar"><label class="f grow">Find<input id="uFind" placeholder="Username, name or role"></label><button class="btn alt" type="button" id="socEdit" hidden>Viber and Messenger buttons</button></div>
@@ -2465,7 +2481,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['deleteTrip','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
+const WRITES = ['deleteTrip','restoreTrip','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 function submitTick(){
@@ -2658,6 +2674,7 @@ $('loginForm').onsubmit = async e => {
     TOKEN = r.token; store('jmti_token', TOKEN); store('jmti_me', JSON.stringify(r.me));
     if(r.mustChange){ pendingPw = f.password.value; f.password.value = ''; showPwForm(true); }
     else { f.password.value = ''; enterApp(r.me); }
+    if(r.warn) setTimeout(() => toast(r.warn, true, 10000), 2500);   // ADMIN: wrong-password alerts or background time (review 2026-11-04)
   }catch(err){ $('loginErr').textContent = err.message; }
   $('loginBtn').disabled = false;
 };
@@ -3002,6 +3019,7 @@ function enterApp(me){
   $('loginScreen').hidden = true; $('app').hidden = false; $('loadErr').hidden = true;
   $('meName').textContent = me.name; $('meRole').textContent = me.role;
   onlineStart(); profileStart(); setTimeout(() => bdayCheck(0), 2500); shiftStart();
+  setTimeout(podLateDaily, 6000);   // POD: late documents, once a day (review 2026-11-04 #10)
   $('askBtn').hidden = !ASK_ON;
   const tabs = me.tabs;
   $('tabs').innerHTML = tabs.filter(t => TAB_NAME[t]).map(t => `<button class="tab" role="tab" data-tab="${t}" type="button">${TAB_NAME[t]}</button>`).join('');   // a tab this page doesn't know is never shown as "undefined"
@@ -3871,6 +3889,25 @@ function openPop(title, sub, body, foot, pdf){
   $('popPdf').hidden = !pdf;
   $('pop').hidden = false; $('popClose').focus();
 }
+// Deleted trips (review 2026-11-04 #3, ADMIN): each deleted row is kept whole on the server and can be put back
+async function openDeletedTrips(){
+  openPop('Deleted trips', 'Loading…', '<p class="hint">Loading…</p>');
+  let list = [];
+  try{ list = await call('deletedTrips'); }catch(e){ $('popBody').innerHTML = `<p class="hint">${esc(e.message)}</p>`; return; }
+  const draw = () => {
+    $('popSub').textContent = list.length ? `Last ${list.length} deleted · newest first` : '';
+    $('popBody').innerHTML = list.length ? `<div class="tbl-wrap" style="max-height:none"><table class="poptbl"><thead><tr><th>Trip</th><th>Truck</th><th>Route</th><th>Deleted</th><th></th></tr></thead><tbody>${list.map(d => `<tr><td>${esc(fmtDay(d.date) || '—')}<small>${esc(d.tripId || 'row ' + d.row)}</small></td><td><b>${esc(d.truckNo || '—')}</b></td><td>${esc(d.route)}</td><td>${esc(d.by)}<small>${esc(d.at)}</small></td><td>${d.restoredAt ? `<small>Put back ${esc(d.restoredAt)} by ${esc(d.restoredBy)}</small>` : `<button class="btn alt" type="button" data-restore="${esc(d.id)}">Restore</button>`}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">No deleted trips.</p>';
+  };
+  draw();
+  $('popBody').onclick = async e => {
+    const b = e.target.closest('[data-restore]'); if(!b) return;
+    const d = list.find(x => x.id===b.dataset.restore); if(!d) return;
+    if(!confirm(`Put back truck ${d.truckNo || ''} trip on ${fmtDay(d.date)}?`)) return;
+    b.disabled = true; b.textContent = 'Putting back…';
+    try{ const r = await call('restoreTrip', d.id); d.restoredAt = 'now'; d.restoredBy = S.me.name; draw(); toast('Trip put back' + (r && r.tripId ? ' (' + r.tripId + ')' : '')); if(can('dispatcher')) refreshTruckPlan(); }
+    catch(err){ toast(err.message, true); b.disabled = false; b.textContent = 'Restore'; }
+  };
+}
 function closePop(force){ if(S.odLocked && force!==true && $('pop').classList.contains('odlock')) return; $('pop').hidden = true; $('pop').classList.remove('odlock'); }
 function lastTime(t){ for(let i = MS_KEYS.length-1; i >= 0; i--){ if(t[MS_KEYS[i]]) return {k: MS_KEYS[i], v: t[MS_KEYS[i]]}; } return null; }
 function popTrips(title, sub, list, foot, why, keepOrder){
@@ -4387,6 +4424,7 @@ function initDispatcher(){
   $('xAddBtn').onclick = () => openDispatchAdd();
   $('xRefresh').onclick = refreshTruckPlan;
   $('xDisbBtn').onclick = () => openOpsForm('DISB', {});
+  $('xDelBtn').onclick = openDeletedTrips;
   $('xReport').onclick = openTruckPlanReport;
   $('xAcct').onchange = () => { const d = xRange()[1]; if(!S.assign[d]) call('getAssignments', d).then(l => { S.assign[d] = l; renderDispatcher(); }).catch(e => toast(e.message, true)); renderDispatcher(); };
   $('xBoard').onclick = e => { const idle = e.target.closest('[data-idle]'); if(idle){ if(may('dispatchAdd')) openDispatchAdd(idle.dataset.idle); return; } const c = e.target.closest('[data-key]'); if(c) openDispatch(S.xTrips.find(t => t.key===c.dataset.key)); };
@@ -4515,7 +4553,7 @@ function openDispatchAdd(truckNo, opt){
     closeDrawer();
     const [f, t] = xRange();
     PENDING[temp.key] = temp; applyLocal(temp);
-    callQ('dispatchAddTrip', {...data, ref:temp.key}).then(up => { delete PENDING[temp.key]; applyLocal(up, temp.key); toast(`Trip ${up.tripId} added for ${fmtDay(d)}` + (d < f || d > t ? ' (outside the dates shown)' : '')); })
+    callQ('dispatchAddTrip', {...data, ref:temp.key}).then(up => { delete PENDING[temp.key]; const note = up && up.note; if(note) delete up.note; applyLocal(up, temp.key); toast(`Trip ${up.tripId} added for ${fmtDay(d)}` + (d < f || d > t ? ' (outside the dates shown)' : '') + (note ? '. ' + note : ''), false, note ? 8000 : 0); })
       .catch(err => { if(err.queued){ obKeepTrip(err.queued, temp); toast(err.message, false, 5000); return; } delete PENDING[temp.key]; removeLocal(temp.key); toast('Not added: ' + err.message, true);
         if(/already has an open trip|is in .* on this date/i.test(err.message || '')){ const k = rk(d, d); delete TC[k]; fetchTrips(d, d).then(() => { const o = openTripOf(d, no); if(o && !$('drawer').classList.contains('on')) openDispatch(o); }).catch(() => {}); } });
   };
@@ -5108,6 +5146,7 @@ function billingCsv(){
 function renderDispatcher(){
   if(S.tab!=='dispatcher') return;
   $('xAddBtn').hidden = !may('dispatchAdd');
+  $('xDelBtn').hidden = !may('restoreTrip');
   $('xFeedNote').hidden = !feedOf();
   if(feedOf() && feedOf().end) $('xFeedNote').innerHTML = 'October trips come from <b>GENERAL DATABASE 2.0</b>: change their status, truck, route and crew there (it shows here within a minute). Trips from November on are added and changed here.';   // GENERAL gets its newest trips from 2.0 (Code.gs feed_)
   const q = $('xFind').value.toLowerCase().trim(), f = S.xFilter;
@@ -5228,6 +5267,8 @@ function openDispatch(t){
       ${field('kms',6,'KMS','inputmode="decimal"')}
       ${field('budget',22,'Budget','inputmode="decimal"')}
       ${field('mano',0,'Fuel (liters)','inputmode="decimal" placeholder="e.g. 45.5"')}
+      ${field('odo',0,'Odometer at refuel (km)','inputmode="decimal" placeholder="e.g. 152340"')}
+      ${field('fuelPrice',0,'Fuel price per liter (₱)','inputmode="decimal" placeholder="e.g. 58.50"')}
       ${field('loader',20,'Loader')}
       ${field('encoding',25,'Encoder remarks')}
       <label class="f full">${esc(hdr(21,'Remarks'))}<textarea data-k="remarks"${locked('remarks') ? ' readonly' : ''}>${esc(t.remarks||'')}</textarea></label>
@@ -5264,7 +5305,7 @@ function openDispatch(t){
   if($('drOps')) $('drOps').onclick = () => openOpsForm('DISB', {trip:t});
   // Delete trip (MANU 2026-11-03: Team leader, Supervisor; Admin too): the row is emptied in GENERAL, its values kept in the Change Log
   if($('drDelTrip')) $('drDelTrip').onclick = async () => {
-    if(!confirm(`Delete truck ${t.truckNo || ''} trip on ${fmtDay(t.date)}${t.tripId ? ' (' + t.tripId + ')' : ''}? It is removed from every list. The Change Log keeps what it had.`)) return;
+    if(!confirm(`Delete truck ${t.truckNo || ''} trip on ${fmtDay(t.date)}${t.tripId ? ' (' + t.tripId + ')' : ''}? It is removed from every list. Admin can put it back from Deleted trips.`)) return;
     const btn = $('drDelTrip'); btn.disabled = true; btn.textContent = 'Deleting…';
     try{ await call('deleteTrip', refOf(t)); closeDrawer(); removeLocal(t.key); toast('Trip deleted'); }
     catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Delete trip'; }
@@ -5299,7 +5340,7 @@ function openCellEditor(t, k, td){
     : k==='destination' ? `<select id="ceVal">${destOptions(t.customer, cur)}</select>`
     : isDate ? `<input id="ceVal" type="date" value="${esc(cur)}" min="${esc(addDays(t.date, -DATE_MOVE_DAYS))}" max="${esc(addDays(t.date, DATE_MOVE_DAYS))}"><div class="hint">Moves the trip to that date, up to ${DATE_MOVE_DAYS} days either way. Trip ID, times and crew stay the same.</div>`
     : isTime ? `<input id="ceVal" type="datetime-local" value="${esc(cur)}">${!isIso(t[k]) && t[k] ? `<div class="hint">In the sheet: ${esc(t[k])}</div>` : ''}`
-    : `<input id="ceVal" ${list ? `list="${list}"` : ''} value="${esc(cur)}" ${k==='kms' || k==='mano' || k==='budget' ? 'inputmode="decimal"' : ''} ${k==='mano' ? 'placeholder="Liters, e.g. 45.5"' : k==='budget' ? 'placeholder="Pesos, e.g. 2500"' : ''} autocomplete="off">`;
+    : `<input id="ceVal" ${list ? `list="${list}"` : ''} value="${esc(cur)}" ${k==='kms' || k==='mano' || k==='budget' ? 'inputmode="decimal"' : ''} ${k==='mano' ? 'placeholder="Liters, e.g. 45.5"' : k==='budget' ? 'placeholder="Pesos, e.g. 2500"' : ''} autocomplete="off">${k==='mano' ? `<label class="f">Odometer (km)<input id="ceOdo" inputmode="decimal" placeholder="e.g. 152340" value="${esc(t.odo || '')}" autocomplete="off"></label><label class="f">Price per liter (₱)<input id="cePrice" inputmode="decimal" placeholder="e.g. 58.50" value="${esc(t.fuelPrice || '')}" autocomplete="off"></label><div class="hint">Odometer and price are optional. They give the real km/L and the fuel cost.</div>` : ''}`;
   const p = document.createElement('div');
   p.id = 'cellEd'; p.className = 'cell-ed';
   const seeTrips = k==='truckNo' && t.truckNo ? tLink(t.truckNo, `See the trips of truck ${t.truckNo}`) : ['driver','helper1','helper2'].includes(k) && t[k] ? pLink(t[k], `See the trips of ${t[k]}`) : '';
@@ -5318,10 +5359,18 @@ function openCellEditor(t, k, td){
     if(k!=='status' && !isTime && !isDate) v = v.toUpperCase();
     if(isDate){ const why = dateMoveErr(t, v); if(why) return toast(why, true); }
     if(k==='mano' && v){ v = v.replace(/,/g,'').replace(/\s*(L|LTRS?|LITERS?)$/,''); if(!/^[0-9]+(\.[0-9]+)?$/.test(v)) return toast('Fuel: type the liters as a number, e.g. 45.5', true); }
+    const fx = {};   // Fuel (L) cell: odometer and price per liter too (review 2026-11-04 #9)
+    if(k==='mano'){
+      const o = ($('ceOdo').value || '').replace(/[,\s]/g,'').replace(/KMS?$/i,''), pr = ($('cePrice').value || '').replace(/[₱,\s]/g,'').replace(/\/L$/i,'');
+      if(o && !/^[0-9]+(\.[0-9]+)?$/.test(o)) return toast('Odometer: type the km reading, e.g. 152340', true);
+      if(pr && (!/^[0-9]+(\.[0-9]+)?$/.test(pr) || +pr > 500)) return toast('Price per liter: type the pesos, e.g. 58.50', true);
+      if(o !== String(t.odo || '')) fx.odo = o;
+      if(pr !== String(t.fuelPrice || '')) fx.fuelPrice = pr;
+    }
     if(k==='budget' && v){ v = v.replace(/^(₱|PHP)\s*/,'').replace(/[,\s]/g,''); if(!/^[0-9]+(\.[0-9]+)?$/.test(v)) return toast('Budget: type the amount in pesos, e.g. 2500', true); }
     if(isTime && !v && !inp.dataset.cleared){ return closeCellEditor(); }
-    if(String(v) === String(cur)) { closeCellEditor(); return toast('Nothing changed'); }
-    const patch = {[k]: v};
+    if(String(v) === String(cur) && !Object.keys(fx).length) { closeCellEditor(); return toast('Nothing changed'); }
+    const patch = String(v) === String(cur) ? {...fx} : {[k]: v, ...fx};
     if(k==='customer' || k==='destination'){
       let route = pickRoute(k==='customer' ? v : t.customer, k==='destination' ? v : t.destination);
       if(route.err && k==='customer' && !pickRoute(v, '').err) route = pickRoute(v, '');   // new source: pick its destination next
@@ -5408,6 +5457,7 @@ function initPod(){
   $('podFind').oninput = $('podAcct').onchange = $('podCust').onchange = renderPod;
   $('podReport').onclick = openPodReport;
   $('podCsv').onclick = podCsv;
+  $('podLateBtn').onclick = () => openPodLate(lsGet('jmti_podlate_days') || 3);
   $('podRefresh').onclick = refreshPod;
   $('podList').onclick = e => {
     if(e.target.closest('#podBulk')) return bulkCheck('pod');
@@ -5495,11 +5545,19 @@ function shiftDot(){
 function shiftOpen(){
   $('shPanel').hidden = false;
   if(SH.data) shiftRender();
-  call('shiftNotes').then(r => { SH.data = r; shiftRender(); }).catch(e => { if(!SH.data) $('shBody').innerHTML = `<div class="empty">${esc(e.message)}</div>`; });
+  call('shiftNotes').then(r => { SH.data = r; SH.got = Date.now(); shiftRender(); }).catch(e => { if(!SH.data) $('shBody').innerHTML = `<div class="empty">${esc(e.message)}</div>`; });
 }
 function shiftRender(){
   const r = SH.data, notes = r.notes;
-  const card = n => `<div class="sh-note"><div class="m"></div><div class="sh-who"><span>Added by <b>${esc(n.name)}</b> (${esc(titleCase(n.role))})</span><span>🕒 <b>${esc(podWhen(n.at))}</b></span></div><div class="t">${esc(n.text)}</div></div>`;
+  // Read by + Mark as read, and Edit within 30 minutes for the writer (review 2026-11-04 #8)
+  const ms = v => { const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/); return m ? Date.UTC(+m[1], m[2]-1, +m[3], +m[4], +m[5]) : 0; };
+  const left = n => (r.editMin || 30) * 60000 - (ms(r.nowStamp) - ms(n.at)) - (Date.now() - (SH.got || Date.now()));
+  const card = (n, act) => { const read = n.read || [], mine = n.user===S.me.username, iRead = read.some(x => x.u===S.me.username);
+    return `<div class="sh-note"><div class="m"></div><div class="sh-who"><span>Added by <b>${esc(n.name)}</b> (${esc(titleCase(n.role))})</span><span>🕒 <b>${esc(podWhen(n.at))}</b>${n.edited ? ` · edited ${esc(String(n.edited).slice(11))}` : ''}</span></div><div class="t">${esc(n.text)}</div>`
+    + `<div class="sh-read">${read.length ? `✓ Read by ${read.map(x => `<b>${esc(x.n)}</b> <small>${esc(String(x.at).slice(5))}</small>`).join(', ')}` : '<span class="dim">Not read yet</span>'}`
+    + (act && !mine && !iRead && n.row ? ` <button class="btn alt sh-rd" type="button" data-shread="${n.row}" data-u="${esc(n.user)}" data-d="${esc(n.date)}">Mark as read</button>` : '')
+    + (act && mine && n.row && r.canAdd && left(n) > 0 ? ` <button class="btn alt sh-rd" type="button" data-shedit="${n.row}" data-d="${esc(n.date)}">Edit (${Math.max(1, Math.ceil(left(n) / 60000))} min left)</button>` : '')
+    + `</div></div>`; };
   const of = (d, sh) => notes.filter(n => n.date===d && n.shift===sh);
   const prev = of(r.prev.date, r.prev.shift), cur = of(r.now.date, r.now.shift);
   const older = notes.filter(n => !((n.date===r.prev.date && n.shift===r.prev.shift) || (n.date===r.now.date && n.shift===r.now.shift)));
@@ -5507,16 +5565,16 @@ function shiftRender(){
   const form = !r.canAdd ? '' : r.mine ? '<p class="hint">You already submitted your endorsement for this shift.</p>'
     : `<label class="f">Your endorsement to the next shift<textarea id="shText" placeholder="Pending trucks, issues, instructions for the next shift">${esc(draft)}</textarea></label>
        <div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn road" type="button" id="shSubmit">Submit endorsement</button></div>
-       <p class="hint">Once submitted it can't be changed. The next shift reads it here.</p>`;
+       <p class="hint">You can fix it for 30 minutes after submitting. The next shift reads it here and taps Mark as read.</p>`;
   $('shBody').innerHTML = `<div class="sh-find">
       <input id="shQ" placeholder="Search endorsements (truck, name, words)" value="${esc(SH.q || '')}">
       <div class="sh-find-row"><label class="f">From<input type="date" id="shFrom" value="${esc(SH.from || '')}"></label><label class="f">To<input type="date" id="shTo" value="${esc(SH.to || '')}"></label>
       <label class="f">Shift<select id="shShift"><option value="">Both</option><option value="DAY" ${SH.shift==='DAY' ? 'selected' : ''}>Day</option><option value="NIGHT" ${SH.shift==='NIGHT' ? 'selected' : ''}>Night</option></select></label></div>
       <div class="sh-find-row"><button class="btn alt" type="button" id="shGo">Search</button><button class="btn alt" type="button" id="shClear" ${SH.q || SH.from || SH.to || SH.shift ? '' : 'hidden'}>Clear</button></div>
     </div><div id="shRes"></div><div id="shMain"><div class="sh-sec">From the previous shift</div><div class="hint" style="margin:-4px 0 8px">${esc(shLabel(r.prev.date, r.prev.shift))}</div>
-    ${prev.length ? prev.map(card).join('') : '<p class="hint">No endorsement from the previous shift.</p>'}
+    ${prev.length ? prev.map(n => card(n, true)).join('') : '<p class="hint">No endorsement from the previous shift.</p>'}
     <div class="sh-sec">This shift</div><div class="hint" style="margin:-4px 0 8px">${esc(shLabel(r.now.date, r.now.shift))}</div>
-    ${cur.map(card).join('')}${form}
+    ${cur.map(n => card(n, true)).join('')}${form}
     ${older.length ? `<div class="sh-sec">Earlier (last 14 days)</div>` + older.map(n => card(n).replace('<div class="m">', `<div class="m">${esc(shLabel(n.date, n.shift))}<br>`)).join('') : ''}</div>`;
   SH.card = n => card(n).replace('<div class="m">', `<div class="m">${esc(shLabel(n.date, n.shift))}<br>`);
   const go = () => { SH.q = $('shQ').value.trim(); SH.from = $('shFrom').value; SH.to = $('shTo').value; SH.shift = $('shShift').value; shiftSearch(); };
@@ -5526,13 +5584,27 @@ function shiftRender(){
   const latest = prev.concat(cur).reduce((a, n) => n.at > a ? n.at : a, '');
   if(latest) lsSet(shSeenKey(), latest);
   $('shDot').hidden = true;
+  $('shMain').onclick = e => {
+    const rd = e.target.closest('[data-shread]'), ed = e.target.closest('[data-shedit]');
+    if(rd){ rd.disabled = true; rd.textContent = 'Saving…';
+      call('markShiftRead', +rd.dataset.shread, rd.dataset.u, rd.dataset.d).then(x => { SH.data = x; SH.got = Date.now(); shiftRender(); toast('Marked as read.'); })
+        .catch(err => { toast(err.message, true); rd.disabled = false; rd.textContent = 'Mark as read'; }); }
+    if(ed){ const n = notes.find(x => x.row===+ed.dataset.shedit); if(!n) return;
+      const box = ed.closest('.sh-note'); if(box.querySelector('textarea')) return;
+      box.insertAdjacentHTML('beforeend', `<textarea class="sh-edit">${esc(n.text)}</textarea><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button class="btn alt" type="button" data-shx>Cancel</button><button class="btn road" type="button" data-shok>Save change</button></div>`);
+      box.querySelector('[data-shx]').onclick = () => shiftRender();
+      box.querySelector('[data-shok]').onclick = ev => { const t = box.querySelector('textarea').value.trim(); if(!t) return toast('Type the endorsement first.', true);
+        ev.target.disabled = true; ev.target.textContent = 'Saving…';
+        call('editShiftNote', n.row, n.date, t).then(x => { SH.data = x; SH.got = Date.now(); shiftRender(); toast('Endorsement changed.'); })
+          .catch(err => { toast(err.message, true); ev.target.disabled = false; ev.target.textContent = 'Save change'; }); }; }
+  };
   const ta = $('shText');
   if(ta){ const dk = 'jmti_sh_draft_' + S.me.username + '_' + r.now.date + r.now.shift; ta.oninput = () => lsSet(dk, ta.value);
     $('shSubmit').onclick = () => {
       const text = ta.value.trim(); if(!text) return toast('Type the endorsement first.', true);
       if(!confirm('Submit your endorsement for this shift? It can\'t be changed after.')) return;
       const b = $('shSubmit'); b.disabled = true; b.textContent = 'Submitting…';
-      call('submitShiftNote', text).then(x => { SH.data = x; try{ localStorage.removeItem(dk); }catch(e){} shiftRender(); toast('Endorsement submitted.'); })
+      call('submitShiftNote', text).then(x => { SH.data = x; SH.got = Date.now(); try{ localStorage.removeItem(dk); }catch(e){} shiftRender(); toast('Endorsement submitted.'); })
         .catch(e => { toast(e.message, true); b.disabled = false; b.textContent = 'Submit endorsement'; });
     }; }
 }
@@ -5608,6 +5680,29 @@ function renderPodStats(){
 const podWhen = v => { const m = String(v || '').match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})/); if(!m) return String(v || ''); const h = +m[2]; return `${fmtDay(m[1])} ${(h % 12) || 12}:${m[3]} ${h < 12 ? 'AM' : 'PM'}`; };
 const nowStamp = () => { const d = new Date(Date.now() + (S.clockOff || 0)), p = n => String(n).padStart(2, '0'); return `${TODAY()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
 /** POD "Download CSV": the trips the POD list shows now (dates, account, customer, find and chip as picked), oldest first. */
+// Late documents (review 2026-11-04 #10): completed trips still not endorsed to Billing after N days, grouped by driver.
+// POD and POD HEAD see it once a day after signing in; the "Late documents" button in the POD tab opens it any time.
+function podLateDaily(){
+  if(!S.me || !['POD','POD HEAD'].includes(S.me.role)) return;
+  const k = 'jmti_podlate_seen_' + S.me.username; if(lsGet(k)===TODAY()) return;
+  call('podLate', lsGet('jmti_podlate_days') || 3).then(r => { lsSet(k, TODAY()); if(r.trips.length && $('pop').hidden && !$('drawer').classList.contains('on')) showPodLate(r); }).catch(() => {});
+}
+function openPodLate(days){
+  openPop('Late documents', 'Loading…', '<p class="hint">Loading…</p>');
+  call('podLate', days).then(showPodLate).catch(e => { $('popBody').innerHTML = `<p class="hint">${esc(e.message)}</p>`; });
+}
+function showPodLate(r){
+  const by = {}; r.trips.forEach(t => (by[t.driver || 'NO DRIVER'] = by[t.driver || 'NO DRIVER'] || []).push(t));
+  const groups = Object.keys(by).map(d => ({d, l: by[d]})).sort((a, b) => b.l.length - a.l.length || b.l[0].age - a.l[0].age);
+  const line = t => `${fmtDay(t.date)} · Truck ${t.truckNo || '—'} · ${t.customer} → ${plainDest(t.destination) || '—'}${t.shipmentNo ? ' · Shipment ' + t.shipmentNo : ''} · ${t.age} days`;
+  const text = `Missing trip documents (over ${r.days} days)\n` + groups.map(g => `\n${g.d} (${g.l.length})\n` + g.l.map(t => '- ' + line(t)).join('\n')).join('\n');
+  openPop('Late documents', `${r.trips.length} completed trip${r.trips.length===1 ? '' : 's'} not endorsed to Billing after ${r.days}+ days · ${groups.length} driver${groups.length===1 ? '' : 's'}`,
+    `<div class="bar" style="margin:0 0 10px"><label class="f">Older than<select id="plDays">${[1,2,3,5,7,14].map(n => `<option value="${n}"${n===+r.days ? ' selected' : ''}>${n} day${n===1 ? '' : 's'}</option>`).join('')}</select></label><button class="btn alt" type="button" id="plCopy">Copy list</button></div>`
+    + (groups.length ? groups.map(g => `<div class="sec">${pLink(g.d) || esc(g.d)} · ${g.l.length} trip${g.l.length===1 ? '' : 's'}</div><div class="tbl-wrap" style="max-height:none"><table class="poptbl"><thead><tr><th>Trip</th><th>Truck</th><th>Route</th><th>Status</th><th class="n">Days</th></tr></thead><tbody>${g.l.map(t => `<tr><td>${esc(fmtDay(t.date))}<small>${esc(t.shipmentNo || t.tripId || '')}</small></td><td><b>${esc(t.truckNo || '—')}</b></td><td>${esc(t.customer)}<small>→ ${esc(plainDest(t.destination) || '—')}</small></td><td>${esc(t.status)}<small>${t.files ? t.files + ' file(s)' : 'no file'}</small></td><td class="n"><b class="${t.age >= 7 ? 'sysh-bad' : ''}">${t.age}</b></td></tr>`).join('')}</tbody></table></div>`).join('')
+      : '<p class="hint">No late documents. 👍</p>'));
+  $('plDays').onchange = e => { lsSet('jmti_podlate_days', +e.target.value); openPodLate(+e.target.value); };
+  $('plCopy').onclick = () => { (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast('List copied. Paste it in the chat or Viber.')).catch(() => toast('Copy did not work on this phone.', true)); };
+}
 function podCsv(){
   const l = S.podShown || [];
   if(!l.length) return toast('No trips shown to download.', true);
@@ -5642,7 +5737,11 @@ function openPod(t){
     const next = {...t, pod};
     if(status!==undefined){ next.finalStatus = status; next.podUpdAt = nowStamp(); next.podUpdBy = S.me.name; }
     if(status===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; }
-    if(checked===false){ next.podAt = ''; next.podBy = ''; next.finalStatus = ''; }
+    else if(status!==undefined || checked===false){   // taken back from Billing (review 2026-11-04 #1)
+      if(t.billAt && podSent(t)) return toast('Billing already checked this trip. Ask Billing to remove its check first.');
+      next.podAt = ''; next.podBy = '';
+    }
+    if(checked===false){ next.finalStatus = ''; }
     closeDrawer();
     const data = {pod}; if(status!==undefined) data.status = status; if(checked===false) data.checked = false;
     saveOptimistic(next, t, () => callQ('podSave', refOf(t), data), () => status===POD_DONE ? 'ENDORSED TO BILLING — moved to billing' : checked===false ? 'Check removed' : status ? 'Status: ' + status : 'Saved');
@@ -5708,7 +5807,8 @@ function openPodStatus(t, td){
     const st = b.dataset.st; closeCellEditor();
     if(st===podSt(t)) return toast('Nothing changed');
     if(st===POD_DONE && !files(t).length && !confirm('No scanned document is uploaded for this trip. Mark ENDORSED TO BILLING and send to billing anyway?')) return;
-    const next = {...t, finalStatus: st, podUpdAt: nowStamp(), podUpdBy: S.me.name}; if(st===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; }
+    if(st!==POD_DONE && t.billAt && podSent(t)) return toast('Billing already checked this trip. Ask Billing to remove its check first.');
+    const next = {...t, finalStatus: st, podUpdAt: nowStamp(), podUpdBy: S.me.name}; if(st===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; } else { next.podAt = ''; next.podBy = ''; }
     saveOptimistic(next, t, () => callQ('podSave', refOf(t), {status: st}), () => st===POD_DONE ? 'ENDORSED TO BILLING — moved to billing' : 'Status: ' + st);
   };
   if($('podUndo')) $('podUndo').onclick = () => send(false);
@@ -6726,8 +6826,27 @@ function initUsers(){
   $('uReset').onclick = resetUser;
 }
 function loadUsers(){
+  loadSysHealth();
   if(S.users) renderUsers(); else $('uTbl').classList.add('loading');
   callFast('listUsers', [], u => { S.users = u; $('uTbl').classList.remove('loading'); renderUsers(); }, () => S.users).catch(e => toast(e.message, true)).finally(() => $('uTbl').classList.remove('loading'));
+}
+// System health (review 2026-11-04 #6, #7; ADMIN and BOSS): Google background time used by JMTI, failed background runs, wrong-password alerts
+function loadSysHealth(){
+  const box = $('sysHealth');
+  if(!S.me || !['ADMIN','BOSS'].includes(S.me.role)){ box.hidden = true; return; }
+  box.hidden = false; if(!box.innerHTML) box.innerHTML = '<p class="hint">System health: loading…</p>';
+  const n2 = v => Number(v || 0).toFixed(1);
+  call('systemHealth').then(h => {
+    const t = h.days.find(d => d.date===h.today) || {min:0, list:[]}, pct = Math.min(100, Math.round(t.min / h.limit * 100));
+    const bad = h.days.slice(0, 2).reduce((a, d) => a.concat(d.list.filter(x => x.failed).map(x => ({...x, date:d.date}))), []);
+    const missing = ['syncOct20','dailyBackup'].filter(f => !h.triggers.includes(f));
+    box.innerHTML = `<details${t.min >= h.warnAt || bad.length || (h.alerts[0] && h.alerts[0].at.slice(0,10)===h.today) ? ' open' : ''}><summary><b>System health</b> · background time today <b class="${t.min >= h.warnAt ? 'sysh-bad' : ''}">${n2(t.min)} min</b> of ${h.limit}${bad.length ? ' · <b class="sysh-bad">' + bad.length + ' failed run' + (bad.length>1?'s':'') + '</b>' : ''}${h.alerts.length ? ' · ' + h.alerts.length + ' wrong-password alert' + (h.alerts.length>1?'s':'') : ''}</summary>
+      <div class="sysh-bar"><span style="width:${pct}%" class="${t.min >= h.warnAt ? 'bad' : ''}"></span></div>
+      <p class="hint">Google gives your account ${h.limit} minutes a day for background jobs, shared by every app on the same Google account (JMTI and DSBER too). This shows JMTI only. If the time runs out, the October sync and the backup stop until the next day.${missing.length ? ` <b class="sysh-bad">Not running: ${missing.map(f => f==='syncOct20' ? 'October sync' : 'daily backup').join(', ')}.</b>` : ''}</p>
+      <table class="poptbl"><thead><tr><th>Day</th><th>Job</th><th class="n">Runs</th><th class="n">Minutes</th><th>Problems</th></tr></thead><tbody>${h.days.slice(0, 7).map(d => d.list.map((x, i) => `<tr><td>${i ? '' : esc(fmtDay(d.date)) + `<small>${n2(d.min)} min</small>`}</td><td>${esc(x.name)}<small>last ${esc(String(x.last).slice(11))}</small></td><td class="n">${x.runs}</td><td class="n">${n2(x.min)}</td><td>${x.failed ? `<span class="sysh-bad">${x.failed} failed</span><small>${esc(x.error)}</small>` : '—'}</td></tr>`).join('')).join('') || '<tr><td colspan="5" class="hint">No background runs recorded yet.</td></tr>'}</tbody></table>
+      <div class="sec">Wrong-password alerts</div>
+      ${h.alerts.length ? `<table class="poptbl"><thead><tr><th>When</th><th>Username typed</th><th class="n">Wrong tries</th></tr></thead><tbody>${h.alerts.slice(0, 20).map(a => `<tr><td>${esc(a.at)}</td><td><b>${esc(a.u)}</b>${a.known ? '' : '<small>no such user</small>'}</td><td class="n">${a.n}</td></tr>`).join('')}</tbody></table>` : '<p class="hint">None. After 5 wrong passwords in a row, each new try waits a few seconds and it shows here.</p>'}</details>`;
+  }).catch(e => { box.innerHTML = `<p class="hint">System health: ${esc(e.message)}</p>`; });
 }
 function renderUsers(){
   const q = $('uFind').value.toLowerCase().trim();
@@ -8320,6 +8439,7 @@ const FUEL_MIN = 2;
 const FM_SECS = ['Coca Cola Canlubang', 'Coca Cola San Fernando', 'Other accounts', 'Not counted in an account'];
 const fmSec = a => { const k = nameKey(a); return k.includes('CANLUBANG') ? 0 : k.includes('SANFERNANDO') ? 1 : k ? 2 : 3; };
 const FM = {data:null, filter:'all', view:'refuel'};
+const FUEL_OVER = 0.10;   // a refuel more than 10% over its route's average liters is red
 const fmKey = () => $('fmFrom').value + '|' + $('fmTo').value;
 function initFuelTab(){
   const Rs = () => { const T = TODAY(), som = T.slice(0, 8) + '01', lm = addDays(som, -1);
@@ -8332,7 +8452,7 @@ function initFuelTab(){
     $('fmRange').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', 'false')); loadFuelTab(); };
   $('fmFrom').onchange = $('fmTo').onchange = dates;
   $('fmFind').oninput = $('fmAcct').onchange = renderFuel;
-  filterChips($('fmView'), [['refuel', 'Each refuel'], ['dest', 'Per destination']], 'refuel', v => { FM.view = v; renderFuel(); });
+  filterChips($('fmView'), [['refuel', 'Each refuel'], ['route', 'Same trip average'], ['dest', 'Per destination']], 'refuel', v => { FM.view = v; renderFuel(); });
   $('fmBody').onclick = e => { const tr = e.target.closest('tr[data-fm]'); if(tr && !e.target.closest('a')) openFuelRefuel(tr.dataset.fm); };
 }
 function loadFuelTab(){
@@ -8348,7 +8468,15 @@ function fuelRows(d){
   const withKm = all.filter(r => r.kmPerL !== null), km = withKm.reduce((a, r) => a + r.km, 0), L = withKm.reduce((a, r) => a + r.liters, 0);
   const fleet = L ? km / L : null;
   all.forEach(r => { r.low = r.kmPerL !== null && r.kmPerL < FUEL_MIN; });
-  return {all, fleet, km, L};
+  // Route basis (MANU 2026-11-04 "per destination, list trips ... show all trips within the custom date with the same trip and show their
+  // consumption, get the average and make it the basis for the fuel consumption of the trip"): the average liters of every refuel on the same
+  // source -> destination in the dates picked. Over the average by more than FUEL_OVER (10%) is red.
+  const rt = {}; all.forEach(r => { if(!r.trip || !(r.liters > 0) || !r.source || !r.destination) return; const k = nameKey(r.source) + '|' + nameKey(r.destination); (rt[k] = rt[k] || []).push(r); });
+  // review 2026-11-04 #9: each trip is compared with the average of the OTHER trips on its route (it no longer pulls its own basis up)
+  Object.values(rt).forEach(l => { const sum = l.reduce((a, r) => a + r.liters, 0), avg = sum / l.length;
+    l.forEach(r => { const o = l.length >= 2 ? (sum - r.liters) / (l.length - 1) : avg;
+      r.rKey = nameKey(r.source) + '|' + nameKey(r.destination); r.gAvg = avg; r.rAvg = o; r.rN = l.length; r.rDiff = r.liters - o; r.over = l.length >= 2 && r.liters > o * (1 + FUEL_OVER); }); });
+  return {all, fleet, km, L, routes: rt};
 }
 function renderFuel(){
   if(!$('fmBody')) return;
@@ -8359,7 +8487,8 @@ function renderFuel(){
   const withKm = all.filter(r => r.kmPerL !== null), km = withKm.reduce((a, r) => a + r.km, 0), L = withKm.reduce((a, r) => a + r.liters, 0), fleet = L ? km / L : null;
   const q = $('fmFind').value.toLowerCase().trim();
   const nLow = all.filter(r => r.low).length, nNo = all.filter(r => r.kmPerL === null).length;
-  counterChips($('fmChips'), [['all', 'All', all.length], ['low', `Under ${FUEL_MIN} km/L`, nLow], ['nokm', 'No km', nNo]], FM.filter, v => { FM.filter = v; renderFuel(); });
+  const nOver = all.filter(r => r.over).length;
+  counterChips($('fmChips'), [['all', 'All', all.length], ['low', `Under ${FUEL_MIN} km/L`, nLow], ['over', 'Over trip average', nOver], ['nokm', 'No km', nNo]], FM.filter, v => { FM.filter = v; renderFuel(); });
   const n2 = v => v===null || v===undefined ? '—' : Number(v).toFixed(2), lit = v => Number(v).toLocaleString('en-PH', {maximumFractionDigits:2});
   const avgOf = l => { const c = l.filter(r => r.kmPerL !== null), k = c.reduce((a, r) => a + r.km, 0), x = c.reduce((a, r) => a + r.liters, 0); return {km: k, L: x, kmpl: x ? k / x : null}; };
   const byTruckSorted = (list, avgFor) => { const by = {}; list.forEach(x => (by[x.truck] = by[x.truck] || []).push(x));
@@ -8374,13 +8503,30 @@ function renderFuel(){
   $('fmKpis').innerHTML = `<div class="kpi"><div class="v">${n2(fleet)}</div><div class="l">${fa==='' ? 'Fleet' : esc(FM_SECS[fa])} km/L</div><div class="s">${fmtN(Math.round(km))} km ÷ ${lit(Math.round(L))} L</div></div>`
     + `<div class="kpi"><div class="v">${fmtN(all.length)}</div><div class="l">Refuels</div><div class="s">${new Set(all.map(r => r.truck)).size} trucks · ${lit(Math.round(all.reduce((a, r) => a + r.liters, 0)))} L</div></div>`
     + `<div class="kpi"><div class="v">${fmtN(nLow)}</div><div class="l">Low km/L</div><div class="s">refuels under ${FUEL_MIN} km/L · ${dLow} truck-destination average${dLow===1 ? '' : 's'}</div></div>`
-    + `<div class="kpi"><div class="v">${fmtN(nNo)}</div><div class="l">No km</div><div class="s">not a trip, or the route has no km yet</div></div>`;
+    + `<div class="kpi"><div class="v">${fmtN(nNo)}</div><div class="l">No km</div><div class="s">not a trip, or the route has no km yet</div></div>`
+    + (() => { const c = all.filter(r => r.cost), o = all.filter(r => r.odoKm), ok = o.reduce((a, r) => a + r.odoKm, 0), oL = o.reduce((a, r) => a + r.liters, 0);
+        return (c.length ? `<div class="kpi"><div class="v">₱${fmtN(Math.round(c.reduce((a, r) => a + r.cost, 0)))}</div><div class="l">Fuel cost</div><div class="s">${c.length} refuel${c.length===1 ? '' : 's'} with a price</div></div>` : '')
+          + (o.length ? `<div class="kpi"><div class="v">${n2(ok / oL)}</div><div class="l">Odometer km/L</div><div class="s">${fmtN(Math.round(ok))} km ÷ ${lit(Math.round(oL))} L · ${o.length} refuel${o.length===1 ? '' : 's'}</div></div>` : ''); })();
   $('fmHead').innerHTML = FM.view==='dest' ? '<tr><th>Destination</th><th class="n">Refuels</th><th class="n">Liters</th><th class="n">Km</th><th class="n">Avg km/L</th></tr>'
     : '<tr><th>Refuel</th><th>Trip</th><th class="n">Liters</th><th class="n">Km</th><th class="n">km/L</th></tr>';
   const secHead = (i, sub) => `<tr class="fm-sec"><td colspan="5"><b>${esc(FM_SECS[i])}</b> <span>· ${sub}</span></td></tr>`;
   const truckHead = (k, list, a, what) => `<tr class="fm-hd"><td colspan="5">${tLink(k, 'Truck ' + k)} <span>· ${what} · ${a.kmpl===null ? 'no km yet' : `${n2(a.kmpl)} km/L (${fmtN(Math.round(a.km))} km ÷ ${lit(Math.round(a.L * 100) / 100)} L)`}</span></td></tr>`;
   let body = '';
   FM.rows = {};
+  if(FM.view==='route'){
+    $('fmNote').textContent = `${fmtDay(f)} to ${fmtDay(t)}: refuels grouped by the same trip (source → destination). Each trip is compared with the average liters of the other trips on the same route; more than ${Math.round(FUEL_OVER * 100)}% over it is red. A trip alone on its route has no basis.`;
+    $('fmHead').innerHTML = '<tr><th>Trip date · truck</th><th>Driver</th><th class="n">Liters</th><th class="n">vs average</th><th class="n">km/L</th></tr>';
+    const rq = all.filter(r => r.rKey && (FM.filter!=='low' || r.low) && (FM.filter!=='over' || r.over) && (FM.filter!=='nokm' || r.kmPerL === null)
+      && (!q || [r.truck, r.plate, r.truckPlate, r.driver, r.source, r.destination].join(' ').toLowerCase().includes(q)));
+    rq.forEach(r => { FM.rows[r.id] = r; });
+    const groups = {}; rq.forEach(r => (groups[r.rKey] = groups[r.rKey] || []).push(r));
+    const gl = Object.values(groups).map(l => ({l, r0: l[0], over: l.filter(r => r.over).length})).sort((a, b) => b.over - a.over || b.l.length - a.l.length || String(a.r0.source).localeCompare(String(b.r0.source)));
+    body = gl.map(g => { const r0 = g.r0, kml = avgOf(g.l);
+      return `<tr class="fm-hd"><td colspan="5"><b>${esc(r0.source || '—')} → ${esc(plainDest(r0.destination) || '—')}</b> <span>· ${r0.rN} trip${r0.rN===1 ? '' : 's'} · average <b>${lit(Math.round(r0.gAvg * 100) / 100)} L</b>${kml.kmpl!==null ? ' · ' + n2(kml.kmpl) + ' km/L' : ''}${g.over ? ` · <span class="fm-low">${g.over} over</span>` : ''}</span></td></tr>`
+        + g.l.sort((a, b) => a.date.localeCompare(b.date) || a.row - b.row).map(r => `<tr class="fm-r rowbtn${r.over ? ' fm-over' : ''}" data-fm="${esc(r.id)}" tabindex="0"><td>${esc(fmtDay(r.date))}<small>Truck ${esc(r.truck)}${r.plate ? ' · ' + esc(r.plate) : ''}</small></td><td>${pLink(r.driver) || '—'}</td><td class="n"><b>${lit(r.liters)}</b></td><td class="n">${r.rN < 2 ? '<small>no basis</small>' : `${r.rDiff >= 0 ? '+' : ''}${lit(Math.round(r.rDiff * 100) / 100)} L<small>${r.rDiff >= 0 ? '+' : ''}${Math.round(r.rDiff / r.rAvg * 100)}%</small>`}${r.over ? '<span class="fm-low">Over</span>' : ''}</td><td class="n">${r.kmPerL===null ? '—' : n2(r.kmPerL)}</td></tr>`).join(''); }).join('');
+    $('fmBody').innerHTML = body || `<tr><td colspan="5" class="empty-cell">${all.length ? 'Nothing matches.' : 'No liters were logged in Fuel (L) in these dates.'}</td></tr>`;
+    return;
+  }
   if(FM.view==='dest'){
     const dq = dl.filter(g => (FM.filter!=='low' || g.low) && (!q || [g.truck, g.dest].join(' ').toLowerCase().includes(q)));
     [0, 1, 2, 3].forEach(i => {
@@ -8393,7 +8539,7 @@ function renderFuel(){
     $('fmBody').innerHTML = body || `<tr><td colspan="5" class="empty-cell">${dl.length ? 'Nothing matches.' : 'No refuels with km in these dates.'}</td></tr>`;
     return;
   }
-  const show = all.filter(r => (FM.filter!=='low' || r.low) && (FM.filter!=='nokm' || r.kmPerL === null)
+  const show = all.filter(r => (FM.filter!=='low' || r.low) && (FM.filter!=='over' || r.over) && (FM.filter!=='nokm' || r.kmPerL === null)
     && (!q || [r.truck, r.plate, r.truckPlate, r.driver, r.source, r.destination].join(' ').toLowerCase().includes(q)));
   show.forEach(r => { FM.rows[r.id] = r; });
   [0, 1, 2, 3].forEach(i => {
@@ -8402,10 +8548,20 @@ function renderFuel(){
     body += secHead(i, `${n2(sa.kmpl)} km/L · ${sl.length} refuel${sl.length===1 ? '' : 's'}`) + byTruckSorted(sl, k => avgOf(all.filter(r => r.truck===k && fmSec(r.acct)===i))).map(tk => {
       const first = tk.list[0];
       return truckHead(tk.k, tk.list, tk.avg, `${esc(first.truckPlate || first.plate || '')} · ${tk.list.length} refuel${tk.list.length===1 ? '' : 's'}`)
-        + tk.list.sort((a, b) => a.date.localeCompare(b.date) || a.row - b.row).map(r => `<tr class="fm-r rowbtn" data-fm="${esc(r.id)}" tabindex="0"><td>${esc(fmtDay(r.date))}<small>${pLink(r.driver)}${r.plate && plateKey(r.plate) !== plateKey(r.truckPlate) ? ' · ' + esc(r.plate) : ''}</small></td><td>${esc(r.source || '—')}<small>→ ${esc(r.destination || '—')}${r.trip ? '' : ' · ' + esc(r.status || 'not a trip')}</small></td><td class="n">${lit(r.liters)}</td><td class="n">${r.km ? fmtN(Math.round(r.km)) : '—'}${r.times === 2 ? `<small>${fmtN(r.base)} × 2 round trip</small>` : ''}</td><td class="n"><b>${r.kmPerL===null ? '<span class="fm-open">no km</span>' : n2(r.kmPerL)}</b>${r.low ? `<span class="fm-low">Below ${FUEL_MIN}</span>` : ''}</td></tr>`).join('');
+        + tk.list.sort((a, b) => a.date.localeCompare(b.date) || a.row - b.row).map(r => `<tr class="fm-r rowbtn" data-fm="${esc(r.id)}" tabindex="0"><td>${esc(fmtDay(r.date))}<small>${pLink(r.driver)}${r.plate && plateKey(r.plate) !== plateKey(r.truckPlate) ? ' · ' + esc(r.plate) : ''}</small></td><td>${esc(r.source || '—')}<small>→ ${esc(r.destination || '—')}${r.trip ? '' : ' · ' + esc(r.status || 'not a trip')}</small></td><td class="n">${lit(r.liters)}</td><td class="n">${r.km ? fmtN(Math.round(r.km)) : '—'}${r.times === 2 ? `<small>${fmtN(r.base)} × 2 round trip</small>` : ''}</td><td class="n"><b>${r.kmPerL===null ? '<span class="fm-open">no km</span>' : n2(r.kmPerL)}</b>${r.odoKmPerL ? `<small class="${r.odoKmPerL < FUEL_MIN ? 'fm-low' : ''}">odometer ${n2(r.odoKmPerL)}</small>` : ''}${r.cost ? `<small>₱${fmtN(Math.round(r.cost))}</small>` : ''}${r.low ? `<span class="fm-low">Below ${FUEL_MIN}</span>` : ''}${r.over ? `<span class="fm-low" title="Trip average ${lit(Math.round(r.rAvg * 100) / 100)} L">Over trip avg</span>` : ''}</td></tr>`).join('');
     }).join('');
   });
   $('fmBody').innerHTML = body || `<tr><td colspan="5" class="empty-cell">${all.length ? 'No refuel matches.' : 'No liters were logged in Fuel (L) in these dates.'}</td></tr>`;
+}
+/** Refuel pop-up: the same trip's refuels in the dates picked, their average and how this one compares (MANU 2026-11-04). */
+function fuelBasisHtml(r){
+  if(!r.rKey) return '';
+  const l = ((fuelRows(FM.data).routes || {})[r.rKey] || []).slice().sort((a, b) => a.date.localeCompare(b.date) || a.row - b.row);
+  const lit = v => Number(v).toLocaleString('en-PH', {maximumFractionDigits:2});
+  if(l.length < 2) return '<div class="sec">Same trip average</div><p class="hint">No other refuel on this trip in these dates, so there is no basis yet.</p>';
+  const pct = Math.round(r.rDiff / r.rAvg * 100);
+  return `<div class="sec">Same trip average · ${l.length} trips</div><p style="margin:0 0 8px">Basis (average of the other ${l.length - 1} trip${l.length===2 ? '' : 's'}) <b>${lit(Math.round(r.rAvg * 100) / 100)} L</b> · this trip <b>${lit(r.liters)} L</b> (${r.rDiff >= 0 ? '+' : ''}${lit(Math.round(r.rDiff * 100) / 100)} L, ${pct >= 0 ? '+' : ''}${pct}%)${r.over ? `<span class="fm-low">More than ${Math.round(FUEL_OVER * 100)}% over</span>` : ''}</p>
+    <div class="tbl-wrap"><table class="poptbl"><thead><tr><th>Date</th><th>Truck</th><th>Driver</th><th class="n">Liters</th><th class="n">vs average</th></tr></thead><tbody>${l.map(x => `<tr${x.truck===r.truck && x.row===r.row ? ' style="font-weight:700;background:rgba(46,91,255,.08)"' : ''}${x.over ? ' class="fm-over"' : ''}><td>${esc(fmtDay(x.date))}</td><td>${esc(x.truck)}</td><td>${esc(x.driver || '—')}</td><td class="n">${lit(x.liters)}</td><td class="n">${x.rDiff >= 0 ? '+' : ''}${lit(Math.round(x.rDiff * 100) / 100)}${x.over ? ' <span class="fm-low">Over</span>' : ''}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function openFuelRefuel(id){
   const r = FM.rows && FM.rows[id]; if(!r) return;
@@ -8415,7 +8571,9 @@ function openFuelRefuel(id){
   openPop(`Truck ${r.truck} · refuel ${fmtDay(r.date)}`, `${esc(String(r.liters))} L · ${r.km ? fmtN(Math.round(r.km)) + ' km' : 'no km'} · ${r.kmPerL===null ? 'no km/L' : n2(r.kmPerL) + ' km/L'}`,
     `<table class="hs-tbl"><tbody><tr><td>Trip</td><td><b>${esc(r.source || '—')}</b><small>→ ${esc(r.destination || '—')}</small></td></tr><tr><td>Status</td><td>${esc(r.status || 'Clip Board')}</td></tr><tr><td>Account</td><td>${esc(FM_SECS[fmSec(r.acct)])}</td></tr>`
     + `<tr><td>Driver</td><td>${pLink(r.driver) || '—'}</td></tr><tr><td>Plate</td><td>${esc(r.plate || '—')}</td></tr>${r.shipment ? `<tr><td>Shipment</td><td>${esc(r.shipment)}</td></tr>` : ''}`
-    + `<tr><td>Liters</td><td>${esc(String(r.liters))}</td></tr><tr><td>Km</td><td>${r.km ? fmtN(Math.round(r.km)) : '—'}</td></tr><tr><td>km/L</td><td><b>${n2(r.kmPerL)}</b>${r.low ? `<span class="fm-low">Below ${FUEL_MIN} km/L</span>` : ''}</td></tr></tbody></table><p class="hint">${why}</p>`,
+    + `<tr><td>Liters</td><td>${esc(String(r.liters))}</td></tr><tr><td>Km</td><td>${r.km ? fmtN(Math.round(r.km)) : '—'}</td></tr><tr><td>km/L</td><td><b>${n2(r.kmPerL)}</b>${r.low ? `<span class="fm-low">Below ${FUEL_MIN} km/L</span>` : ''}</td></tr>`
+    + `<tr><td>Odometer</td><td>${r.odo ? fmtN(r.odo) + ' km' : '<span class="dim">not typed</span>'}${r.odoKm ? `<small>${fmtN(Math.round(r.odoKm))} km since the last refuel · <b class="${r.odoKmPerL < FUEL_MIN ? 'fm-low' : ''}">${n2(r.odoKmPerL)} km/L</b></small>` : r.odo ? '<small>no earlier reading in these dates</small>' : ''}</td></tr>`
+    + `<tr><td>Price</td><td>${r.price ? '₱' + Number(r.price).toFixed(2) + ' per liter · cost <b>₱' + fmtN(Math.round(r.cost)) + '</b>' : '<span class="dim">not typed</span>'}</td></tr></tbody></table><p class="hint">${why}</p>${fuelBasisHtml(r)}`,
     '', true);
 }
 /** Trip hardship tab (MANU 2026-10-20): every CLIENT LIST route with its rating; Admin, Supervisor and Team leader tap one to set it, Boss views. */
@@ -9307,7 +9465,12 @@ function openOpsForm(kind, o){
     if(en) d.entryNo = en.entryNo; else { d.ref = st.ref; if(t) d.trip = refOf(t); }
     $('opSave').disabled = true;
     try{
-      const r = await call('opsSave', d);
+      let r = await call('opsSave', d);
+      // the trip already got money (review 2026-11-04 #4): say so and save only when they mean it
+      if(r && r.dup){
+        if(!confirm(`This trip already got money:\n${r.dup.map(x => `${x.entryNo} · ${pesoTxt(x.amount)} to ${x.paidTo} on ${fmtDay(x.date)}`).join('\n')}\n\nGive ${pesoTxt(d.amount)} more?`)){ $('opSave').disabled = false; return; }
+        d.allowDup = true; r = await call('opsSave', d);
+      }
       putEntry(r.entry); OPS.fund = Object.assign({}, OPS.fund, r.fund); lsSet('jmti_opsfund', OPS.fund);
       if(DB.data) DB.data.fund = r.fund;
       closePop(); renderOpsFund(); renderDisb(); renderAcct();
@@ -9924,6 +10087,7 @@ function payrollCsv(){
 /* PAYROLL-END */
 
 const DEMO_RIDES = [], DEMO_DAYS = [];   // test notes (preview only)
+let DEMO_DEL = null;
 const DEMO = null;   // the sample-data preview is only in the full copy (not deployed)
 
 document.querySelectorAll('.logo-copy').forEach(i => i.src = $('logoMain').src);
