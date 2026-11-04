@@ -1487,6 +1487,7 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
 .fbox-i{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-bottom:1px solid #EEF2FF;background:none;color:#0A1F8F;font:inherit;font-size:14px;font-weight:500;line-height:1.35;white-space:normal;overflow-wrap:anywhere;cursor:pointer}
 .fbox-i:hover,.fbox-i:focus{background:#EEF3FF}
 .fbox-n{padding:10px 12px;color:#64748B;font-size:13px;font-weight:400;white-space:normal}
+.ttag{display:inline-block;font:800 10px/1 inherit;letter-spacing:.04em;padding:3px 6px;border-radius:6px;vertical-align:middle;margin:0 2px}.ttag.t1{background:#E0E7FF;color:#1E3A8A;border:1px solid #A5B4FC}.ttag.t2{background:#DCFCE7;color:#14532D;border:1px solid #86EFAC}
 </style>
 </head>
 <body>
@@ -2344,31 +2345,42 @@ let TRIP_W = {};
 function roundTrips(trips){
   const place = v => { v = String(v||''); const i = v.lastIndexOf('|'); return nameKey(i >= 0 ? v.slice(i+1) : v); };
   const coke = t => /COCACOLA|CCBPI/.test(nameKey(t.customer) + ' ' + nameKey(t.destination));
-  const out = {}, groups = {};
+  const out = {}, groups = {}, mates = {};
+  const pick = w => Object.keys(w).sort((x,y) => w[y]-w[x])[0];
   trips.filter(isTrip).forEach(t => { const u = t.truckNo || t.plateNo; if(u) (groups[u] = groups[u] || []).push(t); });
   Object.values(groups).forEach(list => {
     list.sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.row||0) - (b.row||0));
     const back = (a, b) => coke(a) && coke(b) && !!place(a.customer) && place(a.customer) === place(b.destination);
     const n = t => Object.values(tripAcctW(t)).reduce((x, v) => x + v, 0);
     const pick = w => Object.keys(w).sort((x,y) => w[y]-w[x])[0];
-    const pair = (a, b) => {
-      const acc = pick(tripAcctW(a)) || pick(tripAcctW(b));
-      out[a.key] = {w: acc ? {[acc]: 0.5} : {}, pairAcc: acc || '', leg: 1, other: b.key};
-      out[b.key] = {w: acc ? {[acc]: 0.5} : {}, pairAcc: acc || '', leg: 2, other: a.key};
-    };
+    const pair = (a, b) => { const acc = pick(tripAcctW(a)) || pick(tripAcctW(b)) || ''; mates[a.key] = {other: b.key, acc}; mates[b.key] = {other: a.key, acc}; };   // pairs only find the way back (pay km)
     // First a counted trip with its uncounted way back (Canlubang → San Fernando → Canlubang), so a way-back leg is not paired with
     // the trip after it when the dates start in the middle of the truck's back-and-forth (MANU 2026-10-14); then the rest.
     for(let i = 0; i + 1 < list.length; i++){
       const a = list[i], b = list[i+1];
-      if(!out[a.key] && !out[b.key] && back(a, b) && n(a) > 0 && n(b) <= 0) pair(a, b);
+      if(!mates[a.key] && !mates[b.key] && back(a, b) && n(a) > 0 && n(b) <= 0) pair(a, b);
     }
     for(let i = 0; i + 1 < list.length; i++){
       const a = list[i], b = list[i+1];
-      if(!out[a.key] && !out[b.key] && back(a, b)) pair(a, b);
+      if(!mates[a.key] && !mates[b.key] && back(a, b)) pair(a, b);
     }
+  });
+  // Trip counter (MANU 2026-11-04 "if the source is coca cola and destination is also coca cola it is .5 trip, if source is coca cola
+  // and destination is not coca cola, it is 1 trip", "apply to all trips counters"): every Coca Cola → Coca Cola trip is 0.5, on its own
+  trips.filter(isTrip).forEach(t => {
+    if(!cokeToCoke(t)) return;
+    const w = tripAcctW(t), tot = Object.values(w).reduce((x, v) => x + v, 0), m = mates[t.key], h = {};
+    if(tot > 0) Object.keys(w).forEach(a => { if(w[a]) h[a] = w[a] * 0.5 / tot; }); else if(m && m.acc) h[m.acc] = 0.5;
+    out[t.key] = {w: h, pairAcc: pick(h) || '', leg: 1, other: m ? m.other : ''};
   });
   return out;
 }
+/** A Coca Cola place: the name (after "CCBPI |") has "Coca Cola" in it. Coca Cola → Coca Cola counts 0.5 trip (MANU 2026-11-04). */
+const isCokePlace = v => /COCACOLA/.test(nameKey(placeOf(v)));
+const cokeToCoke = t => isCokePlace(t.customer) && isCokePlace(t.destination);
+/** Trip type (MANU 2026-11-04 "if source is coca cola and destination is also coca cola that is a T1 trip other wise a T2 trip"): T1 = 0.5, T2 = 1. */
+const tripType = t => cokeToCoke(t) ? 'T1' : 'T2';
+const ttTag = t => `<span class="ttag ${tripType(t)==='T1' ? 't1' : 't2'}" title="${tripType(t)==='T1' ? 'T1 trip: Coca Cola to Coca Cola, counts 0.5' : 'T2 trip: counts 1'}">${tripType(t)}</span>`;
 /** TUKOD is half a trip (MANU 2026-11-02), and so is the On Site Destination trip added after it ("TUKOD FROM …" remarks). */
 const tkH = t => (statusText(t).toLowerCase()==='tukod' || /^TUKOD FROM /i.test(String(t.remarks || '').trim())) ? 0.5 : 1;
 const halfW = (w, h) => { if(h===1) return w; const o = {}; Object.keys(w).forEach(a => { o[a] = w[a] * h; }); return o; };
@@ -3577,7 +3589,7 @@ function renderDashboard(){
   if(!ab[NO_ACCT].total && !lyAb[NO_ACCT]) delete ab[NO_ACCT];
   S.dashRep = {ab, lyAb: lyOk ? lyAb : null, allN, trips: nTrips, moving: moving.length, cancelled, other, lane: STAGES.concat(LANE_EXTRA).map(st => [st, LANE_EXTRA.includes(st) ? all.filter(t => laneOf(t)===st).length : count(st)])};   // Generate report (MANU 2026-10-13)
   const amax = Math.max(1, ...Object.values(ab).map(v => v.total));
-  $('custNote').textContent = allTrips.length ? `${fmtN(allN)} trips${pairs ? ` · ${pairs} round-trip leg${pairs===1?'':'s'} at 0.5` : ''}${moved ? ` · ${moved} counted under their truck's assigned account` : ''} · tap an account to filter` : '';
+  $('custNote').textContent = allTrips.length ? `${fmtN(allN)} trips${pairs ? ` · ${pairs} T1 trip${pairs===1?'':'s'} (Coca Cola → Coca Cola) at 0.5` : ''}${moved ? ` · ${moved} counted under their truck's assigned account` : ''} · tap an account to filter` : '';
   $('acctBars').innerHTML = Object.entries(ab).map(([a,v]) => {
     const top = Object.entries(v.cust).filter(x => x[1]).sort((x,y) => y[1]-x[1]);
     const pct = allN ? Math.round(v.total/allN*100) : 0;
@@ -3724,7 +3736,7 @@ function renderTargets(){
   $('tgBody').innerHTML = (any ? '' : `<p class="hint-line" style="margin:0 0 6px">No targets set for ${esc(monthName(p.month))} yet.${d.canEdit ? ' Tap Set targets.' : ' Admin sets them.'}</p>`)
     + tgLine('ALL TRIPS', p.total, t['ALL TRIPS'] || 0, p, true)
     + s.accounts.filter(a => a !== NOT_COUNTED_ACC).map(a => tgLine(a, p.acc[a] ? p.acc[a].trips : 0, t[String(a).toUpperCase()] || 0, p)).join('')
-    + `<p class="hint-line" style="margin:8px 0 0">Trips counted like the Account summary: round trips 0.5 per leg, Sundays and holidays are not working days. The dark line on a bar is where the month should be by today.</p>`;
+    + `<p class="hint-line" style="margin:8px 0 0">Trips counted like the Account summary: T1 trips (Coca Cola → Coca Cola) 0.5, T2 trips 1, Sundays and holidays are not working days. The dark line on a bar is where the month should be by today.</p>`;
 }
 function openTargetForm(month){
   const s = S.sum, d = TG.data; if(!s || !d) return toast('Still loading the targets. Try again in a moment.');
@@ -3844,7 +3856,7 @@ function openKpiPop(k){
     const per = {}; d.list.forEach(t => { const u = t.truckNo || t.plateNo; if(u) per[u] = (per[u] || 0) + kmOf(t); });
     const top = Object.entries(per).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([u, v]) => `Truck ${u}: ${kmTxt(v)}`).join(' · ');
     return popTrips(`Distance covered · ${kmTxt(d.km)} on ${fmtN(d.n)} trips · ${kmTxt(d.avg)} average`, dashSub() + (top ? ' · most: ' + top : ''),
-      d.list.slice().sort((a, b) => kmOf(b) - kmOf(a)), '', t => `<b>${kmTxt(kmOf(t))}</b>${legW(t) < 1 ? ' · half of a round trip' : ''}`, true);
+      d.list.slice().sort((a, b) => kmOf(b) - kmOf(a)), '', t => `<b>${kmTxt(kmOf(t))}</b>${legW(t) < 1 ? ' · T1, 0.5 trip' : ''}`, true);
   }
   if(k==='done') return popTrips(`Completed trips · ${fmtN(wsum(trips.filter(t => stageOf(t)==='Completed'), legW))}`, dashSub(), trips.filter(t => stageOf(t)==='Completed'));
   if(k==='road') return popTrips(`On the road · ${fmtN(wsum(trips.filter(t => MOVING.includes(stageOf(t))), legW))}`, dashSub(), trips.filter(t => MOVING.includes(stageOf(t))));
@@ -4612,7 +4624,7 @@ function groupRoutes(list, byTrip, showHead, cols, rank){
   glist.sort((a,b) => (rank ? rank(a[0]) - rank(b[0]) : 0) || byTrip(a[0], b[0]) || String(a[0].customer).localeCompare(String(b[0].customer)) || String(a[0].destination).localeCompare(String(b[0].destination)));
   list.length = 0; glist.forEach(g => list.push(...g));
   const head = {};
-  glist.forEach(g => { if((isTrip(g[0]) || stageOf(g[0])==='Cancelled') && showHead(g[0])) head[g[0].key] = `<tr class="routehd"><td colspan="${cols}"><div><b>${esc(g[0].customer || '(no source)')}</b> → <b>${esc(g[0].destination || '(no destination)')}</b> <span>· ${tripsTxt(xw(g))}</span></div></td></tr>`; });
+  glist.forEach(g => { if((isTrip(g[0]) || stageOf(g[0])==='Cancelled') && showHead(g[0])) head[g[0].key] = `<tr class="routehd"><td colspan="${cols}"><div><b>${esc(g[0].customer || '(no source)')}</b> → <b>${esc(g[0].destination || '(no destination)')}</b> ${ttTag(g[0])} <span>· ${tripsTxt(xw(g))}</span></div></td></tr>`; });
   return head;
 }
 /* ====================================================================================================
@@ -5117,6 +5129,7 @@ function openDispatch(t){
         <span class="hint">${ro('date') ? (fedKey(t, 'date') ? 'The date comes from GENERAL DATABASE 2.0.' : 'Your role can\'t move the trip date.') : `Pick another date to move this trip there (up to ${DATE_MOVE_DAYS} days either way). Trip ID, times and crew stay the same.`}</span></label>
       <label class="f full">${esc(hdr(4,'Source'))}<input data-k="customer" list="dlCustomers" value="${esc(t.customer||'')}"${fedKey(t, 'customer') ? ' readonly' : ''}></label>
       <label class="f full">${esc(hdr(5,'Destination'))}<input data-k="destination" list="dlDest" value="${esc(t.destination||'')}"${fedKey(t, 'destination') ? ' readonly' : ''}></label>
+      ${isTrip(t) ? `<p class="hint full" style="margin:0">Trip type: ${ttTag(t)} ${tripType(t)==='T1' ? 'Coca Cola → Coca Cola, counts 0.5 trip' : 'counts 1 trip'}${tkH(t) < 1 ? ' (TUKOD: half of that)' : ''}</p>` : ''}
       ${field('shipmentNo',7,'Shipment no')}
       ${field('kms',6,'KMS','inputmode="decimal"')}
       ${field('budget',22,'Budget','inputmode="decimal"')}
@@ -6140,7 +6153,7 @@ function hsDays(trips, who){
     return `<tr><td>${esc(fmtDay(d))}</td><td>${fmtN(wsum(l))}</td><td>${where}<small>${who2.map(x => who==='truck' ? pLink(x) : tLink(x.replace(/^Truck /, ''), x)).join(' · ')}</small></td></tr>`; }).join('')}</tbody></table>`;
 }
 const hsList = (trips, who, extra, none) => trips.length ? histTripRows(trips, who, extra) : `<p class="hint">${none || 'No trips.'}</p>`;
-const hsTitle = (label, trips) => { const w = wsum(trips); return `${esc(label)} · ${fmtN(w)}${w !== trips.length ? ` <small>(${trips.length} legs, round trip legs 0.5)</small>` : ''}`; };
+const hsTitle = (label, trips) => { const w = wsum(trips); return `${esc(label)} · ${fmtN(w)}${w !== trips.length ? ` <small>(${trips.length} rows, T1 trips 0.5)</small>` : ''}`; };
 const barsHtml = pm => { const mx = Math.max(1, ...pm.map(x => x[1])); return `<div class="hs-bars">${pm.map(([m,n]) => `<div title="${m}: ${fmtN(n)} trips">${n ? fmtN(n) : ''}<i style="height:${Math.round(n/mx*70)}px"></i><em>${new Date(m+'-01T00:00').toLocaleString('en-PH',{month:'short'})}</em></div>`).join('')}</div>`; };
 const topHtml = (rows, unit) => rows.length ? `<ul class="hs-top">${rows.map(([k,n]) => `<li><span>${esc(k)}</span><b style="white-space:nowrap">${n}${unit ? ' ' + (n===1 ? unit.replace(/s$/,'') : unit) : ''}</b></li>`).join('')}</ul>` : '<p class="hint">None yet.</p>';
 /** Job order timelapse (MANU): days from the earlier of repair start and report date until it was completed (or today while open). */
