@@ -1297,7 +1297,7 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .br-head{margin:0 0 10px;font-size:14px;line-height:1.45}
 .br-tbl tfoot td{font-weight:700;border-top:2px solid #CBD5E1}
 .br-ph-h{margin:16px 0 8px}
-.nd-km{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.nd-km input{width:90px;min-width:0}
+.nd-km{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.cl-addr{white-space:normal;overflow-wrap:anywhere}.nd-km input{width:90px;min-width:0}
 .cl-rates input.cl-km{width:80px;min-width:0;text-align:right}
 #lowTbl td:first-child,.hs-tbl td.n,.hs-tbl th.n{white-space:nowrap}   /* peso amounts stay on one line */
 .br-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
@@ -1525,6 +1525,11 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
 .sh-read{margin-top:6px;font-size:12.5px;line-height:1.6;color:inherit;opacity:.9}
 .sh-read .sh-rd{padding:3px 10px;font-size:12px;margin-left:4px}
 .sh-edit{width:100%;box-sizing:border-box;min-height:90px;margin-top:8px}
+
+/* Driver rest tag + rules form (review 2026-11-04b) */
+.tag-rest{display:inline-block;margin-left:4px;padding:1px 6px;border-radius:8px;background:#FDE68A;color:#7C2D12;font-size:11px;font-weight:700;white-space:normal}
+.sysh-rules{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;margin:6px 0}
+.sysh-rules .f{min-width:140px}
 </style>
 </head>
 <body>
@@ -2031,6 +2036,7 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <div class="bar">
         <label class="f grow">Find<input id="clFind" placeholder="Source, destination or client" autocomplete="off"></label>
         <button class="btn" type="button" id="clAddRoute" hidden>+ Add route</button>
+        <button class="btn alt" type="button" id="clCokeKm" hidden>Fill Coca Cola km</button>
         <button class="btn alt" type="button" id="clPayBtn" hidden>Record payment</button>
         <button class="btn alt" type="button" id="clCsv">Generate report (CSV)</button>
       </div>
@@ -2038,6 +2044,12 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <div class="chips" id="clChips" style="margin:-6px 0 10px"></div>
       <div class="hint-line" id="clNote" style="margin:0 0 10px"></div>
       <div class="tbl-wrap" style="max-height:640px"><table id="clTbl"><thead><tr><th class="c">#</th><th>Source</th><th>Destination</th><th>Client</th><th>KM (one way)</th></tr></thead><tbody></tbody></table></div>
+      <!-- MANU 2026-11-04 "check for missing trips that source and destination are not connected, auto fill" -->
+      <div class="panel" style="margin-top:14px" id="msrPanel">
+        <h3 style="margin-top:0">Trips with a route not in the CLIENT LIST <small id="msrNote"></small></h3>
+        <div class="bar" style="margin:0 0 8px"><p class="hint grow" id="msrHint" style="margin:0"></p><button class="btn" type="button" id="msrAdd" hidden>Add to CLIENT LIST</button></div>
+        <div class="tbl-wrap" style="max-height:520px"><table id="msrTbl"><thead><tr><th class="c">Add</th><th>Source</th><th>Destination</th><th class="n">Trips</th><th>KM (one way)</th></tr></thead><tbody></tbody></table></div>
+      </div>
       <!-- MANU 2026-10-21 "in client, show trip without distance yet, should be able to edit" -->
       <div class="panel" style="margin-top:14px" id="ndPanel">
         <h3 style="margin-top:0">Trips with no distance yet <small id="ndNote"></small></h3>
@@ -2481,7 +2493,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['deleteTrip','restoreTrip','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
+const WRITES = ['deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 function submitTick(){
@@ -3020,6 +3032,7 @@ function enterApp(me){
   $('meName').textContent = me.name; $('meRole').textContent = me.role;
   onlineStart(); profileStart(); setTimeout(() => bdayCheck(0), 2500); shiftStart();
   setTimeout(podLateDaily, 6000);   // POD: late documents, once a day (review 2026-11-04 #10)
+  S.rules = lsGet('jmti_rules') || null; call('appRules').then(r => { S.rules = r; lsSet('jmti_rules', r); }).catch(() => {});   // odometer / driver rest rules (review 2026-11-04b)
   $('askBtn').hidden = !ASK_ON;
   const tabs = me.tabs;
   $('tabs').innerHTML = tabs.filter(t => TAB_NAME[t]).map(t => `<button class="tab" role="tab" data-tab="${t}" type="button">${TAB_NAME[t]}</button>`).join('');   // a tab this page doesn't know is never shown as "undefined"
@@ -3904,7 +3917,7 @@ async function openDeletedTrips(){
     const d = list.find(x => x.id===b.dataset.restore); if(!d) return;
     if(!confirm(`Put back truck ${d.truckNo || ''} trip on ${fmtDay(d.date)}?`)) return;
     b.disabled = true; b.textContent = 'Putting back…';
-    try{ const r = await call('restoreTrip', d.id); d.restoredAt = 'now'; d.restoredBy = S.me.name; draw(); toast('Trip put back' + (r && r.tripId ? ' (' + r.tripId + ')' : '')); if(can('dispatcher')) refreshTruckPlan(); }
+    try{ const r = await call('restoreTrip', d.id); d.restoredAt = 'now'; d.restoredBy = S.me.name; draw(); toast('Trip put back' + (r && r.tripId ? ' (' + r.tripId + ')' : '') + (r && r.note ? '. ' + r.note : ''), !!(r && r.note), r && r.note ? 9000 : 0); if(can('dispatcher')) refreshTruckPlan(); }
     catch(err){ toast(err.message, true); b.disabled = false; b.textContent = 'Restore'; }
   };
 }
@@ -5145,6 +5158,7 @@ function billingCsv(){
 }
 function renderDispatcher(){
   if(S.tab!=='dispatcher') return;
+  const RF = restFlags(S.xCtx || S.xTrips);   // driver rest warnings (review 2026-11-04b #7)
   $('xAddBtn').hidden = !may('dispatchAdd');
   $('xDelBtn').hidden = !may('restoreTrip');
   $('xFeedNote').hidden = !feedOf();
@@ -5201,7 +5215,7 @@ function renderDispatcher(){
   const idleRow = ({no, a}, n) => `<tr class="idle${may('dispatchAdd') ? ' rowbtn' : ''}" data-idle="${esc(no)}" ${may('dispatchAdd') ? 'title="Add a trip for this truck"' : ''} style="--c:#94A3B8"><td class="nx">${may('dispatchAdd') ? '<button class="nextbtn add" type="button">＋ Add trip</button>' : ''}</td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td class="dim">${xRange()[0]===xRange()[1] ? 'No trip on this date' : 'No trip in these dates'}</td><td class="dim">${esc(sinceText((S.boot.lastTrip || {})[no] || ''))}${may('dispatchAdd') ? ' · <b>tap to add a trip</b>' : ''}</td><td colspan="4"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Waiting shipment</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}<td></td></tr>`;
   const idleBlock = (items, start) => items.map((x, i) => (i===0 || (items[i-1].a.account||'') !== (x.a.account||'') || !!items[i-1].rp !== !!x.rp ? idleHead(x.a.account, items.filter(y => (y.a.account||'')===(x.a.account||'') && !!y.rp === !!x.rp).length, !!x.rp) : '') + (x.rp ? mntRow(x, start + i + 1) : idleRow(x, start + i + 1))).join('');
   const tripRow = (t, i) => { const st = stageOf(t), rp = repairOf(t.plateNo);
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="ed" data-f="driver">${pLink(t.driver)}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}<td class="ed xrem" data-f="remarks">${esc(t.remarks || '')}</td></tr>`; };   // Remarks last (MANU 2026-11-04 "in truckplan, add remarks at the last column")
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="ed" data-f="driver">${pLink(t.driver)}${RF[t.key] ? ` <span class="tag-rest" title="${esc(RF[t.key])}">⚠ rest</span>` : ''}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}<td class="ed xrem" data-f="remarks">${esc(t.remarks || '')}</td></tr>`; };   // Remarks last (MANU 2026-11-04 "in truckplan, add remarks at the last column")
   const accHead = (a, nt, ni, nm) => `<tr class="acchd"><td colspan="${16 + MS_KEYS.length}"><div><b>${esc(a ? titleCase(a) : 'Not counted in an account')}</b> <span>· ${tripsTxt(nt)}${ni ? ` · ${ni} waiting shipment` : ''}${nm ? ` · ${nm} under maintenance` : ''}</span></div></td></tr>`;
   const restHead = (cls, label, k, note) => `<tr class="${cls}"><td colspan="${16 + MS_KEYS.length}"><div><b>${label}</b> <span>· ${k} row${k===1?'':'s'} · ${note}</span></div></td></tr>`;
   let body = '', n = 0;
@@ -5354,7 +5368,7 @@ function openCellEditor(t, k, td){
   if(k==='status' || isTime) inp.focus(); else { inp.focus(); }
   if(isTime){ $('ceNow').onclick = () => { inp.value = nowLocal(); }; $('ceClear').onclick = () => { inp.value = ''; inp.dataset.cleared = '1'; }; }
   $('ceCancel').onclick = closeCellEditor;
-  const save = () => {
+  const save = async () => {
     let v = (inp.value || '').trim(); if(inp.dataset.prev !== undefined && !v) v = inp.dataset.prev;
     if(k!=='status' && !isTime && !isDate) v = v.toUpperCase();
     if(isDate){ const why = dateMoveErr(t, v); if(why) return toast(why, true); }
@@ -5370,6 +5384,7 @@ function openCellEditor(t, k, td){
     if(k==='budget' && v){ v = v.replace(/^(₱|PHP)\s*/,'').replace(/[,\s]/g,''); if(!/^[0-9]+(\.[0-9]+)?$/.test(v)) return toast('Budget: type the amount in pesos, e.g. 2500', true); }
     if(isTime && !v && !inp.dataset.cleared){ return closeCellEditor(); }
     if(String(v) === String(cur) && !Object.keys(fx).length) { closeCellEditor(); return toast('Nothing changed'); }
+    if(k==='mano' && !(await odoOk(t, fx.odo, v))) return;
     const patch = String(v) === String(cur) ? {...fx} : {[k]: v, ...fx};
     if(k==='customer' || k==='destination'){
       let route = pickRoute(k==='customer' ? v : t.customer, k==='destination' ? v : t.destination);
@@ -5400,7 +5415,38 @@ function openCellEditor(t, k, td){
 }
 document.addEventListener('mousedown', e => { const p = $('cellEd'); if(p && !p.contains(e.target) && !e.target.closest('td.ed')) closeCellEditor(); });
 window.addEventListener('scroll', e => { const p = $('cellEd'); if(p && !p.contains(e.target) && Date.now() - (p._at || 0) > 400) closeCellEditor(); }, true);
-function saveDispatch(){
+/** Odometer check before saving fuel (review 2026-11-04b #5): required when Admin turned it on; a reading lower than the truck's
+ *  last one, or more than 2,000 km above it, is asked about first (usually a typo). Returns true to go on with the save. */
+const ODO_JUMP = 2000;
+async function odoOk(t, odo, liters){
+  const hasL = String(liters ?? t.mano ?? '').trim() !== '';
+  if(S.rules && S.rules.odoReq && hasL && String(odo ?? t.odo ?? '').trim()==='') { toast('Type the odometer reading too: Admin made it required with the liters.', true); return false; }
+  if(odo===undefined || String(odo).trim()==='') return true;
+  let prev = null; try{ prev = await call('odoPrev', t.truckNo, t.date, t.row); }catch(e){ return true; }
+  if(!prev) return true;
+  const n = Number(odo), d = n - prev.odo;
+  if(d < 0) return confirm(`Odometer ${n.toLocaleString('en-PH')} km is LOWER than truck ${t.truckNo}'s last reading ${prev.odo.toLocaleString('en-PH')} km (${fmtDay(prev.date)}). Save it anyway?`);
+  if(d > ODO_JUMP) return confirm(`Odometer ${n.toLocaleString('en-PH')} km is ${d.toLocaleString('en-PH')} km more than truck ${t.truckNo}'s last reading ${prev.odo.toLocaleString('en-PH')} km (${fmtDay(prev.date)}). Save it anyway?`);
+  return true;
+}
+/** Driver rest (review 2026-11-04b #7): for the trips loaded, {trip key: warning} when the driver started less than S.rules.restH hours
+ *  after their last trip ended, or has more than S.rules.dutyH hours of trips that day. Shown as a tag next to the driver in Truck Plan. */
+function restFlags(trips){
+  const r = S.rules || {restH: 8, dutyH: 16}, out = {}, now = Date.now();
+  if(!(r.restH > 0) && !(r.dutyH > 0)) return out;
+  const ms = v => { if(!isIso(v)) return 0; const d = new Date(String(v).slice(0,16)); return isNaN(d) ? 0 : d.getTime(); };
+  const by = {};
+  (trips || []).forEach(t => { const k = nameKey(t.driver); if(!k || stageOf(t)==='Cancelled' || /^\s*no trip\s*$/i.test(t.status || '')) return; (by[k] = by[k] || []).push(t); });
+  Object.values(by).forEach(l => {
+    if(r.restH > 0) l.forEach(t => { const st = ms(t.srcArrive); if(!st) return;
+      const ends = l.filter(x => x !== t).map(x => ms(x.destDepart)).filter(e => e && e <= st); if(!ends.length) return;
+      const gap = (st - Math.max(...ends)) / 36e5; if(gap < r.restH) out[t.key] = `Rested ${Math.round(gap * 10) / 10} h before this trip (rule ${r.restH} h)`; });
+    if(r.dutyH > 0){ const days = {}; l.forEach(t => { const a = ms(t.srcArrive); if(!a) return; const b = ms(t.destDepart) || Math.min(now, a + 864e5); (days[t.date] = days[t.date] || []).push([t, Math.max(0, b - a)]); });
+      Object.values(days).forEach(d => { const h = d.reduce((a, x) => a + x[1], 0) / 36e5; if(h > r.dutyH) d.forEach(([t]) => { out[t.key] = (out[t.key] ? out[t.key] + '; ' : '') + `${Math.round(h * 10) / 10} h of trips that day (rule ${r.dutyH} h)`; }); }); }
+  });
+  return out;
+}
+async function saveDispatch(){
   const t = S.drawerTrip; if(!t) return;
   const patch = {};
   $('drBody').querySelectorAll('[data-k]').forEach(el => {
@@ -5423,6 +5469,7 @@ function saveDispatch(){
   for(let i=1;i<times.length;i++){ const prev = times.slice(0,i).filter(Boolean).pop(); if(times[i] && prev && times[i] < prev) return toast(`${MS_LABEL[MS_KEYS[i]]} is earlier than the step before it. Check the time.`, true); }
   if(!Object.keys(patch).length){ toast('Nothing changed'); return closeDrawer(); }
   if(patch.date !== undefined){ const why = dateMoveErr(t, patch.date); if(why) return toast(why, true); }   // trip date moved (MANU 2026-11-02)
+  if((patch.odo !== undefined || patch.mano !== undefined) && !(await odoOk(t, patch.odo, patch.mano ?? t.mano))) return;
   const next = {...t, ...patch};
   const msChanged = MS_KEYS.some(k => patch[k] !== undefined);
   if(!patch.status && msChanged && stageOf(t)!=='Cancelled' && !fedKey(t, 'status')) next.status = deriveLocal(next) || t.status;
@@ -5832,7 +5879,9 @@ async function bulkCheck(kind){
   if(!list.length) return;
   const what = kind==='pod' ? `Mark ${list.length} trips ENDORSED TO BILLING and send them to billing?` : `Mark ${list.length} trips checked by billing?`;
   if(!confirm(what)) return;
-  const refs = list.map(refOf);
+  let inv = '';   // Billing: one invoice number for all of them (optional, review 2026-11-04b #6)
+  if(kind==='bill'){ inv = prompt('Invoice number for these trips (leave blank to add it later):', ''); if(inv===null) return; inv = inv.trim().toUpperCase(); }
+  const refs = list.map(t => inv ? {...refOf(t), invNo: inv} : refOf(t));
   try{
     const r = await call(kind==='pod' ? 'podCheckMany' : 'billingCheckMany', refs);
     r.ok.forEach(up => { const old = list.find(t => (t.tripId && t.tripId===up.tripId) || t.row===up.row); applyLocal(up, old ? old.key : up.key); });
@@ -5893,15 +5942,15 @@ function renderBilling(){
   const acc = fillAcctSelect($('billAcct'));
   const inAcc = done.filter(t => tripInAcct(t, acc));
   const cust = fillCustFilter($('billCust'), inAcc);
-  const base = inAcc.filter(t => (!cust || t.customer===cust) && (!q || [t.truckNo,t.plateNo,t.customer,t.destination,t.shipmentNo].join(' ').toLowerCase().includes(q)));
-  const BILL_F = {tocheck: t => t.podAt && !t.billAt, waiting: t => !podSent(t), checked: t => !!t.billAt || (!t.podAt && podSt(t)===POD_DONE), all: () => true};   // AA ENDORSED TO BILLING (or the older COMPLETED) with no POD stamp = older trip already done
+  const base = inAcc.filter(t => (!cust || t.customer===cust) && (!q || [t.truckNo,t.plateNo,t.customer,t.destination,t.shipmentNo,t.invNo].join(' ').toLowerCase().includes(q)));
+  const BILL_F = {tocheck: t => t.podAt && !t.billAt, waiting: t => !podSent(t), checked: t => !!t.billAt || (!t.podAt && podSt(t)===POD_DONE), noinv: t => !!t.billAt && !t.invNo, all: () => true};   // noinv: review 2026-11-04b #6   // AA ENDORSED TO BILLING (or the older COMPLETED) with no POD stamp = older trip already done
   if(!BILL_F[S.billFilter]) S.billFilter = 'tocheck';
   const billPending = base.filter(BILL_F.tocheck), fromPod = base.filter(t => !!t.podAt);
   kpiCards($('billKpi'), {total: fromPod.length, done: base.filter(BILL_F.checked), doneLabel: 'Checked by billing',
     pending: billPending, pendingLabel: 'Billing pending', pendingNote: `from POD, not checked yet · ${base.filter(BILL_F.waiting).length} still waiting for POD`,
     turnLabel: 'Average time to check', turnNote: 'sent by POD → checked by billing', from: t => stampDate(t.podAt), to: t => stampDate(t.billAt),
     since: t => stampDate(t.podAt)});
-  counterChips($('billChips'), [['tocheck','To check'],['waiting','Waiting for POD'],['checked','Checked'],['all','All completed']].map(([k,l]) => [k, l, base.filter(BILL_F[k]).length]),
+  counterChips($('billChips'), [['tocheck','To check'],['waiting','Waiting for POD'],['checked','Checked'],['noinv','Checked, no invoice'],['all','All completed']].map(([k,l]) => [k, l, base.filter(BILL_F[k]).length]),
     S.billFilter, f => { S.billFilter = f; renderBilling(); });
   const list = base.filter(BILL_F[S.billFilter]);
   // same order as Truck Plan: by route; inside a route from POD and not checked first, then waiting for POD, then checked;
@@ -5914,7 +5963,7 @@ function renderBilling(){
   const ready = S.billFilter==='tocheck' ? list.filter(t => !t._pending) : [];
   S.billReady = ready;
   const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips from POD are waiting for your check.</span><button class="btn road" type="button" id="billBulk">Mark all ${ready.length} checked</button></div>` : '';
-  const stCell = t => t.billAt ? `<span class="docstate ok">Checked ${esc(t.billAt.slice(0,10))}</span>` : t.podAt ? `<span class="docstate wait">From POD · ${files(t).length} file(s)</span>` : `<span class="docstate">Waiting for POD</span>`;
+  const stCell = t => t.billAt ? `<span class="docstate ok">Checked ${esc(t.billAt.slice(0,10))}</span>${t.invNo ? `<small>Invoice ${esc(t.invNo)}${t.invAmt ? ' · ₱' + Number(t.invAmt).toLocaleString('en-PH') : ''}</small>` : '<small class="dim">no invoice no.</small>'}` : t.podAt ? `<span class="docstate wait">From POD · ${files(t).length} file(s)</span>` : `<span class="docstate">Waiting for POD</span>`;
   $('billList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th class="n">KMS</th><th>Driver</th><th>Helpers</th><th>POD</th><th>Billing</th><th>Final status</th></tr></thead><tbody>` +
     list.map((t,i) => (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${t.billAt ? 'var(--done)' : t.podAt ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td title="${esc(t.destination || '')}">${esc(plainDest(t.destination) || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td class="n">${esc(tripKm(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td><td>${esc(t.podAt && t.podAt!=='saving' ? t.podAt.slice(0,10) : t.podAt ? 'Saving…' : '')}${t.pod ? `<small>${esc(t.pod)}</small>` : ''}</td><td>${stCell(t)}</td><td>${esc(podSt(t))}</td></tr>`).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.billFilter==='tocheck' ? 'Nothing from POD to check in these dates.' : 'Nothing here for these dates.'}</div>`;
@@ -5935,6 +5984,8 @@ function openBill(t){
     <div class="form">
       <label class="f">${esc(hdr(6,'KMS'))}<input id="billKms" inputmode="decimal" value="${esc(t.kms || km || '')}"${fedKey(t, 'kms') ? ' readonly title="Comes from GENERAL DATABASE 2.0: change it there"' : ''}></label>
       <div class="f">POD status<div>${podChip(podSt(t))}</div></div>
+      <label class="f">Invoice no<input id="billInv" value="${esc(t.invNo || '')}" placeholder="e.g. SI-004512" autocomplete="off"></label>
+      <label class="f">Billed amount (₱)<input id="billAmt" inputmode="decimal" value="${esc(t.invAmt || '')}" placeholder="e.g. 8500" autocomplete="off"></label>
     </div>
     ${!t.billAt && !podSent(t) ? '<p class="hint" style="color:#B91C1C">Checked is not available yet: POD has not sent this trip to billing.</p>' : ''}
     ${t.billAt ? `<p class="hint">Checked by ${esc(t.billBy)} on ${esc(t.billAt)}</p>` : ''}`,
@@ -5942,6 +5993,10 @@ function openBill(t){
              : `<button class="btn alt" id="billSaveBtn" type="button" style="margin-right:auto">Save</button><button class="btn road" id="billCheck" type="button" ${podSent(t) ? '' : 'disabled title="POD has not sent this trip to billing yet"'}>Checked</button>`);
   const send = checked => {
     const data = fedKey(t, 'kms') ? {} : {kms:$('billKms').value.trim()};   // POD status (AA) belongs to POD now; KMS of a trip from 2.0 is changed in 2.0
+    const inv = $('billInv').value.trim().toUpperCase(), amt = $('billAmt').value.replace(/[₱,\s]/g, '');   // invoice (review 2026-11-04b #6)
+    if(amt && !/^[0-9]+(\.[0-9]+)?$/.test(amt)) return toast('Billed amount: type the pesos, e.g. 8500', true);
+    if(inv !== String(t.invNo || '')) data.invNo = inv;
+    if(amt !== String(t.invAmt || '')) data.invAmt = amt;
     if(checked!==undefined) data.checked = checked;
     const next = {...t, ...data};
     if(checked===true){ next.billAt = 'saving'; next.billBy = S.me.name; }
@@ -6402,7 +6457,7 @@ function renderRem(){
   if(!r || !S.me) return;
   const tag = (cls, t) => `<span class="tag ${cls}">${esc(t)}</span>`;
   const tr = x => `${tLink(x.truckNo, 'Truck ' + x.truckNo)} <span class="dim">${plLink(x.plateNo)}</span>`;
-  const pms = () => r.pms.length ? `<div class="rem-sec">PMS due · ${r.pms.length}</div>` + remList('pms', r.pms, x => `<li><span>${tr(x)}<small>Last PMS ${esc(fmtDay(x.last))}${x.jo ? ' · ' + esc(x.jo) : ''} · ${x.km===null ? '' : Number(x.km).toLocaleString('en-PH') + ' km and '}${x.days} days since</small></span>${tag(x.state==='overdue' ? 'bad' : 'soon', x.state==='overdue' ? 'Overdue' : 'Due soon')}</li>`) : '';
+  const pms = () => r.pms.length ? `<div class="rem-sec">PMS due · ${r.pms.length}</div>` + remList('pms', r.pms, x => `<li><span>${tr(x)}<small>Last PMS ${esc(fmtDay(x.last))}${x.jo ? ' · ' + esc(x.jo) : ''} · ${x.km===null ? '' : Number(x.km).toLocaleString('en-PH') + (x.src==='odometer' ? ' km (odometer)' : ' km') + ' and '}${x.days} days since</small></span>${tag(x.state==='overdue' ? 'bad' : 'soon', x.state==='overdue' ? 'Overdue' : 'Due soon')}</li>`) : '';
   const docs = () => r.docs.length ? `<div class="rem-sec">OR and franchise · ${r.docs.length}</div>` + remList('docs', r.docs, x => `<li><span>${tr(x)}<small>${esc(x.kind)} ${esc(fmtDay(x.exp))}</small></span>${tag(x.days < 0 ? 'bad' : 'soon', (x.kind) + ' ' + daysTxt(x.days))}</li>`) : '';
   const lic = () => r.lic.length ? `<div class="rem-sec">Licenses · ${r.lic.length}</div>` + remList('lic', r.lic, x => `<li><span>${pLink(x.full)}<small>${esc(x.position)} · license ${esc(fmtDay(x.exp))}</small></span>${tag(x.days < 0 ? 'bad' : 'soon', daysTxt(x.days))}</li>`) : '';
   const notes = kinds => {
@@ -6844,8 +6899,17 @@ function loadSysHealth(){
       <div class="sysh-bar"><span style="width:${pct}%" class="${t.min >= h.warnAt ? 'bad' : ''}"></span></div>
       <p class="hint">Google gives your account ${h.limit} minutes a day for background jobs, shared by every app on the same Google account (JMTI and DSBER too). This shows JMTI only. If the time runs out, the October sync and the backup stop until the next day.${missing.length ? ` <b class="sysh-bad">Not running: ${missing.map(f => f==='syncOct20' ? 'October sync' : 'daily backup').join(', ')}.</b>` : ''}</p>
       <table class="poptbl"><thead><tr><th>Day</th><th>Job</th><th class="n">Runs</th><th class="n">Minutes</th><th>Problems</th></tr></thead><tbody>${h.days.slice(0, 7).map(d => d.list.map((x, i) => `<tr><td>${i ? '' : esc(fmtDay(d.date)) + `<small>${n2(d.min)} min</small>`}</td><td>${esc(x.name)}<small>last ${esc(String(x.last).slice(11))}</small></td><td class="n">${x.runs}</td><td class="n">${n2(x.min)}</td><td>${x.failed ? `<span class="sysh-bad">${x.failed} failed</span><small>${esc(x.error)}</small>` : '—'}</td></tr>`).join('')).join('') || '<tr><td colspan="5" class="hint">No background runs recorded yet.</td></tr>'}</tbody></table>
+      ${S.me.role==='ADMIN' ? `<div class="sec">Rules</div><div class="sysh-rules">
+        <label class="f">Driver rest between trips (hours)<input id="ruRest" inputmode="decimal" value="${esc(S.rules ? S.rules.restH : 8)}"></label>
+        <label class="f">Most trip hours in a day<input id="ruDuty" inputmode="decimal" value="${esc(S.rules ? S.rules.dutyH : 16)}"></label>
+        <label class="f" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="ruOdo"${S.rules && S.rules.odoReq ? ' checked' : ''}> Odometer required with fuel liters</label>
+        <button class="btn" type="button" id="ruSave">Save rules</button></div>
+        <p class="hint">Driver rest: Truck Plan shows ⚠ rest next to a driver who starts a trip sooner than this after the last one ended, or has more trip hours in a day. 0 turns a warning off. It warns only, it never blocks.</p>` : ''}
       <div class="sec">Wrong-password alerts</div>
       ${h.alerts.length ? `<table class="poptbl"><thead><tr><th>When</th><th>Username typed</th><th class="n">Wrong tries</th></tr></thead><tbody>${h.alerts.slice(0, 20).map(a => `<tr><td>${esc(a.at)}</td><td><b>${esc(a.u)}</b>${a.known ? '' : '<small>no such user</small>'}</td><td class="n">${a.n}</td></tr>`).join('')}</tbody></table>` : '<p class="hint">None. After 5 wrong passwords in a row, each new try waits a few seconds and it shows here.</p>'}</details>`;
+    if($('ruSave')) $('ruSave').onclick = () => { const b = $('ruSave'); b.disabled = true;
+      call('saveAppRules', {restH: $('ruRest').value.trim(), dutyH: $('ruDuty').value.trim(), odoReq: $('ruOdo').checked})
+        .then(r => { S.rules = r; lsSet('jmti_rules', r); toast('Rules saved.'); }).catch(e => toast(e.message, true)).finally(() => { b.disabled = false; }); };
   }).catch(e => { box.innerHTML = `<p class="hint">System health: ${esc(e.message)}</p>`; });
 }
 function renderUsers(){
@@ -8682,9 +8746,14 @@ function initBook(){
   $('clCsv').onclick = bookCsv;
   $('clPayBtn').onclick = () => openPayForm('');
   $('clAddRoute').onclick = openAddRoute;
+  $('clCokeKm').onclick = fillCoke;
+  $('msrAdd').onclick = addMissing;
+  $('msrTbl').onchange = e => { const b = e.target.closest('input[data-mr]'); if(!b || !MR.data) return; const r = MR.data.routes[Number(b.dataset.mr)]; if(!r) return;
+    if(b.checked) MR.off.delete(mrKey(r)); else MR.off.add(mrKey(r)); renderMissing(); };
   $('ndTbl').onclick = e => { const b = e.target.closest('[data-ndsave]'); if(b) saveNoDist(Number(b.dataset.ndsave)); };
   $('ndTbl').onkeydown = e => { const i = e.target.closest('input[data-nd]'); if(i && e.key==='Enter') saveNoDist(Number(i.dataset.nd)); };
   $('clTbl').onclick = e => { const sv = e.target.closest('[data-rksave]'); if(sv) return saveBookKm(Number(sv.dataset.rksave));
+    const ad = e.target.closest('[data-addr]'); if(ad) return openAddr(Number(ad.dataset.addr));
     const b = e.target.closest('[data-client]'); if(!b || !CL.data) return; const c = CL.data.clients.find(x => x.client===b.dataset.client); if(c) openClientCard(c); };
   $('clTbl').onkeydown = e => { const i = e.target.closest('input[data-rk]'); if(i && e.key==='Enter') saveBookKm(Number(i.dataset.rk)); };
   $('clPays').onclick = e => { const tr = e.target.closest('tr[data-prow]'); if(!tr || !CL.data) return; const p = CL.data.payments.find(x => String(x.row)===tr.dataset.prow); if(p) openPayment(p); };
@@ -8706,7 +8775,7 @@ function bookSub(sub){
   if(sub==='soa') loadSoa(); else if(sub==='profit') loadProfit(); else renderBook();
 }
 function loadBook(){
-  renderBook(); loadNoDist();
+  renderBook(); loadNoDist(); loadMissing();
   return callFast('clientBook', [], d => { CL.data = d; afterBook(); }, () => CL.data).catch(e => { toast(e.message, true); if(!CL.data) $('clNote').textContent = e.message; });
 }
 /* ---- Route distance (MANU 2026-10-21 "in client, should be able to edit km distance", "show trip without distance yet, should be able
@@ -8744,9 +8813,85 @@ async function saveNoDist(i){
     loadBook();
   }catch(e){ toast(e.message, true); btn.disabled = false; }
 }
+/* ---- Missing routes (MANU 2026-11-04 "IN CLIENTS DATABASE CHECK FOR MISSING TRIPS THAT SOURCE AND DESTINATION ARE NOT CONNECTED, AUTO
+   FILL"): trips whose source → destination is not a CLIENT LIST row, grouped by route. "Add to CLIENT LIST" writes the ticked ones (km
+   from those trips' KMS, else the same destination's km, else blank); new client names get a CLIENTS row with no account. The nightly job
+   adds new ones by itself. */
+const MR = {data:null, off:new Set()};
+const mrKey = r => nameKey(r.source) + '|' + nameKey(r.destination);
+function loadMissing(){
+  renderMissing();
+  return call('missingRoutes').then(d => { MR.data = d; renderMissing(); }).catch(e => { if(!MR.data) $('msrNote').textContent = '· ' + e.message; });
+}
+function renderMissing(){
+  const d = MR.data, body = $('msrTbl') && $('msrTbl').tBodies[0]; if(!body) return;
+  if(!d){ body.innerHTML = '<tr><td colspan="5" class="empty-cell">Checking every trip against the CLIENT LIST…</td></tr>'; $('msrAdd').hidden = true; return; }
+  const add = !!d.canAdd && d.routes.length, on = d.routes.filter(r => !MR.off.has(mrKey(r)));
+  $('msrNote').textContent = d.routes.length ? `· ${plural(d.trips, 'trip')} on ${plural(d.routes.length, 'route')} not connected` : '· every trip\'s route is in the CLIENT LIST';
+  $('msrHint').textContent = d.routes.length ? (add ? 'Untick a route that is a typo, then press Add. KM in grey is a guess from the trips (please check); blank KM shows under "No distance yet". New clients come in with no account (by trip rule).' : 'View only. Admin, Billing or Accounting adds them.')
+    + ' New routes found later are added by themselves every night.' : '';
+  $('msrAdd').hidden = !add; $('msrAdd').disabled = !on.length; $('msrAdd').textContent = `Add ${on.length===d.routes.length ? 'all ' : ''}${plural(on.length, 'route')} to CLIENT LIST`;
+  body.innerHTML = d.routes.length ? d.routes.map((r, i) => `<tr>${add ? `<td class="c"><input type="checkbox" data-mr="${i}" ${MR.off.has(mrKey(r)) ? '' : 'checked'} aria-label="Add this route"></td>` : '<td class="c">' + (i + 1) + '</td>'}`
+    + `<td><b>${esc(r.source)}</b>${r.newSource ? '<small class="db-left">new source</small>' : ''}</td><td>${esc(plainDest(r.destination))}<small>${esc(r.client || 'no client (no " | ")')}</small></td>`
+    + `<td class="n">${fmtN(r.trips)}<small>${esc(fmtDay(r.first))}${r.first!==r.last ? ' – ' + esc(fmtDay(r.last)) : ''}</small></td>`
+    + `<td>${r.km ? `<span${r.kmFrom==='coke' ? '' : ' class="dim"'}>${fmtN(r.km)} km</span><small>${r.kmFrom==='coke' ? 'Coca Cola km list' : r.kmFrom==='trips' ? 'from the trips' : 'same destination'}</small>` : '<span class="db-left">No distance</span>'}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty-cell">Every trip\'s source and destination is in the CLIENT LIST.</td></tr>';
+}
+async function addMissing(){
+  const d = MR.data; if(!d) return;
+  const pick = d.routes.filter(r => !MR.off.has(mrKey(r))); if(!pick.length) return toast('Tick at least one route.', true);
+  const btn = $('msrAdd'); btn.disabled = true; btn.textContent = 'Adding…';
+  try{
+    const r = await call('addMissingRoutes', pick.length===d.routes.length ? [] : pick.map(x => ({source:x.source, destination:x.destination})));
+    MR.data = r.list; MR.off.clear(); renderMissing();
+    toast(`${plural(r.added, 'route')} added to the CLIENT LIST${r.clients ? ` · ${plural(r.clients, 'new client')} (no account yet)` : ''}`);
+    refreshBoot(); call('clientBook').then(x => { CL.data = x; loadNoDist(); afterBook(); }).catch(() => {});
+  }catch(e){ toast(e.message, true); renderMissing(); }
+}
+/* ---- Place addresses (MANU 2026-11-04 "ADD ADDRESSES OF CLIENT SOURCE AND DESTINATION"): one address per source and per destination,
+   shown under each route; tap "Address" (or the address) to change both of a route's addresses. */
+const addrOf = p => ((CL.data && CL.data.places) || {})[nameKey(p)] || '';
+function addrHtml(p, i, ed){
+  const a = addrOf(p);
+  return a ? `<small class="cl-addr">📍 ${ed ? `<button class="linkbtn" type="button" data-addr="${i}">${esc(a)}</button>` : esc(a)}</small>`
+    : ed ? `<small><button class="linkbtn" type="button" data-addr="${i}">+ Address</button></small>` : '';
+}
+function openAddr(i){
+  const x = CL.rows && CL.rows[i]; if(!x) return; const r = x.r;
+  openPop('Addresses', `${esc(r.source)} → ${esc(plainDest(r.destination))}`, `
+    <div class="form">
+      <label class="f full">Source address · ${esc(r.source)}<input id="adSrc" value="${esc(addrOf(r.source))}" autocomplete="off" placeholder="Street, town, province"></label>
+      <label class="f full">Destination address · ${esc(r.destination)}<input id="adDst" value="${esc(addrOf(r.destination))}" autocomplete="off" placeholder="Street, town, province"></label>
+      <p class="hint full" style="margin:0">One address per place: every route from or to it shows the same address.</p>
+    </div>`, `<button class="btn alt" type="button" onclick="closePop()">Cancel</button> <button class="btn road" type="button" id="adSave">Save</button>`);
+  $('adSave').onclick = async () => {
+    const items = [{place:r.source, address:$('adSrc').value.trim()}, {place:r.destination, address:$('adDst').value.trim()}].filter(y => y.address!==addrOf(y.place));
+    if(!items.length) return toast('Nothing changed.');
+    const btn = $('adSave'); btn.disabled = true; btn.textContent = 'Saving…';
+    try{ CL.data.places = await call('savePlaceAddress', items); closePop(); renderBook(); toast('Address saved'); }
+    catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Save'; }
+  };
+}
+/* Coca Cola km (MANU 2026-11-04 "THESE ARE CURRENT DISTANCES OF COCA COLA, CHECK FOR MISSING DISTANCES IN CLIENT LIST AND FILL MISSING"):
+   fills blank km of Canlubang / San Fernando plant routes from the Coca Cola km list kept in Code.gs, then shows what it did. */
+async function fillCoke(){
+  const btn = $('clCokeKm'); btn.disabled = true; btn.textContent = 'Filling…';
+  try{
+    const r = await call('fillCokeKm');
+    const li = (l, f) => l.length ? `<div class="tbl-wrap" style="max-height:260px"><table class="poptbl"><tbody>${l.map(f).join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">None.</p>';
+    openPop('Coca Cola km', `${plural(r.filled.length, 'route')} filled · ${r.at}`, `
+      <h4 style="margin:0 0 6px">Filled (${r.filled.length})</h4>${li(r.filled, x => `<tr><td>${esc(x.source)}<small>→ ${esc(plainDest(x.destination))}</small></td><td class="n">${fmtN(x.km)} km</td></tr>`)}
+      <h4 style="margin:12px 0 6px">Already has a different km, not changed (${r.differs.length})</h4>${li(r.differs, x => `<tr><td>${esc(x.source)}<small>→ ${esc(plainDest(x.destination))}</small></td><td class="n">${fmtN(x.km)} km<small>list: ${fmtN(x.list)} km</small></td></tr>`)}
+      <h4 style="margin:12px 0 6px">Two km in the list, type it yourself (${r.unsure.length})</h4>${li(r.unsure, x => `<tr><td>${esc(x.source)}<small>→ ${esc(plainDest(x.destination))}</small></td><td>${esc(x.list)}</td></tr>`)}
+      <h4 style="margin:12px 0 6px">In the Coca Cola list but no CLIENT LIST route matched (${r.unmatched.length})</h4>${li(r.unmatched, x => `<tr><td>${esc(x.plant)}<small>→ ${esc(x.destination)}</small></td><td class="n">${fmtN(x.km)} km</td></tr>`)}`,
+      `<button class="btn alt" type="button" onclick="closePop()">Close</button>`, true);
+    if(r.filled.length){ refreshBoot(); loadNoDist(); loadMissing(); call('clientBook').then(x => { CL.data = x; afterBook(); }).catch(() => {}); }
+  }catch(e){ toast(e.message, true); }
+  btn.disabled = false; btn.textContent = 'Fill Coca Cola km';
+}
 function afterBook(){
   const d = CL.data;
-  $('clProfitTab').hidden = !d.canProfit; $('clPayBtn').hidden = !d.canEdit; $('clAddRoute').hidden = !d.canEdit;
+  $('clProfitTab').hidden = !d.canProfit; $('clPayBtn').hidden = !d.canEdit; $('clAddRoute').hidden = !d.canEdit; $('clCokeKm').hidden = !d.canEdit;
   const sel = $('soaClient'), cur = sel.value;
   sel.innerHTML = '<option value="">Pick the client</option>' + d.clients.map(c => `<option value="${esc(c.client)}" ${c.client===cur ? 'selected' : ''}>${esc(c.client)}</option>`).join('');
   if(S.tab!=='clients') return;
@@ -8766,7 +8911,7 @@ function renderBook(){
   const d = CL.data, q = $('clFind').value.toLowerCase().trim(), body = $('clTbl').tBodies[0];
   if(!d){ body.innerHTML = '<tr><td colspan="5" class="empty-cell">Loading the routes…</td></tr>'; $('clPays').tBodies[0].innerHTML = ''; $('clKpi').innerHTML = ''; return; }
   const all = CL.rows = bookRoutes();
-  const found = all.filter(x => !q || [x.r.source, x.r.destination, x.c.client].join(' ').toLowerCase().includes(q));
+  const found = all.filter(x => !q || [x.r.source, x.r.destination, x.c.client, addrOf(x.r.source), addrOf(x.r.destination)].join(' ').toLowerCase().includes(q));
   if(!BOOK_F[CL.filter]) CL.filter = 'all';
   const nk = found.filter(x => !hasKm(x.r)).length, ndTrips = ND.data ? ND.data.routes.reduce((a, r) => a + r.trips, 0) : null;
   $('clKpi').innerHTML = kpiHtml([
@@ -8779,7 +8924,7 @@ function renderBook(){
   $('clNote').textContent = (ed ? 'Type or change a km and press Save: it goes to the CLIENT LIST, and trips on that route with blank KMS use it.' : 'View only.')
     + ' Tap a client for its contact details and rates.';
   body.innerHTML = list.length ? list.map((x, n) => { const r = x.r, i = all.indexOf(x), km = hasKm(r);
-    return `<tr${km ? '' : ' class="cl-nokm"'}><td class="c">${n + 1}</td><td><b>${esc(r.source)}</b></td><td>${esc(plainDest(r.destination))}</td>`
+    return `<tr${km ? '' : ' class="cl-nokm"'}><td class="c">${n + 1}</td><td><b>${esc(r.source)}</b>${addrHtml(r.source, i, ed)}</td><td>${esc(plainDest(r.destination))}${addrHtml(r.destination, i, ed)}</td>`
       + `<td><button class="linkbtn" type="button" data-client="${esc(x.c.client)}">${esc(x.c.client)}</button></td>`
       + `<td>${ed ? `<div class="nd-km"><input data-rk="${i}" inputmode="decimal" value="${km ? esc(r.km) : ''}" placeholder="${km ? 'km' : 'No distance'}" autocomplete="off" aria-label="KM"><button class="btn alt" type="button" data-rksave="${i}">Save</button></div>`
         : km ? `${fmtN(r.km)} km` : '<span class="db-left">No distance yet</span>'}</td></tr>`; }).join('')
@@ -8864,10 +9009,12 @@ function openAddRoute(){
   openPop('Add route', 'A new source and destination with its distance. It goes to the CLIENT LIST and shows in Add trip at once.', `
     <div class="form">
       <label class="f full">Source<input id="arSrc" list="dlCustomers" autocomplete="off" placeholder="Pick or type a new source"></label>
+      <label class="f full">Source address<input id="arSrcAd" autocomplete="off" placeholder="Street, town, province"></label>
       <label class="f full">Client<select id="arCl"><option value="">Pick the client…</option>${names.map(n => `<option>${esc(n)}</option>`).join('')}<option value="__new">+ New client…</option></select></label>
       <label class="f full" id="arNewW" hidden>New client name<input id="arNew" autocomplete="off" placeholder="e.g. CENTURY"></label>
       <label class="f full" id="arAcctW" hidden>Account<select id="arAcct"><option value="">Pick the account…</option>${CLIENT_ACCTS.map(a => `<option value="${esc(a)}">${esc(acctTxt(a))}</option>`).join('')}</select></label>
       <label class="f full">Destination<input id="arDst" autocomplete="off" placeholder="Place only, e.g. Century Pasig"></label>
+      <label class="f full">Destination address<input id="arDstAd" autocomplete="off" placeholder="Street, town, province"></label>
       <label class="f">Distance (KM, one way)<input id="arKm" inputmode="decimal" autocomplete="off"></label>
       <p class="hint full" id="arPrev" style="margin:0"></p>
     </div>`,
@@ -8878,6 +9025,12 @@ function openAddRoute(){
     $('arPrev').textContent = src && c && pl ? `Saves: ${src} → ${c} | ${pl}${Number($('arKm').value) > 0 ? ' · ' + $('arKm').value.trim() + ' km' : ''}` : ''; };
   $('arCl').onchange = () => { $('arNewW').hidden = $('arAcctW').hidden = !isNew(); prev(); };
   ['arSrc', 'arNew', 'arDst', 'arKm'].forEach(id => { $(id).oninput = prev; });
+  // a place that already has an address fills it in (MANU 2026-11-04 addresses)
+  const fillAd = () => { const s = $('arSrc').value.trim(), c = client(), pl = placeOf($('arDst').value);
+    if(!$('arSrcAd').dataset.typed) $('arSrcAd').value = s ? addrOf(s) : '';
+    if(!$('arDstAd').dataset.typed) $('arDstAd').value = c && pl ? addrOf(`${c} | ${pl}`) : ''; };
+  ['arSrc', 'arDst', 'arNew'].forEach(id => $(id).addEventListener('change', fillAd)); $('arCl').addEventListener('change', fillAd);
+  ['arSrcAd', 'arDstAd'].forEach(id => { $(id).oninput = () => { $(id).dataset.typed = '1'; }; });
   $('arSave').onclick = async () => {
     const src = $('arSrc').value.trim(), c = client(), pl = placeOf($('arDst').value), km = Number($('arKm').value.replace(/[^0-9.]/g, ''));
     if(!src) return toast('Type the source.', true);
@@ -8890,6 +9043,8 @@ function openAddRoute(){
       if(isNew() && !names.some(n => nameKey(n)===nameKey(c))) await call('saveClient', {client:c, account:$('arAcct').value});
       const dest = `${c} | ${pl}`;
       await call('saveRoute', {origin:src, client:c, destination:dest, km});
+      const ads = [{place:src, address:$('arSrcAd').value.trim()}, {place:dest, address:$('arDstAd').value.trim()}].filter(y => y.address!==addrOf(y.place));
+      if(ads.length){ try{ const pl2 = await call('savePlaceAddress', ads); if(CL.data) CL.data.places = pl2; }catch(e){ toast('Route added, but the address was not saved: ' + e.message, true); } }
       if(S.boot){ if(S.boot.km){ S.boot.km[nameKey(src) + '|' + nameKey(dest)] = km; if(S.boot.km['|' + nameKey(dest)]===undefined) S.boot.km['|' + nameKey(dest)] = km; }
         learnNames({customer:src, destination:dest}); }
       // the pop-up closes as soon as the route is saved; the Clients list refreshes behind it (MANU 2026-11-02 "its loading a long time")
@@ -9025,8 +9180,8 @@ function profitCsv(){
 }
 function bookCsv(){
   const d = CL.data; if(!d) return toast('Still getting the routes.');
-  saveCsvFile(`Routes and distance ${TODAY()}.csv`, ['Source', 'Destination', 'Client', 'Account', 'KM (one way)', 'Rate now', 'Rate since'],
-    bookRoutes().map(({r, c}) => [r.source, plainDest(r.destination), c.client, acctTxt(c.account), hasKm(r) ? r.km : 'NO DISTANCE', r.rate!==null ? r.rate : '', r.from || '']));
+  saveCsvFile(`Routes and distance ${TODAY()}.csv`, ['Source', 'Source address', 'Destination', 'Destination address', 'Client', 'Account', 'KM (one way)', 'Rate now', 'Rate since'],
+    bookRoutes().map(({r, c}) => [r.source, addrOf(r.source), plainDest(r.destination), addrOf(r.destination), c.client, acctTxt(c.account), hasKm(r) ? r.km : 'NO DISTANCE', r.rate!==null ? r.rate : '', r.from || '']));
 }
 
 const DB = {filter:'tosend', data:null, key:''};
@@ -10087,7 +10242,7 @@ function payrollCsv(){
 /* PAYROLL-END */
 
 const DEMO_RIDES = [], DEMO_DAYS = [];   // test notes (preview only)
-let DEMO_DEL = null;
+let DEMO_DEL = null, DEMO_RULES = {odoReq: false, restH: 8, dutyH: 16};
 const DEMO = null;   // the sample-data preview is only in the full copy (not deployed)
 
 document.querySelectorAll('.logo-copy').forEach(i => i.src = $('logoMain').src);
