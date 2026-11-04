@@ -1491,6 +1491,21 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
 .fbox-n{padding:10px 12px;color:#64748B;font-size:13px;font-weight:400;white-space:normal}
 .ttag{display:inline-block;font:800 10px/1 inherit;letter-spacing:.04em;padding:3px 6px;border-radius:6px;vertical-align:middle;margin:0 2px}.ttag.t1{background:#E0E7FF;color:#1E3A8A;border:1px solid #A5B4FC}.ttag.t2{background:#DCFCE7;color:#14532D;border:1px solid #86EFAC}
 .pst-at{display:block;margin-top:3px;font-size:10.5px;color:var(--muted);white-space:nowrap}
+
+td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700}
+/* Shift endorsement notepad (MANU 2026-11-04) */
+.sh-fab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:35;border:0;border-radius:12px 0 0 12px;padding:14px 8px;background:#0A27B5;color:#fff;font:700 12.5px/1 inherit;cursor:pointer;box-shadow:0 6px 18px rgba(2,10,53,.35)}
+.sh-fab span{writing-mode:vertical-rl;transform:rotate(180deg);display:block;letter-spacing:.3px}
+.sh-dot{position:absolute;top:6px;left:6px;width:10px;height:10px;border-radius:50%;background:#EF4444;box-shadow:0 0 0 2px #fff}
+.sh-panel{position:fixed;right:0;top:0;bottom:0;z-index:60;width:min(440px,100vw);background:var(--card,#fff);border-left:1px solid var(--line);box-shadow:-10px 0 30px rgba(2,10,53,.35);display:flex;flex-direction:column}
+.sh-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);font-size:15px;color:var(--ink)}
+.sh-body{overflow:auto;padding:14px 16px 24px;flex:1}
+.sh-body textarea{width:100%;min-height:150px;box-sizing:border-box}
+.sh-note{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px;background:rgba(46,91,255,.04)}
+.sh-note .m{font-size:11.5px;color:var(--muted);margin-bottom:6px}
+.sh-note .t{white-space:pre-wrap;word-break:break-word;font-size:13.5px}
+.sh-sec{font-weight:700;font-size:12.5px;color:var(--ink);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.4px}
+@media print{.sh-fab,.sh-panel{display:none!important}}
 </style>
 </head>
 <body>
@@ -2149,6 +2164,11 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
 <datalist id="dlTrucks"></datalist><datalist id="dlPlates"></datalist><datalist id="dlCustomers"></datalist>
 <datalist id="dlDest"></datalist><datalist id="dlClientDest"></datalist><datalist id="dlAllDest"></datalist><datalist id="dlDrivers"></datalist><datalist id="dlHelpers"></datalist>
 <datalist id="dlDoc"></datalist><datalist id="dlFinal"></datalist>
+<button class="sh-fab" id="shBtn" type="button" hidden title="Shift endorsement"><span>📝 Endorsement</span><b id="shDot" class="sh-dot" hidden></b></button>
+<aside class="sh-panel" id="shPanel" hidden aria-label="Shift endorsement">
+  <div class="sh-head"><b>Shift endorsement</b><button class="icon-btn" type="button" id="shClose" aria-label="Close">✕</button></div>
+  <div class="sh-body" id="shBody"><div class="empty">Loading…</div></div>
+</aside>
 <button class="chat-fab" id="chatBtn" type="button" hidden aria-label="Chat" title="Chat (drag to move)"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M11 14.5h22a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H19a4 4 0 0 1-4-4V20z" fill="#0B3FA8" opacity=".45"/><path d="M10 13h22a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V18.5z" fill="#fff"/><rect x="18" y="17.6" width="13.5" height="2.6" rx="1.3" fill="#8AB4F8"/><rect x="18" y="22.1" width="13.5" height="2.6" rx="1.3" fill="#8AB4F8"/><rect x="18" y="26.6" width="10" height="2.6" rx="1.3" fill="#8AB4F8"/></svg><b id="chatN" class="fab-n" hidden>0</b></button>
 <div class="soc-fab" id="socFab" hidden>
   <a class="vb" id="vbBtn" data-soc="viber" target="_top" rel="noopener" hidden aria-label="Viber" title="Viber"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C7 3 4 5.6 4 10.2c0 2.6 1 4.5 2.7 5.6V20l3-2.2c.7.1 1.5.2 2.3.2 5 0 8-2.6 8-7.8S17 3 12 3z" fill="#fff"/><path d="M9.3 7.6c.3-.2.7-.2.9.1l.9 1.3c.2.3.1.7-.1.9l-.5.4c.3.8 1.1 1.7 2 2.1l.4-.5c.2-.3.6-.3.9-.1l1.3.9c.3.2.4.6.1.9l-.5.6c-.4.5-1.1.6-1.7.4-2-.8-3.6-2.4-4.3-4.4-.2-.6 0-1.2.4-1.6z" fill="#7360F2"/></svg></a>
@@ -2303,6 +2323,14 @@ const podSt = t => { const v = String(t.finalStatus || '').trim().toUpperCase().
 const podSent = t => !!t.podAt || podSt(t)===POD_DONE;
 const podChip = st => `<span class="pstat s-${st ? st.toLowerCase().replace(/[^a-z]+/g,'-') : 'none'}">${esc(st || 'No status')}</span>`;
 /** Fuel log (GENERAL column W, header MANO): liters as a number; older rows hold typed text like "47.6 LTRS", shown as is. */
+/** MANU 2026-11-04 "FOR THE FUEL, COMPUTATION IS 2 KM/L BASE ON ROUNDTRIP DISTANCE, IF LESS THAN, HIGHLIGHT IT RED":
+ *  round trip = 2 × the one-way KMS; km/L = round trip ÷ liters in Fuel (L); under 2 km/L (more liters than the one-way km) is red. */
+function fuelCheck(t){
+  const l = parseFloat(String(t.mano ?? '').replace(/,/g, '')), km = parseFloat(String(tripKm(t)).replace(/,/g, ''));
+  if(!(l > 0) || !(km > 0)) return {};
+  const rt = km * 2, kml = Math.round(rt / l * 100) / 100;
+  return {rt, kml, bad: kml < 2};
+}
 const fuelText = v => { const x = String(v ?? '').trim(); return x && /^-?[0-9.,]+$/.test(x) ? x.replace(/,/g,'') + ' L' : x; };
 /** Budget (GENERAL column V) in pesos, "₱2,500"; anything else the sheet holds is shown as it is. */
 const budgetText = v => { const x = String(v ?? '').trim(), n = x.replace(/^(₱|PHP)\s*/i, '').replace(/,/g, ''); return x && /^-?[0-9]+(\.[0-9]+)?$/.test(n) ? '₱' + Number(n).toLocaleString('en-PH', {maximumFractionDigits: 2}) : x; };
@@ -2698,7 +2726,7 @@ function signOut(msg){
   closeDrawer();
   location.hash = '';
   S.boot = null; S.me = null; S.bootOk = false;
-  hideDock(); $('chatBtn').hidden = true; $('socFab').hidden = true; SOC.user = ''; if(!$('pop').hidden && $('pop').classList.contains('chatpop')) closePop(true);   // the chat pop-up closes too
+  hideDock(); $('chatBtn').hidden = true; $('shBtn').hidden = true; $('shPanel').hidden = true; $('socFab').hidden = true; SOC.user = ''; if(!$('pop').hidden && $('pop').classList.contains('chatpop')) closePop(true);   // the chat pop-up closes too
   askReset(); $('askBox').hidden = true; $('askBtn').hidden = true;
   PF.mine = null; PF.user = ''; if($('helloCard')) $('helloCard').hidden = true;
   showLogin(msg);
@@ -2967,7 +2995,7 @@ function enterApp(me){
   document.body.classList.toggle('planview', !may('dispatch'));   // POD in Truck Plan: view only (MANU 2026-11-04)
   $('loginScreen').hidden = true; $('app').hidden = false; $('loadErr').hidden = true;
   $('meName').textContent = me.name; $('meRole').textContent = me.role;
-  onlineStart(); profileStart(); setTimeout(() => bdayCheck(0), 2500);
+  onlineStart(); profileStart(); setTimeout(() => bdayCheck(0), 2500); shiftStart();
   $('askBtn').hidden = !ASK_ON;
   const tabs = me.tabs;
   $('tabs').innerHTML = tabs.filter(t => TAB_NAME[t]).map(t => `<button class="tab" role="tab" data-tab="${t}" type="button">${TAB_NAME[t]}</button>`).join('');   // a tab this page doesn't know is never shown as "undefined"
@@ -5100,7 +5128,7 @@ function renderDispatcher(){
   const idleRow = ({no, a}, n) => `<tr class="idle${may('dispatchAdd') ? ' rowbtn' : ''}" data-idle="${esc(no)}" ${may('dispatchAdd') ? 'title="Add a trip for this truck"' : ''} style="--c:#94A3B8"><td class="nx">${may('dispatchAdd') ? '<button class="nextbtn add" type="button">＋ Add trip</button>' : ''}</td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td class="dim">${xRange()[0]===xRange()[1] ? 'No trip on this date' : 'No trip in these dates'}</td><td class="dim">${esc(sinceText((S.boot.lastTrip || {})[no] || ''))}${may('dispatchAdd') ? ' · <b>tap to add a trip</b>' : ''}</td><td colspan="4"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Waiting shipment</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}</tr>`;
   const idleBlock = (items, start) => items.map((x, i) => (i===0 || (items[i-1].a.account||'') !== (x.a.account||'') || !!items[i-1].rp !== !!x.rp ? idleHead(x.a.account, items.filter(y => (y.a.account||'')===(x.a.account||'') && !!y.rp === !!x.rp).length, !!x.rp) : '') + (x.rp ? mntRow(x, start + i + 1) : idleRow(x, start + i + 1))).join('');
   const tripRow = (t, i) => { const st = stageOf(t), rp = repairOf(t.plateNo);
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td><td class="n ed" data-f="mano">${esc(fuelText(t.mano))}</td><td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="ed" data-f="driver">${pLink(t.driver)}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}</tr>`; };
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="ed" data-f="driver">${pLink(t.driver)}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}</tr>`; };
   const accHead = (a, nt, ni, nm) => `<tr class="acchd"><td colspan="${15 + MS_KEYS.length}"><div><b>${esc(a ? titleCase(a) : 'Not counted in an account')}</b> <span>· ${tripsTxt(nt)}${ni ? ` · ${ni} waiting shipment` : ''}${nm ? ` · ${nm} under maintenance` : ''}</span></div></td></tr>`;
   const restHead = (cls, label, k, note) => `<tr class="${cls}"><td colspan="${15 + MS_KEYS.length}"><div><b>${label}</b> <span>· ${k} row${k===1?'':'s'} · ${note}</span></div></td></tr>`;
   let body = '', n = 0;
@@ -5397,6 +5425,59 @@ function renderPod(){
       return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.podFilter==='completed' ? 'No trip endorsed to billing in these dates.' : 'Nothing left to check here.'}</div>`;
   freezeCols($('podList'));
+}
+/** Shift endorsement notepad (MANU 2026-11-04 "ADD AN ENDORSEMENT NOTEPAD BUTTON AT THE RIGHT FOR DISPATCH AND TEAM LEADER PER SHIFT",
+ *  "THIS WILL BE SUBMITTED AND VIEWED BY THE NEXT SHIFT AND THE NEXT SHIFT WILL MAKE THEIR OWN ENDORSEMENT").
+ *  Day shift 6 AM–6 PM, night shift 6 PM–6 AM (server decides). One submit per person per shift, then it is locked.
+ *  The red dot shows when the previous shift has an endorsement you haven't opened. One server call at sign-in, then only when opened. */
+const SH = {data: null};
+const shSeenKey = () => 'jmti_sh_seen_' + (S.me ? S.me.username : '');
+const shLabel = (d, sh) => `${fmtDay(d)} · ${sh==='NIGHT' ? 'Night shift (6 PM–6 AM)' : 'Day shift (6 AM–6 PM)'}`;
+function shiftStart(){
+  const b = $('shBtn'); b.hidden = !may('shiftNote'); $('shPanel').hidden = true; SH.data = null;
+  if(b.hidden) return;
+  b.onclick = shiftOpen; $('shClose').onclick = () => { $('shPanel').hidden = true; };
+  setTimeout(() => call('shiftNotes').then(r => { SH.data = r; shiftDot(); }).catch(() => {}), 4000);
+}
+function shiftDot(){
+  const r = SH.data; if(!r) return;
+  const seen = lsGet(shSeenKey()) || '';
+  const prev = r.notes.filter(n => n.date===r.prev.date && n.shift===r.prev.shift);
+  $('shDot').hidden = !prev.some(n => n.at > seen && n.user !== S.me.username);
+}
+function shiftOpen(){
+  $('shPanel').hidden = false;
+  if(SH.data) shiftRender();
+  call('shiftNotes').then(r => { SH.data = r; shiftRender(); }).catch(e => { if(!SH.data) $('shBody').innerHTML = `<div class="empty">${esc(e.message)}</div>`; });
+}
+function shiftRender(){
+  const r = SH.data, notes = r.notes;
+  const card = n => `<div class="sh-note"><div class="m"><b>${esc(n.name)}</b> · ${esc(titleCase(n.role))} · submitted ${esc(podWhen(n.at))}</div><div class="t">${esc(n.text)}</div></div>`;
+  const of = (d, sh) => notes.filter(n => n.date===d && n.shift===sh);
+  const prev = of(r.prev.date, r.prev.shift), cur = of(r.now.date, r.now.shift);
+  const older = notes.filter(n => !((n.date===r.prev.date && n.shift===r.prev.shift) || (n.date===r.now.date && n.shift===r.now.shift)));
+  const draft = lsGet('jmti_sh_draft_' + S.me.username + '_' + r.now.date + r.now.shift) || '';
+  const form = !r.canAdd ? '' : r.mine ? '<p class="hint">You already submitted your endorsement for this shift.</p>'
+    : `<label class="f">Your endorsement to the next shift<textarea id="shText" placeholder="Pending trucks, issues, instructions for the next shift">${esc(draft)}</textarea></label>
+       <div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn road" type="button" id="shSubmit">Submit endorsement</button></div>
+       <p class="hint">Once submitted it can't be changed. The next shift reads it here.</p>`;
+  $('shBody').innerHTML = `<div class="sh-sec">From the previous shift</div><div class="hint" style="margin:-4px 0 8px">${esc(shLabel(r.prev.date, r.prev.shift))}</div>
+    ${prev.length ? prev.map(card).join('') : '<p class="hint">No endorsement from the previous shift.</p>'}
+    <div class="sh-sec">This shift</div><div class="hint" style="margin:-4px 0 8px">${esc(shLabel(r.now.date, r.now.shift))}</div>
+    ${cur.map(card).join('')}${form}
+    ${older.length ? `<div class="sh-sec">Earlier (last 14 days)</div>` + older.map(n => card(n).replace('<div class="m">', `<div class="m">${esc(shLabel(n.date, n.shift))}<br>`)).join('') : ''}`;
+  const latest = prev.concat(cur).reduce((a, n) => n.at > a ? n.at : a, '');
+  if(latest) lsSet(shSeenKey(), latest);
+  $('shDot').hidden = true;
+  const ta = $('shText');
+  if(ta){ const dk = 'jmti_sh_draft_' + S.me.username + '_' + r.now.date + r.now.shift; ta.oninput = () => lsSet(dk, ta.value);
+    $('shSubmit').onclick = () => {
+      const text = ta.value.trim(); if(!text) return toast('Type the endorsement first.', true);
+      if(!confirm('Submit your endorsement for this shift? It can\'t be changed after.')) return;
+      const b = $('shSubmit'); b.disabled = true; b.textContent = 'Submitting…';
+      call('submitShiftNote', text).then(x => { SH.data = x; try{ localStorage.removeItem(dk); }catch(e){} shiftRender(); toast('Endorsement submitted.'); })
+        .catch(e => { toast(e.message, true); b.disabled = false; b.textContent = 'Submit endorsement'; });
+    }; }
 }
 /** POD analytics tab (POD HEAD, Admin, Boss; MANU 2026-11-04 "add POD analytics tab for POD head"): completed trips in the dates picked,
  *  by POD status, how fast they get endorsed to billing, how old the ones still waiting are, per customer and per POD clerk. */
