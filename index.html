@@ -633,6 +633,8 @@ table.xl td.nx{padding:2px 4px}
 body.trips-only #kpis [data-kpi="trucks"],body.trips-only #kpis [data-kpi="inactive"],body.trips-only #alerts,body.trips-only #ntPanel,
 body.trips-only .panel.inact,body.trips-only #topPanel,body.trips-only #sumMeasure,body.trips-only #sumInsights{display:none !important}
 body.trips-only .grid2{grid-template-columns:1fr}
+body.planview #drSave, body.planview #v-dispatcher .nextbtn, body.planview #xRefresh + #xAddBtn{display:none !important}
+body.planview #v-dispatcher td.ed{cursor:default}
 .nextbtn{font:inherit;font-size:11px;font-weight:700;border:1px solid var(--road,#1D7FB8);color:var(--road,#1D7FB8);background:#fff;border-radius:6px;padding:3px 8px;cursor:pointer;white-space:nowrap}
 body.viewonly #fAddBtn, body.viewonly #fPanel, body.viewonly #aSave, body.viewonly #xAddBtn, body.viewonly .nextbtn,
 body.viewonly #drSave, body.viewonly #drCancelTrip, body.viewonly #naSave, body.viewonly #ceSave,
@@ -1488,6 +1490,7 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
 .fbox-i:hover,.fbox-i:focus{background:#EEF3FF}
 .fbox-n{padding:10px 12px;color:#64748B;font-size:13px;font-weight:400;white-space:normal}
 .ttag{display:inline-block;font:800 10px/1 inherit;letter-spacing:.04em;padding:3px 6px;border-radius:6px;vertical-align:middle;margin:0 2px}.ttag.t1{background:#E0E7FF;color:#1E3A8A;border:1px solid #A5B4FC}.ttag.t2{background:#DCFCE7;color:#14532D;border:1px solid #86EFAC}
+.pst-at{display:block;margin-top:3px;font-size:10.5px;color:var(--muted);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -1522,7 +1525,7 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
   };
   setTimeout(function () { window.__jmtiShow(window.__jmtiErr || 'the page code did not load'); }, 5000);
 </script>
-<div id="demoBanner" class="demo" hidden>Preview with sample data. Sign in as admin, boss, supervisor, teamleader, dispatcher, pod, billing or hr — any password.</div>
+<div id="demoBanner" class="demo" hidden>Preview with sample data. Sign in as admin, boss, supervisor, teamleader, dispatcher, pod, podhead, billing or hr — any password.</div>
 
 <!-- ================= SIGN IN ================= -->
 <section class="login" id="loginScreen">
@@ -1821,10 +1824,23 @@ html.scrolling #bgFx .bglogo{animation-play-state:paused}
       <label class="f">Customer<select id="podCust"><option value="">All customers</option></select></label>
       <label class="f grow">Find<input id="podFind" placeholder="Truck, plate, shipment, customer"></label>
       <button class="btn alt" type="button" id="podReport">Generate report</button>
+      <button class="btn alt" type="button" id="podCsv">Download CSV</button>
     </div>
     <div class="kpis kpis4" id="podKpi"></div>
     <div class="chips" id="podChips" style="margin:-6px 0 14px"></div>
     <div class="list" id="podList"></div>
+  </section>
+
+  <!-- ================= POD ANALYTICS (POD HEAD, MANU 2026-11-04) ================= -->
+  <section class="view" id="v-podstats">
+    <div class="bar">
+      <div class="chips" id="psRange"></div>
+      <label class="f">From<input type="date" id="psFrom"></label>
+      <label class="f">To<input type="date" id="psTo"></label>
+      <label class="f">Account<select id="psAcct"><option value="">All accounts</option></select></label>
+      <button class="btn alt" type="button" id="psJpg">JPEG report</button>
+    </div>
+    <div id="psBody"><div class="empty">Loading…</div></div>
   </section>
 
   <!-- ================= BILLING ================= -->
@@ -2177,7 +2193,7 @@ const MS_KEYS = ['srcArrive','loadStart','loadEnd','srcDepart','destArrive','unl
 const MS_COL = {srcArrive:12,loadStart:13,loadEnd:14,srcDepart:15,destArrive:16,unloadStart:17,unloadEnd:18,destDepart:19};
 const MS_LABEL = {srcArrive:'Source time in',loadStart:'Loading start',loadEnd:'Loading end',srcDepart:'Source time out',
   destArrive:'Destination time in',unloadStart:'Unloading start',unloadEnd:'Unloading end',destDepart:'Destination time out'};
-const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users'};
+const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users'};
 const NO_AUTH = ['login','getAppUrl'];
 
 const S = { sum:null, sumAt:0, sumView:'week', sumMeasure:'trips', topView:'p7', me:null, boot:null, trips:[], range:{}, tab:'', stageFilter:'', shown:150,
@@ -2279,7 +2295,8 @@ const plainDest = v => String(v || '').replace(/^[^|]*\|\s*/, '').trim();
  *  ENDORSED TO BILLING was called COMPLETED until MANU 2026-10-20 "change completed to Endorsed to Billing": older rows that say
  *  COMPLETED (or COMPLETE) read as ENDORSED TO BILLING everywhere; new picks save ENDORSED TO BILLING. */
 const POD_DONE = 'ENDORSED TO BILLING';
-const POD_ST = [POD_DONE,'PENDING','WAITING DOCS','RECEIVED DOCUMENTS','TUKOD'];   // RECEIVED DOCUMENTS: papers are with POD, not yet endorsed (MANU 2026-10-20 "add received documents")
+const POD_ST = [POD_DONE,'PENDING','WAITING DOCS','RECEIVED DOCUMENTS','TUKOD'];
+const podPickSt = () => may('podEndorse') ? POD_ST : POD_ST.filter(st => st!==POD_DONE);   // only POD and POD HEAD set ENDORSED TO BILLING (MANU 2026-11-04)   // RECEIVED DOCUMENTS: papers are with POD, not yet endorsed (MANU 2026-10-20 "add received documents")
 const POD_BLANK = 'WAITING DOCS';
 const podSt = t => { const v = String(t.finalStatus || '').trim().toUpperCase().replace(/\s+/g, ' '); return /^(COMPLETED?|ENDORSED TO BILLING)$/.test(v) ? POD_DONE : v || POD_BLANK; };
 const podSent = t => !!t.podAt || podSt(t)===POD_DONE;
@@ -2946,6 +2963,7 @@ async function start(){
 function enterApp(me){
   S.me = me; S.bootOk = false;
   document.body.classList.toggle('viewonly', may('viewAll'));   // BOSS: every tab, no edit buttons
+  document.body.classList.toggle('planview', !may('dispatch'));   // POD in Truck Plan: view only (MANU 2026-11-04)
   $('loginScreen').hidden = true; $('app').hidden = false; $('loadErr').hidden = true;
   $('meName').textContent = me.name; $('meRole').textContent = me.role;
   onlineStart(); profileStart(); setTimeout(() => bdayCheck(0), 2500);
@@ -3031,7 +3049,7 @@ function loadBoot(){
 function initOnce(){
   if(started) return;
   started = true;
-  initDashboard(); initFleet(); initAssign(); initPlanner(); initDispatcher(); initHardTab(); initFuelTab(); initUnits(); initPod(); initBilling(); initBook(); initDisb(); initAcct(); initPayroll(); initManpower(); initUsers();
+  initDashboard(); initFleet(); initAssign(); initPlanner(); initDispatcher(); initHardTab(); initFuelTab(); initUnits(); initPod(); initPodStats(); initBilling(); initBook(); initDisb(); initAcct(); initPayroll(); initManpower(); initUsers();
   initDrawer();
   $('loadRetry').onclick = loadBoot;
   // Fewer Google calls (MANU 2026-11-03 "make it fast and doesnt consume the google calls"): once the server sends the trips
@@ -3152,7 +3170,7 @@ function showTab(t){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id==='v-'+view));
   if(t==='maintenance') return loadMaintenance();
   if(!S.boot && !['manpower','users'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
-  ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
+  ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
   if(['dashboard','manpower'].includes(t) || (t==='fleet' && may('fleet'))) loadReminders();
 }
 
@@ -3319,7 +3337,7 @@ setInterval(() => {
     (left open overnight, or back from the background next morning), dates that ended on the old day move to the new one
     (Today, Last 7 days, This month …) and the open tab reloads, so "Today" and "Yesterday" stay right. */
 let DAY_SEEN = '';
-const DAY_PAIRS = [['dFrom','dTo'],['xDate','xTo'],['podFrom','podTo'],['billFrom','billTo'],['dbFrom','dbTo'],['acFrom','acTo'],['fmFrom','fmTo'],['fdFrom','fdTo'],['mrFrom','mrTo'],['scFrom','scTo'],['xhFrom','xhTo'],['soaFrom','soaTo'],['prFrom','prTo']];
+const DAY_PAIRS = [['dFrom','dTo'],['xDate','xTo'],['podFrom','podTo'],['psFrom','psTo'],['billFrom','billTo'],['dbFrom','dbTo'],['acFrom','acTo'],['fmFrom','fmTo'],['fdFrom','fdTo'],['mrFrom','mrTo'],['scFrom','scTo'],['xhFrom','xhTo'],['soaFrom','soaTo'],['prFrom','prTo']];
 function dayRolled(old, now){
   const n = Math.round((Date.parse(now) - Date.parse(old)) / 864e5);
   if(!(n > 0)) return;
@@ -4343,10 +4361,11 @@ function initDispatcher(){
     if(idle){ if(may('dispatchAdd')) openDispatchAdd(idle.dataset.idle); return; }
     const c = e.target.closest('[data-key]'); if(!c) return;
     const t = S.xTrips.find(x => x.key===c.dataset.key); if(!t) return;
+    const view = !may('dispatch');   // POD (MANU 2026-11-04 "add POD access to truckplan as viewer"): open the trip to read, nothing else
     const nb = e.target.closest('[data-next]');
-    if(nb) return quickNext(t, nb.dataset.next);
+    if(nb && !view) return quickNext(t, nb.dataset.next);
     const td = e.target.closest('td.ed');
-    if(td) return openCellEditor(t, td.dataset.f, td);
+    if(td && !view) return openCellEditor(t, td.dataset.f, td);
     openDispatch(t);
   };
 }
@@ -5311,6 +5330,7 @@ function initPod(){
   $('podFrom').onchange = $('podTo').onchange = loadPod;
   $('podFind').oninput = $('podAcct').onchange = $('podCust').onchange = renderPod;
   $('podReport').onclick = openPodReport;
+  $('podCsv').onclick = podCsv;
   $('podList').onclick = e => {
     if(e.target.closest('#podBulk')) return bulkCheck('pod');
     const c=e.target.closest('[data-key]'); if(!c) return;
@@ -5350,16 +5370,101 @@ function renderPod(){
   const podOrder = t => t.podAt ? 2 : files(t).length ? 0 : 1;
   const doneAt = t => { const x = lastTime(t), dt = x ? toDate(x.v) : null; return dt ? dt.getTime() : new Date(t.date + 'T23:59').getTime(); };
   const byTrip = (a,b) => podOrder(a) - podOrder(b) || doneAt(a) - doneAt(b) || String(a.truckNo).localeCompare(String(b.truckNo),undefined,{numeric:true});
-  const head = groupRoutes(list, byTrip, () => false, 12);   // no route header rows on POD (MANU)
-  const ready = ['tocheck','waitdocs'].includes(S.podFilter) ? list.filter(t => !t._pending && files(t).length && podSt(t)==='WAITING DOCS') : [];
+  // MANU 2026-11-04 "sort by date, oldest to earliest": by trip date, oldest first (no route groups), then the order above
+  list.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || byTrip(a, b));
+  const head = {};
+  S.podShown = list;   // Download CSV (MANU 2026-11-04 "in POD add download CSV"): the rows shown, in this order
+  const ready = may('podEndorse') && ['tocheck','waitdocs'].includes(S.podFilter) ? list.filter(t => !t._pending && files(t).length && podSt(t)==='WAITING DOCS') : [];
   S.podReady = ready;
   const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips in Waiting docs have scanned documents.</span><button class="btn road" type="button" id="podBulk">Mark all ${ready.length} ENDORSED TO BILLING</button></div>` : '';
   const docCell = t => t.podAt ? `<span class="docstate ok">Sent ${esc(t.podAt.slice(0,10))}</span>` : `<span class="docstate wait">${files(t).length ? files(t).length+' file(s) · to check' : 'No documents'}</span>`;
-  $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th>Driver</th><th>Helpers</th><th>Status</th><th>Documents</th><th>POD remarks</th></tr></thead><tbody>` +
+  $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th>Driver</th><th>Helpers</th><th>Documents</th><th>POD remarks</th><th>Status</th></tr></thead><tbody>` +
     list.map((t,i) => {
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td></tr>`; }).join('') + `</tbody></table></div>`
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.podFilter==='completed' ? 'No trip endorsed to billing in these dates.' : 'Nothing left to check here.'}</div>`;
   freezeCols($('podList'));
+}
+/** POD analytics tab (POD HEAD, Admin, Boss; MANU 2026-11-04 "add POD analytics tab for POD head"): completed trips in the dates picked,
+ *  by POD status, how fast they get endorsed to billing, how old the ones still waiting are, per customer and per POD clerk. */
+function initPodStats(){
+  const today = TODAY();
+  rangeChips($('psRange'), (f,t) => { $('psFrom').value=f; $('psTo').value=t; loadPodStats(); });
+  $('psFrom').value = addDays(today,-29); $('psTo').value = today;
+  $('psFrom').onchange = $('psTo').onchange = loadPodStats;
+  $('psAcct').onchange = renderPodStats;
+  $('psJpg').onclick = () => { const b = $('psJpg'), was = b.innerHTML; b.disabled = true; b.textContent = 'Making picture…';
+    const f = $('psFrom').value, t = $('psTo').value, acc = $('psAcct').value;
+    const line = `${f===t ? fmtDay(f) : fmtDay(f) + ' to ' + fmtDay(t)} · ${acc ? (acc===NO_ACCT ? 'Not counted in an account' : titleCase(acc)) : 'All accounts'}`;
+    Promise.resolve(secShot($('psBody'), 'POD analytics', {line, name: `${f} to ${t}`}, 'jpg')).finally(() => { b.disabled = false; b.innerHTML = was; }); };
+}
+function loadPodStats(){
+  const f = $('psFrom').value, t = $('psTo').value; $('psRange')._mark(f,t);
+  return withTrips(f, t, list => { if($('psFrom').value!==f || $('psTo').value!==t) return; S.psTrips = list; renderPodStats(); }, $('psBody'));
+}
+function renderPodStats(){
+  if(S.tab!=='podstats') return;
+  const acc = fillAcctSelect($('psAcct'));
+  const done = (S.psTrips || []).filter(t => stageOf(t)==='Completed' && tripInAcct(t, acc));
+  const DAY = 864e5, now = Date.now();
+  const doneAt = t => doneTime(t) || new Date(t.date + 'T23:59');
+  const sentAt = t => stampDate(t.podAt);
+  const sent = done.filter(podSent), wait = done.filter(t => !podSent(t));
+  const turn = sent.map(t => { const a = doneAt(t), z = sentAt(t); return a && z && z >= a ? (z - a) / DAY : null; }).filter(x => x!==null);
+  const avg = xs => xs.length ? xs.reduce((a,b) => a+b, 0) / xs.length : null;
+  const d1 = v => v===null ? '—' : v < 1 ? Math.round(v*24) + ' h' : (Math.round(v*10)/10) + ' days';
+  const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
+  const cnt = st => done.filter(t => (podSent(t) ? POD_DONE : podSt(t))===st).length;
+  const ageB = [0,0,0,0], AGE_L = ['0–2 days','3–7 days','8–14 days','15+ days'];
+  wait.forEach(t => { const d = (now - doneAt(t)) / DAY; ageB[d < 3 ? 0 : d < 8 ? 1 : d < 15 ? 2 : 3]++; });
+  const maxB = Math.max(1, ...ageB);
+  // per customer
+  const cust = {};
+  done.forEach(t => { const k = t.customer || '(no customer)', c = cust[k] || (cust[k] = {n:0, s:0, docs:0, turns:[]}); c.n++; if(files(t).length) c.docs++;
+    if(podSent(t)){ c.s++; const a = doneAt(t), z = sentAt(t); if(a && z && z >= a) c.turns.push((z - a) / DAY); } });
+  const custRows = Object.entries(cust).sort((a,b) => (b[1].n - b[1].s) - (a[1].n - a[1].s) || b[1].n - a[1].n);
+  // per POD clerk (who endorsed)
+  const by = {}; sent.forEach(t => { const k = t.podBy || '(older, no name)'; by[k] = (by[k] || 0) + 1; });
+  // endorsed per day
+  const perDay = {}; sent.forEach(t => { const d = String(t.podAt || '').slice(0,10); if(/^\d{4}-\d{2}-\d{2}$/.test(d)) perDay[d] = (perDay[d] || 0) + 1; });
+  const days = Object.keys(perDay).sort(), maxD = Math.max(1, ...Object.values(perDay));
+  const bar = (v, max, c) => `<div style="background:var(--line);border-radius:6px;height:10px;min-width:60px"><div style="width:${Math.round(v / max * 100)}%;height:10px;border-radius:6px;background:${c}"></div></div>`;
+  const ST_C = {[POD_DONE]:'#94A3B8','PENDING':'#B91C1C','WAITING DOCS':'#5B9BB0','RECEIVED DOCUMENTS':'#16A34A','TUKOD':'#7C3AED'};
+  if(!done.length){ $('psBody').innerHTML = '<div class="empty">No completed trip in these dates.</div>'; return; }
+  $('psBody').innerHTML = `
+    <div class="kpis kpis4">
+      <div class="kpi"><div class="v">${done.length}</div><div class="l">Completed trips</div><div class="s">${done.filter(t => files(t).length).length} with scanned documents</div></div>
+      <div class="kpi"><div class="v">${pct(sent.length, done.length)}</div><div class="l">Endorsed to Billing</div><div class="s">${sent.length} of ${done.length} trips</div></div>
+      <div class="kpi"><div class="v">${wait.length}</div><div class="l">Not yet endorsed</div><div class="s">${wait.filter(t => !files(t).length).length} with no documents</div></div>
+      <div class="kpi"><div class="v">${d1(avg(turn))}</div><div class="l">Average time to endorse</div><div class="s">trip completed → endorsed${turn.length ? ' · ' + turn.length + ' trips' : ''}</div></div>
+    </div>
+    <div class="grid2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:14px">
+      <div class="panel"><h3>By POD status <small>completed trips</small></h3>
+        <table class="xl"><tbody>${POD_ST.map(st => { const n = cnt(st); return `<tr><td>${podChip(st)}</td><td class="c"><b>${n}</b></td><td style="width:45%">${bar(n, done.length, ST_C[st])}</td><td class="c">${pct(n, done.length)}</td></tr>`; }).join('')}</tbody></table></div>
+      <div class="panel"><h3>Not yet endorsed, by age <small>since the trip was completed</small></h3>
+        <table class="xl"><tbody>${AGE_L.map((l,i) => `<tr><td>${l}</td><td class="c"><b>${ageB[i]}</b></td><td style="width:55%">${bar(ageB[i], maxB, i < 1 ? '#16A34A' : i < 2 ? '#D97706' : '#B91C1C')}</td></tr>`).join('')}</tbody></table></div>
+      <div class="panel"><h3>Endorsed by <small>who sent trips to billing</small></h3>
+        ${Object.keys(by).length ? `<table class="xl"><tbody>${Object.entries(by).sort((a,b) => b[1]-a[1]).map(([k,v]) => `<tr><td>${esc(k)}</td><td class="c"><b>${v}</b></td></tr>`).join('')}</tbody></table>` : '<p class="hint">None yet.</p>'}</div>
+      <div class="panel"><h3>Endorsed per day <small>by date sent to billing</small></h3>
+        ${days.length ? `<table class="xl"><tbody>${days.map(d => `<tr><td>${esc(fmtDay(d))}</td><td class="c"><b>${perDay[d]}</b></td><td style="width:55%">${bar(perDay[d], maxD, 'var(--road)')}</td></tr>`).join('')}</tbody></table>` : '<p class="hint">None yet.</p>'}</div>
+    </div>
+    <div class="panel"><h3>Per customer <small>most trips waiting first</small></h3>
+      <div class="xl-wrap"><table class="xl"><thead><tr><th>Customer</th><th class="c">Completed</th><th class="c">Endorsed</th><th class="c">Waiting</th><th class="c">With documents</th><th class="c">% endorsed</th><th class="c">Average time to endorse</th></tr></thead><tbody>
+      ${custRows.map(([k,c]) => `<tr><td>${esc(k)}</td><td class="c">${c.n}</td><td class="c">${c.s}</td><td class="c"><b>${c.n - c.s}</b></td><td class="c">${c.docs}</td><td class="c">${pct(c.s, c.n)}</td><td class="c">${d1(avg(c.turns))}</td></tr>`).join('')}
+      </tbody></table></div></div>`;
+}
+/** "2026-11-04 15:10" → "Nov 4, 2026 3:10 PM": when the POD status last changed or a document was uploaded (MANU 2026-11-04). */
+const podWhen = v => { const m = String(v || '').match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})/); if(!m) return String(v || ''); const h = +m[2]; return `${fmtDay(m[1])} ${(h % 12) || 12}:${m[3]} ${h < 12 ? 'AM' : 'PM'}`; };
+const nowStamp = () => { const d = new Date(Date.now() + (S.clockOff || 0)), p = n => String(n).padStart(2, '0'); return `${TODAY()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+/** POD "Download CSV": the trips the POD list shows now (dates, account, customer, find and chip as picked), oldest first. */
+function podCsv(){
+  const l = S.podShown || [];
+  if(!l.length) return toast('No trips shown to download.', true);
+  const chip = ({tocheck:'All to check', pending:'Pending', waitdocs:'Waiting docs', recvdocs:'Received documents', tukod:'Tukod', completed:'Endorsed to Billing'})[S.podFilter] || '';
+  saveCsvFile(`POD ${chip} ${$('podFrom').value} to ${$('podTo').value}.csv`.replace(/\s+/g, ' '),
+    ['#', 'Trip date', 'Trip ID', 'Truck', 'Plate', 'Customer', 'Destination', 'Shipment', 'Driver', 'Helpers', 'Documents', 'POD remarks', 'Status', 'Status updated'],
+    l.map((t, i) => [i + 1, t.date, t.tripId || '', t.truckNo || '', t.plateNo || '', t.customer || '', t.destination || '', t.shipmentNo || '', t.driver || '',
+      [t.helper1, t.helper2].filter(Boolean).join(', '), t.podAt ? 'Sent ' + String(t.podAt).slice(0, 10) : files(t).length ? files(t).length + ' file(s)' : 'No documents',
+      t.pod || '', podSt(t), t.podUpdAt ? podWhen(t.podUpdAt) : '']));
 }
 function openPod(t){
   if(!t) return;
@@ -5372,18 +5477,18 @@ function openPod(t){
     <label class="upl" style="margin-top:10px">Upload scan (PDF or photo)<input type="file" id="podFile" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic" multiple></label>
     <div id="podUp" class="hint" style="margin-top:6px"></div>
     <div class="sec">Check</div>
-    <div class="f">Status<div class="pst-pick" id="podStPick">${POD_ST.map(st => `<button type="button" class="pstat s-${st.toLowerCase().replace(/[^a-z]+/g,'-')}" data-st="${st}" aria-pressed="${podSt(t)===st}">${st}</button>`).join('')}</div>
-      <span class="hint">ENDORSED TO BILLING sends the trip to billing. It then shows under the Endorsed to Billing chip.</span></div>
+    <div class="f">Status<div class="pst-pick" id="podStPick">${podPickSt().map(st => `<button type="button" class="pstat s-${st.toLowerCase().replace(/[^a-z]+/g,'-')}" data-st="${st}" aria-pressed="${podSt(t)===st}">${st}</button>`).join('')}</div>
+      <span class="hint">${may('podEndorse') ? 'ENDORSED TO BILLING sends the trip to billing. It then shows under the Endorsed to Billing chip.' : 'Only POD can set ENDORSED TO BILLING.'}</span></div>
     <label class="f">${esc(hdr(24,'POD REMARKS'))}<textarea id="podRemarks">${esc(t.pod||'')}</textarea></label>
     ${t.podAt ? `<p class="hint">Checked by ${esc(t.podBy)} on ${esc(t.podAt)} · ${esc(t.docStatus||'')}</p>` : ''}`,
-    t.podAt ? `<button class="btn alt" id="podUndo" type="button" style="margin-right:auto">Undo check</button><button class="btn" id="podSaveBtn" type="button">Save remarks</button>`
-            : `<button class="btn alt" id="podSaveBtn" type="button" style="margin-right:auto">Save remarks</button><button class="btn road" id="podCheck" type="button">ENDORSED TO BILLING — send to billing</button>`);
+    t.podAt ? `${may('podEndorse') ? '<button class="btn alt" id="podUndo" type="button" style="margin-right:auto">Undo check</button>' : ''}<button class="btn" id="podSaveBtn" type="button">Save remarks</button>`
+            : `<button class="btn alt" id="podSaveBtn" type="button" style="margin-right:auto">Save remarks</button>${may('podEndorse') ? '<button class="btn road" id="podCheck" type="button">ENDORSED TO BILLING — send to billing</button>' : ''}`);
   $('podFile').onchange = e => uploadFiles(t, [...e.target.files]);
   const send = (checked, status) => {
     const pod = $('podRemarks').value.trim().toUpperCase();
     if(checked===true) status = POD_DONE;
     const next = {...t, pod};
-    if(status!==undefined) next.finalStatus = status;
+    if(status!==undefined){ next.finalStatus = status; next.podUpdAt = nowStamp(); }
     if(status===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; }
     if(checked===false){ next.podAt = ''; next.podBy = ''; next.finalStatus = ''; }
     closeDrawer();
@@ -5446,12 +5551,12 @@ function openPodRemarks(t, td){
 function openPodStatus(t, td){
   if(!t || !may('pod')) return;
   if(t._pending) return toast('Still saving — try again in a moment.');
-  const p = podPop(td, `<div class="ce-h"><b>Status</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div><div class="pst-pick">${POD_ST.map(st => `<button type="button" class="pstat s-${st.toLowerCase().replace(/[^a-z]+/g,'-')}" data-st="${st}" aria-pressed="${podSt(t)===st}">${st}</button>`).join('')}</div><div class="hint">ENDORSED TO BILLING sends the trip to billing.</div>`);
+  const p = podPop(td, `<div class="ce-h"><b>Status</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div><div class="pst-pick">${podPickSt().map(st => `<button type="button" class="pstat s-${st.toLowerCase().replace(/[^a-z]+/g,'-')}" data-st="${st}" aria-pressed="${podSt(t)===st}">${st}</button>`).join('')}</div><div class="hint">${may('podEndorse') ? 'ENDORSED TO BILLING sends the trip to billing.' : 'Only POD can set ENDORSED TO BILLING.'}</div>`);
   p.onclick = e => { const b = e.target.closest('[data-st]'); if(!b) return;
     const st = b.dataset.st; closeCellEditor();
     if(st===podSt(t)) return toast('Nothing changed');
     if(st===POD_DONE && !files(t).length && !confirm('No scanned document is uploaded for this trip. Mark ENDORSED TO BILLING and send to billing anyway?')) return;
-    const next = {...t, finalStatus: st}; if(st===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; }
+    const next = {...t, finalStatus: st, podUpdAt: nowStamp()}; if(st===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; }
     saveOptimistic(next, t, () => callQ('podSave', refOf(t), {status: st}), () => st===POD_DONE ? 'ENDORSED TO BILLING — moved to billing' : 'Status: ' + st);
   };
   if($('podUndo')) $('podUndo').onclick = () => send(false);
@@ -6449,10 +6554,10 @@ document.addEventListener('click', e => {
 }, true);
 document.addEventListener('keydown', e => { if(e.key==='Enter' && e.target.matches && e.target.matches('[data-person],[data-truckpop],[data-platepop]')) e.target.click(); });
 
-const ALL_ROLES = ['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','BILLING','ACCOUNTING','PAYROLL','HR','MAINTENANCE'];
+const ALL_ROLES = ['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','POD HEAD','BILLING','ACCOUNTING','PAYROLL','HR','MAINTENANCE'];
 const ROLE_NOTE = {'ADMIN':'Everything, including users.','BOSS':'Sees everything Admin sees, changes nothing (view only).',
   'SUPERVISOR':'Dashboard, Truck assignment and Truck Plan; in Truck Plan changes only source and destination, and adds trips.','TEAM LEADER':'Dashboard, Fleet (view only), Truck assignment and Truck Plan.',
-  'DISPATCHER':'Truck Plan only.','POD':'Checks completed trips and uploads scanned documents.','BILLING':'Checks trips POD sent; source, destination, distance and clients.',
+  'DISPATCHER':'Truck Plan only.','POD':'Checks completed trips, uploads scanned documents, endorses to billing.','POD HEAD':'Everything POD does, plus the POD analytics tab.','BILLING':'Checks trips POD sent; source, destination, distance and clients.',
   'HR':'Drivers and helpers (Manpower) and users, except Admin and Boss accounts.','MAINTENANCE':'Maintenance dashboard only.',
   'ACCOUNTING':'Disbursement (trip budgets sent) and Accounting (inventory purchases with receipts, money summary).','PAYROLL':'Payroll and Disbursement (trip budgets sent).'};
 const ADMIN_ONLY_ROLES = ['ADMIN','BOSS'];   // only an admin creates, changes or gives these (HR manages the rest; same check on the server)
