@@ -1844,7 +1844,7 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <label class="f">Account<select id="xAcct"><option value="">All accounts</option><option>COCA COLA CANLUBANG PLANT</option><option>COCA COLA SAN FERNANDO</option><option>OTHER ACCOUNTS</option></select></label>
       <label class="f grow">Find<input id="xFind" placeholder="Truck, plate, customer, driver, shipment"></label>
       <button class="btn alt" type="button" id="xReport">Generate report</button>
-      <button class="btn alt" type="button" id="xRdd" title="RDD for one date as a landscape PDF (Coca Cola trips)">Generate RDD</button>
+      <button class="btn alt" type="button" id="xRdd" title="RDD for one date as a landscape PDF (pick the account)">Generate RDD</button>
       <div class="chips" id="xChips"></div>
     </div>
     <p class="hint feed-hint" id="xFeedNote" hidden>Trips from <b>GENERAL DATABASE 2.0</b> get their status, truck, route and crew changed there, and new trips are typed there for now. Times, remarks, budget and fuel still save here.</p>
@@ -3450,7 +3450,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 4, APP_VERSION_DATE = '2026-11-05';
+const APP_VERSION = 5, APP_VERSION_DATE = '2026-11-05';
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
@@ -7133,12 +7133,12 @@ function pdfFromJpegs(pages){
 }
 /* ---- Generate RDD (MANU 2026-11-05 "add this button to generate RDD in the truckplan. set the date, this is only a single date",
  * "make it a landscape pdf", "make sure to get the exact font and spacing of the cells") ----
- * One date's Coca Cola trips in the layout of OCTOBER COKE.xlsx, drawn straight into a PDF (no pictures, so it stays sharp and small):
+ * One date's trips of the picked account (All, Canlubang, San Fernando, Other accounts) in the layout of OCTOBER COKE.xlsx, drawn straight into a PDF (no pictures, so it stays sharp and small):
  * Letter landscape, margins 0.25" / 0.31" / 0.28", fit to the page width like the workbook (Fit All Columns on One Page).
  * Sizes are the workbook's: column widths in pixels (Excel widths at the default font), row heights and font sizes in points
  * (title 72.75 · header 88.5 · section 55.5 · trip 117.75 · sign-off 32.1; Arial 20, title 48, sign-off 24). Arial is printed as
  * Helvetica, the PDF font with the same letter widths; the title's Arial Black prints as Helvetica Bold (phones have no Arial Black).
- * Rows: CANLUBANG then SAN FERNANDO (the trip's account, as Truck Plan counts it), trips in the order they were typed. A truck's
+ * Rows: CANLUBANG, SAN FERNANDO, OTHER ACCOUNTS (the trip's account, as Truck Plan counts it), trips in the order they were typed. A truck's
  * Coca Cola to Coca Cola legs that follow on from each other (next source = last destination) share one NO., as in the workbook. */
 const RDD_COLS = [122, 111, 167, 415, 397, 212, 201, 222, 222, 222, 129, 189];
 const RDD_HEAD = ['NO.', 'TRUCK NO', 'PLATE NUMBER', 'CUSTOMER', 'DESTINATION', 'SHIPMENT NUMBER', 'STATUS', 'DRIVER', 'HELPER', 'HELPER', 'MANO', 'REMARKS'];
@@ -7189,13 +7189,13 @@ const rddRgb = hex => hex.match(/../g).map(h => (parseInt(h, 16) / 255).toFixed(
  *  Coca Cola to Coca Cola, until it is back where the group started or at its own plant (Canlubang Plant / San Fernando Pampanga):
  *  this matches how the October sheets were numbered (checked on all 27 days; the few left over were numbered by hand differently). */
 const RDD_HOME = ['COCACOLACANLUBANGPLANT', 'COCACOLASANFERNANDOPAMPANGA'];
-function rddSections(trips, day){
+function rddSections(trips, day, pick){   // pick: '' all accounts, or 0 Canlubang / 1 San Fernando / 2 Other accounts (MANU 2026-11-05 "there should be an option to select what account")
   const pl = v => nameKey(placeOf(v));
-  const list = trips.filter(t => t.date === day && isTrip(t) && isCokePlace(t.customer)).sort((a, b) => (a.row || 0) - (b.row || 0));
+  const list = trips.filter(t => t.date === day && isTrip(t)).sort((a, b) => (a.row || 0) - (b.row || 0));
   const secOf = t => {
     const s = acctSec(acctOfTrip(t)); if(s === 0 || s === 1) return s;
     const a = acctSec(assignedAcct(t.truckNo, day)); if(a === 0 || a === 1) return a;
-    const k = nameKey(t.customer); return k.includes('CANLUBANG') ? 0 : k.includes('SANFERNANDO') ? 1 : 2;
+    const k = nameKey(t.customer); return !isCokePlace(t.customer) ? 2 : k.includes('CANLUBANG') ? 0 : k.includes('SANFERNANDO') ? 1 : 2;
   };
   const groups = [], last = {};
   list.forEach(t => {
@@ -7203,12 +7203,13 @@ function rddSections(trips, day){
     if(p && isCokePlace(p.destination) && isCokePlace(t.customer) && pl(p.destination) !== pl(g.legs[0].customer) && pl(p.destination) !== RDD_HOME[g.sec]) return g.legs.push(t);
     const ng = {legs: [t], sec: secOf(t)}; groups.push(ng); if(u) last[u] = ng;
   });
-  const secs = [{name: 'CANLUBANG', groups: []}, {name: 'SAN FERNANDO', groups: []}, {name: 'OTHERS', groups: []}];
+  const secs = [{name: 'CANLUBANG', groups: []}, {name: 'SAN FERNANDO', groups: []}, {name: 'OTHER ACCOUNTS', groups: []}];
   groups.forEach(g => secs[g.sec].groups.push(g.legs));
-  return secs.filter(s => s.groups.length);
+  return secs.filter((s, i) => s.groups.length && (pick === '' || pick === undefined || Number(pick) === i));
 }
 const rddTitle = day => { const [y, m, d] = day.split('-').map(Number); return `RDD ${new Date(y, m - 1, d).toLocaleDateString('en-US', {month: 'long'}).toUpperCase()} ${String(d).padStart(2, '0')}, ${y}`; };
-const rddFile = day => { const [y, m, d] = day.split('-'); return `RDD ${m}-${d}-${y}.pdf`; };
+const RDD_ACCTS = [['', 'All accounts'], ['0', 'Coca Cola Canlubang'], ['1', 'Coca Cola San Fernando'], ['2', 'Other accounts']];
+const rddFile = (day, pick) => { const [y, m, d] = day.split('-'), a = RDD_ACCTS.find(x => x[0] === String(pick ?? '')); return `RDD ${m}-${d}-${y}${a && a[0] !== '' ? ' ' + a[1] : ''}.pdf`; };
 
 /** The PDF (a Blob). Bands are the pieces a page break may not cut: title + header, a section title with its first trip, each
  *  trip with its linked legs, and the sign-off. Units: sheet points (column pixels × 0.75), printed at the fit-to-width scale. */
@@ -7288,18 +7289,19 @@ function rddPdf(day, secs, preparedBy){
 /** Truck Plan › Generate RDD: pick one date, get its trips from the server, save the PDF. */
 function openRdd(){
   const d0 = ($('xDate') && $('xDate').value) || TODAY();
-  openPop('Generate RDD', 'Pick the date. The PDF lists that date\'s Coca Cola trips, Canlubang then San Fernando, in the RDD layout (landscape).',
-    `<div class="repform"><label class="f">Date<input type="date" id="rddDate" value="${esc(d0)}"></label></div><p class="hint-line" id="rddNote" style="margin:8px 0 0"></p>`,
+  const s0 = $('xAcct') && $('xAcct').value ? String(acctSec($('xAcct').value)) : '';
+  openPop('Generate RDD', 'Pick the date and the account. The PDF lists that date\'s trips, Canlubang then San Fernando then Other accounts, in the RDD layout (landscape).',
+    `<div class="repform"><label class="f">Date<input type="date" id="rddDate" value="${esc(d0)}"></label><label class="f">Account<select id="rddAcct">${RDD_ACCTS.map(([v, t]) => `<option value="${v}" ${v === s0 ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label></div><p class="hint-line" id="rddNote" style="margin:8px 0 0"></p>`,
     `<button class="btn alt" type="button" onclick="closePop()">Close</button> <button class="btn road" type="button" id="rddGo">Generate PDF</button>`);
   $('rddGo').onclick = () => {
-    const day = $('rddDate').value, btn = $('rddGo');
+    const day = $('rddDate').value, pick = $('rddAcct').value, btn = $('rddGo'), accName = (RDD_ACCTS.find(x => x[0] === pick) || RDD_ACCTS[0])[1];
     if(!day) return toast('Pick a date first.', true);
     btn.disabled = true; btn.textContent = 'Getting the trips…'; $('rddNote').textContent = '';
     fetchTrips(day, day).then(trips => {
       btn.disabled = false; btn.textContent = 'Generate PDF';
-      const secs = rddSections(trips || [], day);
-      if(!secs.length){ $('rddNote').textContent = `No Coca Cola trips on ${fmtDay(day)}.`; return toast('No Coca Cola trips on that date.', true); }
-      const r = rddPdf(day, secs, S.me ? (S.me.name || S.me.username) : ''), name = rddFile(day), url = URL.createObjectURL(r.blob);
+      const secs = rddSections(trips || [], day, pick);
+      if(!secs.length){ $('rddNote').textContent = `No trips for ${accName} on ${fmtDay(day)}.`; return toast('No trips for that account on that date.', true); }
+      const r = rddPdf(day, secs, S.me ? (S.me.name || S.me.username) : ''), name = rddFile(day, pick), url = URL.createObjectURL(r.blob);
       const n = secs.reduce((s, x) => s + x.groups.reduce((a, g) => a + g.length, 0), 0);
       $('rddNote').innerHTML = `${esc(fmtDay(day))}: ${secs.map(x => `${esc(titleCase(x.name))} ${x.groups.length}`).join(' · ')} (${n} row${n === 1 ? '' : 's'}), ${r.pages} page${r.pages === 1 ? '' : 's'}. <a href="${url}" target="_blank" rel="noopener">Open the PDF</a>`;
       if(repSave(name, url)) toast('Saved ' + name); else { window.open(url, '_blank'); toast('The PDF opened in a new tab. Save it from there.'); }
