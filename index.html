@@ -50,7 +50,7 @@ if ('serviceWorker' in navigator) {
 /* Opened from GitHub (manuobueniii.github.io/JMTI, MANU 2026-10-13): there is no google.script.run, so the same calls go
    to the Apps Script web app (doPost in Code.gs) as fetch requests. On the Apps Script page itself this does nothing. */
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbz5P5C6qrNrhvE_TvygExbyes-4xmIT-Jz6N0oSFnkZScDmyK884pGTlULHhuWCp01_/exec';
+  var API = 'https://script.google.com/macros/s/AKfycbwOSjMBYolkEesACiseK0eyHGq_yR3nrytA3zoaaw4UBfZjCRdV7nEsNEFM9GoEjXZWZg/exec';
   if (!/github\.io$/.test(location.hostname) || (window.google && google.script)) return;
   window.JMTI_API = API;
   function send(fn, args){
