@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, interactive-widget=resizes-content">
 <!-- maximum-scale=1: the phone never zooms in on its own when a box is tapped to type (MANU 2026-11-02 "when typing on mobile phone do not zoom");
      iPhones still let people pinch to zoom by hand. The same is set in Code.gs doGet (addMetaTag) for the Apps Script copy. -->
 <title>JMTI Operations</title>
@@ -1559,6 +1559,42 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
 .tag-rest{display:inline-block;margin-left:4px;padding:1px 6px;border-radius:8px;background:#FDE68A;color:#7C2D12;font-size:11px;font-weight:700;white-space:normal}
 .sysh-rules{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;margin:6px 0}
 .sysh-rules .f{min-width:140px}
+/* ---- Easier on phones (MANU 2026-11-05 "make the system more user friendly when using phone", version 6) ----
+   1. Top bar: fixed at the top; after scrolling down only the menu, logo and clock stay (tb-mini), so the screen is not a third bar.
+   2. Endorsement: a round button at the bottom left instead of the tab on the right edge that covered boxes.
+   3. Filter bars: boxes fill the row (dates two per row, lists and Find full width), buttons share the row.
+   4. Bigger tap areas: chips, buttons, table rows and Next step buttons.
+   MANU 14:46 "make font smaller in phone view, in truckplan, the scrollable part should have a wider view": smaller text, frozen Next step column 76 px (version 8). */
+@media (max-width:700px){
+  header.top{position:fixed;top:0;left:0;right:0;z-index:30;background:rgba(4,16,74,.97)}
+  #app{padding-top:var(--tbH,0px)}
+  body.tb-mini header.top #verBadge:not(.bad),body.tb-mini header.top .hello.tb,body.tb-mini header.top .userchip{display:none!important}
+  body.tb-mini header.top{box-shadow:0 6px 18px rgba(2,10,53,.45)}
+  .sh-fab{top:auto;bottom:18px;left:14px;right:auto;transform:none;width:52px;height:52px;padding:0;border-radius:50%;display:grid;place-items:center;font-size:0}
+  .sh-fab span{writing-mode:horizontal-tb;transform:none;font-size:0;line-height:1}
+  .sh-fab span::before{content:"\1F4DD";font-size:22px}
+  .sh-dot{top:2px;left:auto;right:2px}
+  .view > .bar > .f{flex:1 1 100%;min-width:0}
+  .view > .bar > .f:has(input[type=date]),.view > .bar > .f:has(input[type=month]){flex:1 1 calc(50% - 5px)}
+  .view > .bar > .f input,.view > .bar > .f select{width:100%;min-width:0;box-sizing:border-box}
+  .view > .bar > .btn,.view > .bar > .icon-btn{flex:1 1 auto}
+  .view > .bar > .chips{flex:1 1 100%}
+  .chip{min-height:32px;padding:6px 11px;font-size:11.5px}
+  .btn,.icon-btn{min-height:36px}
+  .btn{font-size:12.5px;padding:8px 12px}
+  .icon-btn{font-size:11.5px;padding:7px 10px}
+  .linkbtn{padding:6px 0!important;min-height:30px}
+  table.xl{font-size:11px;line-height:1.25}
+  table.xl th{font-size:10px}
+  table.xl th,table.xl td{padding:5px 6px}
+  table.xl td.nx{padding:3px 3px;width:76px;min-width:76px;max-width:76px}
+  table.xl th.fz:first-child{width:76px;min-width:76px;max-width:76px}
+  .nextbtn{white-space:normal;text-align:left;min-height:30px;padding:4px 5px;font-size:10px;line-height:1.15;width:100%}
+  #v-dispatcher table.xl td.fz,#v-dispatcher table.xl th.fz{max-width:76px}
+  .xl-wrap{max-height:calc(100dvh - 120px)}
+  main{max-width:calc(100% - 6px);padding:10px 5px}
+  .dr-foot{padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+}
 </style>
 </head>
 <body>
@@ -3450,7 +3486,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 5, APP_VERSION_DATE = '2026-11-05';
+const APP_VERSION = 9, APP_VERSION_DATE = '2026-11-05';
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
@@ -9906,14 +9942,21 @@ function openOpsForm(kind, o){
   const st = {photo: en ? en.photo : '', ref: 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)};
   const crew = t ? [['Driver', t.driver], ['Helper', t.helper1], ['Helper 2', t.helper2]].filter(c => c[1]) : [];
   const fund = OPS.fund;
-  openPop(en ? `Change ${en.entryNo}` : isB ? 'Send budget' : 'Disbursement',
+  // additional budget (MANU 2026-11-05 "when a budget is already sent, additional budget can be sent"): what this trip already got
+  // shows in the form and Save sends it as an additional budget, no yes/no box (the server marks it ADDITIONAL BUDGET)
+  const tripDone = t && t.tripId && !isB && !en ? [...new Map([...((DB.data && DB.data.entries) || []), ...((AC.data && AC.data.entries) || [])]
+    .filter(e => e.type==='OPS DISBURSEMENT' && e.ref===t.tripId && entryLive(e)).map(e => [e.entryNo, e])).values()] : [];
+  st.addl = tripDone.length > 0;
+  const doneHtml = l => `<div class="ds-read warn" style="margin-bottom:10px"><b>Already sent for this trip: ${pesoTxt(l.reduce((x, e) => x + (Number(e.amount) || 0), 0))}</b><br>${l.map(x => `${esc(x.entryNo)} · ${pesoTxt(x.amount)} to ${esc(x.paidTo)} on ${esc(fmtDay(x.date))}`).join('<br>')}<br>This one is saved as an additional budget.</div>`;
+  openPop(en ? `Change ${en.entryNo}` : isB ? 'Send budget' : st.addl ? 'Additional budget' : 'Disbursement',
     t ? `Truck ${esc(t.truckNo || '—')} · ${esc(fmtDay(t.date))} · ${esc(t.customer || '')} → ${esc(t.destination || '—')}` : isB ? 'Budget Accounting sends to Operations; it shows as Budget received in Disbursement' : 'Money given to an employee from the operations fund', `
+    <div id="opDone">${st.addl ? doneHtml(tripDone) : ''}</div>
     ${fund ? `<div class="ds-sum"><span>Budget received <b>${pesoTxt(fund.received)}</b></span><span>Disbursed <b>${pesoTxt(fund.disbursed)}</b></span><span>Budget left <b class="${fund.left < 0 ? 'db-over' : ''}">${pesoTxt(fund.left)}</b></span></div>` : ''}
     <div class="form">
       <label class="f">Date<input id="opDate" type="date" max="${TODAY()}" value="${esc(en ? en.date : TODAY())}"></label>
       <label class="f">${isB ? 'Received by' : 'Employee'}<input id="opWho" list="dlOpsPeople" autocomplete="off" value="${esc(en ? en.paidTo : (crew[0] ? crew[0][1] : ''))}" placeholder="${isB ? 'Name of who got the cash' : 'Driver, helper or other employee'}"></label>
       ${crew.length > 1 ? `<div class="f full ds-f">Crew of this trip<div class="chips" id="opCrew">${crew.map(c => `<button class="chip" type="button" data-who="${esc(c[1])}">${esc(c[0])}: ${esc(c[1])}</button>`).join('')}</div></div>` : ''}
-      <label class="f full">Purpose<input id="opWhy" list="dlOpsWhy" autocomplete="off" value="${esc(en ? en.details : '')}" placeholder="${isB ? 'e.g. weekly operations budget' : 'e.g. toll, fuel, meals'}"></label>
+      <label class="f full">Purpose<input id="opWhy" list="dlOpsWhy" autocomplete="off" value="${esc(en ? en.details : '')}" placeholder="${isB ? 'e.g. weekly operations budget' : st.addl ? 'e.g. additional toll, fuel, meals' : 'e.g. toll, fuel, meals'}"></label>
       <label class="f">Amount (₱)<input id="opAmt" inputmode="decimal" autocomplete="off" value="${esc(en ? en.amount : '')}"></label>
       <div class="f full ds-f">Receipt<input id="opFile" type="file" accept="image/&#42;,application/pdf"><div class="ds-read" id="opRead"></div></div>
       <label class="f">Transaction no<input id="opTxn" autocomplete="off" value="${esc(en ? en.txnNo || '' : '')}" placeholder="GCash or bank reference (none for cash)"></label>
@@ -9922,7 +9965,7 @@ function openOpsForm(kind, o){
     <datalist id="dlOpsPeople">${[...new Set([...document.querySelectorAll('#dlDrivers option, #dlHelpers option')].map(x => x.value).filter(Boolean))].map(v => `<option value="${esc(v)}">`).join('')}</datalist>
     <datalist id="dlOpsWhy">${OPS_PURPOSES.map(v => `<option value="${esc(v)}">`).join('')}</datalist>
     <div class="hint" id="opWarn" style="margin-top:8px"></div>`,
-    `<button class="btn alt" type="button" onclick="closePop()">Cancel</button> <button class="btn road" type="button" id="opSave">${en ? 'Save changes' : 'Save'}</button>`);
+    `<button class="btn alt" type="button" onclick="closePop()">Cancel</button> <button class="btn road" type="button" id="opSave">${en ? 'Save changes' : st.addl ? 'Send additional budget' : 'Save'}</button>`);
   const showPhoto = () => { const box = $('opRead');
     if(st.photo){ box.className = 'ds-read ok'; box.innerHTML = `Receipt saved. <button class="icon-btn" type="button" data-photo="${esc(st.photo)}">View receipt</button> Pick another file to replace it.`; }
     else { box.className = 'ds-read'; box.textContent = 'Take or pick a photo of the receipt (needs signal). It can be added later with Change.'; } };
@@ -9951,13 +9994,15 @@ function openOpsForm(kind, o){
     if(!d.purpose) return toast('Type the purpose.', true);
     if(!(d.amount > 0)) return toast('Type the amount in pesos.', true);
     if(en) d.entryNo = en.entryNo; else { d.ref = st.ref; if(t) d.trip = refOf(t); }
+    if(st.addl) d.allowDup = true;
     $('opSave').disabled = true;
     try{
-      let r = await call('opsSave', d);
-      // the trip already got money (review 2026-11-04 #4): say so and save only when they mean it
+      const r = await call('opsSave', d);
+      // the trip already got money the page did not know about: show it in the form, the next Save sends the additional budget
       if(r && r.dup){
-        if(!confirm(`This trip already got money:\n${r.dup.map(x => `${x.entryNo} · ${pesoTxt(x.amount)} to ${x.paidTo} on ${fmtDay(x.date)}`).join('\n')}\n\nGive ${pesoTxt(d.amount)} more?`)){ $('opSave').disabled = false; return; }
-        d.allowDup = true; r = await call('opsSave', d);
+        st.addl = true; $('opDone').innerHTML = doneHtml(r.dup); $('opSave').textContent = 'Send additional budget'; $('opSave').disabled = false;
+        $('popTitle') && ($('popTitle').textContent = 'Additional budget');
+        return toast('This trip already got money. Check the list, then tap Send additional budget.');
       }
       putEntry(r.entry); OPS.fund = Object.assign({}, OPS.fund, r.fund); lsSet('jmti_opsfund', OPS.fund);
       if(DB.data) DB.data.fund = r.fund;
@@ -10635,6 +10680,28 @@ start();
     const go = () => setTimeout(make, 1500);   // after the first screen is drawn (Faster loading)
     if(src.complete && src.naturalWidth) go(); else src.addEventListener('load', go, {once:true});
   }catch(e){ /* decoration only */ }
+})();
+</script>
+<script>
+/* Easier on phones (MANU 2026-11-05, version 6): the top bar keeps its full height free under it (--tbH), shrinks to one line
+   after scrolling down, and a box tapped in a form is scrolled above the phone keyboard. */
+(function(){
+  var mq = matchMedia('(max-width:700px)'), hd = null, mini = false;
+  function bar(){ hd = hd || document.querySelector('header.top'); return hd; }
+  function size(){ var h = bar(); if(!h) return; if(!mq.matches){ document.body.style.removeProperty('--tbH'); return; }
+    if(!mini && h.offsetHeight) document.body.style.setProperty('--tbH', h.offsetHeight + 'px'); }
+  function onScroll(){ if(!mq.matches){ if(mini){ mini = false; document.body.classList.remove('tb-mini'); } return; }
+    var m = window.scrollY > 90; if(m !== mini){ mini = m; document.body.classList.toggle('tb-mini', m); if(!m) setTimeout(size, 0); } }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', function(){ size(); onScroll(); });
+  if(mq.addEventListener) mq.addEventListener('change', function(){ size(); onScroll(); });
+  function watch(){ var h = bar(); if(!h) return setTimeout(watch, 500); size(); if(window.ResizeObserver) new ResizeObserver(size).observe(h); }
+  watch();
+  document.addEventListener('focusin', function(e){
+    var el = e.target; if(!mq.matches || !el || !el.matches || !el.matches('input:not([type=checkbox]):not([type=radio]):not([type=date]):not([type=month]),textarea')) return;
+    setTimeout(function(){ var vv = window.visualViewport, r = el.getBoundingClientRect(), vh = vv ? vv.height : innerHeight;
+      if(r.bottom > vh - 12 || r.top < 0) try{ el.scrollIntoView({block:'center', behavior:'smooth'}); }catch(x){ el.scrollIntoView(); } }, 350);
+  });
 })();
 </script>
 </body>
