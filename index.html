@@ -53,10 +53,23 @@ if ('serviceWorker' in navigator) {
   var API = 'https://script.google.com/macros/s/AKfycbwOSjMBYolkEesACiseK0eyHGq_yR3nrytA3zoaaw4UBfZjCRdV7nEsNEFM9GoEjXZWZg/exec';
   if (!/github\.io$/.test(location.hostname) || (window.google && google.script)) return;
   window.JMTI_API = API;
+  function online(){
+    if (navigator.onLine === false) return Promise.resolve(false);
+    var c = window.AbortController ? new AbortController() : null, t = setTimeout(function(){ if (c) c.abort(); }, 4000);
+    return fetch('https://www.google.com/generate_204?t=' + Date.now(), { mode: 'no-cors', cache: 'no-store', signal: c ? c.signal : undefined })
+      .then(function(){ clearTimeout(t); return true; }, function(){ clearTimeout(t); return false; });
+  }
   function send(fn, args){
     var t0 = Date.now();
     return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
-      .catch(function(){ throw new Error('No connection to the server. Check the internet and try again.'); })
+      .catch(function(){
+        // MANU 2026-11-05: a call can fail with the internet working (Google sends back its own error page, which the app
+        // cannot read). Only say "no signal" when Google itself cannot be reached either.
+        return online().then(function(up){
+          if (up) throw new Error('The server did not answer "' + fn + '" (your internet is working). Try again in a minute. If it keeps happening, tell Admin: open Apps Script JMTI DASH, run any function once to approve permissions, then deploy a New version.');
+          throw new Error('No connection to the server. Check the internet and try again.');
+        });
+      })
       .then(function(r){ return r.text().then(function(t){ return { st: r.status, t: t }; }); })
       .then(function(x){
         var t = x.t, j; try { j = JSON.parse(t); } catch (e) {
@@ -3436,7 +3449,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 2, APP_VERSION_DATE = '2026-11-05';
+const APP_VERSION = 3, APP_VERSION_DATE = '2026-11-05';
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
