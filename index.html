@@ -1595,6 +1595,21 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
   main{max-width:calc(100% - 6px);padding:10px 5px}
   .dr-foot{padding-bottom:calc(12px + env(safe-area-inset-bottom))}
 }
+/* ---- PC top bar on ONE row (MANU 2026-11-05 "this should only take one row", version 10) ----
+   Menu, logo, clock, version, greeting and the user part stay on one line; the greeting gives up room first
+   (its words wrap), then the title, the motto and the greeting hide on narrower windows. Phones unchanged. */
+@media (min-width:1101px){
+  .top-inner{flex-wrap:nowrap!important}
+  .top-inner .brand{flex:1 1 auto;min-width:0;flex-wrap:nowrap;gap:10px;margin-right:0}
+  .top-inner .brand > *{flex:none}
+  .top-inner .brand > .hello.tb{flex:0 1 auto;min-width:0;max-width:440px}
+  .top .hello.tb .hello-t{min-width:0}
+  .top-inner .userchip{flex:none;flex-wrap:nowrap;margin-left:auto;gap:6px}
+  .top-inner .userchip .icon-btn{white-space:nowrap}
+}
+@media (min-width:1101px) and (max-width:1700px){ .brand small,.brand h1{display:none} .top .hello.tb .hello-av .ms-av{width:32px;height:32px} }
+@media (min-width:1101px) and (max-width:1400px){ .top .hello.tb .hello-t q{display:none} .top-inner .userchip .nm{max-width:130px;white-space:normal;line-height:1.15} }
+@media (min-width:1101px) and (max-width:1250px){ .top .hello.tb{display:none!important} }
 </style>
 </head>
 <body>
@@ -3486,7 +3501,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 9, APP_VERSION_DATE = '2026-11-05';
+const APP_VERSION = 12, APP_VERSION_DATE = '2026-11-06';
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
