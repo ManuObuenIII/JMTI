@@ -1844,6 +1844,7 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <label class="f">Account<select id="xAcct"><option value="">All accounts</option><option>COCA COLA CANLUBANG PLANT</option><option>COCA COLA SAN FERNANDO</option><option>OTHER ACCOUNTS</option></select></label>
       <label class="f grow">Find<input id="xFind" placeholder="Truck, plate, customer, driver, shipment"></label>
       <button class="btn alt" type="button" id="xReport">Generate report</button>
+      <button class="btn alt" type="button" id="xRdd" title="RDD for one date as a landscape PDF (Coca Cola trips)">Generate RDD</button>
       <div class="chips" id="xChips"></div>
     </div>
     <p class="hint feed-hint" id="xFeedNote" hidden>Trips from <b>GENERAL DATABASE 2.0</b> get their status, truck, route and crew changed there, and new trips are typed there for now. Times, remarks, budget and fuel still save here.</p>
@@ -3449,7 +3450,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 3, APP_VERSION_DATE = '2026-11-05';
+const APP_VERSION = 4, APP_VERSION_DATE = '2026-11-05';
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
@@ -4592,6 +4593,7 @@ function initDispatcher(){
   $('xDisbBtn').onclick = () => openOpsForm('DISB', {});
   $('xDelBtn').onclick = openDeletedTrips;
   $('xReport').onclick = openTruckPlanReport;
+  $('xRdd').onclick = openRdd;
   $('xAcct').onchange = () => { const d = xRange()[1]; if(!S.assign[d]) call('getAssignments', d).then(l => { S.assign[d] = l; renderDispatcher(); }).catch(e => toast(e.message, true)); renderDispatcher(); };
   $('xBoard').onclick = e => { const idle = e.target.closest('[data-idle]'); if(idle){ if(may('dispatchAdd')) openDispatchAdd(idle.dataset.idle); return; } const c = e.target.closest('[data-key]'); if(c) openDispatch(S.xTrips.find(t => t.key===c.dataset.key)); };
   filterChips($('xChips'), [['all','All'],['latest','Latest status'],['open','Not completed'],['Planned','Clip board'],['moving','On the road'],['Completed','Completed'],['other','Not on trip']], 'all', f => { S.xFilter = f; renderDispatcher(); });
@@ -7128,6 +7130,182 @@ function pdfFromJpegs(pages){
   put(`xref\n0 ${count}\n0000000000 65535 f \n` + Array.from({length: count - 1}, (_, i) => String(offs[i + 1]).padStart(10, '0') + ' 00000 n \n').join(''));
   put(`trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
   return new Blob(parts, {type: 'application/pdf'});
+}
+/* ---- Generate RDD (MANU 2026-11-05 "add this button to generate RDD in the truckplan. set the date, this is only a single date",
+ * "make it a landscape pdf", "make sure to get the exact font and spacing of the cells") ----
+ * One date's Coca Cola trips in the layout of OCTOBER COKE.xlsx, drawn straight into a PDF (no pictures, so it stays sharp and small):
+ * Letter landscape, margins 0.25" / 0.31" / 0.28", fit to the page width like the workbook (Fit All Columns on One Page).
+ * Sizes are the workbook's: column widths in pixels (Excel widths at the default font), row heights and font sizes in points
+ * (title 72.75 · header 88.5 · section 55.5 · trip 117.75 · sign-off 32.1; Arial 20, title 48, sign-off 24). Arial is printed as
+ * Helvetica, the PDF font with the same letter widths; the title's Arial Black prints as Helvetica Bold (phones have no Arial Black).
+ * Rows: CANLUBANG then SAN FERNANDO (the trip's account, as Truck Plan counts it), trips in the order they were typed. A truck's
+ * Coca Cola to Coca Cola legs that follow on from each other (next source = last destination) share one NO., as in the workbook. */
+const RDD_COLS = [122, 111, 167, 415, 397, 212, 201, 222, 222, 222, 129, 189];
+const RDD_HEAD = ['NO.', 'TRUCK NO', 'PLATE NUMBER', 'CUSTOMER', 'DESTINATION', 'SHIPMENT NUMBER', 'STATUS', 'DRIVER', 'HELPER', 'HELPER', 'MANO', 'REMARKS'];
+const RDD_H = {title: 72.75, head: 88.5, sec: 55.5, row: 117.75, gap: 55.5, sign: 32.1};
+const RDD_FW = {   // Helvetica and Helvetica-Bold widths (1/1000 em) of WinAnsi codes 32..255
+  R: '278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,761,556,0,222,556,333,1000,556,556,333,1000,667,333,1000,0,611,0,0,222,222,333,333,350,556,1000,333,1000,500,333,944,0,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,500,556,500',
+  B: '278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,761,556,0,278,556,500,1000,556,556,333,1000,667,333,1000,0,611,0,0,278,278,500,500,350,556,1000,333,1000,556,333,944,0,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,556,611,556'
+};
+let RDD_FWN = null;
+const RDD_HI = '€\0‚ƒ„…†‡ˆ‰Š‹Œ\0Ž\0\0‘’“”•–—˜™š›œ\0žŸ';   // WinAnsi 128..159
+/** Text as WinAnsi codes (what the PDF fonts print); letters it has no code for become "?". */
+function rddCodes(s){
+  const out = [];
+  for(const ch of String(s ?? '').normalize('NFC')){
+    const c = ch.charCodeAt(0);
+    if((c >= 32 && c < 127) || (c >= 160 && c < 256)) out.push(c);
+    else if(ch === '\t' || ch === '\n' || ch === '\r') out.push(32);
+    else { const i = RDD_HI.indexOf(ch); out.push(ch !== '\0' && i >= 0 ? 128 + i : 63); }
+  }
+  return out;
+}
+function rddWidth(codes, bold, size){
+  if(!RDD_FWN) RDD_FWN = {R: RDD_FW.R.split(',').map(Number), B: RDD_FW.B.split(',').map(Number)};
+  const w = RDD_FWN[bold ? 'B' : 'R'];
+  return codes.reduce((s, c) => s + (w[c - 32] || 556), 0) * size / 1000;
+}
+/** Word wrap like Excel's Wrap Text: whole words per line, a word too long for the cell is cut. Returns lines of codes. */
+function rddWrap(text, maxW, bold, size){
+  const words = String(text ?? '').trim().split(/\s+/).filter(Boolean).map(rddCodes), lines = [];
+  let cur = [];
+  const fits = l => rddWidth(l, bold, size) <= maxW;
+  words.forEach(w => {
+    const tryL = cur.length ? cur.concat([32], w) : w;
+    if(fits(tryL)){ cur = tryL; return; }
+    if(cur.length) lines.push(cur);
+    cur = [];
+    let rest = w;
+    while(!fits(rest) && rest.length > 1){ let n = rest.length - 1; while(n > 1 && !fits(rest.slice(0, n))) n--; lines.push(rest.slice(0, n)); rest = rest.slice(n); }
+    cur = rest;
+  });
+  if(cur.length) lines.push(cur);
+  return lines;
+}
+const rddPdfStr = codes => '(' + codes.map(c => c === 40 || c === 41 || c === 92 ? '\\' + String.fromCharCode(c) : c < 127 ? String.fromCharCode(c) : '\\' + c.toString(8).padStart(3, '0')).join('') + ')';
+const rddRgb = hex => hex.match(/../g).map(h => (parseInt(h, 16) / 255).toFixed(3)).join(' ');
+
+/** The date's trips as workbook sections: [{name, groups: [[trip, trip…], …]}]. A truck's legs that day share one NO. while it goes
+ *  Coca Cola to Coca Cola, until it is back where the group started or at its own plant (Canlubang Plant / San Fernando Pampanga):
+ *  this matches how the October sheets were numbered (checked on all 27 days; the few left over were numbered by hand differently). */
+const RDD_HOME = ['COCACOLACANLUBANGPLANT', 'COCACOLASANFERNANDOPAMPANGA'];
+function rddSections(trips, day){
+  const pl = v => nameKey(placeOf(v));
+  const list = trips.filter(t => t.date === day && isTrip(t) && isCokePlace(t.customer)).sort((a, b) => (a.row || 0) - (b.row || 0));
+  const secOf = t => {
+    const s = acctSec(acctOfTrip(t)); if(s === 0 || s === 1) return s;
+    const a = acctSec(assignedAcct(t.truckNo, day)); if(a === 0 || a === 1) return a;
+    const k = nameKey(t.customer); return k.includes('CANLUBANG') ? 0 : k.includes('SANFERNANDO') ? 1 : 2;
+  };
+  const groups = [], last = {};
+  list.forEach(t => {
+    const u = String(t.truckNo || t.plateNo || '').trim(), g = u && last[u], p = g && g.legs[g.legs.length - 1];
+    if(p && isCokePlace(p.destination) && isCokePlace(t.customer) && pl(p.destination) !== pl(g.legs[0].customer) && pl(p.destination) !== RDD_HOME[g.sec]) return g.legs.push(t);
+    const ng = {legs: [t], sec: secOf(t)}; groups.push(ng); if(u) last[u] = ng;
+  });
+  const secs = [{name: 'CANLUBANG', groups: []}, {name: 'SAN FERNANDO', groups: []}, {name: 'OTHERS', groups: []}];
+  groups.forEach(g => secs[g.sec].groups.push(g.legs));
+  return secs.filter(s => s.groups.length);
+}
+const rddTitle = day => { const [y, m, d] = day.split('-').map(Number); return `RDD ${new Date(y, m - 1, d).toLocaleDateString('en-US', {month: 'long'}).toUpperCase()} ${String(d).padStart(2, '0')}, ${y}`; };
+const rddFile = day => { const [y, m, d] = day.split('-'); return `RDD ${m}-${d}-${y}.pdf`; };
+
+/** The PDF (a Blob). Bands are the pieces a page break may not cut: title + header, a section title with its first trip, each
+ *  trip with its linked legs, and the sign-off. Units: sheet points (column pixels × 0.75), printed at the fit-to-width scale. */
+function rddPdf(day, secs, preparedBy){
+  const X = [0]; RDD_COLS.forEach(w => X.push(X[X.length - 1] + w * 0.75));
+  const SW = X[X.length - 1], PW = 792, PH = 612, ML = 18, MT = 22.32, MB = 20.16;
+  const k = Math.floor((PW - 2 * ML) / SW * 100) / 100;   // Excel fits to width at a whole percent
+  const PAD = 1.5;   // Excel's 2-pixel inset at each side of a cell
+  const cell = (c0, c1, y, h, text, o = {}) => ({x: X[c0], w: X[c1 + 1] - X[c0], y, h, text, size: 20, bold: false, fill: 'FFFFFF', box: true, align: 'center', valign: 'center', ...o});
+  const bands = [];
+  // title (A1:L1 merged, bottom line) and the yellow header
+  bands.push({h: RDD_H.title + RDD_H.head, cells: [
+    cell(0, 11, 0, RDD_H.title, rddTitle(day), {size: 48, bold: true, fill: '', box: false, under: true}),
+    ...RDD_HEAD.map((t, i) => cell(i, i, RDD_H.title, RDD_H.head, t, {bold: true, fill: 'FFFF00'}))
+  ]});
+  const tripRow = (y, t) => [t.truckNo, t.plateNo, t.customer, t.destination, t.shipmentNo, statusText(t), t.driver, t.helper1, t.helper2, '', t.remarks]
+    .map((v, i) => cell(i + 1, i + 1, y, RDD_H.row, String(v ?? '').trim()));
+  const groupCells = (y0, g, no) => [cell(0, 0, y0, RDD_H.row * g.length, String(no)), ...g.flatMap((t, i) => tripRow(y0 + i * RDD_H.row, t))];
+  secs.forEach(s => {
+    s.groups.forEach((g, gi) => {
+      const head = gi === 0 ? [cell(0, 2, 0, RDD_H.sec, s.name, {bold: true, fill: '9FC5E8'}), ...[3,4,5,6,7,8,9,10,11].map(i => cell(i, i, 0, RDD_H.sec, '', {fill: '9FC5E8'}))] : [];
+      const top = head.length ? RDD_H.sec : 0;
+      bands.push({h: top + RDD_H.row * g.length, cells: head.concat(groupCells(top, g, gi + 1))});
+    });
+  });
+  // sign-off (blank row, then PREPARED BY / RECEIVED with their lines; bold Arial 24, set at the bottom of the cell)
+  const so = RDD_H.gap, sh = RDD_H.sign, sg = {size: 24, bold: true, fill: '', box: false, align: 'left', valign: 'bottom'};
+  bands.push({h: so + sh * 4, cells: [
+    cell(3, 3, so, sh, 'PREPARED BY:', sg), cell(4, 4, so, sh, '', {...sg, under: true}), cell(6, 6, so, sh, 'RECEIVED', sg),
+    cell(4, 4, so + sh, sh, String(preparedBy || '').toUpperCase(), {...sg, align: 'center'}),
+    cell(6, 6, so + sh, sh, 'POD', sg), cell(6, 6, so + sh * 2, sh, 'BILLING', sg), cell(6, 6, so + sh * 3, sh, 'PAYROLL', sg),
+    ...[0, 1, 2, 3].map(i => cell(7, 8, so + sh * i, sh, '', {...sg, under: true}))   // sign lines under H:I of each row, as in the sheet
+  ]});
+  // pages
+  const room = (PH - MT - MB) / k, pages = [];
+  let page = null, y = 0;
+  bands.forEach(b => { if(!page || (y + b.h > room && y > 0)){ page = []; pages.push(page); y = 0; } page.push({b, y}); y += b.h; });
+  const streams = pages.map(pg => {
+    const fills = [], texts = [], lines = [];
+    const px = v => (ML + v * k).toFixed(2), py = v => (PH - MT - v * k).toFixed(2);
+    pg.forEach(({b, y: by}) => b.cells.forEach(c => {
+      const top = by + c.y;
+      if(c.fill && c.fill !== 'FFFFFF') fills.push(`${rddRgb(c.fill)} rg ${px(c.x)} ${py(top + c.h)} ${(c.w * k).toFixed(2)} ${(c.h * k).toFixed(2)} re f`);
+      if(c.box) lines.push(`${px(c.x)} ${py(top + c.h)} ${(c.w * k).toFixed(2)} ${(c.h * k).toFixed(2)} re S`);
+      if(c.under) lines.push(`${px(c.x)} ${py(top + c.h)} m ${px(c.x + c.w)} ${py(top + c.h)} l S`);
+      if(!c.text) return;
+      const L = rddWrap(c.text, c.w - 2 * PAD, c.bold, c.size), lh = c.size * 1.15, asc = c.size * 0.905, desc = c.size * 0.212;
+      const blockH = L.length * lh, t0 = c.valign === 'bottom' ? top + c.h - blockH - 0.75 : top + (c.h - blockH) / 2;
+      L.forEach((ln, i) => {
+        const w = rddWidth(ln, c.bold, c.size), x = c.align === 'left' ? c.x + PAD : c.x + (c.w - w) / 2, base = t0 + i * lh + (lh - asc - desc) / 2 + asc;
+        texts.push(`BT /${c.bold ? 'F2' : 'F1'} ${(c.size * k).toFixed(2)} Tf ${px(x)} ${py(base)} Td ${rddPdfStr(ln)} Tj ET`);
+      });
+    }));
+    return ['1 1 1 rg', ...fills, '0 0 0 rg', ...texts, '0 0 0 RG 0.5 w 0 J', ...lines].join('\n');
+  });
+  // the PDF file
+  const enc = new TextEncoder(), parts = [], offs = [];
+  let len = 0;
+  const put = s => { const b = enc.encode(s); parts.push(b); len += b.length; };
+  const obj = (n, body) => { offs[n] = len; put(`${n} 0 obj\n${body}\nendobj\n`); };
+  put('%PDF-1.4\n');
+  const first = 5, kids = pages.map((p, i) => `${first + i * 2} 0 R`).join(' ');
+  obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2, `<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`);
+  obj(3, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  obj(4, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  streams.forEach((s, i) => {
+    const n = first + i * 2;
+    obj(n, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${n + 1} 0 R >>`);
+    obj(n + 1, `<< /Length ${enc.encode(s).length} >>\nstream\n${s}\nendstream`);
+  });
+  const count = first + pages.length * 2, xref = len;
+  put(`xref\n0 ${count}\n0000000000 65535 f \n` + Array.from({length: count - 1}, (_, i) => String(offs[i + 1]).padStart(10, '0') + ' 00000 n \n').join(''));
+  put(`trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return {blob: new Blob(parts, {type: 'application/pdf'}), pages: pages.length};
+}
+/** Truck Plan › Generate RDD: pick one date, get its trips from the server, save the PDF. */
+function openRdd(){
+  const d0 = ($('xDate') && $('xDate').value) || TODAY();
+  openPop('Generate RDD', 'Pick the date. The PDF lists that date\'s Coca Cola trips, Canlubang then San Fernando, in the RDD layout (landscape).',
+    `<div class="repform"><label class="f">Date<input type="date" id="rddDate" value="${esc(d0)}"></label></div><p class="hint-line" id="rddNote" style="margin:8px 0 0"></p>`,
+    `<button class="btn alt" type="button" onclick="closePop()">Close</button> <button class="btn road" type="button" id="rddGo">Generate PDF</button>`);
+  $('rddGo').onclick = () => {
+    const day = $('rddDate').value, btn = $('rddGo');
+    if(!day) return toast('Pick a date first.', true);
+    btn.disabled = true; btn.textContent = 'Getting the trips…'; $('rddNote').textContent = '';
+    fetchTrips(day, day).then(trips => {
+      btn.disabled = false; btn.textContent = 'Generate PDF';
+      const secs = rddSections(trips || [], day);
+      if(!secs.length){ $('rddNote').textContent = `No Coca Cola trips on ${fmtDay(day)}.`; return toast('No Coca Cola trips on that date.', true); }
+      const r = rddPdf(day, secs, S.me ? (S.me.name || S.me.username) : ''), name = rddFile(day), url = URL.createObjectURL(r.blob);
+      const n = secs.reduce((s, x) => s + x.groups.reduce((a, g) => a + g.length, 0), 0);
+      $('rddNote').innerHTML = `${esc(fmtDay(day))}: ${secs.map(x => `${esc(titleCase(x.name))} ${x.groups.length}`).join(' · ')} (${n} row${n === 1 ? '' : 's'}), ${r.pages} page${r.pages === 1 ? '' : 's'}. <a href="${url}" target="_blank" rel="noopener">Open the PDF</a>`;
+      if(repSave(name, url)) toast('Saved ' + name); else { window.open(url, '_blank'); toast('The PDF opened in a new tab. Save it from there.'); }
+      setTimeout(() => URL.revokeObjectURL(url), 10 * 60000);
+    }).catch(e => { btn.disabled = false; btn.textContent = 'Generate PDF'; toast('Trips not loaded: ' + (e && e.message || e), true); });
+  };
 }
 /** Cuts a tall picture into A4-shaped JPEG pages, moving each cut up to a plain line (a row border or a gap) when one is near. */
 function canvasPages(c){
