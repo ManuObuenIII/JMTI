@@ -1406,6 +1406,9 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 /* Clock at the top (MANU 2026-10-28 "add clock at the top"): Philippine time */
 .clk{display:flex;flex-direction:column;justify-content:center;line-height:1.15;padding:4px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.18);color:#fff;font-variant-numeric:tabular-nums;min-width:0}
 .clk b{font-size:15px;font-weight:800;letter-spacing:.01em}
+.verb{align-self:center;font-size:11px;font-weight:700;line-height:1.2;padding:4px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#DCE6FF;cursor:pointer;white-space:normal;text-align:left}
+.verb.bad{background:#B91C1C;border-color:#FCA5A5;color:#fff}
+.ver-line{margin:10px 0 0;font-size:12px;color:#5B6B95;text-align:center}.ver-line.bad{color:#B91C1C;font-weight:700}
 .clk span{font-size:11px;color:#B9C8F5;font-weight:600}
 .clk:empty{display:none}
 
@@ -1576,6 +1579,7 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
     <label class="f">Password<input name="password" type="password" autocomplete="current-password" required></label>
     <div class="err" id="loginErr" role="alert"></div>
     <button class="btn" type="submit" id="loginBtn">Sign in</button>
+    <p class="ver-line" id="verLogin"></p>
   </form>
   <form class="card" id="pwForm" onsubmit="return false" hidden autocomplete="off">
     <img class="logo-copy" alt="JMTI">
@@ -1598,6 +1602,7 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <img class="logo-copy" alt="JMTI">
       <div><h1>Operations Dashboard</h1><small>J. Magtalas Trucking Inc.</small></div>
       <div class="clk" id="topClock" title="Philippine time"></div>
+      <button type="button" class="verb" id="verBadge" title="App version"></button>
       <!-- welcome card in the top bar, right after the clock (MANU 2026-10-29 screenshot: "move this after the date and time") -->
       <div class="hello tb" id="helloCard" hidden></div>
     </div>
@@ -2249,7 +2254,7 @@ const MS_COL = {srcArrive:12,loadStart:13,loadEnd:14,srcDepart:15,destArrive:16,
 const MS_LABEL = {srcArrive:'Source time in',loadStart:'Loading start',loadEnd:'Loading end',srcDepart:'Source time out',
   destArrive:'Destination time in',unloadStart:'Unloading start',unloadEnd:'Unloading end',destDepart:'Destination time out'};
 const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users'};
-const NO_AUTH = ['login','getAppUrl'];
+const NO_AUTH = ['login','getAppUrl','appVersion'];
 
 const S = { sum:null, sumAt:0, sumView:'week', sumMeasure:'trips', topView:'p7', me:null, boot:null, trips:[], range:{}, tab:'', stageFilter:'', shown:150,
             pTrips:[], xTrips:[], podTrips:[], billTrips:[], xFilter:'all', podFilter:'tocheck', billFilter:'tocheck',
@@ -3098,6 +3103,7 @@ function loadBoot(){
     else call('getAssignments', today).then(l => { S.assign[today] = l; redrawAll(); if(S.tab==='assign') renderAssign(); }).catch(() => {});
     S.me = r.me; store('jmti_me', JSON.stringify(r.me));
     const wasEmpty = !S.boot; S.boot = r.boot; S.bootAt = Date.now();
+    if(LIVE || window.JMTI_API) verShow(Number(r.boot.serverVersion) || 0);   // version count from the server
     fillLists();
     if(wasEmpty) showTab(S.tab); else { redrawAll(); if(S.tab==='assign') renderAssign(); }
     S.odPre = r.od ? {at: Date.now(), v: r.od} : null;   // overdue list and idle trucks came with it (dispatch roles)
@@ -3414,6 +3420,29 @@ function dayRolled(old, now){
   if(S.me && S.tab) showTab(S.tab);
   if(S.me) setTimeout(() => bdayCheck(0), 1500);   // a new day: its birthdays
 }
+/* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
+   in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
+   reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
+const APP_VERSION = 1, APP_VERSION_DATE = '2026-11-04';
+const VER = {server:undefined};
+function verText(){
+  const sv = VER.server;
+  if(sv===undefined) return {short:`Version ${APP_VERSION}`, long:`This app page is version ${APP_VERSION} (${APP_VERSION_DATE}). Checking the server…`, bad:false};
+  if(sv===null) return {short:`Version ${APP_VERSION}`, long:`This app page is version ${APP_VERSION} (${APP_VERSION_DATE}). No signal, so the server version is not known.`, bad:false};
+  if(sv===APP_VERSION) return {short:`Version ${APP_VERSION}`, long:`Up to date: page and server are both version ${APP_VERSION} (${APP_VERSION_DATE}).`, bad:false};
+  if(!sv || sv < APP_VERSION) return {short:`Page v${APP_VERSION} · Server ${sv ? 'v' + sv : 'old'}`, long:`The server (Code.gs) is ${sv ? 'version ' + sv : 'older than version 1'}, the page is version ${APP_VERSION}. Admin: paste the latest Code.gs and Index.html, Save, then Deploy > Manage deployments > Edit > New version.`, bad:true};
+  return {short:`Page v${APP_VERSION} · Server v${sv}`, long:`The server is version ${sv} but this page is version ${APP_VERSION} (older). Close the app fully and open it again, or reload the page.`, bad:true};
+}
+function verShow(sv){
+  if(sv!==undefined) VER.server = sv;
+  const t = verText(), b = $('verBadge'), l = $('verLogin');
+  if(b){ b.textContent = t.short; b.classList.toggle('bad', t.bad); b.title = t.long; }
+  if(l){ l.textContent = t.bad ? t.long : t.short + (VER.server===APP_VERSION ? ' · up to date' : ''); l.classList.toggle('bad', t.bad); }
+}
+function verCheck(){
+  if(!LIVE && !window.JMTI_API) return verShow(APP_VERSION);   // the preview has no separate server
+  callServer('appVersion').then(r => verShow(Number(r && r.version) || 0)).catch(e => verShow(e && e.net ? null : 0));
+}
 function clockTick(){
   const o = mnlNow(), el = $('topClock');
   if(o && el){ const h = +o.hour % 12 || 12, mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+o.month - 1];
@@ -3423,6 +3452,7 @@ function clockTick(){
   DAY_SEEN = t;
 }
 setInterval(clockTick, 1000);
+setTimeout(() => { verShow(); verCheck(); $('verBadge').onclick = () => toast(verText().long, verText().bad, 8000); }, 0);
 document.addEventListener('visibilitychange', () => { if(!document.hidden) clockTick(); });
 clockTick();
 /** Counter chips (POD, Billing): items = [[key, label, count]]; tapping one filters the list. Rebuilt on every render. */
