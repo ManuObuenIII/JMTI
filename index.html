@@ -1409,6 +1409,19 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 .verb{align-self:center;font-size:11px;font-weight:700;line-height:1.2;padding:4px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#DCE6FF;cursor:pointer;white-space:normal;text-align:left}
 .verb.bad{background:#B91C1C;border-color:#FCA5A5;color:#fff}
 .ver-line{margin:10px 0 0;font-size:12px;color:#5B6B95;text-align:center}.ver-line.bad{color:#B91C1C;font-weight:700}
+/* Update pop-up (MANU 2026-11-05 "if current version is not updated, ask pop-up what users have to do") */
+.vup{position:fixed;inset:0;z-index:100000;background:rgba(2,10,53,.72);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.vup[hidden]{display:none}
+.vup-box{background:#fff;color:#0A1F8F;border-radius:18px;max-width:520px;width:100%;padding:20px 20px 16px;box-shadow:0 18px 60px rgba(0,0,0,.45);border-top:6px solid #B91C1C;font-size:15px;line-height:1.45;max-height:calc(100vh - 32px);overflow:auto}
+.vup-box h3{margin:0 0 6px;font-size:20px;color:#B91C1C}
+.vup-box p{margin:6px 0}
+.vup-box ol{margin:8px 0;padding-left:22px}.vup-box li{margin:6px 0}
+.vup-box .vup-ver{font-size:12px;color:#5B6B95}
+.vup-box details{margin-top:8px;font-size:13px}.vup-box summary{cursor:pointer;font-weight:700}
+.vup-box .vup-warn{background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;border-radius:10px;padding:8px 10px;font-size:13px}
+.vup-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.vup-btns button,.vup-btns a{flex:1 1 160px;border:0;border-radius:12px;padding:12px 14px;font:700 15px system-ui,sans-serif;cursor:pointer;text-align:center;text-decoration:none}
+.vup-go{background:#B91C1C;color:#fff}.vup-later{background:#E8EEFF;color:#0A1F8F}
 .clk span{font-size:11px;color:#B9C8F5;font-weight:600}
 .clk:empty{display:none}
 
@@ -3423,7 +3436,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 1, APP_VERSION_DATE = '2026-11-04';
+const APP_VERSION = 2, APP_VERSION_DATE = '2026-11-05';
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
@@ -3438,11 +3451,108 @@ function verShow(sv){
   const t = verText(), b = $('verBadge'), l = $('verLogin');
   if(b){ b.textContent = t.short; b.classList.toggle('bad', t.bad); b.title = t.long; }
   if(l){ l.textContent = t.bad ? t.long : t.short + (VER.server===APP_VERSION ? ' · up to date' : ''); l.classList.toggle('bad', t.bad); }
+  try { vupShow(); } catch(e){}
 }
 function verCheck(){
+  VER.at = Date.now();
   if(!LIVE && !window.JMTI_API) return verShow(APP_VERSION);   // the preview has no separate server
   callServer('appVersion').then(r => verShow(Number(r && r.version) || 0)).catch(e => verShow(e && e.net ? null : 0));
 }
+/* Update pop-up (MANU 2026-11-05 "if current version is not updated, ask pop-up what users have to do"): when this page and the
+   server carry different version numbers, a pop-up says in plain words what to do on this kind of device. Checked at open, at
+   sign-in, every 10 minutes and when the app comes back on screen. No signal = no pop-up (sign-in is never blocked by it).
+   - Page older than the server: the pop-up stays until the numbers match. "Reload now" drops the kept copy of the page (service
+     worker + its cache) and opens the newest page. After 2 tries that did not help, "Use the app for now" hides it for 10 minutes.
+   - Server older than the page: Admin has not deployed Code.gs yet. Admin gets the steps; others can tap OK and keep working. */
+const VUP_TRY = 'jmti_verTry', VUP_LATER = 'jmti_verLater';
+const vupGit = () => !!window.JMTI_API;
+const vupInstalled = () => { try { return matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: window-controls-overlay)').matches || navigator.standalone === true; } catch(e){ return false; } };
+const vupPhone = () => /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+const vupIOS = () => /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+function vupGet(k){ try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e){ return null; } }
+function vupSet(k, v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function vupSteps(){
+  const link = '<b>manuobueniii.github.io/JMTI</b>', reinstall = vupIOS()
+    ? 'In Safari: Share, then <b>Add to Home Screen</b>'
+    : 'In Chrome: menu ⋮, then <b>Add to Home screen</b> / <b>Install app</b>';
+  const S_ = {
+    phoneApp: ['Phone (JMTI app on the home screen)', [
+      'Tap <b>Reload now</b> below.',
+      'Still this message? Close the JMTI app fully: open your recent apps and swipe JMTI away. Then open JMTI again.',
+      `Still old? Open ${link} in ${vupIOS() ? 'Safari' : 'Chrome'}, pull the page down to refresh, then remove the old JMTI icon and add it again. ${reinstall}.`]],
+    phoneWeb: ['Phone (in the browser)', [
+      'Tap <b>Reload now</b> below.',
+      'Still this message? Pull the page down to refresh.',
+      `Still old? Close this tab and open ${window.JMTI_API ? link : 'the JMTI link'} again.`]],
+    pcApp: ['Computer (JMTI desktop app)', [
+      'Click <b>Reload now</b> below.',
+      'Still this message? Press <b>Ctrl + Shift + R</b> (or <b>Ctrl + F5</b>; Mac: <b>Cmd + Shift + R</b>).',
+      'Still old? Close the JMTI window fully and open it again.']],
+    pcWeb: ['Computer (in the browser)', [
+      'Click <b>Reload now</b> below.',
+      'Still this message? Press <b>Ctrl + F5</b> or <b>Ctrl + Shift + R</b> (Mac: <b>Cmd + Shift + R</b>).',
+      `Still old? Close the tab and open ${window.JMTI_API ? link : 'the JMTI link'} again.`]]
+  };
+  const mine = vupPhone() ? (vupInstalled() ? 'phoneApp' : 'phoneWeb') : (vupInstalled() ? 'pcApp' : 'pcWeb');
+  const ol = k => `<ol>${S_[k][1].map(x => `<li>${x}</li>`).join('')}</ol>`;
+  return `<p><b>${S_[mine][0]}:</b></p>${ol(mine)}<details><summary>Using a different device?</summary>${
+    Object.keys(S_).filter(k => k !== mine).map(k => `<p><b>${S_[k][0]}:</b></p>${ol(k)}`).join('')}</details>`;
+}
+async function vupReload(btn){
+  if(btn){ btn.disabled = true; btn.textContent = 'Reloading…'; }
+  const sv = VER.server, t = vupGet(VUP_TRY);
+  vupSet(VUP_TRY, {sv, n: (t && t.sv === sv ? t.n : 0) + 1, at: Date.now()});
+  if(!vupGit()){   // Apps Script page: open the app link again (the page sits in Google's frame)
+    if(VER.url){ try { window.open(VER.url, '_top'); return; } catch(e){} }
+    location.reload(); return;
+  }
+  // GitHub page: forget the kept copy (service worker + its saved page), then open the page fresh from GitHub
+  try { if(navigator.serviceWorker){ const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r => r.unregister())); } } catch(e){}
+  try { if(window.caches){ const ks = await caches.keys(); await Promise.all(ks.filter(k => /^jmti-app/.test(k)).map(k => caches.delete(k))); } } catch(e){}
+  location.replace(location.pathname + '?fresh=' + Date.now() + location.hash);
+}
+function vupHide(){ const o = $('vup'); if(o) o.hidden = true; }
+function vupShow(){
+  const sv = VER.server;
+  if(sv === undefined || sv === null || sv === APP_VERSION){
+    vupHide();
+    if(sv === APP_VERSION){ vupSet(VUP_TRY, null); vupSet(VUP_LATER, null); }
+    return;
+  }
+  const pageOld = sv > APP_VERSION;
+  const later = vupGet(VUP_LATER);
+  if(later && later.sv === sv && later.pv === APP_VERSION && Date.now() < later.until) return vupHide();
+  let o = $('vup');
+  if(!o){ o = document.createElement('div'); o.id = 'vup'; o.className = 'vup'; o.setAttribute('role', 'alertdialog'); o.setAttribute('aria-modal', 'true'); document.body.appendChild(o); }
+  const ver = `<p class="vup-ver">This app: version ${APP_VERSION} · Server: ${sv ? 'version ' + sv : 'older than version 1'}</p>`;
+  if(pageOld){
+    const t = vupGet(VUP_TRY), tries = t && t.sv === sv ? t.n : 0;
+    if(!vupGit() && !VER.url && !VER.urlAsk){ VER.urlAsk = 1; callServer('getAppUrl').then(u => { VER.url = u || ''; }).catch(() => {}); }
+    o.innerHTML = `<div class="vup-box"><h3>Update the app</h3>
+      <p>You are using an <b>old copy</b> of the JMTI app. A newer version is out. Please update it now so your work saves correctly.</p>
+      ${vupSteps()}
+      ${tries >= 2 ? `<p class="vup-warn">Still old after ${tries} reloads. The new version may not be on the app site yet. Tell Admin (they need to update the app site), then try again in a few minutes.</p>` : ''}
+      ${ver}
+      <div class="vup-btns"><button type="button" class="vup-go" id="vupGo">Reload now</button>${tries >= 2 ? '<button type="button" class="vup-later" id="vupLater">Use the app for now</button>' : ''}</div></div>`;
+    $('vupGo').onclick = e => vupReload(e.currentTarget);
+    if($('vupLater')) $('vupLater').onclick = () => { vupSet(VUP_LATER, {sv, pv: APP_VERSION, until: Date.now() + 10 * 60000}); vupHide(); };
+  } else {
+    if(VER.okSeen === sv) return vupHide();   // OK tapped once this session
+    const admin = S.me && S.me.role === 'ADMIN';
+    o.innerHTML = `<div class="vup-box"><h3>${admin ? 'Finish the update (Admin)' : 'The app is being updated'}</h3>
+      ${admin ? `<p>This page is version ${APP_VERSION} but the server (Apps Script) is still ${sv ? 'version ' + sv : 'older'}. To finish:</p>
+        <ol><li>Open Apps Script <b>JMTI DASH</b>.</li><li>Paste the latest <b>Code.gs</b> and <b>Index.html</b> (all of each), then <b>Save</b>.</li>
+        <li><b>Deploy &gt; Manage deployments &gt; Edit (pencil) &gt; Version: New version &gt; Deploy</b>. Never "New deployment".</li></ol>`
+      : `<p>Admin is updating the app. You can keep working. If some part shows an error, wait a few minutes and try again.</p>
+        <p>If this message is still here tomorrow, tell Admin: <b>"the server needs the New version deploy"</b>.</p>`}
+      ${ver}<div class="vup-btns"><button type="button" class="vup-later" id="vupOk">OK</button></div></div>`;
+    $('vupOk').onclick = () => { VER.okSeen = sv; vupHide(); };
+  }
+  o.hidden = false;
+}
+if(/[?&]fresh=\d/.test(location.search)){ try { history.replaceState(null, '', location.pathname + location.hash); } catch(e){} }
+setInterval(() => { if(!document.hidden) verCheck(); }, 10 * 60000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden && Date.now() - (VER.at || 0) > 120000) verCheck(); });
 function clockTick(){
   const o = mnlNow(), el = $('topClock');
   if(o && el){ const h = +o.hour % 12 || 12, mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+o.month - 1];
