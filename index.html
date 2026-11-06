@@ -2234,6 +2234,11 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
         <div class="chips" id="acChips" style="margin-bottom:10px"></div>
         <div class="tbl-wrap" style="max-height:560px"><table id="acEnt"><thead><tr><th>Entry</th><th>Date</th><th>Type</th><th>Details</th><th>Paid to</th><th class="n">Amount</th><th>How</th><th>Reference</th><th>Status</th></tr></thead><tbody></tbody></table></div>
       </div>
+      <div class="panel" style="margin-top:14px">
+        <h3 style="margin-top:0">Disbursement purposes <small id="acPurNote"></small></h3>
+        <div class="chips" id="acPurList" style="margin-bottom:10px"></div>
+        <div class="bar" id="acPurAdd" hidden><label class="f grow">New purpose<input id="acPurNew" autocomplete="off" maxlength="60" placeholder="e.g. WASH"></label><button class="btn road" type="button" id="acPurBtn">+ Add purpose</button></div>
+      </div>
     </div>
     <div id="acInv" hidden><div id="acInvHost"></div></div>
   </section>
@@ -3501,7 +3506,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 13, APP_VERSION_DATE = '2026-11-06';
+const APP_VERSION = 14, APP_VERSION_DATE = '2026-11-06';
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
@@ -4656,6 +4661,8 @@ function initDispatcher(){
     const view = !may('dispatch');   // POD (MANU 2026-11-04 "add POD access to truckplan as viewer"): open the trip to read, nothing else
     const nb = e.target.closest('[data-next]');
     if(nb && !view) return quickNext(t, nb.dataset.next);
+    // MANO cell (MANU 2026-11-06): opens the Disbursement form for this trip with purpose MANO
+    if(e.target.closest('td[data-f="manoAmt"]') && !view && may('opsDisburse') && !$('xDisbBtn').hidden) return openOpsForm('DISB', {trip: t, purpose: 'MANO'});
     const td = e.target.closest('td.ed');
     // MANU 2026-11-04 "when budget cell is clicked, it should pop-up disbursement": the Disbursement form for this trip's crew
     if(td && td.dataset.f==='budget' && may('opsDisburse') && !$('xDisbBtn').hidden) return openOpsForm('DISB', {trip: t});
@@ -5408,7 +5415,7 @@ function renderDispatcher(){
   const byTruck = (a,b) => String(a.truckNo).localeCompare(String(b.truckNo),undefined,{numeric:true}) || String(a.date).localeCompare(String(b.date));
   const garL = list.filter(t => !onRoute(t) && isGar(t)).sort((a,b) => statusText(a).localeCompare(statusText(b)) || byTruck(a,b));
   const notL = list.filter(t => !onRoute(t) && !isGar(t)).sort(byTruck), routeL = list.filter(onRoute);
-  const head = groupRoutes(routeL, byTrip, () => true, 16 + MS_KEYS.length, acc ? null : t => secRank(secOf(t)));   // blue route title on every route, all accounts (MANU)
+  const head = groupRoutes(routeL, byTrip, () => true, 17 + MS_KEYS.length, acc ? null : t => secRank(secOf(t)));   // blue route title on every route, all accounts (MANU)
   const tm = v => v ? esc(toDate(v) ? toDate(v).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : v) : '';
   // every truck assigned to an account (or to the picked account) with no trip that day, grouped by account at the end
   const assignedNos = accTrucks || (S.assign[d] || []).filter(a => a.account).map(a => String(a.truckNo));
@@ -5416,15 +5423,15 @@ function renderDispatcher(){
     .map(no => { const a = (S.assign[d] || []).find(x => String(x.truckNo)===no) || {}; return {no, a, rp: holdOf(a.plateNo || plateFor(no))}; })
     .filter(({no, a}) => !q || [no, a.plateNo, a.driver, a.helper1, a.helper2].join(' ').toLowerCase().includes(q)) : [];
     idleTrucks.sort((x,y) => secRank(x.a.account||'') - secRank(y.a.account||'') || (x.rp ? 1 : 0) - (y.rp ? 1 : 0) || x.no.localeCompare(y.no,undefined,{numeric:true}));
-  const idleHead = (acct, n, mnt) => mnt ? `<tr class="routehd mnthd"><td colspan="${16 + MS_KEYS.length}"><div><b>UNDER MAINTENANCE</b> <span>· ${n} truck${n===1?'':'s'} · open Major or Minor job order, can't be dispatched</span></div></td></tr>`
-    : `<tr class="routehd"><td colspan="${16 + MS_KEYS.length}"><div><b>WAITING SHIPMENT</b> <span>· ${n} truck${n===1?'':'s'}${may('dispatchAdd') ? ' · tap a truck to add a trip' : ''}</span></div></td></tr>`;
-  const mntRow = ({no, a, rp}, n) => `<tr class="idle mnt" style="--c:#DC2626"><td class="nx"></td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td colspan="2"><span class="tag-repair">UNDER MAINTENANCE</span> · ${esc(repairText(rp))}${rp.description ? `<small>${esc(rp.description)}</small>` : ''}</td><td colspan="4"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Under maintenance</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}<td></td></tr>`;
-  const idleRow = ({no, a}, n) => `<tr class="idle${may('dispatchAdd') ? ' rowbtn' : ''}" data-idle="${esc(no)}" ${may('dispatchAdd') ? 'title="Add a trip for this truck"' : ''} style="--c:#94A3B8"><td class="nx">${may('dispatchAdd') ? '<button class="nextbtn add" type="button">＋ Add trip</button>' : ''}</td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td class="dim">${xRange()[0]===xRange()[1] ? 'No trip on this date' : 'No trip in these dates'}</td><td class="dim">${esc(sinceText((S.boot.lastTrip || {})[no] || ''))}${may('dispatchAdd') ? ' · <b>tap to add a trip</b>' : ''}</td><td colspan="4"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Waiting shipment</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}<td></td></tr>`;
+  const idleHead = (acct, n, mnt) => mnt ? `<tr class="routehd mnthd"><td colspan="${17 + MS_KEYS.length}"><div><b>UNDER MAINTENANCE</b> <span>· ${n} truck${n===1?'':'s'} · open Major or Minor job order, can't be dispatched</span></div></td></tr>`
+    : `<tr class="routehd"><td colspan="${17 + MS_KEYS.length}"><div><b>WAITING SHIPMENT</b> <span>· ${n} truck${n===1?'':'s'}${may('dispatchAdd') ? ' · tap a truck to add a trip' : ''}</span></div></td></tr>`;
+  const mntRow = ({no, a, rp}, n) => `<tr class="idle mnt" style="--c:#DC2626"><td class="nx"></td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td colspan="2"><span class="tag-repair">UNDER MAINTENANCE</span> · ${esc(repairText(rp))}${rp.description ? `<small>${esc(rp.description)}</small>` : ''}</td><td colspan="5"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Under maintenance</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}<td></td></tr>`;
+  const idleRow = ({no, a}, n) => `<tr class="idle${may('dispatchAdd') ? ' rowbtn' : ''}" data-idle="${esc(no)}" ${may('dispatchAdd') ? 'title="Add a trip for this truck"' : ''} style="--c:#94A3B8"><td class="nx">${may('dispatchAdd') ? '<button class="nextbtn add" type="button">＋ Add trip</button>' : ''}</td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td class="dim">${xRange()[0]===xRange()[1] ? 'No trip on this date' : 'No trip in these dates'}</td><td class="dim">${esc(sinceText((S.boot.lastTrip || {})[no] || ''))}${may('dispatchAdd') ? ' · <b>tap to add a trip</b>' : ''}</td><td colspan="5"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Waiting shipment</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}<td></td></tr>`;
   const idleBlock = (items, start) => items.map((x, i) => (i===0 || (items[i-1].a.account||'') !== (x.a.account||'') || !!items[i-1].rp !== !!x.rp ? idleHead(x.a.account, items.filter(y => (y.a.account||'')===(x.a.account||'') && !!y.rp === !!x.rp).length, !!x.rp) : '') + (x.rp ? mntRow(x, start + i + 1) : idleRow(x, start + i + 1))).join('');
   const tripRow = (t, i) => { const st = stageOf(t), rp = repairOf(t.plateNo);
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="ed" data-f="driver">${pLink(t.driver)}${RF[t.key] ? ` <span class="tag-rest" title="${esc(RF[t.key])}">⚠ rest</span>` : ''}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}<td class="ed xrem" data-f="remarks">${esc(t.remarks || '')}</td></tr>`; };   // Remarks last (MANU 2026-11-04 "in truckplan, add remarks at the last column")
-  const accHead = (a, nt, ni, nm) => `<tr class="acchd"><td colspan="${16 + MS_KEYS.length}"><div><b>${esc(a ? titleCase(a) : 'Not counted in an account')}</b> <span>· ${tripsTxt(nt)}${ni ? ` · ${ni} waiting shipment` : ''}${nm ? ` · ${nm} under maintenance` : ''}</span></div></td></tr>`;
-  const restHead = (cls, label, k, note) => `<tr class="${cls}"><td colspan="${16 + MS_KEYS.length}"><div><b>${label}</b> <span>· ${k} row${k===1?'':'s'} · ${note}</span></div></td></tr>`;
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="n" data-f="manoAmt" title="MANO given out for this trip (Disbursement, purpose MANO)">${t.manoAmt ? esc(pesoTxt(t.manoAmt)) : ''}</td><td class="ed" data-f="driver">${pLink(t.driver)}${RF[t.key] ? ` <span class="tag-rest" title="${esc(RF[t.key])}">⚠ rest</span>` : ''}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}<td class="ed xrem" data-f="remarks">${esc(t.remarks || '')}</td></tr>`; };   // Remarks last (MANU 2026-11-04 "in truckplan, add remarks at the last column")
+  const accHead = (a, nt, ni, nm) => `<tr class="acchd"><td colspan="${17 + MS_KEYS.length}"><div><b>${esc(a ? titleCase(a) : 'Not counted in an account')}</b> <span>· ${tripsTxt(nt)}${ni ? ` · ${ni} waiting shipment` : ''}${nm ? ` · ${nm} under maintenance` : ''}</span></div></td></tr>`;
+  const restHead = (cls, label, k, note) => `<tr class="${cls}"><td colspan="${17 + MS_KEYS.length}"><div><b>${label}</b> <span>· ${k} row${k===1?'':'s'} · ${note}</span></div></td></tr>`;
   let body = '', n = 0;
   if(acc){ body = routeL.map(t => tripRow(t, n++)).join('') + idleBlock(idleTrucks, n); n += idleTrucks.length; }
   else SECS.forEach(sec => {
@@ -5434,7 +5441,7 @@ function renderDispatcher(){
   });
   if(garL.length) body += restHead('acchd garhd', 'GARAGE', garL.length, 'every garage status, all accounts, not counted as trips; garage loaded stays on its route') + garL.map(t => tripRow(t, n++)).join('');
   if(notL.length) body += restHead('acchd nothd', 'NOT A TRIP', notL.length, 'no-trip reasons and other statuses, not counted as trips') + notL.map(t => tripRow(t, n++)).join('');
-  $('xList').innerHTML = list.length || idleTrucks.length ? `<div class="xl-wrap"><table class="xl" data-fz="0,1,2,3,4,5,6" data-fzp="0,3"><thead><tr><th>Next step</th><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th class="n">KMS</th><th class="n">Fuel (L)</th><th class="n">Budget</th><th>Driver</th><th>Helper</th><th>Helper 2</th><th>Status</th>${MS_KEYS.map(k => `<th>${esc(MS_LABEL[k])}</th>`).join('')}<th>Remarks</th></tr></thead><tbody>${
+  $('xList').innerHTML = list.length || idleTrucks.length ? `<div class="xl-wrap"><table class="xl" data-fz="0,1,2,3,4,5,6" data-fzp="0,3"><thead><tr><th>Next step</th><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th class="n">KMS</th><th class="n">Fuel (L)</th><th class="n">Budget</th><th class="n">MANO</th><th>Driver</th><th>Helper</th><th>Helper 2</th><th>Status</th>${MS_KEYS.map(k => `<th>${esc(MS_LABEL[k])}</th>`).join('')}<th>Remarks</th></tr></thead><tbody>${
     body}</tbody></table></div>` : `<div class="empty">Nothing to encode for ${esc(xRangeText())} with this filter.</div>`;
   freezeCols($('xList'));
 }
@@ -7259,6 +7266,8 @@ function rddSections(trips, day, pick){   // pick: '' all accounts, or 0 Canluba
   groups.forEach(g => secs[g.sec].groups.push(g.legs));
   return secs.filter((s, i) => s.groups.length && (pick === '' || pick === undefined || Number(pick) === i));
 }
+// MANO in pesos (MANU 2026-11-06 "add that mano in pesos to the RDD"): the trip's MANO disbursements, e.g. 1,200 (Helvetica has no peso sign)
+const rddMano = t => { const n = Number(String(t.manoAmt ?? '').replace(/[^0-9.]/g, '')); return n > 0 ? n.toLocaleString('en-US', {maximumFractionDigits: 2}) : ''; };
 const rddTitle = day => { const [y, m, d] = day.split('-').map(Number); return `RDD ${new Date(y, m - 1, d).toLocaleDateString('en-US', {month: 'long'}).toUpperCase()} ${String(d).padStart(2, '0')}, ${y}`; };
 const RDD_ACCTS = [['', 'All accounts'], ['0', 'Coca Cola Canlubang'], ['1', 'Coca Cola San Fernando'], ['2', 'Other accounts']];
 const rddFile = (day, pick) => { const [y, m, d] = day.split('-'), a = RDD_ACCTS.find(x => x[0] === String(pick ?? '')); return `RDD ${m}-${d}-${y}${a && a[0] !== '' ? ' ' + a[1] : ''}.pdf`; };
@@ -7277,7 +7286,7 @@ function rddPdf(day, secs, preparedBy){
     cell(0, 11, 0, RDD_H.title, rddTitle(day), {size: 48, bold: true, fill: '', box: false, under: true}),
     ...RDD_HEAD.map((t, i) => cell(i, i, RDD_H.title, RDD_H.head, t, {bold: true, fill: 'FFFF00'}))
   ]});
-  const tripRow = (y, t) => [t.truckNo, t.plateNo, t.customer, t.destination, t.shipmentNo, statusText(t), t.driver, t.helper1, t.helper2, '', t.remarks]
+  const tripRow = (y, t) => [t.truckNo, t.plateNo, t.customer, t.destination, t.shipmentNo, statusText(t), t.driver, t.helper1, t.helper2, rddMano(t), t.remarks]
     .map((v, i) => cell(i + 1, i + 1, y, RDD_H.row, String(v ?? '').trim()));
   const groupCells = (y0, g, no) => [cell(0, 0, y0, RDD_H.row * g.length, String(no)), ...g.flatMap((t, i) => tripRow(y0 + i * RDD_H.row, t))];
   secs.forEach(s => {
@@ -9901,8 +9910,32 @@ function disbCsv(){
    Accounting; OPS DISBURSEMENT (OPD-) rows are money a dispatcher (or Admin) gave an employee, here or from Truck Plan. Budget left =
    received − disbursed, all dates. Supervisor, Team leader and Dispatcher see the Disbursement tab. */
 const OPS_KINDS = ['OPS BUDGET', 'OPS DISBURSEMENT'];
-const OPS_PURPOSES = ['TOLL', 'FUEL', 'PARKING', 'MEALS', 'ALLOWANCE', 'LOADING / UNLOADING', 'TIRE / VULCANIZING', 'REPAIR', 'PASSWAY / CHECKPOINT'];
+const OPS_PURPOSES = ['TOLL', 'FUEL', 'PARKING', 'MEALS', 'ALLOWANCE', 'LOADING / UNLOADING', 'TIRE / VULCANIZING', 'REPAIR', 'PASSWAY / CHECKPOINT', 'MANO'];   // MANO (MANU 2026-11-06 "add mano"): a MANO disbursed for a trip also shows in Truck Plan's MANO column and the RDD
 const OPS = {filter:'all', fund:null};
+// the Purpose dropdown's choices: Accounting's list (DISBURSEMENT PURPOSES tab, sent with the fund), else the starting list
+const opsPurposes = () => { const l = (OPS.fund && OPS.fund.purposes) || (AC.data && AC.data.fund && AC.data.fund.purposes) || (DB.data && DB.data.fund && DB.data.fund.purposes); return l && l.length ? l : OPS_PURPOSES; };
+/** Accounting tab: the list of disbursement purposes; Accounting and Admin add or remove them (MANU 2026-11-06). */
+function renderAcPurposes(){
+  if(!$('acPurList')) return;
+  const edit = may('accounting'), l = opsPurposes();
+  $('acPurAdd').hidden = !edit;
+  $('acPurNote').textContent = edit ? '· the choices in the Disbursement Purpose dropdown; tap × to remove one' : '· the choices in the Disbursement Purpose dropdown';
+  $('acPurList').innerHTML = l.map(v => `<span class="chip" style="cursor:default">${esc(v)}${edit ? ` <button class="icon-btn" type="button" data-pdel="${esc(v)}" title="Remove ${esc(v)}">×</button>` : ''}</span>`).join('');
+  const save = async (d, btn) => {
+    if(btn) btn.disabled = true;
+    try{
+      const r = await call('opsPurposeSave', d);
+      [OPS.fund, AC.data && AC.data.fund, DB.data && DB.data.fund].forEach(f => { if(f) f.purposes = r.purposes; });
+      if(!OPS.fund) OPS.fund = {purposes: r.purposes};
+      lsSet('jmti_opsfund', OPS.fund);
+      if(d.add) $('acPurNew').value = '';
+      renderAcPurposes(); toast(d.add ? `${String(d.add).toUpperCase()} added` : `${d.remove} removed`);
+    }catch(err){ toast(err.message, true); }
+    if(btn) btn.disabled = false;
+  };
+  $('acPurList').onclick = e => { const b = e.target.closest('[data-pdel]'); if(b && edit) save({remove: b.dataset.pdel}, b); };
+  $('acPurBtn').onclick = () => { const v = $('acPurNew').value.trim(); if(!v) return toast('Type the purpose.', true); save({add: v}, $('acPurBtn')); };
+}
 const opsEntries = () => ((DB.data && DB.data.entries) || []).filter(e => OPS_KINDS.includes(e.type));
 const opsKindTxt = e => e.type==='OPS BUDGET' ? 'Budget received' : 'Disbursed';
 function opsFundTxt(f){ return !f ? '' : `Budget left ${pesoTxt(f.left)}`; }
@@ -9964,6 +9997,7 @@ function openOpsForm(kind, o){
     .filter(e => e.type==='OPS DISBURSEMENT' && e.ref===t.tripId && entryLive(e)).map(e => [e.entryNo, e])).values()] : [];
   st.addl = tripDone.length > 0;
   const doneHtml = l => `<div class="ds-read warn" style="margin-bottom:10px"><b>Already sent for this trip: ${pesoTxt(l.reduce((x, e) => x + (Number(e.amount) || 0), 0))}</b><br>${l.map(x => `${esc(x.entryNo)} · ${pesoTxt(x.amount)} to ${esc(x.paidTo)} on ${esc(fmtDay(x.date))}`).join('<br>')}<br>This one is saved as an additional budget.</div>`;
+  // disbursement purpose is a dropdown (MANU 2026-11-06 "make the purpose in disbursement dropdown"); an older typed purpose stays a choice when changing that entry
   openPop(en ? `Change ${en.entryNo}` : isB ? 'Send budget' : st.addl ? 'Additional budget' : 'Disbursement',
     t ? `Truck ${esc(t.truckNo || '—')} · ${esc(fmtDay(t.date))} · ${esc(t.customer || '')} → ${esc(t.destination || '—')}` : isB ? 'Budget Accounting sends to Operations; it shows as Budget received in Disbursement' : 'Money given to an employee from the operations fund', `
     <div id="opDone">${st.addl ? doneHtml(tripDone) : ''}</div>
@@ -9972,7 +10006,8 @@ function openOpsForm(kind, o){
       <label class="f">Date<input id="opDate" type="date" max="${TODAY()}" value="${esc(en ? en.date : TODAY())}"></label>
       <label class="f">${isB ? 'Received by' : 'Employee'}<input id="opWho" list="dlOpsPeople" autocomplete="off" value="${esc(en ? en.paidTo : (crew[0] ? crew[0][1] : ''))}" placeholder="${isB ? 'Name of who got the cash' : 'Driver, helper or other employee'}"></label>
       ${crew.length > 1 ? `<div class="f full ds-f">Crew of this trip<div class="chips" id="opCrew">${crew.map(c => `<button class="chip" type="button" data-who="${esc(c[1])}">${esc(c[0])}: ${esc(c[1])}</button>`).join('')}</div></div>` : ''}
-      <label class="f full">Purpose<input id="opWhy" list="dlOpsWhy" autocomplete="off" value="${esc(en ? en.details : '')}" placeholder="${isB ? 'e.g. weekly operations budget' : st.addl ? 'e.g. additional toll, fuel, meals' : 'e.g. toll, fuel, meals'}"></label>
+      ${isB ? `<label class="f full">Purpose<input id="opWhy" list="dlOpsWhy" autocomplete="off" value="${esc(en ? en.details : '')}" placeholder="e.g. weekly operations budget"></label>`
+        : (cur => `<label class="f full">Purpose<select id="opWhy"><option value="">Pick the purpose</option>${[...opsPurposes(), ...(cur && !opsPurposes().includes(cur) ? [cur] : [])].map(v => `<option value="${esc(v)}"${v===cur ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></label>`)(String(en ? en.details || '' : o.purpose || '').trim().toUpperCase())}
       <label class="f">Amount (₱)<input id="opAmt" inputmode="decimal" autocomplete="off" value="${esc(en ? en.amount : '')}"></label>
       <div class="f full ds-f">Receipt<input id="opFile" type="file" accept="image/&#42;,application/pdf"><div class="ds-read" id="opRead"></div></div>
       <label class="f">Transaction no<input id="opTxn" autocomplete="off" value="${esc(en ? en.txnNo || '' : '')}" placeholder="GCash or bank reference (none for cash)"></label>
@@ -10007,7 +10042,7 @@ function openOpsForm(kind, o){
     const d = {kind, date: $('opDate').value || TODAY(), paidTo: $('opWho').value.trim(), purpose: $('opWhy').value.trim(), amount: amt(), photo: st.photo, txnNo: $('opTxn').value.trim(), remarks: $('opRem').value.trim()};
     if(d.date > TODAY()) return toast('The date cannot be in the future.', true);
     if(!d.paidTo) return toast(isB ? 'Type who received the budget.' : 'Pick the employee who got the money.', true);
-    if(!d.purpose) return toast('Type the purpose.', true);
+    if(!d.purpose) return toast(isB ? 'Type the purpose.' : 'Pick the purpose.', true);
     if(!(d.amount > 0)) return toast('Type the amount in pesos.', true);
     if(en) d.entryNo = en.entryNo; else { d.ref = st.ref; if(t) d.trip = refOf(t); }
     if(st.addl) d.allowDup = true;
@@ -10022,6 +10057,8 @@ function openOpsForm(kind, o){
       }
       putEntry(r.entry); OPS.fund = Object.assign({}, OPS.fund, r.fund); lsSet('jmti_opsfund', OPS.fund);
       if(DB.data) DB.data.fund = r.fund;
+      // MANO for a trip: the server wrote the trip's MANO total; show it in Truck Plan now
+      if(r.mano && r.mano.tripId){ (S.xTrips || []).filter(x => x.tripId===r.mano.tripId).forEach(x => { x.manoAmt = r.mano.amount || ''; }); if($('xList')) try{ renderDispatcher(); }catch(e){} }
       closePop(); renderOpsFund(); renderDisb(); renderAcct();
       toast(en ? `${r.entry.entryNo} saved` : isB ? `${r.entry.entryNo}: ${pesoTxt(r.entry.amount)} budget sent to Operations · left ${pesoTxt(r.fund.left)}` : `${r.entry.entryNo}: ${pesoTxt(r.entry.amount)} to ${r.entry.paidTo} · left ${pesoTxt(r.fund.left)}`, false, 4000);
     }catch(err){ toast(err.message, true); $('opSave').disabled = false; }
@@ -10187,6 +10224,7 @@ function loadAcct(){
 }
 function renderAcct(){
   if(S.tab!=='accounting' || AC.sub!=='sum') return;
+  renderAcPurposes();
   const d = AC.data, f = $('acFrom').value, t = $('acTo').value;
   const n = (k, w, ws) => `${k} ${k===1 ? w : (ws || w + 's')}`;
   if(!d){ $('acKpi').innerHTML = ''; $('acPay').innerHTML = $('acJo').innerHTML = '<div class="empty">Loading…</div>'; $('acChips').innerHTML = ''; $('acEnt').tBodies[0].innerHTML = ''; $('acNote').textContent = ''; $('acEntNote').textContent = ''; return; }
