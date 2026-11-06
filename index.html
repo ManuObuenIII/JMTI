@@ -1658,6 +1658,28 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
 @media (min-width:1101px) and (max-width:1700px){ .brand small,.brand h1{display:none} .top .hello.tb .hello-av .ms-av{width:32px;height:32px} }
 @media (min-width:1101px) and (max-width:1400px){ .top .hello.tb .hello-t q{display:none} .top-inner .userchip .nm{max-width:130px;white-space:normal;line-height:1.15} }
 @media (min-width:1101px) and (max-width:1250px){ .top .hello.tb{display:none!important} }
+/* ---- SETTINGS GEAR (MANU 2026-11-06 "add settings gear button", version 14.2) ---- */
+.userchip #pwChangeBtn,.userchip #logoutBtn{display:none!important}
+.userchip .setbtn{display:inline-flex;align-items:center;justify-content:center;padding:5px 7px}
+.userchip .setbtn svg{width:18px;height:18px;flex:none}
+@media (max-width:700px){ .userchip .setbtn{padding:0;width:40px} .userchip .setbtn svg{width:21px;height:21px} }
+@media (prefers-reduced-motion:no-preference){ .userchip .setbtn svg{transition:transform .35s ease} .userchip .setbtn:hover svg{transform:rotate(60deg)} }
+.pop.setpop .popbox{width:min(480px,100%)}
+.setl{display:flex;flex-direction:column;gap:14px}
+.setl h4{margin:0 0 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.setl .setg{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.7)}
+.setl .setr{display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;border:0;border-top:1px solid var(--line);background:none;text-align:left;font:inherit;font-size:13.5px;color:var(--ink);cursor:pointer;min-height:46px}
+.setl .setg > .setr:first-child{border-top:0}
+.setl .setr:hover{background:rgba(46,91,255,.07)}
+.setl .setr .si{width:22px;text-align:center;flex:none;font-size:16px}
+.setl .setr .st{flex:1;display:flex;flex-direction:column;gap:1px;overflow-wrap:anywhere}
+.setl .setr .st small{color:var(--muted);font-size:11.5px}
+.setl .setr .sa{color:var(--muted);font-size:18px;flex:none}
+.setl .setr.danger{color:#B91C1C;font-weight:700}
+.setl .sw{position:relative;width:44px;height:26px;border-radius:13px;background:#CBD5E1;flex:none;transition:background .2s}
+.setl .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+.setl .setr[aria-checked="true"] .sw{background:#2E5BFF}
+.setl .setr[aria-checked="true"] .sw::after{transform:translateX(18px)}
 /* ---- ANIMATIONS (MANU 2026-11-06 "add animations", version 14.2) ----
    Short (120–320 ms), CSS only, opacity/transform only so phones stay smooth. Nothing moves when the phone or PC
    is set to "reduce motion". Tables re-drawn by the 10-second refresh do NOT animate again (only on tab open). */
@@ -1698,6 +1720,232 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
   .login .card{animation:aPop .4s cubic-bezier(.2,.8,.2,1) both}
   /* version badge: a light shine passes once on open */
   #verBadge{background-image:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);background-size:60% 100%;background-repeat:no-repeat;animation:aShine 1.2s ease-out .6s both}
+}
+/* Settings > Animations off: nothing moves (loading spinners still show, just still) */
+html.noanim *,html.noanim *::before,html.noanim *::after{animation:none!important;transition:none!important}
+html.noanim .bglogo{transform:translate(var(--x0),var(--y0))!important}
+/* ---- THEMES (MANU 2026-11-06 "add themes in settings", "add night mode and day mode") ----
+   Standard = the royal-blue look (default). Day = light background all around. Night = dark pages, pop-ups and chat:
+   the light surfaces are turned dark by one filter, and photos, pictures and charts are turned back so they look normal. */
+html.th-day,html.th-day body{background:#E9EEFB}
+html.th-day #bgFx{background:radial-gradient(120% 90% at 85% 10%,#FFFFFF 0%,transparent 55%),linear-gradient(135deg,#DCE5FF 0%,#F4F7FF 45%,#E4EBFF 70%,#D3DDFB 100%)}
+html.th-day #bgFx::after{display:none}
+html.th-day body:has(#app:not([hidden])){background:linear-gradient(135deg,#DCE5FF 0%,#F4F7FF 45%,#E4EBFF 70%,#D3DDFB 100%) fixed}
+html.th-day .bglogo{filter:none;opacity:calc(var(--o) * .7)}
+html.th-day header.top{background:rgba(10,39,181,.94)}
+html.th-day main{box-shadow:0 0 0 1px rgba(10,30,90,.08),inset 0 1px 0 #fff,0 30px 70px -34px rgba(10,30,90,.35)}
+html.th-day .pop,html.th-day .scrim{background:rgba(20,40,110,.28)}
+html.th-night main,html.th-night .popbox,html.th-night .vchg-box,html.th-night .vup-box,html.th-night .submit-box,html.th-night .drawer,
+html.th-night .askbox,html.th-night .chdock,html.th-night .ch-sheet-bg > *,html.th-night .login .card{filter:invert(.92) hue-rotate(180deg)}
+html.th-night main img,html.th-night main video,html.th-night main canvas,html.th-night .popbox img,html.th-night .popbox canvas,html.th-night .drawer img,
+html.th-night .chdock img,html.th-night .askbox img,html.th-night .ch-sheet-bg img,html.th-night .login .card img,html.th-night .viewer-in img{filter:invert(1.087) hue-rotate(180deg)}
+html.th-night .setl .sw{filter:invert(1) hue-rotate(180deg)}
+/* parts that are dark blue on purpose stay dark blue at Night */
+html.th-night main .road,html.th-night main .hello,html.th-night .chd-head,html.th-night .ask-q{filter:invert(1.087) hue-rotate(180deg)}
+html.th-night main .road img,html.th-night main .hello img,html.th-night .chd-head img{filter:none}
+.setl .setr.thr{cursor:default}
+.setl .thc{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.setl .thc button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer}
+.setl .thc button[aria-pressed="true"]{background:linear-gradient(180deg,#2547D6,#071A78);color:#fff;border-color:#061566}
+/* My color (MANU 2026-11-06 "add select theme color use cmyk"): the picked color (C, M, Y, K) sets --tc (main), --tc2 (darker),
+   --tc3 (darkest) and --tcl (light); these rules paint the top bar, background, buttons and blue cards with it */
+.setl .cmyk{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.setl .cmyk[hidden]{display:none}
+.setl .cmyk label{display:grid;grid-template-columns:18px 1fr 44px;align-items:center;gap:8px;font-weight:800;font-size:12.5px}
+.setl .cmyk input[type=range]{width:100%;accent-color:var(--tc,#2E5BFF);padding:0;border:0;box-shadow:none;background:none}
+.setl .cmyk input[type=number]{width:44px;padding:3px 4px;font-size:12.5px;text-align:center}
+.setl .cmyk .cm-prev{display:flex;align-items:center;gap:10px;margin-top:2px}
+.setl .cmyk .cm-sw{width:56px;height:34px;border-radius:10px;flex:none;border:1px solid rgba(0,0,0,.15);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.setl .cmyk .cm-pre{display:flex;gap:6px;flex-wrap:wrap}
+.setl .cmyk .cm-pre button{width:26px;height:26px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.2);cursor:pointer;padding:0}
+html.th-color{--road:var(--tc);--ink:var(--tc2)}
+html.th-color,html.th-color body{background:var(--tc3)}
+html.th-color #bgFx:not(.inapp),html.th-color body:has(#app:not([hidden])){background:linear-gradient(118deg,transparent 0 31%,rgba(255,255,255,.12) 38%,rgba(255,255,255,.28) 45%,rgba(255,255,255,.1) 53%,transparent 57%) fixed,linear-gradient(135deg,var(--tc3) 0%,var(--tc2) 30%,var(--tc) 50%,var(--tc2) 72%,var(--tc3) 100%) fixed}
+html.th-color header.top{background:color-mix(in srgb,var(--tc3) 88%,transparent)}
+html.th-color .btn{background:linear-gradient(180deg,var(--tc) 0%,var(--tc2) 100%);border-color:var(--tc3);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -2px 0 rgba(0,0,0,.25),0 3px 0 var(--tc3),0 10px 18px -8px rgba(0,0,0,.5)}
+html.th-color .btn.alt,html.th-color .btn.danger{background:linear-gradient(180deg,#FFFFFF,#EDF1FA);border-color:rgba(10,30,90,.14);box-shadow:inset 0 1px 0 #fff,0 2px 0 rgba(10,30,90,.12)}
+html.th-color .chip[aria-pressed=true],html.th-color .setl .thc button[aria-pressed="true"],html.th-color .toast:not(.err),html.th-color .vchg-btns button{background:linear-gradient(180deg,var(--tc),var(--tc2));border-color:var(--tc3);color:#fff}
+html.th-color .road,html.th-color .hello,html.th-color .chd-head{background:linear-gradient(135deg,var(--tc3) 0%,var(--tc2) 45%,var(--tc) 60%,var(--tc3) 100%)}
+html.th-color .kpi::before{background:linear-gradient(90deg,var(--tc2),var(--tc),var(--tcl))}
+html.th-color .kpi .v{background:linear-gradient(135deg,var(--tc2),var(--tc));-webkit-background-clip:text;background-clip:text}
+html.th-color .tab[aria-selected=true]{color:var(--tc3)}
+html.th-color .sh-fab,html.th-color .chat-fab,html.th-color .userchip .askbtn,html.th-color .me-av,html.th-color .ask-q{background:linear-gradient(180deg,var(--tc),var(--tc2))}
+html.th-color .setl .setr[aria-checked="true"] .sw{background:var(--tc)}
+html.th-color .panel h3,html.th-color table.xl th,html.th-color .vchg-box h3{color:var(--tc3)}
+html.th-color a{color:var(--tc)}
+html.th-color .stop:not([aria-pressed=true]) .n{background:radial-gradient(circle at 35% 30%,var(--tc),var(--tc3) 70%)}
+/* ===== SYSTEM ANALYTICS tab (MANU 2026-11-06): cards, small bars, busiest-hours chart; tables scroll sideways on phones ===== */
+#v-analytics .an-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:14px}
+#v-analytics .panel{margin-bottom:14px;min-width:0}
+#v-analytics .an-grid .panel{margin-bottom:0}
+#v-analytics .an-bar{background:var(--line);border-radius:6px;height:10px;min-width:50px;overflow:hidden}
+#v-analytics .an-bar i{display:block;height:10px;border-radius:6px}
+#v-analytics .an-t td,#v-analytics .an-t th{white-space:normal;word-break:break-word}
+#v-analytics .an-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#v-analytics .an-scroll table{min-width:640px}
+#v-analytics .an-hours{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;align-items:end;height:130px;padding-top:6px}
+#v-analytics .an-hours div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+#v-analytics .an-hours i{display:block;width:100%;min-height:2px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#2E5BFF,#0A27B5)}
+#v-analytics .an-hours span{font-size:10px;line-height:14px;height:14px;color:var(--muted,#64748B)}
+#v-analytics .an-ver{display:inline-block;padding:1px 8px;border-radius:999px;font-weight:700;font-size:12px;background:#DCFCE7;color:#166534}
+#v-analytics .an-ver.bad{background:#FEE2E2;color:#B91C1C}
+#v-analytics .an-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#16A34A;margin-right:6px;vertical-align:middle}
+#v-analytics .an-idle td{opacity:.55}
+@media (max-width:700px){ #v-analytics .an-grid{grid-template-columns:1fr} #v-analytics .an-hours{height:100px} }
+/* Activity log (My profile, and Admin from System analytics) */
+.act-box{margin-top:6px}
+.pf-act{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.pf-act h4{margin:0 0 8px}
+.act-box .an-bar,.pf-act .an-bar{background:var(--line);border-radius:6px;height:10px;min-width:40px;overflow:hidden}
+.act-box .an-bar i,.pf-act .an-bar i{display:block;height:10px;border-radius:6px}
+.act-t td,.act-t th{white-space:normal;word-break:break-word}
+.act-t th,#v-analytics .an-t th{word-break:normal;overflow-wrap:normal}
+.act-idle td{opacity:.5}
+.act-list{max-height:340px;overflow:auto;margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:4px 8px}
+.act-row{display:grid;grid-template-columns:96px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);word-break:break-word}
+.act-row:last-child{border-bottom:0}
+.act-at{font-variant-numeric:tabular-nums;color:var(--muted,#64748B);font-size:12px}
+#v-analytics button.an-who{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;min-height:0!important;margin:0;color:inherit;font:inherit;font-weight:600;text-align:left;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+/* ---- SAVE FEEDBACK, PULL TO REFRESH, CHANGED CELLS, JUMP TO ROW (MANU 2026-11-06 picks 12-15, version 14.2) ----
+   Save buttons: spinner while saving, then a green check; the Submitting box ends with a green "Saved" check.
+   Phones: pull the page down at the top to refresh the tab. Cells changed by someone else glow for a moment.
+   After Add trip or a Find, the page scrolls smoothly to the row and lights it. Motion only when "reduce motion" is off. */
+button.sv-busy{pointer-events:none;opacity:.85}
+button.sv-busy::before{content:"";display:inline-block;width:.85em;height:.85em;margin-right:6px;vertical-align:-1px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;box-sizing:border-box}
+button.sv-ok{background:#16A34A!important;border-color:#16A34A!important;color:#fff!important}
+button.sv-ok::before{content:"\2713";display:inline-block;margin-right:6px;font-weight:900}
+.submit-box .sv-ok-ic,.submit-box .sv-ok-t{display:none}
+.submit-ov.sv-ok{cursor:default}
+.submit-ov.sv-ok .submit-box > *{display:none}
+.submit-ov.sv-ok .submit-box > .sv-ok-ic,.submit-ov.sv-ok .submit-box > .sv-ok-t{display:flex}
+.sv-ok-ic{width:58px;height:58px;border-radius:50%;background:#16A34A;color:#fff;font-size:32px;font-weight:900;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(22,163,74,.4)}
+.submit-box b.sv-ok-t{font-size:16px;color:#15803D}
+td.cell-glow{box-shadow:inset 0 0 0 999px rgba(250,204,21,.45)}
+tr.row-jump > td{box-shadow:inset 0 0 0 999px rgba(46,91,255,.18)}
+tr.row-jump > td:first-child{box-shadow:inset 4px 0 0 #2E5BFF,inset 0 0 0 999px rgba(46,91,255,.18)}
+.xcard.row-jump,.row-jump:not(tr){outline:3px solid #2E5BFF;outline-offset:2px}
+.ptr{position:fixed;left:50%;top:calc(var(--tbH,0px) + 4px);z-index:96;width:46px;height:46px;margin-left:-23px;border-radius:50%;background:#fff;box-shadow:0 6px 20px rgba(2,10,53,.35);display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(-70px);pointer-events:none}
+.ptr img{width:30px;height:30px;object-fit:contain}
+.ptr.ready{box-shadow:0 0 0 3px #2E5BFF,0 6px 20px rgba(2,10,53,.35)}
+@media (max-width:700px),(pointer:coarse){html,body{overscroll-behavior-y:contain}}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes svSpin{to{transform:rotate(360deg)}}
+  @keyframes svPop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.15);opacity:1}100%{transform:scale(1)}}
+  @keyframes svBtn{0%{transform:scale(.94)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+  @keyframes cellGlow{0%{box-shadow:inset 0 0 0 999px rgba(250,204,21,.75)}70%{box-shadow:inset 0 0 0 999px rgba(250,204,21,.4)}100%{box-shadow:inset 0 0 0 999px rgba(250,204,21,0)}}
+  @keyframes rowJump{0%,35%{box-shadow:inset 0 0 0 999px rgba(46,91,255,.3)}100%{box-shadow:inset 0 0 0 999px rgba(46,91,255,0)}}
+  @keyframes rowJump1{0%,35%{box-shadow:inset 4px 0 0 #2E5BFF,inset 0 0 0 999px rgba(46,91,255,.3)}100%{box-shadow:inset 4px 0 0 rgba(46,91,255,0),inset 0 0 0 999px rgba(46,91,255,0)}}
+  @keyframes cardJump{0%,40%{outline-color:#2E5BFF}100%{outline-color:rgba(46,91,255,0)}}
+  @keyframes ptrSpin{to{transform:rotate(360deg)}}
+  button.sv-busy::before{animation:svSpin .7s linear infinite}
+  button.sv-ok{animation:svBtn .3s ease-out}
+  .submit-ov.sv-ok .sv-ok-ic{animation:svPop .38s cubic-bezier(.3,1.5,.5,1)}
+  td.cell-glow{animation:cellGlow 2.6s ease-out both}
+  tr.row-jump > td{animation:rowJump 2.2s ease-out both}
+  tr.row-jump > td:first-child{animation:rowJump1 2.2s ease-out both}
+  .xcard.row-jump,.row-jump:not(tr){animation:cardJump 2.2s ease-out both}
+  .ptr.snap{transition:transform .25s cubic-bezier(.2,.8,.2,1),opacity .25s}
+  .ptr.spin img{animation:ptrSpin .8s linear infinite}
+}
+/* ---- LOOK AND FEEL (MANU 2026-11-06 "all" 15 aesthetic picks, version 14.2) ----
+   Tap ripple, numbers that count up, glass cards that tilt (PC), status pop, Completed truck, trend lines, target rings,
+   trip progress bars, tooltips, initials badges, time-of-day greeting and tint, badge halo, empty-list drawings.
+   Motion only when "reduce motion" is off and the Animations switch is on (html.noanim stops it all). */
+.fx-rip{position:fixed;z-index:2147483000;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,255,255,.65) 0%,rgba(46,91,255,.28) 45%,rgba(46,91,255,0) 70%);opacity:0}
+/* 3: glass cards follow the mouse */
+.kpi.fx-tilt,.xcard.fx-tilt{transform:perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-3px)!important;transition:transform .08s linear,box-shadow .25s!important}
+.kpi.fx-tilt::after,.xcard.fx-tilt::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.55),rgba(255,255,255,0) 60%);mix-blend-mode:soft-light}
+.xcard{position:relative}
+/* 7: trend line under a Dashboard number */
+.fx-spark{display:block;width:100%;height:26px;margin-top:4px;overflow:visible}
+.fx-spark path.l{fill:none;stroke:var(--fxs,#2E5BFF);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fx-spark path.a{fill:var(--fxs,#2E5BFF);opacity:.12;stroke:none}
+.fx-spark circle{fill:var(--fxs,#2E5BFF)}
+.fx-spark-t{display:block;font-size:10px;color:var(--muted,#64748B);font-weight:600}
+html.th-color .fx-spark{--fxs:var(--tc)}
+/* 8: target ring per account */
+.fx-ring{display:inline-grid;place-items:center;width:38px;height:38px;vertical-align:middle;margin-right:8px;position:relative;flex:none}
+.fx-ring svg{width:38px;height:38px;transform:rotate(-90deg);position:absolute;inset:0}
+.fx-ring circle{fill:none;stroke-width:4.5}
+.fx-ring .bg{stroke:rgba(10,30,90,.12)}
+.fx-ring .fg{stroke:var(--rc,#2E5BFF);stroke-linecap:round}
+.fx-ring b{font-size:9.5px;font-weight:800;color:var(--rc,#2E5BFF);position:relative}
+.fx-ring.full .fg{stroke:#16A34A}
+.fx-ring.full{filter:drop-shadow(0 0 5px rgba(22,163,74,.55))}
+.tg-row .nm{display:flex;align-items:center}
+/* 9: trip progress bar in Truck Plan */
+#v-dispatcher table.xl td.st{position:relative}
+.fx-tp{display:block;height:4px;margin-top:3px;border-radius:3px;background:rgba(10,30,90,.1);overflow:hidden;min-width:44px}
+.fx-tp i{display:block;height:100%;width:var(--p,0%);border-radius:3px;background:linear-gradient(90deg,color-mix(in srgb,var(--c,#2E5BFF) 55%,#fff),var(--c,#2E5BFF))}
+/* 10: tooltips */
+#fxTip{position:fixed;z-index:2147483001;max-width:min(280px,86vw);padding:8px 11px;border-radius:10px;background:rgba(6,18,80,.96);color:#fff;
+  font-size:12.5px;line-height:1.4;font-weight:600;box-shadow:0 10px 28px rgba(2,10,53,.4);pointer-events:none;white-space:pre-line;overflow-wrap:anywhere}
+#fxTip[hidden]{display:none}
+#fxTip b{display:block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;opacity:.75;margin-bottom:2px}
+/* 11: initials badges with an online dot */
+.fx-av{position:relative;display:inline-flex;vertical-align:middle;margin-right:7px}
+.fx-av .ms-av{width:30px;height:30px;font-size:11px}
+.fx-av .ms-av.xs{width:22px;height:22px;font-size:8.5px}
+.fx-av .ondot{position:absolute;right:-2px;bottom:-2px;width:10px;height:10px;box-shadow:0 0 0 2px #fff}
+.sh-who .fx-av{margin-right:5px}
+/* 12: time-of-day greeting icon and background tint */
+.fx-tod{display:inline-block;margin-right:5px}
+#bgFx::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 2s}
+html[data-tod="morning"] #bgFx::after{opacity:1;background:radial-gradient(90% 70% at 10% 0%,rgba(255,183,110,.16),transparent 60%)}
+html[data-tod="sunset"] #bgFx::after{opacity:1;background:radial-gradient(90% 70% at 90% 0%,rgba(255,120,90,.15),rgba(150,70,200,.07) 50%,transparent 70%)}
+html[data-tod="night"] #bgFx::after{opacity:1;background:linear-gradient(180deg,rgba(2,6,30,.22),rgba(2,6,30,.12))}
+html.th-day[data-tod="night"] #bgFx::after{background:linear-gradient(180deg,rgba(20,30,80,.08),transparent)}
+/* 13: halo around the bell and the chat button when a new count arrives */
+.fx-halo{position:relative}
+.fx-halo::after{content:"";position:absolute;inset:-4px;border-radius:50%;pointer-events:none;box-shadow:0 0 0 0 rgba(239,68,68,.6)}
+/* 15: drawings for empty lists and errors */
+.fx-empty{display:block;width:120px;height:62px;margin:0 auto 8px;opacity:.9}
+.fx-empty .bd{fill:#C7D2FE}.fx-empty .cb{fill:#2E5BFF}.fx-empty .wh{fill:#0A1F8F}.fx-empty .hb{fill:#fff}.fx-empty .rd{stroke:#94A3B8;stroke-width:2;stroke-linecap:round}
+.fx-empty .sm{fill:#94A3B8;opacity:0}.fx-empty .q{fill:#2E5BFF;font:800 18px system-ui,sans-serif}
+.fx-empty.err .cb{fill:#DC2626}.fx-empty.err .bd{fill:#FECACA}
+html.th-color .fx-empty .cb{fill:var(--tc)}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes fxRip{0%{transform:scale(.15);opacity:.9}100%{transform:scale(1.25);opacity:0}}
+  .fx-rip{animation:fxRip .5s ease-out forwards}
+  /* 4: status pop: grows, glows in its new colour, the old colour fades off */
+  @keyframes fxPop{0%{transform:scale(1)}30%{transform:scale(1.22)}55%{transform:scale(.94)}75%{transform:scale(1.06)}100%{transform:scale(1)}}
+  @keyframes fxGlow{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c,#2E5BFF) 70%,transparent)}100%{box-shadow:0 0 0 12px rgba(46,91,255,0)}}
+  @keyframes fxOld{0%{opacity:1}100%{opacity:0}}
+  .pill.fx-pop{animation:fxPop .6s cubic-bezier(.3,1.4,.5,1),fxGlow .9s ease-out;position:relative}
+  .pill.fx-pop::after{content:"";position:absolute;inset:-1px;border-radius:inherit;background:var(--fxo,transparent);animation:fxOld .9s ease-out forwards;pointer-events:none}
+  td.st.fx-pop .dot{animation:fxPop .6s cubic-bezier(.3,1.4,.5,1),fxGlow .9s ease-out}
+  td.st.fx-pop{animation:fxStTxt 1s ease-out}
+  @keyframes fxStTxt{0%{background:color-mix(in srgb,var(--fxo,#94A3B8) 30%,transparent)}100%{background:transparent}}
+  /* 5: Completed celebration */
+  @keyframes fxDrive{0%{transform:translateX(-140px)}100%{transform:translateX(calc(100vw + 40px))}}
+  @keyframes fxSpark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
+  .fx-truck{position:fixed;left:0;bottom:84px;z-index:2147482999;pointer-events:none;width:110px;height:56px;animation:fxDrive 2.1s cubic-bezier(.45,.05,.4,1) forwards}
+  .fx-truck .wh{animation:ptrSpin .4s linear infinite;transform-box:fill-box;transform-origin:center}
+  .fx-spk{position:fixed;z-index:2147482999;pointer-events:none;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;animation:fxSpark .9s ease-out forwards}
+  .fx-spark path.l{stroke-dasharray:var(--len,300);stroke-dashoffset:var(--len,300);animation:fxDraw .9s ease-out .15s forwards}
+  @keyframes fxIn{from{opacity:0}to{opacity:1}}
+  .fx-spark circle{animation:fxIn .3s ease-out 1s both}
+  @keyframes fxDraw{to{stroke-dashoffset:0}}
+  .fx-ring .fg{transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1)}
+  .fx-ring.full.fx-new{animation:fxPop .7s cubic-bezier(.3,1.4,.5,1) .9s}
+  .fx-tp i{transition:width .8s cubic-bezier(.2,.8,.2,1)}
+  @keyframes fxTipIn{0%{opacity:0;transform:translateY(4px) scale(.97)}100%{opacity:1;transform:none}}
+  #fxTip:not([hidden]){animation:fxTipIn .14s ease-out}
+  @keyframes fxHalo{0%{box-shadow:0 0 0 0 rgba(239,68,68,.65)}100%{box-shadow:0 0 0 16px rgba(239,68,68,0)}}
+  @keyframes fxSwing{0%,100%{transform:rotate(0)}15%{transform:rotate(18deg)}30%{transform:rotate(-15deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-6deg)}75%{transform:rotate(3deg)}}
+  @keyframes fxNum{0%{transform:translateY(-8px) scale(1.4)}60%{transform:translateY(1px) scale(.95)}100%{transform:none}}
+  .fx-halo::after{animation:fxHalo .9s ease-out 2}
+  .bellbtn.fx-halo svg{animation:fxSwing 1s ease-in-out;transform-origin:50% 8%}
+  .fx-halo .bell-n,.fx-halo .fab-n{animation:fxNum .45s cubic-bezier(.3,1.6,.5,1)}
+  .fx-empty .truck{animation:fxIdle 2.4s ease-in-out infinite;transform-box:fill-box}
+  @keyframes fxIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+  .fx-empty .sm{animation:fxSmoke 2.2s ease-out infinite}
+  .fx-empty .sm.s2{animation-delay:.7s}.fx-empty .sm.s3{animation-delay:1.4s}
+  @keyframes fxSmoke{0%{opacity:.7;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(-4px,-14px) scale(1.4)}}
+  .fx-empty .q{animation:fxBob 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  @keyframes fxBob{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-3px) rotate(8deg)}}
 }
 </style>
 </head>
@@ -1778,8 +2026,10 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <button class="icon-btn obbtn" id="obBtn" type="button" hidden></button>
       <button class="icon-btn bellbtn" id="lwBtn" type="button" hidden aria-label="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v3.6L4.3 15.4A1 1 0 0 0 5.2 17h13.6a1 1 0 0 0 .9-1.6L18 12.6V9a6 6 0 0 0-6-6z" fill="currentColor"/><path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><b id="lwN" class="bell-n" hidden>0</b></button>
       <button class="icon-btn askbtn" id="askBtn" type="button" hidden title="Ask a question about the app's data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l1.9 5.2 5.2 1.9-5.2 1.9L12 16.7l-1.9-5.2-5.2-1.9 5.2-1.9z" fill="currentColor"/><path d="M18.5 14.5l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z" fill="currentColor" opacity=".7"/></svg>Ask JMTI</button>
-      <button class="icon-btn" id="pwChangeBtn" type="button">Password</button>
-      <button class="icon-btn" id="logoutBtn" type="button">Sign out</button></div>
+      <button class="icon-btn setbtn" id="setBtn" type="button" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.9"/></svg></button>
+      <!-- Password and Sign out live in Settings (gear) since 2026-11-06; kept here hidden because other code clicks them -->
+      <button class="icon-btn" id="pwChangeBtn" type="button" hidden>Password</button>
+      <button class="icon-btn" id="logoutBtn" type="button" hidden>Sign out</button></div>
   </div>
 </header>
 
@@ -2058,6 +2308,18 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <button class="btn alt" type="button" id="psJpg">JPEG report</button>
     </div>
     <div id="psBody"><div class="empty">Loading…</div></div>
+  </section>
+
+  <!-- ================= SYSTEM ANALYTICS (Admin, Boss view only; MANU 2026-11-06) ================= -->
+  <section class="view" id="v-analytics">
+    <div class="bar">
+      <div class="chips" id="anRange"></div>
+      <label class="f">From<input type="date" id="anFrom"></label>
+      <label class="f">To<input type="date" id="anTo"></label>
+      <button class="btn alt" type="button" id="anRefresh" title="Ask the server again">↻ Refresh</button>
+      <button class="btn alt" type="button" id="anJpg">JPEG report</button>
+    </div>
+    <div id="anBody"><div class="empty">Loading…</div></div>
   </section>
 
   <!-- ================= BILLING ================= -->
@@ -2399,7 +2661,7 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
   </div>
 </div>
 <div class="submit-ov" id="submitOv" hidden role="alertdialog" aria-live="assertive" aria-label="Submitting">
-  <div class="submit-box"><div class="logo-load"><img class="logo-copy" alt=""><span class="lroad"></span></div><span class="submit-sec" id="submitSec">5</span><b>Submitting… please wait</b><small>Saving to the sheet. Don't close or refresh the page.</small></div>
+  <div class="submit-box"><div class="logo-load"><img class="logo-copy" alt=""><span class="lroad"></span></div><span class="submit-sec" id="submitSec">5</span><b>Submitting… please wait</b><small>Saving to the sheet. Don't close or refresh the page.</small><span class="sv-ok-ic" aria-hidden="true">✓</span><b class="sv-ok-t">Saved</b></div>
 </div>
 <div class="logo-loader" id="loadLogo" hidden aria-live="polite"><div class="logo-load"><img class="logo-copy" alt=""><span class="lroad"></span></div><span>Loading…</span></div>
 <div class="toast" id="toast" role="status"></div>
@@ -2429,7 +2691,7 @@ const MS_KEYS = ['srcArrive','loadStart','loadEnd','srcDepart','destArrive','unl
 const MS_COL = {srcArrive:12,loadStart:13,loadEnd:14,srcDepart:15,destArrive:16,unloadStart:17,unloadEnd:18,destDepart:19};
 const MS_LABEL = {srcArrive:'Source time in',loadStart:'Loading start',loadEnd:'Loading end',srcDepart:'Source time out',
   destArrive:'Destination time in',unloadStart:'Unloading start',unloadEnd:'Unloading end',destDepart:'Destination time out'};
-const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users'};
+const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users',analytics:'System analytics'};
 const NO_AUTH = ['login','getAppUrl','appVersion'];
 
 const S = { sum:null, sumAt:0, sumView:'week', sumMeasure:'trips', topView:'p7', me:null, boot:null, trips:[], range:{}, tab:'', stageFilter:'', shown:150,
@@ -2494,6 +2756,11 @@ const holdOfR = r => !!r && r.hold !== false;
 const hdr = (col, fallback) => { const h = S.boot && S.boot.headers && S.boot.headers[col-1]; return h ? h.trim() : fallback; };
 const can = tab => !!(S.me && S.me.tabs.includes(tab));
 const may = perm => !!(S.me && (S.me.perms||[]).includes(perm));   // server permission (CAN in Code.gs)
+// Completed trips are locked for Dispatcher and Team leader (MANU 2026-11-06 "after completed status, dispatch cannot edit the trip
+// anymore, only supervisor can"); the server refuses the save too (DONE_LOCK_ROLES in Code.gs). Supervisor and Admin keep editing.
+const DONE_LOCK_ROLES = ['DISPATCHER', 'TEAM LEADER'];
+const doneLocked = t => !!(t && S.me && DONE_LOCK_ROLES.includes(S.me.role) && String(t.status || '').trim().toLowerCase() === 'completed');
+const DONE_LOCK_TXT = 'Completed, ask Supervisor. Only a Supervisor can change a Completed trip.';
 const OPS_LOCKED = ['plateNo','driver','helper1','helper2','kms','budget'];   // dispatcher-only roles can't change these (truck: yes, MANU; its plate and crew follow)
 const CELL_RO = ['plateNo','kms'];   // Truck Plan cells never edited by hand: plate follows the truck, KMS comes from CLIENT LIST (MANU)
 const DATE_MOVE_DAYS = 30;   // a trip date can be moved this many days earlier or later (MANU 2026-11-02 "users should be able to edit Trip date"; Code.gs DATE_MOVE_DAYS)
@@ -2688,14 +2955,39 @@ function toast(msg, err, ms){
 const WRITES = ['deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
+/* Save buttons (MANU 2026-11-06 pick 13): the button pressed just before a save gets a spinner, then a green check,
+   and can't be pressed again while it saves; the Submitting box ends with a green "Saved" check. */
+const SV = {btn:null, at:0, okShow:false, lastWrite:0}, SV_QUIET = ['markShiftRead','acctReadPhoto'];
+const SV_WORD = /save|submit|send|add|update|confirm|endorse|delete|cancel|yes|post|put back|check|apply|upload|generate|restore|remove/i;
+document.addEventListener('click', e => {
+  const b = e.target && e.target.closest && e.target.closest('button'); if(!b) return;
+  const now = Date.now(), saveish = b.type==='submit' || SV_WORD.test(b.id || '') || SV_WORD.test(b.textContent || '');
+  if(b.classList.contains('sv-busy') || (saveish && b===SV.last && now - SV.lastAt < 700)){ e.preventDefault(); e.stopImmediatePropagation(); return; }   // no double press
+  SV.btn = b; SV.at = now; if(saveish){ SV.last = b; SV.lastAt = now; }
+}, true);
+function svStart(fn){
+  if(SV_QUIET.includes(fn)) return null;
+  SV.lastWrite = Date.now();
+  const b = SV.btn; if(!b || Date.now() - SV.at > 4000 || !b.isConnected) return null;
+  SV.btn = null; b.classList.remove('sv-ok'); b.classList.add('sv-busy'); b.setAttribute('aria-busy', 'true'); return b;
+}
+function svEnd(fn, b, ok){
+  if(!SV_QUIET.includes(fn)){ SV.okShow = ok; SV.lastWrite = Date.now(); }
+  if(!b) return; b.classList.remove('sv-busy'); b.removeAttribute('aria-busy');
+  if(ok && b.isConnected){ b.classList.add('sv-ok'); clearTimeout(b._sv); b._sv = setTimeout(() => b.classList.remove('sv-ok'), 1400); }
+}
 function submitTick(){
   clearTimeout(submitTimer);
   const left = Math.ceil((submitUntil - Date.now()) / 1000);
   if(submitting > 0 || left > 0){
-    $('submitOv').hidden = false;
+    $('submitOv').classList.remove('sv-ok'); $('submitOv').hidden = false;
     $('submitSec').textContent = left > 0 ? `${left}` : '…';
     submitTimer = setTimeout(submitTick, 200);
-  } else $('submitOv').hidden = true;
+  } else if(SV.okShow && !$('submitOv').hidden){   // saved: a green check for a moment, then the box closes
+    SV.okShow = false; $('submitOv').classList.add('sv-ok');
+    submitTimer = setTimeout(() => { $('submitOv').classList.remove('sv-ok'); $('submitOv').hidden = true; showLoader(); }, 850);
+    return;
+  } else { $('submitOv').classList.remove('sv-ok'); $('submitOv').hidden = true; }
   showLoader();
 }
 let loginWait = 0;
@@ -2704,8 +2996,8 @@ function call(fn, ...args){
   if(fn==='login'){ loginWait++; showLoader(); return callNow(fn, ...args).finally(() => { loginWait--; showLoader(); }); }
   if(WRITES.includes(fn) && fn!=='changePassword' && may('viewAll')) return Promise.reject(new Error('View only: your account can see everything but cannot make changes.'));
   if(WRITES.includes(fn)){
-    submitting++; submitUntil = Math.max(submitUntil, Date.now() + SUBMIT_MS); submitTick();
-    return callNow(fn, ...args).finally(() => { submitting--; submitTick(); });
+    submitting++; submitUntil = Math.max(submitUntil, Date.now() + SUBMIT_MS); const sb = svStart(fn); SV.okShow = false; submitTick();
+    return callNow(fn, ...args).then(v => { svEnd(fn, sb, true); return v; }, e => { svEnd(fn, sb, false); throw e; }).finally(() => { submitting--; submitTick(); });
   }
   return callNow(fn, ...args);
 }
@@ -2721,6 +3013,7 @@ function callServer(fn, ...args){
       }
       if(/^AUTH:/.test(msg) || /AUTH:/.test(msg)) { signOut(msg.replace(/^.*AUTH:\s{0,}/,'')); }
       const m2 = msg.replace(/^Error:\s{0,}/,'').replace(/^.*AUTH:\s{0,}/,'').trim();
+      if(!/AUTH:/.test(msg) && fn!=='login') spdAdd(fn, Date.now() - t0, -1, m2 || 'failed without a message');   // counted in System analytics (ERROR LOG)
       reject(new Error(/^(Error|undefined|null)?$/i.test(m2) ? 'The server failed on ' + fn + ' without saying why.' : m2));   // says which request failed (MANU 2026-11-03 bare "Error")
     };
     const t0 = Date.now();
@@ -2745,7 +3038,7 @@ function callServer(fn, ...args){
 /** Speed log (MANU 2026-11-02 "faster user experience"): how long each server call took, sent a few at a time with the chat
     check (at most once a minute) and added up per hour in the SPEED LOG tab. [request, total ms, server ms or -1]. */
 const SPD = {list:[], sent:Date.now() - 50000};
-function spdAdd(fn, ms, srv){ if(SPD.list.length < 200 && fn) SPD.list.push([String(fn), Math.round(ms), srv == null || isNaN(srv) ? -1 : Math.round(srv)]); }
+function spdAdd(fn, ms, srv, err){ if(SPD.list.length < 200 && fn) SPD.list.push([String(fn), Math.round(ms), srv == null || isNaN(srv) ? -1 : Math.round(srv)].concat(err ? [String(err).slice(0, 300)] : [])); }   // err: a failed request's message (System analytics, 14.2)
 function spdTake(){ SPD.sent = Date.now(); return SPD.list.splice(0, 40); }
 window.JMTI_SPDADD = spdAdd;
 /** Busy answers: refused before anything ran (or the save never got the sheet), so even a save is safe to send again. */
@@ -2874,7 +3167,7 @@ $('loginForm').onsubmit = async e => {
   e.preventDefault();
   const f = e.target; $('loginBtn').disabled = true; $('loginErr').textContent = '';
   try{
-    const r = await call('login', f.username.value, f.password.value);
+    const r = await call('login', f.username.value, f.password.value, {v: APP_VERSION, dev: devLabel()});   // SIGN-IN LOG (System analytics)
     TOKEN = r.token; store('jmti_token', TOKEN); store('jmti_me', JSON.stringify(r.me));
     if(r.mustChange){ pendingPw = f.password.value; f.password.value = ''; showPwForm(true); }
     else { f.password.value = ''; enterApp(r.me); }
@@ -2907,6 +3200,94 @@ $('pwForm').onsubmit = async e => {
 $('pwChangeBtn').onclick = () => showPwForm(false);
 $('meAv').onclick = () => openProfile();
 $('helloCard').onclick = e => { if(e.target.closest('[data-myprof]')) openProfile(); };
+/* Settings (MANU 2026-11-06 "add settings gear button"): one gear in the top bar holds the things that were spread around
+   the app: profile, password, version / What changed, animations on/off, app-icon count, reload, who is online, sign out.
+   Only settings that already existed; Animations is saved on this phone/PC (localStorage jmti_noanim). */
+const animOff = () => store('jmti_noanim') === '1';
+document.documentElement.classList.toggle('noanim', animOff());
+const THEMES = [['std', 'Standard'], ['day', '☀️ Day'], ['night', '🌙 Night'], ['color', '🎨 My color']];
+/* My color: C, M, Y, K 0–100 saved as "c,m,y,k" (jmti_tcolor); RGB = 255 × (1 − C) × (1 − K) and so on */
+const CMYK_DEF = [94, 78, 0, 29];   // the app's royal blue #0A27B5
+const CMYK_PRESETS = [['Royal blue', [94, 78, 0, 29]], ['Green', [85, 0, 70, 40]], ['Red', [0, 90, 85, 20]], ['Orange', [0, 55, 100, 5]], ['Purple', [55, 90, 0, 25]], ['Teal', [90, 0, 30, 35]], ['Black', [0, 0, 0, 85]]];
+const cmykGet = () => { const v = (store('jmti_tcolor') || '').split(',').map(Number); return v.length === 4 && v.every(n => n >= 0 && n <= 100) ? v : CMYK_DEF.slice(); };
+const cmykRgb = ([c, m, y, k]) => [c, m, y].map(x => Math.round(255 * (1 - x / 100) * (1 - k / 100)));
+const rgbHex = a => '#' + a.map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+function themeColor(v){
+  let rgb = cmykRgb(v); const lum = (.2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2]) / 255;
+  if(lum > .42) rgb = rgb.map(x => Math.round(x * .42 / lum));   // very light picks are deepened so white text stays readable
+  const sh = f => rgbHex(rgb.map(x => Math.round(x * f))), h = document.documentElement.style;
+  h.setProperty('--tc', rgbHex(rgb)); h.setProperty('--tc2', sh(.62)); h.setProperty('--tc3', sh(.28));
+  h.setProperty('--tcl', rgbHex(rgb.map(x => Math.round(x + (255 - x) * .6))));
+  return rgb;
+}
+const themeNow = () => { const t = store('jmti_theme'); return THEMES.some(x => x[0] === t) ? t : 'std'; };
+function themeSet(t){
+  store('jmti_theme', t === 'std' ? null : t);
+  const h = document.documentElement; h.classList.toggle('th-day', t === 'day'); h.classList.toggle('th-night', t === 'night'); h.classList.toggle('th-color', t === 'color');
+  if(t === 'color') themeColor(cmykGet());
+  const m = document.querySelector('meta[name="theme-color"]'); if(m) m.content = t === 'day' ? '#0A27B5' : t === 'color' ? getComputedStyle(h).getPropertyValue('--tc3').trim() || '#020A35' : '#020A35';
+}
+themeSet(themeNow());
+function openSettings(){
+  if(S.odLocked && !$('pop').hidden && $('pop').classList.contains('odlock')) return;   // the overdue lock stays on top
+  const row = (k, ic, t, sub, extra) => `<button type="button" class="setr${k==='out' ? ' danger' : ''}" data-set="${k}"${extra || ''}><span class="si">${ic}</span><span class="st">${t}${sub ? `<small>${sub}</small>` : ''}</span>${extra && extra.includes('switch') ? '<span class="sw"></span>' : '<span class="sa">›</span>'}</button>`;
+  const vt = verText();
+  const g = (h, rows) => rows.filter(Boolean).length ? `<div>${h ? `<h4>${h}</h4>` : ''}<div class="setg">${rows.filter(Boolean).join('')}</div></div>` : '';
+  const body = `<div class="setl">
+    ${g('My account', [
+      row('prof', '👤', 'My profile', 'Photo, birthday and motto'),
+      row('pw', '🔑', 'Change password', ''),
+    ])}
+    ${g('App', [
+      row('ver', '🆕', 'What changed', esc(vt.long || ('Version ' + APP_VERSION))),
+      `<div class="setr thr"><span class="si">🎨</span><span class="st">Theme<small>Saved on this phone or PC only</small><span class="thc">${THEMES.map(([k, n]) => `<button type="button" data-theme="${k}" aria-pressed="${themeNow() === k}">${n}</button>`).join('')}</span><span class="cmyk" id="cmykBox"${themeNow() === 'color' ? '' : ' hidden'}>${['C', 'M', 'Y', 'K'].map((n, i) => `<label title="${['Cyan', 'Magenta', 'Yellow', 'Black (key)'][i]}"><span>${n}</span><input type="range" min="0" max="100" step="1" data-cm="${i}" value="${cmykGet()[i]}" aria-label="${['Cyan', 'Magenta', 'Yellow', 'Black'][i]}"><input type="number" min="0" max="100" data-cmn="${i}" value="${cmykGet()[i]}" aria-label="${['Cyan', 'Magenta', 'Yellow', 'Black'][i]} %"></label>`).join('')}<span class="cm-prev"><span class="cm-sw" id="cmSw"></span><span class="hint" id="cmTxt"></span></span><span class="cm-pre">${CMYK_PRESETS.map(([n, v]) => `<button type="button" data-cmpre="${v.join(',')}" title="${n}" aria-label="${n}" style="background:${rgbHex(cmykRgb(v))}"></button>`).join('')}</span></span></span></div>`,
+      row('anim', '✨', 'Animations', 'Moving effects and drifting logos, on this phone or PC only', ` role="switch" aria-checked="${!animOff()}"`),
+      row('snd', '🔊', 'Sounds', 'Soft click and chime for saves, messages and alerts, on this phone or PC only', ` role="switch" aria-checked="${store('jmti_snd') === '1'}"`),
+      badgeAsk() ? row('badge', '🔔', 'Show the count on the app icon', 'Unread chats on the JMTI icon') : '',
+      row('tab', '↻', 'Refresh this tab', 'Read the newest data now'),
+      row('reload', '⟳', 'Reload the app', 'Gets the newest version of the page'),
+    ])}
+    ${g('People', [ row('online', '🟢', 'Who is signed in', '') ])}
+    ${may('restoreTrip') ? g('Admin', [ row('deleted', '🗑', 'Deleted trips', 'Put back a trip deleted from Truck Plan') ]) : ''}
+    ${g('', [ row('out', '⎋', 'Sign out', esc(S.me ? S.me.name + ' · ' + (S.me.role || '') : '')) ])}
+  </div>`;
+  openPop('Settings', '', body);
+  $('pop').classList.add('setpop');
+  $('popBody').onclick = e => {
+    const pre = e.target.closest('[data-cmpre]');
+    if(pre){ cmykApply(pre.dataset.cmpre.split(',').map(Number)); return; }
+    if(e.target.closest('#cmykBox')) return;
+    const th = e.target.closest('[data-theme]');
+    if(th){ themeSet(th.dataset.theme); $('cmykBox').hidden = th.dataset.theme !== 'color'; if(th.dataset.theme === 'color') cmykApply(cmykGet()); $('popBody').querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x === th))); toast('Theme: ' + th.textContent.replace(/^\S+ /, '')); return; }
+    const b = e.target.closest('[data-set]'); if(!b) return;
+    const k = b.dataset.set;
+    if(k === 'anim'){ const on = animOff(); store('jmti_noanim', on ? null : '1'); document.documentElement.classList.toggle('noanim', !on); b.setAttribute('aria-checked', String(on)); toast(on ? 'Animations on' : 'Animations off'); return; }
+    if(k === 'snd'){ const on = store('jmti_snd') !== '1'; store('jmti_snd', on ? '1' : null); b.setAttribute('aria-checked', String(on)); if(on) fxSound('chat'); toast(on ? 'Sounds on' : 'Sounds off'); return; }
+    if(k === 'badge'){ Notification.requestPermission().then(() => { updateAppBadge.last = null; updateAppBadge(); b.remove(); }).catch(() => {}); return; }
+    if(k === 'reload'){ vupReload(b); return; }
+    closePop();
+    ({prof: () => openProfile(), pw: () => showPwForm(false), ver: vchgShow, tab: () => { showTab(S.tab); toast('Refreshing ' + (TAB_NAME[S.tab] || 'this tab') + '…'); },
+      online: openOnline, deleted: openDeletedTrips, out: () => $('logoutBtn').click()})[k]?.();
+  };
+}
+$('setBtn').onclick = openSettings;
+/* My color sliders: every move recolors the app at once and is saved on this phone/PC */
+function cmykApply(v){
+  v = v.map(n => Math.max(0, Math.min(100, Math.round(+n || 0))));
+  store('jmti_tcolor', v.join(',')); themeSet('color');
+  const box = $('cmykBox'); if(!box) return;
+  box.querySelectorAll('[data-cm]').forEach(x => { x.value = v[+x.dataset.cm]; });
+  box.querySelectorAll('[data-cmn]').forEach(x => { if(document.activeElement !== x) x.value = v[+x.dataset.cmn]; });
+  const raw = rgbHex(cmykRgb(v)); $('cmSw').style.background = raw;
+  $('cmTxt').textContent = `C ${v[0]} · M ${v[1]} · Y ${v[2]} · K ${v[3]} = ${raw}`;
+  $('popBody').querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === 'color')));
+}
+document.addEventListener('input', e => {
+  const t = e.target; if(!t.closest || !t.closest('#cmykBox')) return;
+  const box = $('cmykBox'), v = [0, 1, 2, 3].map(i => (t.dataset.cmn == i ? t : box.querySelector(`[data-cm="${i}"]`)).value);
+  cmykApply(v);
+});
+document.addEventListener('click', e => { if(e.target.closest && e.target.closest('#setBtn') && themeNow() === 'color') setTimeout(() => cmykApply(cmykGet()), 0); });
 $('logoutBtn').onclick = () => { call('logout').catch(()=>{}); signOut(''); };
 /* ===== Ask JMTI (MANU 2026-10-14 "integrate ai question and answer inside but only to get information inside the system") =====
  * Questions go to askJmti (Code.gs), which lets the AI read the app's data with this person's sign-in: it sees only what the role's
@@ -3228,7 +3609,7 @@ function enterApp(me){
   $('askBtn').hidden = !ASK_ON;
   const tabs = me.tabs;
   $('tabs').innerHTML = tabs.filter(t => TAB_NAME[t]).map(t => `<button class="tab" role="tab" data-tab="${t}" type="button">${TAB_NAME[t]}</button>`).join('');   // a tab this page doesn't know is never shown as "undefined"
-  $('tabs').onclick = e => { const b = e.target.closest('.tab'); if(b){ tabMenu(false); showTab(b.dataset.tab); } };
+  $('tabs').onclick = e => { const b = e.target.closest('.tab'); if(b){ tabMenu(false); spdAdd('Tab: ' + (TAB_NAME[b.dataset.tab] || b.dataset.tab), 0); showTab(b.dataset.tab); } };   // Tab: … = tabs opened (System analytics)
   $('tabMenuBtn').onclick = e => { e.stopPropagation(); tabMenu(!$('tabMenu').classList.contains('open')); };
 
   initOnce();
@@ -3310,7 +3691,7 @@ function loadBoot(){
 function initOnce(){
   if(started) return;
   started = true;
-  initDashboard(); initFleet(); initAssign(); initPlanner(); initDispatcher(); initHardTab(); initFuelTab(); initUnits(); initPod(); initPodStats(); initBilling(); initBook(); initDisb(); initAcct(); initPayroll(); initManpower(); initUsers();
+  initDashboard(); initFleet(); initAssign(); initPlanner(); initDispatcher(); initHardTab(); initFuelTab(); initUnits(); initPod(); initPodStats(); initBilling(); initBook(); initDisb(); initAcct(); initPayroll(); initManpower(); initUsers(); initAnalytics();
   initDrawer();
   $('loadRetry').onclick = loadBoot;
   // Fewer Google calls (MANU 2026-11-03 "make it fast and doesnt consume the google calls"): once the server sends the trips
@@ -3458,8 +3839,8 @@ function showTab(t){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id==='v-'+view));
   { const v = $('v-'+view); if(v){ v.classList.remove('anim-in'); void v.offsetWidth; v.classList.add('anim-in'); clearTimeout(showTab._a); showTab._a = setTimeout(() => v.classList.remove('anim-in'), 1500); } }   // animations on tab open only (MANU 2026-11-06)
   if(t==='maintenance') return loadMaintenance();
-  if(!S.boot && !['manpower','users'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
-  ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
+  if(!S.boot && !['manpower','users','analytics'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
+  ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, analytics:loadAnalytics, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
   if(['dashboard','manpower'].includes(t) || (t==='fleet' && may('fleet'))) loadReminders();
 }
 
@@ -3602,7 +3983,7 @@ function openOnline(){
   if(!d){ onlineLoad().then(x => { if(x) openOnline(); }); return; }
   if(Date.now() - ON.at > 60000) onlineLoad();   // shows what it has, then the fresh list (onlineLoad redraws the open list)
   const on = d.users.filter(u => u.online), lately = d.users.filter(u => !u.online && u.at), rest = d.users.filter(u => !u.at);
-  const row = u => `<tr><td><span class="ondot${u.online ? '' : ' off'}"></span> <b>${esc(u.name || u.username)}</b><br><small>${esc(u.username)}</small></td><td>${esc(u.role)}</td>`
+  const row = u => `<tr><td><span class="fx-av">${chatAv(u.username, false, u.name || u.username)}<span class="ondot${u.online ? '' : ' off'}"></span></span><b>${esc(u.name || u.username)}</b><br><small>${esc(u.username)}</small></td><td>${esc(u.role)}</td>`
     + `<td>${u.at ? esc(agoText(u.at, d.now)) + ' <small>· ' + esc(clock12(mnlAt(u.at))) + '</small>' : '<small>not in the last 6 hours</small>'}`
     + `${u.lastLogin ? '<br><small>Signed in ' + esc(loginText(u.lastLogin)) + '</small>' : ''}</td></tr>`;
   const sec = (t, l) => l.length ? `<tr class="sec"><td colspan="3">${t} · ${l.length}</td></tr>` + l.map(row).join('') : '';
@@ -3669,6 +4050,29 @@ function verCheck(){
 const APP_CHANGES = [
   // MANU 2026-11-06 15:20 UTC "this is version 14.2": this afternoon's changes (from ~14:17 UTC)
   {v:14.2, d:'2026-11-06', items:[
+    'Look and feel: buttons, chips, tabs and rows show a soft ripple where you tap.',
+    'Dashboard numbers count up when the tab opens and roll to the new number when they change. Trucks with trips and Trips completed get a small trend line over the days you picked (3 or more days).',
+    'On PC, Dashboard cards and truck cards tilt toward the mouse with a light that follows it.',
+    'When a trip status changes, its status pops and glows in the new color. When you mark a trip Completed, a small JMTI truck drives across the screen with a sparkle.',
+    'Android phones buzz lightly on save, a stronger buzz on delete or cancel, and a double buzz on an error.',
+    'Monthly targets: each account has a ring that fills to its % of the target and turns green at 100%.',
+    'Truck Plan: each trip has a thin progress bar under its status (Clip Board, loading, on the road, unloading, Completed).',
+    'Tips: hover on PC, or press and hold on a phone, a column name, status or button to see what it means.',
+    'Who is signed in, endorsements and System analytics show round initials (or photo) badges; Who is signed in has the green online dot on the badge.',
+    'The greeting has a sunrise, sun, sunset or moon icon by the time of day, and the background takes a light morning, sunset or night tint.',
+    'New notifications or chats make the bell swing with a red halo and the chat button pulse, and the count jumps.',
+    'Empty lists and errors show a small truck drawing (parked, searching, or broken down).',
+    'Settings: new Sounds switch (off at first) for a soft click on save, a chime for new messages and alerts, and a short tune for Completed. Moving effects and buzz follow the Animations switch.',
+    'Save buttons show a turning circle while saving, then a green check, and can\'t be pressed twice. The Submitting box ends with a green "Saved" check.',
+    'Phones: at the top of a tab, pull the page down and let go to refresh it (the JMTI logo turns while it loads).',
+    'When someone else changes a trip, only the cells that changed glow yellow for a moment in Truck Plan, POD, Billing and the Dashboard.',
+    'After Add trip, or a search in a Find box, the page scrolls smoothly to that row and lights it for 2 seconds (on phones press Enter or Search).',
+    'My profile: new Activity log with your time in the app per day (hours and minutes), your sign-ins and every change you saved, with a Find box.',
+    'New System analytics tab (Admin; Boss can view): time in the app per day and per person (tap a name for their activity log), active users and who is online, sign-ins per day, changes saved per person, per position and per part of the app, busiest hours, answer times and slow requests, failed requests with their messages, the version each person has open, background time and the last backup.',
+    'New gear button (⚙) in the top bar opens Settings: My profile, Change password, What changed, Animations on/off, Refresh this tab, Reload the app, Who is signed in, Sign out (Admin: Deleted trips). Password and Sign out moved inside it.',
+    'Settings has a Theme choice: Standard (royal blue), Day (light all around) and Night (dark pages, pop-ups and chat). Each phone or PC keeps its own choice.',
+    'Theme: new My color choice. Pick your own app color with C, M, Y and K sliders (0 to 100), or tap a quick color. The top bar, background, buttons and blue cards take that color. Saved on this phone or PC.',
+    'Truck Plan: once a trip is Completed, Dispatchers and Team leaders can only view it (no status, times, remarks, crew, cancel or delete). The trip pop-up says "Completed, ask Supervisor". Supervisors and Admin can still change it.',
     'Animations: tabs fade in with their cards rising one after another, pop-ups and the What changed box grow in, messages slide up, chat and Ask JMTI slide in, the bell count pops, chips and tabs press in when tapped, and the version badge shines once. All short and light; nothing moves if the phone or PC is set to reduce motion.',
     'Truck Plan: every cell now wraps its text in narrower columns with the smallest spacing, so more columns fit on the screen (PC and phone).',
     'POD and Billing: the shipment column is now two columns. SHIPMENT NO. shows it for Coca Cola trips (Canlubang and San Fernando) and DTTR for Other accounts trips. Same in the CSV downloads. Add trip and the trip pop-up call the box DTTR for Other accounts trucks.',
@@ -4281,7 +4685,7 @@ function renderNoTrip(){
 }
 /** pdf = true on information pop-ups: shows Save PDF (MANU). Forms and report pickers leave it out. */
 function openPop(title, sub, body, foot, pdf){
-  $('pop').classList.remove('lwpop', 'chatpop', 'bdpop'); delete $('pop').dataset.kind;
+  $('pop').classList.remove('lwpop', 'chatpop', 'bdpop', 'setpop'); delete $('pop').dataset.kind;
   $('popBody').onclick = null; $('popBody').onchange = null;   // a new pop-up never runs the last one's handlers
   $('popTitle').textContent = title; $('popSub').innerHTML = sub || ''; $('popBody').innerHTML = body; $('popFoot').innerHTML = foot || '';
   $('popPdf').hidden = !pdf;
@@ -4804,6 +5208,7 @@ function savePlan(e){
   temps.forEach(t => { PENDING[t.key] = t; applyLocal(t); });
   call('addTrips', {...data, copies}).then(list => {
     temps.forEach((t,i) => { delete PENDING[t.key]; if(list[i]) applyLocal(list[i], t.key); else removeLocal(t.key); });
+    if(list[0]) jumpRow(list[0].key);
     toast(list.length>1 ? `${list.length} trips added` : `Trip ${list[0].tripId} added`);
   }).catch(err => {
     temps.forEach(t => { delete PENDING[t.key]; removeLocal(t.key); });
@@ -4838,13 +5243,14 @@ function initDispatcher(){
     const t = S.xTrips.find(x => x.key===c.dataset.key); if(!t) return;
     const view = !may('dispatch');   // POD (MANU 2026-11-04 "add POD access to truckplan as viewer"): open the trip to read, nothing else
     const nb = e.target.closest('[data-next]');
-    if(nb && !view) return quickNext(t, nb.dataset.next);
+    if(nb && !view && !doneLocked(t)) return quickNext(t, nb.dataset.next);
     // MANO cell (MANU 2026-11-06): opens the Disbursement form for this trip with purpose MANO
     if(e.target.closest('td[data-f="manoAmt"]') && !view && may('opsDisburse') && !$('xDisbBtn').hidden) return openOpsForm('DISB', {trip: t, purpose: 'MANO'});
     const td = e.target.closest('td.ed');
     // MANU 2026-11-04 "when budget cell is clicked, it should pop-up disbursement": the Disbursement form for this trip's crew
     if(td && td.dataset.f==='budget' && may('opsDisburse') && !$('xDisbBtn').hidden) return openOpsForm('DISB', {trip: t});
-    if(td && !view) return openCellEditor(t, td.dataset.f, td);
+    if(td && !view && doneLocked(t)) toast(DONE_LOCK_TXT, true);   // read-only pop-up below
+    else if(td && !view) return openCellEditor(t, td.dataset.f, td);
     openDispatch(t);
   };
 }
@@ -4958,8 +5364,8 @@ function openDispatchAdd(truckNo, opt){
     closeDrawer();
     const [f, t] = xRange();
     PENDING[temp.key] = temp; applyLocal(temp);
-    callQ('dispatchAddTrip', {...data, ref:temp.key}).then(up => { delete PENDING[temp.key]; const note = up && up.note; if(note) delete up.note; applyLocal(up, temp.key); toast(`Trip ${up.tripId} added for ${fmtDay(d)}` + (d < f || d > t ? ' (outside the dates shown)' : '') + (note ? '. ' + note : ''), false, note ? 8000 : 0); })
-      .catch(err => { if(err.queued){ obKeepTrip(err.queued, temp); toast(err.message, false, 5000); return; } delete PENDING[temp.key]; removeLocal(temp.key); toast('Not added: ' + err.message, true);
+    callQ('dispatchAddTrip', {...data, ref:temp.key}).then(up => { delete PENDING[temp.key]; const note = up && up.note; if(note) delete up.note; applyLocal(up, temp.key); jumpRow(up && up.key); toast(`Trip ${up.tripId} added for ${fmtDay(d)}` + (d < f || d > t ? ' (outside the dates shown)' : '') + (note ? '. ' + note : ''), false, note ? 8000 : 0); })
+      .catch(err => { if(err.queued){ obKeepTrip(err.queued, temp); jumpRow(temp.key); toast(err.message, false, 5000); return; } delete PENDING[temp.key]; removeLocal(temp.key); toast('Not added: ' + err.message, true);
         if(/already has an open trip|is in .* on this date/i.test(err.message || '')){ const k = rk(d, d); delete TC[k]; fetchTrips(d, d).then(() => { const o = openTripOf(d, no); if(o && !$('drawer').classList.contains('on')) openDispatch(o); }).catch(() => {}); } });
   };
   setTimeout(() => (!truckNo ? $('naTruck') : NO_ROUTE_ST.includes(stKey()) ? $('naSave') : $('naSrc')).focus(), 230);
@@ -5724,6 +6130,14 @@ function openDispatch(t){
     saveOptimistic({...t, status:S.boot.cancelled, remarks:(t.remarks?t.remarks+' | ':'')+'CANCELLED: '+reason.toUpperCase()}, t,
       () => callQ('cancelTrip', refOf(t), reason.toUpperCase()), () => 'Trip cancelled');
   };
+  if(doneLocked(t)){   // Completed: Dispatcher / Team leader only read it (MANU 2026-11-06)
+    body.querySelectorAll('input,select,textarea').forEach(x => x.disabled = true);
+    body.querySelectorAll('[data-now],[data-clear]').forEach(b => b.remove());
+    body.insertAdjacentHTML('afterbegin', '<p class="hint fed-note"><b>Completed, ask Supervisor.</b> This trip is Completed, so only a Supervisor can change it (status, times, remarks, crew, cancel or delete).</p>');
+    $('drFoot').innerHTML = '<span class="hint" style="margin-right:auto"><b>Completed, ask Supervisor</b></span><button class="btn alt" id="drRoClose" type="button">Close</button>';
+    $('drRoClose').onclick = closeDrawer;
+    return setTimeout(() => $('drClose').focus(), 230);
+  }
   setTimeout(() => { const i = next && body.querySelector(`input[data-k="${next}"]`); (i || $('drClose')).focus(); }, 230);
 }
 function closeCellEditor(){ const p = $('cellEd'); if(p){ p.remove(); } document.querySelectorAll('table.xl td.sel').forEach(x => x.classList.remove('sel')); }
@@ -5995,7 +6409,7 @@ function shiftRender(){
   const ms = v => { const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/); return m ? Date.UTC(+m[1], m[2]-1, +m[3], +m[4], +m[5]) : 0; };
   const left = n => (r.editMin || 30) * 60000 - (ms(r.nowStamp) - ms(n.at)) - (Date.now() - (SH.got || Date.now()));
   const card = (n, act) => { const read = n.read || [], mine = n.user===S.me.username, iRead = read.some(x => x.u===S.me.username);
-    return `<div class="sh-note"><div class="m"></div><div class="sh-who"><span>Added by <b>${esc(n.name)}</b> (${esc(titleCase(n.role))})</span><span>🕒 <b>${esc(podWhen(n.at))}</b>${n.edited ? ` · edited ${esc(String(n.edited).slice(11))}` : ''}</span></div><div class="t">${esc(n.text)}</div>`
+    return `<div class="sh-note"><div class="m"></div><div class="sh-who"><span><span class="fx-av">${chatAv(n.user || n.name, 'xs', n.name)}</span>Added by <b>${esc(n.name)}</b> (${esc(titleCase(n.role))})</span><span>🕒 <b>${esc(podWhen(n.at))}</b>${n.edited ? ` · edited ${esc(String(n.edited).slice(11))}` : ''}</span></div><div class="t">${esc(n.text)}</div>`
     + `<div class="sh-read">${read.length ? `✓ Read by ${read.map(x => `<b>${esc(x.n)}</b> <small>${esc(String(x.at).slice(5))}</small>`).join(', ')}` : '<span class="dim">Not read yet</span>'}`
     + (act && !mine && !iRead && n.row ? ` <button class="btn alt sh-rd" type="button" data-shread="${n.row}" data-u="${esc(n.user)}" data-d="${esc(n.date)}">Mark as read</button>` : '')
     + (act && mine && n.row && r.canAdd && left(n) > 0 ? ` <button class="btn alt sh-rd" type="button" data-shedit="${n.row}" data-d="${esc(n.date)}">Edit (${Math.max(1, Math.ceil(left(n) / 60000))} min left)</button>` : '')
@@ -6058,6 +6472,141 @@ function shiftRender(){
         .catch(e => { toast(e.message, true); b.disabled = false; b.textContent = 'Submit endorsement'; });
     }; }
 }
+/** Time in the app (MANU 2026-11-06 "show the users daily usage in hours and minutes"): seconds this page is on screen and was touched in
+    the last 5 minutes, sent with the chat check (Code.gs useNote_ → USAGE LOG). */
+const USE = {sec:0, input:Date.now()};
+['pointerdown','keydown','wheel','touchstart'].forEach(ev => addEventListener(ev, () => { USE.input = Date.now(); }, {passive:true, capture:true}));
+setInterval(() => { if(TOKEN && document.visibilityState==='visible' && Date.now() - USE.input < 300000) USE.sec += 15; }, 15000);
+const hmText = m => { m = Math.round(Number(m) || 0); return !m ? '—' : m < 60 ? m + ' min' : Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : ''); };
+/** Activity log (MANU 2026-11-06 "in profile, add activity log, show the users daily usage in hours and minutes and actions performed by the user").
+    el = where it goes; user = another person's username (Admin, from System analytics) or '' for your own. */
+function actLog(el, user){
+  const st = {days: 7, find: ''};
+  const load = () => {
+    el.querySelector('.act-b').innerHTML = '<div class="empty">Loading…</div>';
+    call('myActivity', st.days, user || '').then(d => { st.d = d; draw(); }).catch(e => { el.querySelector('.act-b').innerHTML = `<div class="empty">${esc(e.message)}</div>`; });
+  };
+  const draw = () => {
+    const d = st.d; if(!d) return;
+    const days = []; for(let x = d.to; x >= d.from; x = addDays(x, -1)) days.push(x);
+    const tot = days.reduce((a, x) => a + (d.use[x] || 0), 0), max = Math.max(1, ...days.map(x => d.use[x] || 0));
+    const q = st.find.trim().toLowerCase(), list = (d.list || []).filter(x => !q || (x[0] + ' ' + x[2]).toLowerCase().includes(q));
+    el.querySelector('.act-b').innerHTML = `
+      <p class="hint" style="margin:4px 0 8px"><b>${hmText(tot)}</b> in the app in ${days.length} days · ${Object.values(d.ch).reduce((a,b) => a + b, 0)} changes saved · ${Object.values(d.si).reduce((a,b) => a + b, 0)} sign-ins</p>
+      <table class="xl act-t"><thead><tr><th>Day</th><th class="c">Time used</th><th></th><th class="c">Changes</th><th class="c">Sign-ins</th></tr></thead><tbody>${days.map(x => `<tr${d.use[x] || d.ch[x] || d.si[x] ? '' : ' class="act-idle"'}><td>${esc(fmtDay(x))}</td><td class="c"><b>${hmText(d.use[x])}</b></td><td style="width:34%"><div class="an-bar"><i style="width:${Math.round((d.use[x] || 0) / max * 100)}%;background:#2E5BFF"></i></div></td><td class="c">${d.ch[x] || ''}</td><td class="c">${d.si[x] || ''}</td></tr>`).join('')}</tbody></table>
+      <label class="f full" style="margin-top:10px">Find in actions<input class="act-find" value="${esc(st.find)}" placeholder="Trip, truck, POD, budget…"></label>
+      <div class="act-list">${list.length ? list.map(x => `<div class="act-row"><span class="act-at">${esc(x[0].slice(5))}</span><span><b>${esc(titleCase(x[1] || ''))}</b><br><small>${esc(x[2])}</small></span></div>`).join('') : '<p class="hint">No action in these days.</p>'}${d.more ? `<p class="hint">${d.more} older actions not shown.</p>` : ''}</div>
+      ${(d.problems || []).length ? `<p class="hint" style="color:#B91C1C">Could not read: ${esc(d.problems.join('; '))}</p>` : ''}
+      <p class="hint">Time used counts minutes the app is on screen and in use (from version 14.2 on).</p>`;
+    const f = el.querySelector('.act-find'); f.oninput = () => { st.find = f.value; const pos = f.selectionStart; draw(); const g = el.querySelector('.act-find'); g.focus(); try{ g.setSelectionRange(pos, pos); }catch(e){} };
+  };
+  el.innerHTML = `<div class="chips act-r"><button class="chip" type="button" data-d="1">Today</button><button class="chip" type="button" data-d="7" aria-pressed="true">Last 7 days</button><button class="chip" type="button" data-d="30">Last 30 days</button></div><div class="act-b"></div>`;
+  el.querySelector('.act-r').onclick = e => { const b = e.target.closest('.chip'); if(!b) return; st.days = Number(b.dataset.d); el.querySelectorAll('.act-r .chip').forEach(c => c.setAttribute('aria-pressed', c===b)); load(); };
+  load();
+}
+/** Admin: one person's activity log, from System analytics > Per person. */
+function openActivity(u, name){
+  openPop('Activity log · ' + name, 'Time in the app per day, sign-ins and every change this person saved.', '<div class="act-box" id="actBox"></div>', '<button class="btn alt" type="button" id="actBack">Close</button>');
+  $('actBack').onclick = () => closePop();
+  actLog($('actBox'), u);
+}
+/** System analytics tab (Admin; Boss view only. MANU 2026-11-06 "add analytics tab for admin to check the performance and usage of
+ *  the system"): who uses the app and how much (sign-ins, saved changes per person, part of the app, hour), how fast it answers
+ *  (SPEED LOG), what failed (ERROR LOG), which page version each person has open, background time and the last backup.
+ *  Code.gs systemAnalytics(from, to); kept 2 minutes on the server, ↻ Refresh asks again. */
+const AN = {data:null, busy:false};
+function initAnalytics(){
+  const today = TODAY();
+  rangeChips($('anRange'), (f,t) => { $('anFrom').value=f; $('anTo').value=t; loadAnalytics(); });
+  $('anFrom').value = addDays(today,-6); $('anTo').value = today;
+  $('anFrom').onchange = $('anTo').onchange = loadAnalytics;
+  $('anRefresh').onclick = () => loadAnalytics(true);
+  $('anJpg').onclick = () => { const b = $('anJpg'), was = b.innerHTML; b.disabled = true; b.textContent = 'Making picture…';
+    const f = $('anFrom').value, t = $('anTo').value;
+    Promise.resolve(secShot($('anBody'), 'System analytics', {line: f===t ? fmtDay(f) : fmtDay(f) + ' to ' + fmtDay(t), name: `${f} to ${t}`}, 'jpg')).finally(() => { b.disabled = false; b.innerHTML = was; }); };
+}
+function loadAnalytics(force){
+  const f = $('anFrom').value, t = $('anTo').value; $('anRange')._mark(f,t);
+  if(!AN.data || AN.data.from!==f || AN.data.to!==t) $('anBody').innerHTML = '<div class="empty">Loading…</div>';
+  AN.busy = true;
+  return call('systemAnalytics', f, t).then(d => { AN.busy = false; if($('anFrom').value!==f || $('anTo').value!==t) return; AN.data = d; renderAnalytics(); if(force) toast('Analytics refreshed.'); })
+    .catch(e => { AN.busy = false; $('anBody').innerHTML = `<div class="empty">${esc(e.message)}</div>`; });
+}
+function renderAnalytics(){
+  if(S.tab!=='analytics' || !AN.data) return;
+  const d = AN.data, live = d.live || {users:[]}, act = d.act || {days:{}, users:{}, areas:{}, actions:{}, hours:[]};
+  const sec = ms => ms ? (ms < 1000 ? (Math.round(ms / 10) / 100).toFixed(2) : (Math.round(ms / 100) / 10).toFixed(1)) + ' s' : '—';
+  const num = n => Number(n || 0).toLocaleString('en-US');
+  const bar = (v, max, c) => `<div class="an-bar"><i style="width:${max ? Math.max(v ? 2 : 0, Math.round(v / max * 100)) : 0}%;background:${c || 'var(--road)'}"></i></div>`;
+  const days = []; for(let x = d.from; x <= d.to; x = addDays(x, 1)) days.push(x);
+  const byName = {}; live.users.forEach(u => { byName[u.n] = u; byName[u.u] = u; });
+  // sign-ins
+  const si = d.signins || [], siDay = {}, siUser = {}, siRole = {};
+  si.forEach(r => { const day = r[0].slice(0,10); siDay[day] = (siDay[day] || 0) + 1; siUser[r[1]] = (siUser[r[1]] || 0) + 1; });
+  // who was active: signed in, or saved something, in these dates
+  const people = {};
+  live.users.forEach(u => { people[u.u] = {u:u.u, n:u.n, r:u.r, si:siUser[u.u] || 0, n2:0, add:0, edit:0, days:0, last:u.lastLogin, pv:u.pv, dev:u.dev, online:u.online, at:u.at}; });
+  Object.entries(act.users || {}).forEach(([name, x]) => {
+    const lu = byName[name], k = lu ? lu.u : name, p = people[k] || (people[k] = {u:k, n:name, r:x.r, si:0, n2:0, add:0, edit:0, days:0, last:'', pv:'', dev:''});
+    p.n2 += x.n; p.add += x.add; p.edit += x.edit; p.days = Math.max(p.days, x.days); if(!p.r) p.r = x.r;
+  });
+  const usage = d.usage || {}, useDay = {}; let useTot = 0;
+  Object.entries(usage).forEach(([u, m]) => { const p = people[u]; let t = 0; Object.entries(m).forEach(([x, v]) => { t += v; useDay[x] = (useDay[x] || 0) + v; }); useTot += t; if(p) p.min = t; });
+  const maxU = Math.max(1, ...days.map(x => useDay[x] || 0));
+  const plist = Object.values(people), active = plist.filter(p => p.si || p.n2 || p.min);
+  active.forEach(p => { siRole[p.r || '—'] = siRole[p.r || '—'] || {users:0, si:0, n:0}; const r = siRole[p.r || '—']; r.users++; r.si += p.si; r.n += p.n2; });
+  // speed
+  const req = d.req || [], callN = req.filter(r => !/^\(app open/.test(r[0])).reduce((a, r) => a + r[1], 0);
+  const callMs = req.filter(r => !/^\(app open/.test(r[0])).reduce((a, r) => a + r[1] * r[2], 0), over = req.reduce((a, r) => a + r[5], 0);
+  const failed = req.reduce((a, r) => a + r[6], 0);
+  const openRow = req.find(r => /^\(app open, fresh/.test(r[0]));
+  // versions in use (people whose app checked in within the last 6 hours)
+  const sv = Number(d.serverVersion), vers = {}, oldV = [];
+  live.users.filter(u => u.pv).forEach(u => { vers[u.pv] = (vers[u.pv] || 0) + 1; if(Number(u.pv) !== sv) oldV.push(u); });
+  const onNow = live.users.filter(u => u.online);
+  const maxSi = Math.max(1, ...days.map(x => siDay[x] || 0)), maxAct = Math.max(1, ...days.map(x => act.days[x] || 0));
+  const hours = act.hours || [], maxH = Math.max(1, ...hours);
+  const areas = Object.entries(act.areas || {}).sort((a,b) => b[1]-a[1]), maxA = Math.max(1, ...areas.map(a => a[1]));
+  const tabs = Object.entries(d.tabs || {}).sort((a,b) => b[1]-a[1]), maxT = Math.max(1, ...tabs.map(a => a[1]));
+  const sdays = d.sdays || {}, maxSd = Math.max(1, ...days.map(x => sdays[x] && sdays[x].n ? sdays[x].ms / sdays[x].n : 0));
+  const bg = d.bg || {days:[]}, bgDay = {}; (bg.days || []).forEach(x => { bgDay[x.date] = x; });
+  const verChip = v => !v ? '<span class="hint">—</span>' : `<span class="an-ver${Number(v)===sv ? '' : ' bad'}">${esc(String(v))}</span>`;
+  const ago = at => { if(!at) return '—'; const m = Math.round((live.now - at) / 60000); return m < 1 ? 'now' : m < 60 ? m + ' min ago' : Math.round(m / 60) + ' h ago'; };
+  const roleRows = Object.entries(siRole).sort((a,b) => b[1].n - a[1].n || b[1].users - a[1].users);
+  const userRows = plist.sort((a,b) => (b.n2 - a.n2) || (b.si - a.si) || String(a.n).localeCompare(String(b.n)));
+  const bk = d.backup || {};
+  const panel = (title, small, body) => `<div class="panel"><h3>${title}${small ? ` <small>${small}</small>` : ''}</h3>${body}</div>`;
+  const dayTable = (val, max, c, fmt) => `<table class="xl an-t"><tbody>${days.slice().reverse().map(x => { const v = val(x); return `<tr><td>${esc(fmtDay(x))}</td><td class="c"><b>${fmt ? fmt(x) : num(v)}</b></td><td style="width:50%">${bar(v, max, c)}</td></tr>`; }).join('')}</tbody></table>`;
+  $('anBody').innerHTML = `
+    <div class="kpis kpis4">
+      <div class="kpi"><div class="v">${active.length}<small style="font-size:.5em;opacity:.7"> / ${live.users.length}</small></div><div class="l">Active users</div><div class="s">${hmText(useTot)} in the app · ${onNow.length} online now</div></div>
+      <div class="kpi"><div class="v">${num(si.length)}</div><div class="l">Sign-ins</div><div class="s">${num(act.total)} changes saved${act.system ? ' · ' + num(act.system) + ' by the system' : ''}</div></div>
+      <div class="kpi"><div class="v">${callN ? sec(callMs / callN) : '—'}</div><div class="l">Average answer time</div><div class="s">${num(callN)} requests · ${callN ? Math.round(over / callN * 1000) / 10 : 0}% over 5 s${openRow ? ' · app opens in ' + sec(openRow[2]) : ''}</div></div>
+      <div class="kpi"><div class="v" style="${failed || d.errCount ? 'color:#B91C1C' : ''}">${num(Math.max(failed, d.errCount || 0))}</div><div class="l">Failed requests</div><div class="s">${oldV.length ? oldV.length + ' on an old version' : 'everyone on version ' + esc(String(sv))}</div></div>
+    </div>
+    ${(d.problems || []).length ? `<p class="hint" style="color:#B91C1C">Could not read: ${esc(d.problems.join('; '))}</p>` : ''}
+    <div class="an-grid">
+      ${panel('Online now', onNow.length + ' of ' + live.users.length + ' active accounts', onNow.length ? `<table class="xl an-t"><tbody>${onNow.sort((a,b) => b.at - a.at).map(u => `<tr><td>${esc(u.n)}<div class="hint">${esc(u.r)}${u.dev ? ' · ' + esc(u.dev) : ''}</div></td><td class="c">${verChip(u.pv)}</td><td class="c">${ago(u.at)}</td></tr>`).join('')}</tbody></table>` : '<p class="hint">Nobody right now.</p>')}
+      ${panel('Version in use', 'server is version ' + esc(String(sv)) + ', apps open in the last 6 h', Object.keys(vers).length ? `<table class="xl an-t"><tbody>${Object.entries(vers).sort((a,b) => Number(b[0]) - Number(a[0])).map(([v,n]) => `<tr><td>${verChip(v)}</td><td class="c"><b>${n}</b></td><td style="width:50%">${bar(n, live.users.filter(u => u.pv).length, Number(v)===sv ? '#16A34A' : '#B91C1C')}</td></tr>`).join('')}</tbody></table>${oldV.length ? `<p class="hint" style="color:#B91C1C">Old version: ${oldV.map(u => esc(u.n)).join(', ')}. They should reload the app.</p>` : ''}` : '<p class="hint">No app has checked in since this version was deployed.</p>')}
+      ${panel('Time in the app per day', 'everyone together, hours and minutes', dayTable(x => useDay[x] || 0, maxU, '#0A27B5', x => hmText(useDay[x])))}
+      ${panel('Sign-ins per day', '', dayTable(x => siDay[x] || 0, maxSi, '#2E5BFF'))}
+      ${panel('Changes saved per day', 'trips, POD, billing, money, people…', dayTable(x => act.days[x] || 0, maxAct, '#16A34A'))}
+      ${panel('Busiest hours', 'changes saved, Manila time', `<div class="an-hours">${hours.map((v,h) => `<div title="${h}:00 · ${v}"><i style="height:${Math.round(v / maxH * 100)}%"></i><span>${h % 3 ? '' : (h % 12 || 12) + (h < 12 ? 'a' : 'p')}</span></div>`).join('')}</div>`)}
+      ${panel('By position', 'active users, sign-ins, changes', roleRows.length ? `<table class="xl an-t"><thead><tr><th>Position</th><th class="c">Users</th><th class="c">Sign-ins</th><th class="c">Changes</th></tr></thead><tbody>${roleRows.map(([r,x]) => `<tr><td>${esc(r)}</td><td class="c">${x.users}</td><td class="c">${num(x.si)}</td><td class="c"><b>${num(x.n)}</b></td></tr>`).join('')}</tbody></table>` : '<p class="hint">Nobody yet.</p>')}
+      ${panel('By part of the app', 'changes saved', areas.length ? `<table class="xl an-t"><tbody>${areas.map(([a,n]) => `<tr><td>${esc(a)}</td><td class="c"><b>${num(n)}</b></td><td style="width:50%">${bar(n, maxA, '#7C3AED')}</td></tr>`).join('')}</tbody></table>` : '<p class="hint">None yet.</p>')}
+      ${panel('Tabs opened', 'taps on the menu', tabs.length ? `<table class="xl an-t"><tbody>${tabs.map(([a,n]) => `<tr><td>${esc(a)}</td><td class="c"><b>${num(n)}</b></td><td style="width:50%">${bar(n, maxT, '#0EA5E9')}</td></tr>`).join('')}</tbody></table>` : '<p class="hint">Counted from version 14.2 on.</p>')}
+      ${panel('Answer time per day', 'average per request · over 5 s · failed', dayTable(x => sdays[x] && sdays[x].n ? sdays[x].ms / sdays[x].n : 0, maxSd, '#D97706', x => { const s = sdays[x]; return s && s.n ? `${sec(s.ms / s.n)}<div class="hint">${s.over} slow${s.failed ? ' · <span style="color:#B91C1C">' + s.failed + ' failed</span>' : ''}</div>` : '—'; }))}
+      ${panel('Background time per day', `Google limit ${bg.limit || 90} min (shared with the other projects on this account)`, dayTable(x => bgDay[x] ? bgDay[x].min : 0, bg.limit || 90, '#0A27B5', x => bgDay[x] ? `${bgDay[x].min} min${bgDay[x].failed ? '<div class="hint" style="color:#B91C1C">' + bgDay[x].failed + ' failed run(s)</div>' : ''}` : '—'))
+        + `<p class="hint">Last backup: ${bk.at ? esc(bk.at) + (bk.errors ? ' · <span style="color:#B91C1C">' + bk.errors + ' problem(s)</span>' : ' · OK') + (bk.folder ? ` · <a href="${esc(bk.folder)}" target="_blank" rel="noopener">folder</a>` : '') : '<b style="color:#B91C1C">none yet</b> (starts at the next Admin sign-in)'}</p>`}
+    </div>
+    ${panel('Per person', 'most changes first · tap a name for their activity log · version = the app they have open', `<div class="an-scroll"><table class="xl an-t"><thead><tr><th>Name</th><th>Position</th><th class="c">Time used</th><th class="c">Sign-ins</th><th class="c">Changes</th><th class="c">Trips added</th><th class="c">Trip / POD / billing edits</th><th class="c">Days active</th><th>Last sign-in</th><th class="c">Version</th></tr></thead><tbody>${userRows.map(p => `<tr${p.si || p.n2 || p.min ? '' : ' class="an-idle"'}><td>${p.online ? '<span class="an-dot" title="online now"></span>' : ''}<button type="button" class="an-who" data-act="${esc(p.u)}" data-n="${esc(p.n)}" title="Open this person's activity log"><span class="fx-av">${chatAv(p.u, 'xs', p.n)}</span>${esc(p.n)}</button></td><td>${esc(p.r || '')}</td><td class="c">${hmText(p.min)}</td><td class="c">${num(p.si)}</td><td class="c"><b>${num(p.n2)}</b></td><td class="c">${num(p.add)}</td><td class="c">${num(p.edit)}</td><td class="c">${p.days || '—'}</td><td>${esc(p.last || '—')}</td><td class="c">${verChip(p.pv)}</td></tr>`).join('')}</tbody></table></div>`)}
+    ${panel('Requests', 'slowest total time first · times in seconds', req.length ? `<div class="an-scroll"><table class="xl an-t"><thead><tr><th>Request</th><th class="c">Count</th><th class="c">Average</th><th class="c">On the server</th><th class="c">Slowest</th><th class="c">Over 5 s</th><th class="c">Failed</th></tr></thead><tbody>${req.slice(0, 40).map(r => `<tr><td>${esc(r[0])}</td><td class="c">${num(r[1])}</td><td class="c"><b style="${r[2] > 5000 ? 'color:#B91C1C' : r[2] > 2500 ? 'color:#D97706' : ''}">${sec(r[2])}</b></td><td class="c">${sec(r[3])}</td><td class="c">${sec(r[4])}</td><td class="c">${r[5] || ''}</td><td class="c" style="${r[6] ? 'color:#B91C1C;font-weight:700' : ''}">${r[6] || ''}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">No speed notes in these dates yet (phones send them about once a minute).</p>')}
+    ${panel('Recent errors', (d.errCount || 0) + ' in these dates · newest first · "No signal" is not counted', (d.errs || []).length ? `<div class="an-scroll"><table class="xl an-t"><thead><tr><th>When</th><th>User</th><th>Request</th><th>Message</th></tr></thead><tbody>${d.errs.map(e => `<tr><td>${esc(e[0])}</td><td>${esc(e[1])}</td><td>${esc(e[2])}</td><td>${esc(e[3])}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">No failed request in these dates.</p>')}
+    <p class="hint">Made ${esc(d.made || '')} (kept 2 minutes on the server). Time used, sign-ins, errors, versions and tabs opened are counted from version 14.2 on.</p>`;
+  $('anBody').onclick = e => { const b = e.target.closest('[data-act]'); if(b) openActivity(b.dataset.act, b.dataset.n); };
+}
+/** Phone or PC, and which link the app was opened from (System analytics). */
+function devLabel(){ return (matchMedia('(max-width:700px)').matches ? 'Phone' : 'PC') + (window.JMTI_API ? ' · GitHub app' : ' · Google link'); }
 /** POD analytics tab (POD HEAD, Admin, Boss; MANU 2026-11-04 "add POD analytics tab for POD head"): completed trips in the dates picked,
  *  by POD status, how fast they get endorsed to billing, how old the ones still waiting are, per customer and per POD clerk. */
 function initPodStats(){
@@ -8239,10 +8788,130 @@ function tripsRefreshDue(){
     const fn = {dispatcher:loadDispatcher, dashboard:() => loadDashboard(true), trips:() => loadDashboard(true), pod:loadPod, billing:loadBilling}[S.tab];
     TV.due = false;
     Object.keys(FRESH).forEach(k => { delete FRESH[k]; });   // ask the server, not the copy fetched moments ago
-    if(fn) fn();
+    if(fn){ glowArm(); fn(); }
   }
 }
 setInterval(tripsRefreshDue, 2000);
+
+/* Changed cells glow (MANU 2026-11-06 pick 12): when someone else saves a trip and the tab gets those dates again, only
+   the cells whose text changed glow yellow for a moment (new rows glow whole). Skipped right after this person's own save,
+   and when very many cells change at once (another date range, a big re-sort). Row numbers are not compared. */
+const GLOW = {snap:null, until:0, done:{}, obs:null, h:null};
+function glowArm(){
+  if(GLOW.obs){ GLOW.obs.disconnect(); GLOW.obs = null; }
+  GLOW.snap = null;
+  if(Date.now() - SV.lastWrite < 20000) return;
+  const v = document.querySelector('.view.on'); if(!v) return;
+  const m = new Map();
+  v.querySelectorAll('tr[data-key]').forEach(tr => m.set(tr.dataset.key, Array.from(tr.cells, td => td.textContent)));
+  v.querySelectorAll('.xcard[data-key]').forEach(c => m.set('card:' + c.dataset.key, [c.textContent]));
+  if(!m.size) return;
+  GLOW.snap = {v, m}; GLOW.until = Date.now() + 15000; GLOW.done = {};
+  GLOW.obs = new MutationObserver(() => { clearTimeout(GLOW.h); GLOW.h = setTimeout(glowDiff, 60); });
+  GLOW.obs.observe(v, {childList:true, subtree:true});
+  setTimeout(() => { if(GLOW.obs && Date.now() >= GLOW.until){ GLOW.obs.disconnect(); GLOW.obs = null; } }, 15100);
+}
+function glowDiff(){
+  const g = GLOW.snap; if(!g || Date.now() > GLOW.until || !g.v.classList.contains('on')) return;
+  const hits = [];
+  g.v.querySelectorAll('tr[data-key]').forEach(tr => {
+    const k = tr.dataset.key; if(/^tmp-/.test(k) || PENDING[k]) return;
+    const old = g.m.get(k);
+    Array.from(tr.cells).forEach((td, i) => { if(td.classList.contains('rn') || td.classList.contains('nx')) return; const t = td.textContent;
+      if(!old || (old[i] !== undefined && old[i] !== t)) hits.push([td, k + '|' + i, t]); });
+  });
+  g.v.querySelectorAll('.xcard[data-key]').forEach(c => { const old = g.m.get('card:' + c.dataset.key); if(!old || old[0] !== c.textContent) hits.push([c, 'card:' + c.dataset.key, c.textContent]); });
+  if(!hits.length || hits.length > 60) return;
+  hits.forEach(([el, id, t]) => {
+    const was = GLOW.done[id], now = Date.now();
+    if(was && was.t === t && el === was.el) return;
+    const gone = was && was.t === t ? now - was.at : 0;   // the same change re-drawn: keep its glow going, don't start it again
+    if(gone > 2500) return;
+    if(!was || was.t !== t) GLOW.done[id] = {t, at:now, el}; else was.el = el;
+    el.classList.remove('cell-glow'); void el.offsetWidth;
+    el.style.animationDelay = gone ? -gone + 'ms' : '';
+    el.classList.add('cell-glow'); clearTimeout(el._gl);
+    el._gl = setTimeout(() => { el.classList.remove('cell-glow'); el.style.animationDelay = ''; }, 2650 - gone);
+  });
+}
+/* Jump to the row (MANU 2026-11-06 pick 15): after Add trip, or after typing in a Find box (PC) or pressing Enter / Search
+   (phone), the page scrolls smoothly to the row and lights it for 2 seconds. */
+const RM = matchMedia('(prefers-reduced-motion: reduce)');
+function jumpEl(el, how){
+  if(!el) return;
+  const top = parseFloat(getComputedStyle(document.body).getPropertyValue('--tbH')) || 0, r = el.getBoundingClientRect();
+  if(how !== 'none' && (r.top < top + 8 || r.bottom > innerHeight - 8)){
+    const o = {block: how === 'nearest' ? 'nearest' : 'center', inline:'nearest', behavior: RM.matches || document.documentElement.classList.contains('noanim') ? 'auto' : 'smooth'};
+    try{ el.scrollIntoView(o); }catch(e){ el.scrollIntoView(); }
+  }
+  el.classList.remove('row-jump'); void el.offsetWidth; el.classList.add('row-jump');
+  clearTimeout(el._rj); el._rj = setTimeout(() => el.classList.remove('row-jump'), 2300);
+}
+/** After a trip is added: wait for the Submitting box to close, then find the row on the open tab and jump to it. */
+function jumpRow(key){
+  if(!key) return;
+  const t0 = Date.now();
+  const go = () => {
+    if(!$('submitOv').hidden && Date.now() - t0 < 12000) return setTimeout(go, 200);
+    if($('drawer').classList.contains('on')) return;
+    const v = document.querySelector('.view.on'), el = v && v.querySelector(`[data-key="${CSS.escape(String(key))}"]`);
+    if(!el){ if(Date.now() - t0 < 6000) setTimeout(go, 250); return; }
+    jumpEl(el, 'center');
+  };
+  setTimeout(go, 150);
+}
+const FJ = {h:null};
+const isFindBox = i => i && i.tagName === 'INPUT' && /Find$/.test(i.id || '') && i.closest('.view');
+function findJump(i, how){
+  const v = i.closest('.view'); if(!v || !v.classList.contains('on') || !i.value.trim()) return;
+  const below = i.getBoundingClientRect().bottom - 2;
+  const list = Array.from(v.querySelectorAll('tbody tr[data-key], tbody tr[data-truck], tbody tr[data-k], tbody tr[data-idle], .xcard[data-key]')).filter(x => x.offsetParent !== null);
+  jumpEl(list.find(x => x.getBoundingClientRect().top >= below) || list[0], how);
+}
+document.addEventListener('input', e => {
+  const i = e.target; if(!isFindBox(i)) return;
+  clearTimeout(FJ.h); if(!i.value.trim()) return;
+  FJ.h = setTimeout(() => findJump(i, matchMedia('(pointer:fine)').matches ? 'nearest' : 'none'), 900);   // phone: no scrolling while typing
+});
+document.addEventListener('keydown', e => {
+  const i = e.target; if(e.key !== 'Enter' || !isFindBox(i) || !i.value.trim()) return;
+  clearTimeout(FJ.h); e.preventDefault();
+  if(!matchMedia('(pointer:fine)').matches) i.blur();   // closes the phone keyboard so the row can be seen
+  setTimeout(() => findJump(i, 'center'), 300);
+});
+/* Pull down to refresh on phones (MANU 2026-11-06 pick 14): at the top of the page, pull down until the JMTI logo turns,
+   let go and the tab reads the newest data (the tab's ↻ Refresh when it has one). Not inside pop-ups, chat or forms. */
+(function(){
+  const mq = matchMedia('(max-width:700px), (pointer:coarse)'), PULL = 64;
+  let y0 = null, x0 = 0, pull = 0, on = false, busy = false, ind = null;
+  const mk = () => { if(ind) return ind; ind = document.createElement('div'); ind.className = 'ptr'; ind.setAttribute('aria-hidden', 'true');
+    const im = document.createElement('img'); im.alt = ''; const lg = $('logoMain'); if(lg) im.src = lg.src; ind.appendChild(im); document.body.appendChild(ind); return ind; };
+  const show = p => { const d = mk(); d.classList.remove('snap'); d.style.opacity = Math.min(1, p / PULL); d.style.transform = `translateY(${p - 60}px) rotate(${p * 4}deg)`; d.classList.toggle('ready', p >= PULL); };
+  const hide = () => { if(!ind) return; ind.classList.add('snap'); ind.classList.remove('ready', 'spin'); ind.style.opacity = 0; ind.style.transform = 'translateY(-70px)'; };
+  const blocked = t => !mq.matches || busy || !S.me || $('app').hidden || window.scrollY > 0 || !$('submitOv').hidden
+    || document.querySelector('.pop:not([hidden]), .vchg:not([hidden]), .vup:not([hidden]), .chdock:not([hidden]), .askbox:not([hidden]), .viewer[style*="flex"], #drawer.on, .scrim.on')
+    || (t && t.closest && t.closest('input, textarea, select, [contenteditable], .chdock, .askbox, .drawer, .pop, .ch-sheet-bg'))
+    || (t && (function(n){ for(; n && n !== document.body; n = n.parentElement){ if(n.scrollTop > 0) return true; } return false; })(t));
+  const refresh = () => {
+    busy = true; const d = mk(); d.classList.add('snap', 'spin'); d.style.opacity = 1; d.style.transform = `translateY(${PULL - 60}px)`;
+    const id = {dispatcher:'xRefresh', pod:'podRefresh', analytics:'anRefresh'}[S.tab], b = id && $(id), t0 = Date.now();
+    if(b && !b.disabled && b.offsetParent !== null) b.click();
+    else { Object.keys(FRESH).forEach(k => { delete FRESH[k]; }); TV.due = false; showTab(S.tab); }
+    const end = () => { if(Date.now() - t0 < 700 || (b && b.disabled && Date.now() - t0 < 10000)) return setTimeout(end, 150); busy = false; hide(); };
+    setTimeout(end, 150);
+  };
+  document.addEventListener('touchstart', e => { y0 = null; on = false; pull = 0; if(e.touches.length !== 1 || blocked(e.target)) return; y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchmove', e => {
+    if(y0 === null) return;
+    const dy = e.touches[0].clientY - y0, dx = Math.abs(e.touches[0].clientX - x0);
+    if(!on && (dy <= 0 || dx > dy)){ if(dx > 10 || dy < -4) y0 = null; return; }   // sideways (wide tables) or scrolling up: not a pull
+    if(window.scrollY > 0){ y0 = null; if(on) hide(); on = false; return; }
+    if(dy > 8){ on = true; if(e.cancelable) e.preventDefault(); pull = Math.min(110, (dy - 8) * 0.5); show(pull); }
+  }, {passive:false});
+  const done = () => { if(y0 === null) return; y0 = null; if(!on) return; on = false; if(pull >= PULL) refresh(); else hide(); pull = 0; };
+  document.addEventListener('touchend', done, {passive:true});
+  document.addEventListener('touchcancel', () => { y0 = null; if(on){ on = false; hide(); } }, {passive:true});
+})();
 function chatPoll(){
   CH.busy = true; const u = CH.user;
   const full = !CH.full;   // the first ask after the page opens: the people and groups too (a kept copy may be from before groups)
@@ -8256,6 +8925,8 @@ function chatPoll(){
   if(ride.done) opt.done = ride.done;
   const spd = SPD.list.length && Date.now() - SPD.sent > 60000 ? spdTake() : null;
   if(spd) opt.spd = spd;
+  if(USE.sec >= 60){ opt.use = USE.sec; USE.sec = 0; }   // time in the app (Activity log)
+  if(!(Date.now() - (CH.pvAt || 0) < 600000)){ CH.pvAt = Date.now(); opt.pv = {v: APP_VERSION, dev: devLabel()}; }   // the version this phone has open (System analytics), every 10 min
   return call('chatList', CH.last, CH.loaded && !full ? CH.v : '', full, opt).then(d => { CH.fail = 0;
       if(ride.on && d.online) onlineGot(d.online);
       if(ride.done && d.done && DN.want === ride.done) doneGot(d.done);
@@ -9009,8 +9680,10 @@ function openProfile(){
       <label class="f full">Birthday<input type="date" id="pfBday" value="${esc(p.birthday || '')}" min="1930-01-01" max="${TODAY()}"></label>
       <label class="f full">Motto in life<textarea id="pfMotto" maxlength="150" rows="2" placeholder="e.g. Safety first, always on time">${esc(p.motto || '')}</textarea></label>
       <small class="dim" id="pfN"></small>
+      <div class="pf-act"><h4>Activity log</h4><div id="pfAct"></div></div>
     </div>`, `<button class="btn alt" type="button" id="pfBack">Back</button> <button class="btn road" type="button" id="pfSave">Save</button>`);
   const cnt = () => { $('pfN').textContent = `${$('pfMotto').value.length} / 150`; }; cnt();
+  actLog($('pfAct'), '');   // Activity log (MANU 2026-11-06)
   $('pfMotto').oninput = cnt;
   $('pfBack').onclick = () => closePop();
   $('pfPick').onclick = () => $('pfIn').click();
@@ -11135,6 +11808,290 @@ document.addEventListener('focusout', e => {
   delete i.dataset.prev; i.placeholder = '';
 });
 new MutationObserver(showLoader).observe($('app'), {subtree:true, attributes:true, attributeFilter:['class']});
+/* ===== LOOK AND FEEL (MANU 2026-11-06 picked all 15 ideas, version 14.2) =====
+ * Everything here only decorates what the app already drew: it never changes data or saves anything.
+ * Moving effects stop when the Animations switch in Settings is off or the phone/PC is set to reduce motion.
+ * Sounds are off until the person turns them on in Settings (jmti_snd = '1' on this phone/PC). */
+const FX = {rm: matchMedia('(prefers-reduced-motion: reduce)'), fine: matchMedia('(hover:hover) and (pointer:fine)'),
+  num: new Map(), st: new Map(), done: new Set(), buzzAt: 0, ac: null};
+const fxOn = () => !animOff() && !FX.rm.matches;
+const sndOn = () => store('jmti_snd') === '1';
+
+/* 6 + 14: a short buzz (Android) and an optional soft sound for save, delete, error, new message and Completed */
+function fxFeel(kind){
+  const now = Date.now(); if(now - FX.buzzAt < 250) return; FX.buzzAt = now;
+  if(!animOff() && navigator.vibrate){
+    try{ navigator.vibrate({ok: 12, del: [25, 40, 25], err: [60, 50, 60], chat: [15, 60, 15], done: [20, 40, 20, 40, 40]}[kind] || 0); }catch(e){}
+  }
+  if(sndOn()) fxSound(kind);
+}
+function fxSound(kind){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    const ac = FX.ac = FX.ac || new AC(); if(ac.state === 'suspended') ac.resume();
+    const notes = {ok: [[880, 0, .07]], del: [[520, 0, .08], [360, .09, .12]], err: [[220, 0, .14], [180, .16, .18]],
+      chat: [[660, 0, .1], [990, .11, .16]], done: [[523, 0, .1], [659, .1, .1], [784, .2, .1], [1047, .3, .22]], tap: [[1200, 0, .03]]}[kind] || [];
+    notes.forEach(([f, at, len]) => {
+      const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + at;
+      o.type = kind === 'err' ? 'triangle' : 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      o.connect(g).connect(ac.destination); o.start(t); o.stop(t + len + 0.02);
+    });
+  }catch(e){}
+}
+{ const _svEnd = svEnd;
+  svEnd = function(fn, b, ok){ _svEnd(fn, b, ok); if(!SV_QUIET.includes(fn)) fxFeel(!ok ? 'err' : /^(deleteTrip|cancelTrip|cancelPayment|acctCancel)$/.test(fn) ? 'del' : 'ok'); }; }
+{ const _toast = toast;
+  toast = function(msg, err, ms){ _toast(msg, err, ms); if(err && !/^No signal/.test(String(msg))) fxFeel('err'); }; }
+
+/* 1: tap ripple where the finger or mouse pressed */
+document.addEventListener('pointerdown', e => {
+  if(!fxOn() || e.button > 0) return;
+  const t = e.target.closest && e.target.closest('button,.chip,.tab,a.lnk,tr[data-key],.xcard,.setr,[role="button"]');
+  if(!t || t.closest('input,select,textarea,.chdock .ch-in')) return;
+  const r = document.createElement('div'); r.className = 'fx-rip'; r.style.left = e.clientX + 'px'; r.style.top = e.clientY + 'px';
+  document.body.appendChild(r); setTimeout(() => r.remove(), 560);
+}, {passive: true});
+
+/* 3: on PC, Dashboard cards and truck cards tilt toward the mouse and a light follows it */
+document.addEventListener('pointermove', e => {
+  if(!FX.fine.matches || e.pointerType !== 'mouse') return;
+  const c = e.target.closest && e.target.closest('.kpi,.xcard');
+  if(FX.tilt && FX.tilt !== c){ FX.tilt.classList.remove('fx-tilt'); FX.tilt = null; }
+  if(!c || !fxOn()) return;
+  const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+  c.style.setProperty('--ry', ((x - .5) * 10).toFixed(2) + 'deg'); c.style.setProperty('--rx', ((.5 - y) * 8).toFixed(2) + 'deg');
+  c.style.setProperty('--mx', (x * 100).toFixed(1) + '%'); c.style.setProperty('--my', (y * 100).toFixed(1) + '%');
+  if(FX.tilt !== c){ c.classList.add('fx-tilt'); FX.tilt = c; }
+}, {passive: true});
+document.addEventListener('pointerleave', () => { if(FX.tilt){ FX.tilt.classList.remove('fx-tilt'); FX.tilt = null; } });
+
+/* 2: numbers on cards count up the first time and roll to the new number when it changes */
+function fxCount(el, key){
+  const tn = [...el.childNodes].find(n => n.nodeType === 3 && /\d/.test(n.data)); if(!tn) return;
+  const m = tn.data.match(/^(\D*?)(-?[\d,]*\.?\d+)(.*)$/s); if(!m) return;
+  const to = parseFloat(m[2].replace(/,/g, '')); if(!isFinite(to)) return;
+  const dec = (m[2].split('.')[1] || '').length, comma = m[2].includes(',') || Math.abs(to) >= 1000;
+  const prev = FX.num.get(key); FX.num.set(key, to);
+  if(prev === to || !fxOn()) return;
+  const from = prev === undefined ? 0 : prev, t0 = performance.now(), dur = prev === undefined ? 750 : 550;
+  const fmt = v => comma ? v.toLocaleString('en-PH', {minimumFractionDigits: dec, maximumFractionDigits: dec}) : v.toFixed(dec);
+  const step = now => {
+    if(!tn.isConnected){ delete el.dataset.fxa; return; }
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    tn.data = m[1] + fmt(from + (to - from) * e) + m[3];
+    if(k < 1) requestAnimationFrame(step); else delete el.dataset.fxa;
+  };
+  el.dataset.fxa = '1'; tn.data = m[1] + fmt(from) + m[3]; requestAnimationFrame(step);
+}
+
+/* 4 + 5 + 9: status changes pop; your own trip turning Completed gets the truck; Truck Plan rows get a progress bar */
+const FX_PCT = st => { const i = STAGES.indexOf(st); return st === 'Tukod' || st === 'Completed' ? 100 : i < 0 ? 0 : Math.round(i / 7 * 100); };
+function fxStatus(view){
+  const vid = view.id;
+  view.querySelectorAll('[data-key]').forEach(row => {
+    const el = row.querySelector('td.st') || row.querySelector('.pill'); if(!el) return;
+    const txt = el.textContent.trim(); if(!txt || /^Saving/.test(txt)) return;
+    const k = vid + '|' + row.dataset.key, prev = FX.st.get(k); FX.st.set(k, txt);
+    if(prev === undefined || prev === txt) return;
+    if(fxOn()){
+      const oc = el.classList.contains('pill') ? getComputedStyle(el).color : getComputedStyle(row).getPropertyValue('--c');
+      el.style.setProperty('--fxo', oc || 'transparent');
+      el.classList.remove('fx-pop'); void el.offsetWidth; el.classList.add('fx-pop'); setTimeout(() => el.classList.remove('fx-pop'), 1100);
+    }
+    if(/^completed$/i.test(txt) && Date.now() - (SV.lastWrite || 0) < 20000 && !FX.done.has(row.dataset.key)){ FX.done.add(row.dataset.key); fxCelebrate(el); }
+  });
+  if(vid === 'v-dispatcher'){
+    const by = FX.byKey();
+    view.querySelectorAll('tr[data-key] > td.st').forEach(td => {
+      const t = by.get(td.parentNode.dataset.key); if(!t) return;
+      const st = stageOf(t); if(!STAGES.includes(st)) { const old = td.querySelector('.fx-tp'); if(old) old.remove(); return; }
+      const p = FX_PCT(st) + '%'; let bar = td.querySelector('.fx-tp');
+      if(!bar){ bar = document.createElement('span'); bar.className = 'fx-tp'; bar.innerHTML = '<i></i>'; td.appendChild(bar); }
+      bar.title = 'Trip progress: ' + st + ' (' + p + ')';
+      if(bar.dataset.p !== p){ bar.dataset.p = p; requestAnimationFrame(() => bar.firstChild.style.setProperty('--p', p)); }
+    });
+  }
+}
+FX.byKey = () => { const src = S.tab === 'dispatcher' ? (S.xCtx || S.xTrips || []) : (S.trips || []); if(FX._bk && FX._bkSrc === src) return FX._bk; FX._bkSrc = src; FX._bk = new Map(src.map(t => [String(t.key), t])); return FX._bk; };   // Truck Plan keeps its trips in S.xCtx / S.xTrips
+function fxCelebrate(el){
+  fxFeel('done');
+  if(!fxOn()) return;
+  const tr = document.createElement('div'); tr.className = 'fx-truck';
+  tr.innerHTML = '<svg viewBox="0 0 110 56" width="110" height="56"><rect x="2" y="8" width="66" height="34" rx="4" fill="#2E5BFF"/><text x="35" y="31" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="system-ui,sans-serif">JMTI</text>'
+    + '<path d="M70 18h20l12 13v11H70z" fill="#0A1F8F"/><path d="M75 22h13l8 9H75z" fill="#BFDBFE"/><rect x="0" y="42" width="104" height="3" rx="1.5" fill="#0A1F8F"/>'
+    + '<g class="wh"><circle cx="20" cy="46" r="7" fill="#111827"/><circle cx="20" cy="46" r="2.5" fill="#9CA3AF"/><rect x="19" y="39.5" width="2" height="4" fill="#9CA3AF"/></g>'
+    + '<g class="wh"><circle cx="88" cy="46" r="7" fill="#111827"/><circle cx="88" cy="46" r="2.5" fill="#9CA3AF"/><rect x="87" y="39.5" width="2" height="4" fill="#9CA3AF"/></g></svg>';
+  document.body.appendChild(tr); setTimeout(() => tr.remove(), 2300);
+  const r = (el && el.isConnected ? el : document.body).getBoundingClientRect(), cx = r.left + Math.min(r.width, 160) / 2, cy = r.top + r.height / 2;
+  const cols = ['#16A34A', '#2E5BFF', '#F59E0B', '#EC4899', '#22D3EE'];
+  for(let i = 0; i < 14; i++){
+    const s = document.createElement('i'), a = i / 14 * Math.PI * 2, d = 34 + Math.random() * 30;
+    s.className = 'fx-spk'; s.style.left = cx + 'px'; s.style.top = cy + 'px'; s.style.background = cols[i % cols.length];
+    s.style.setProperty('--dx', Math.cos(a) * d + 'px'); s.style.setProperty('--dy', Math.sin(a) * d + 'px');
+    document.body.appendChild(s); setTimeout(() => s.remove(), 1000);
+  }
+}
+
+/* 15: small truck drawings for empty lists (parked) and errors (broken down, with smoke) */
+function fxEmpty(root){
+  root.querySelectorAll('.empty:not([data-fx])').forEach(b => {
+    const t = b.textContent.trim();
+    if(!t || /^(Loading|Searching|Opening)/i.test(t) || b.querySelector('table,button,input,svg,img')) return;
+    b.dataset.fx = '1';
+    const err = /could not|couldn.t|failed|error|no signal|not allowed|try again/i.test(t), q = !err && /match|find|search/i.test(t);
+    const d = document.createElement('div'); d.innerHTML = '<svg class="fx-empty' + (err ? ' err' : '') + '" viewBox="0 0 120 62" aria-hidden="true">'
+      + '<line class="rd" x1="4" y1="57" x2="116" y2="57"/>'
+      + '<g class="truck"><rect class="bd" x="16" y="16" width="56" height="30" rx="4"/><path class="cb" d="M74 24h18l10 11v11H74z"/><path class="hb" d="M78 28h12l6 7H78z"/>'
+      + '<circle class="wh" cx="32" cy="49" r="6"/><circle class="wh" cx="90" cy="49" r="6"/><circle class="hb" cx="32" cy="49" r="2"/><circle class="hb" cx="90" cy="49" r="2"/></g>'
+      + (err ? '<circle class="sm" cx="96" cy="20" r="4"/><circle class="sm s2" cx="98" cy="18" r="4"/><circle class="sm s3" cx="94" cy="19" r="4"/><rect x="56" y="36" width="10" height="3" rx="1.5" transform="rotate(-30 61 37)" fill="#DC2626"/>' : '')
+      + (q ? '<text class="q" x="44" y="12">?</text>' : (!err ? '<text x="44" y="36" text-anchor="middle" font-size="9" font-weight="800" fill="#0A1F8F" font-family="system-ui,sans-serif">P</text>' : ''))
+      + '</svg>';
+    b.insertBefore(d.firstChild, b.firstChild);
+  });
+}
+
+/* one watcher for the whole app: after any redraw (at most every 200 ms) count numbers, check statuses, add drawings */
+FX.scan = () => {
+  FX.timer = 0;
+  const v = document.querySelector('#app .view.on');
+  document.querySelectorAll('#app .view.on .kpi .v, #pop:not([hidden]) .kpi .v').forEach((el, i) => {
+    const box = el.closest('.kpis,[id]'), k = (box && box.id || 'k') + ':' + ([...(box || document).querySelectorAll('.kpi .v')].indexOf(el)) + ':' + (el.closest('.kpi').dataset.kpi || el.closest('.kpi').dataset.acc || '');
+    if(el.dataset.fxa || el.dataset.fxv === el.textContent) return;
+    el.dataset.fxv = el.textContent; fxCount(el, k);
+  });
+  if(v){ fxStatus(v); fxEmpty(v); }
+  ['#pop:not([hidden])', '#shBody'].forEach(s => { const p = document.querySelector(s); if(p) fxEmpty(p); });
+};
+new MutationObserver(ms => {
+  if(FX.timer) return;
+  if(!ms.some(m => { const t = m.target.nodeType === 1 ? m.target : m.target.parentElement; return t && t.closest('.view,#pop,#shBody') && !t.closest('.fx-tp'); })) return;
+  FX.timer = setTimeout(FX.scan, 200);
+}).observe(document.body, {childList: true, subtree: true});
+
+/* 7: Dashboard cards get a small trend line over the days picked (up to the last 14 days, when 3 or more days are picked) */
+{ const _rd = renderDashboard;
+  renderDashboard = function(){ _rd.apply(this, arguments); try{ fxSparks(); }catch(e){} }; }
+function fxSparks(){
+  const box = $('kpis'); if(!box || !S.trips) return;
+  const trips = S.trips.filter(dashPass()).filter(isTrip), days = [...new Set(trips.map(t => t.date).filter(Boolean))].sort().slice(-14);
+  if(days.length < 3) return;
+  const per = f => days.map(d => f(trips.filter(t => t.date === d)));
+  const series = {done: per(l => l.filter(t => stageOf(t) === 'Completed').length),
+    trucks: per(l => new Set(l.map(t => t.truckNo || t.plateNo).filter(Boolean)).size)};
+  Object.entries(series).forEach(([k, ys]) => {
+    const b = box.querySelector(`[data-kpi="${k}"]`); if(!b || b.querySelector('.fx-spark')) return;
+    const W = 120, H = 24, mx = Math.max(1, ...ys), mn = Math.min(...ys), sx = i => i / (ys.length - 1) * W, sy = y => H - 2 - (y - mn) / Math.max(1, mx - mn) * (H - 4);
+    const pts = ys.map((y, i) => sx(i).toFixed(1) + ',' + sy(y).toFixed(1)), line = 'M' + pts.join('L');
+    const up = ys[ys.length - 1] >= ys[0];
+    b.insertAdjacentHTML('beforeend', `<svg class="fx-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="--len:${W * 2}"><path class="a" d="${line}L${W},${H}L0,${H}Z"/><path class="l" d="${line}"/><circle cx="${sx(ys.length - 1)}" cy="${sy(ys[ys.length - 1])}" r="2.6"/></svg>`
+      + `<small class="fx-spark-t">${up ? '▲' : '▼'} last ${days.length} days · ${fmtN(ys[ys.length - 1])} on ${esc(fmtDay(days[days.length - 1]))}</small>`);
+  });
+}
+
+/* 8: a ring per account in Monthly targets that fills to the % of the target and turns green at 100% */
+{ const _tg = tgLine;
+  tgLine = function(name, trips, target){
+    const h = _tg.apply(this, arguments); if(!target) return h;
+    const pct = Math.max(0, trips / target * 100), C = 2 * Math.PI * 15, full = pct >= 100, key = String(name);
+    const was = (FX.ring = FX.ring || {})[key]; FX.ring[key] = pct;
+    const off = v => (C * (1 - Math.min(100, v) / 100)).toFixed(1);
+    const ring = `<span class="fx-ring${full ? ' full' : ''}${full && !(was >= 100) ? ' fx-new' : ''}" data-ring="${esc(key)}" data-to="${off(pct)}" style="--rc:${full ? '#16A34A' : pct >= 70 ? '#2E5BFF' : pct >= 40 ? '#D97706' : '#DC2626'}" title="${Math.round(pct)}% of the month's target">`
+      + `<svg viewBox="0 0 38 38"><circle class="bg" cx="19" cy="19" r="15"/><circle class="fg" cx="19" cy="19" r="15" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${fxOn() && was === undefined ? C.toFixed(1) : off(pct)}"/></svg><b>${Math.round(Math.min(pct, 999))}%</b></span>`;
+    return h.replace('<span class="nm">', '<span class="nm">' + ring);
+  }; }
+{ const _rt = renderTargets;
+  renderTargets = function(){ _rt.apply(this, arguments);
+    requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('#tgBody .fx-ring').forEach(r => { const c = r.querySelector('.fg'); if(c) c.setAttribute('stroke-dashoffset', r.dataset.to); }))); }; }
+
+/* 10: tooltips: hover on PC, press and hold on phones. Uses the item's own tip, or the meaning of a column or status. */
+const FX_TIPS = {
+  'next step': 'Tap the button to save the next time of this trip as now.', 'kms': 'Distance of the route in km (from CLIENT LIST).',
+  'fuel (l)': 'Liters of fuel for this trip. Red when under 2 km per liter on the round trip.', 'budget': 'Trip budget released. Tap to open the Disbursement form.',
+  'mano': 'MANO given out for this trip (Disbursement, purpose MANO).', 'mano amount': 'MANO given out for this trip (Disbursement, purpose MANO).',
+  'shipment no.': 'Shipment number from the client (Coca Cola trips).', 'dttr': 'DTTR number for Other accounts trips.',
+  'shipment no. / dttr': 'Shipment number (Coca Cola) or DTTR (Other accounts).', 'trip date': 'Day the trip counts on. TL, Supervisor and Admin can move it.',
+  'source time in': 'Truck arrived at the source (pick-up).', 'loading start': 'Loading started at the source.', 'loading end': 'Loading finished.',
+  'source time out': 'Truck left the source.', 'destination time in': 'Truck arrived at the destination. Overdue 24 hours after this if not Completed.',
+  'unloading start': 'Unloading started.', 'unloading end': 'Unloading finished.', 'destination time out': 'Truck left the destination.',
+  'remarks': 'Notes from Dispatcher, TL or Admin.', 'its': 'ITS document number (POD/Billing).', 'rr idts': 'RR IDTS document number.',
+  'rr pallet': 'RR PALLET document number.', 'iwts': 'IWTS document number.', 'charge invoice': 'Charge invoice number.',
+  'status changes': 'Every POD status time and who did it, oldest first.', 'scanned': 'When the POD document was uploaded.',
+  'tukod': 'Trip ended at the source side: counts 0.5. The copy after TUKOD counts 1.', 'clip board': 'Trip planned, crew has the clip board.',
+  'waiting crew': 'Truck waits for a driver or helper. Open trip, counts 0.', 'under maintenance': 'Truck is in repair. Open trip, counts 0.',
+  'garage loaded': 'Parked in the garage with cargo. Counts 1 and is an open trip.', 'completed': 'Trip finished. Dispatcher and TL can only view it now.',
+  'cancelled': 'Trip cancelled. Not counted.', 'endorsed to billing': 'POD sent the documents to Billing.', 'waiting docs': 'Documents not back yet.',
+  'received documents': 'POD has the documents.', 'pending': 'POD documents have a problem to fix.', 'rdd': 'Trips report for payroll (Generate RDD).'
+};
+FX.tipEl = () => FX.tip || (FX.tip = Object.assign(document.body.appendChild(document.createElement('div')), {id: 'fxTip', hidden: true}));
+function fxTipText(el){
+  if(el.dataset.fxt) return el.dataset.fxt;
+  const own = el.getAttribute('title'); if(own) return own;
+  const k = el.textContent.trim().toLowerCase().replace(/\s+/g, ' ');
+  if(FX_TIPS[k]) return FX_TIPS[k];
+  const st = STAGE_MATCH[k];   // any trip status: which step of the trip it is
+  return st && STAGES.includes(st) ? `Trip step: ${st} (about ${FX_PCT(st)}% of the trip done).` : '';
+}
+function fxTipShow(el, x, y){
+  const txt = fxTipText(el); if(!txt) return false;
+  if(el.hasAttribute('title')){ el.dataset.fxt = el.getAttribute('title'); el.removeAttribute('title'); }
+  const tip = FX.tipEl(), head = el.matches('th') ? el.textContent.trim() : '';
+  tip.innerHTML = (head ? `<b>${esc(head)}</b>` : '') + esc(txt); tip.hidden = false;
+  const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  let left = Math.max(6, Math.min(innerWidth - w - 6, (x !== undefined ? x : r.left + r.width / 2) - w / 2));
+  let top = r.top - h - 8; if(top < 6) top = r.bottom + 8;
+  tip.style.left = left + 'px'; tip.style.top = top + 'px'; FX.tipFor = el; return true;
+}
+function fxTipHide(){
+  if(FX.tip) FX.tip.hidden = true;
+  const el = FX.tipFor; FX.tipFor = null; clearTimeout(FX.tipT);
+  if(el && el.dataset.fxt){ if(!el.hasAttribute('title')) el.setAttribute('title', el.dataset.fxt); delete el.dataset.fxt; }
+}
+const FX_TIP_SEL = '[title],th,td.st,.pill,.chip';
+document.addEventListener('mouseover', e => {
+  if(!FX.fine.matches) return;
+  const el = e.target.closest && e.target.closest(FX_TIP_SEL);
+  if(el === FX.tipFor) return; fxTipHide();
+  if(!el || el.closest('#fxTip')) return;
+  if(el.hasAttribute('title')){ el.dataset.fxt = el.getAttribute('title'); el.removeAttribute('title'); }   // no browser tip; ours shows instead
+  FX.tipFor = el; FX.tipT = setTimeout(() => { if(FX.tipFor === el && el.isConnected) fxTipShow(el); }, 380);
+});
+document.addEventListener('scroll', fxTipHide, true);
+document.addEventListener('pointerdown', e => { if(e.pointerType === 'mouse') fxTipHide(); }, true);
+document.addEventListener('touchstart', e => {
+  fxTipHide(); FX.lp = 0;
+  const el = e.target.closest && e.target.closest(FX_TIP_SEL); if(!el || el.closest('input,select,textarea') || !fxTipText(el)) return;
+  const t = e.touches[0], x = t.clientX, y = t.clientY;
+  FX.lpT = setTimeout(() => { if(fxTipShow(el, x, y)){ FX.lp = Date.now(); if(navigator.vibrate && !animOff()) try{ navigator.vibrate(8); }catch(er){} setTimeout(fxTipHide, 3200); } }, 520);
+}, {passive: true});
+['touchend', 'touchmove', 'touchcancel'].forEach(ev => document.addEventListener(ev, () => clearTimeout(FX.lpT), {passive: true}));
+document.addEventListener('click', e => { if(FX.lp && Date.now() - FX.lp < 900){ FX.lp = 0; e.preventDefault(); e.stopImmediatePropagation(); } }, true);   // the hold showed a tip, so the tap doesn't also open the item
+document.addEventListener('contextmenu', e => { if(FX.tipFor && FX.tip && !FX.tip.hidden) e.preventDefault(); });
+
+/* 12: the greeting follows the time of day (sunrise, sun, sunset, moon) and the background takes a light tint */
+function fxTod(){
+  const h = +((mnlAt(Date.now()) || 'T12').split('T')[1].slice(0, 2));
+  const tod = h >= 5 && h < 9 ? 'morning' : h < 17 && h >= 9 ? 'day' : h >= 17 && h < 19 ? 'sunset' : 'night';
+  document.documentElement.dataset.tod = tod;
+  return {morning: '🌅', day: '☀️', sunset: '🌇', night: '🌙'}[tod];
+}
+{ const _rh = renderHello;
+  renderHello = function(){ _rh.apply(this, arguments);
+    const b = document.querySelector('#helloCard .hello-t > b'), ic = fxTod();
+    if(b && !b.querySelector('.fx-tod') && !/birthday/i.test(b.textContent)) b.insertAdjacentHTML('afterbegin', `<span class="fx-tod" aria-hidden="true">${ic}</span>`); }; }
+fxTod(); setInterval(() => { fxTod(); if(S.me) renderHello(); }, 10 * 60000);
+
+/* 13: the bell and the chat button send out a red halo, and the count jumps, when the number goes up */
+function fxBadgeWatch(numId, btnId, kind){
+  const n = $(numId); if(!n) return; let last = -1;
+  new MutationObserver(() => {
+    const v = n.hidden ? 0 : parseInt(n.textContent, 10) || 0, b = $(btnId);
+    if(last >= 0 && v > last && b){ if(fxOn()){ b.classList.remove('fx-halo'); void b.offsetWidth; b.classList.add('fx-halo'); setTimeout(() => b.classList.remove('fx-halo'), 1900); } if(kind) fxFeel(kind); }
+    last = v;
+  }).observe(n, {childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['hidden']});
+}
+fxBadgeWatch('lwN', 'lwBtn', 'chat'); fxBadgeWatch('chatN', 'chatBtn', 'chat');
+
 window.__JMTI_READY = true;
 start();
 </script>
