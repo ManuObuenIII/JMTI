@@ -156,6 +156,8 @@ main{max-width:1680px;margin:0 auto;padding:14px 20px}
 /* ---------- controls ---------- */
 .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:18px}
 .bar .grow{flex:1}
+#v-dispatcher > .bar > .x-find{flex:1 1 260px;min-width:260px}   /* MANU 2026-11-06: Truck Plan Find on the 2nd row, after the chips, filling the space */
+#v-dispatcher > .bar > .x-find input{width:100%}
 label.f{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;color:var(--muted)}
 input,select,textarea{border:1px solid var(--line);background:#fff;border-radius:var(--radius-s);padding:8px 10px;min-height:38px;width:100%}
 textarea{min-height:64px;resize:vertical}
@@ -1622,6 +1624,25 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
   main{max-width:calc(100% - 6px);padding:10px 5px}
   .dr-foot{padding-bottom:calc(12px + env(safe-area-inset-bottom))}
 }
+/* ---- TP-WRAP: Truck Plan cells wrap, minimal spacing (MANU 2026-11-06 "for the truckplan, wrap all cells, minimal spaces", 14.1) ----
+   Every cell (headers too) wraps its words inside a narrow column instead of stretching it, with the smallest padding,
+   so more columns fit on the screen. Only the Truck Plan table; POD and Billing keep their look. */
+#v-dispatcher table.xl{line-height:1.15}
+#v-dispatcher table.xl th, #v-dispatcher table.xl td{padding:2px 3px;white-space:normal;overflow-wrap:break-word;word-break:normal;overflow:visible;text-overflow:clip;max-width:112px;vertical-align:middle}
+#v-dispatcher table.xl th{font-size:10px;line-height:1.1}
+#v-dispatcher table.xl td.nx{padding:1px 2px;max-width:92px}
+#v-dispatcher table.xl td.nx .nextbtn{white-space:normal;text-align:left;padding:2px 4px;line-height:1.1;width:100%}
+#v-dispatcher table.xl td.st .dot{margin-right:3px}
+#v-dispatcher table.xl td.xrem{min-width:120px;max-width:180px}
+#v-dispatcher table.xl tbody tr.routehd td, #v-dispatcher table.xl tbody tr.routehd:hover td{padding:3px 5px;max-width:none}
+#v-dispatcher table.xl tbody tr.acchd td, #v-dispatcher table.xl tbody tr.acchd:hover td{padding:4px 5px;max-width:none}
+#v-dispatcher table.xl tr.acchd div, #v-dispatcher table.xl tr.routehd div{left:5px}
+@media (max-width:700px){
+  #v-dispatcher table.xl th, #v-dispatcher table.xl td{padding:2px 3px;max-width:88px}
+  #v-dispatcher table.xl td.nx, #v-dispatcher table.xl th.fz:first-child{width:72px;min-width:72px;max-width:72px}
+  #v-dispatcher table.xl td.fz, #v-dispatcher table.xl th.fz{max-width:72px}
+  #v-dispatcher table.xl td.nx .nextbtn{min-height:28px;padding:2px 3px;font-size:10px}
+}
 /* ---- PC top bar on ONE row (MANU 2026-11-05 "this should only take one row", version 10) ----
    Menu, logo, clock, version, greeting and the user part stay on one line; the greeting gives up room first
    (its words wrap), then the title, the motto and the greeting hide on narrower windows. Phones unchanged. */
@@ -1637,6 +1658,47 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
 @media (min-width:1101px) and (max-width:1700px){ .brand small,.brand h1{display:none} .top .hello.tb .hello-av .ms-av{width:32px;height:32px} }
 @media (min-width:1101px) and (max-width:1400px){ .top .hello.tb .hello-t q{display:none} .top-inner .userchip .nm{max-width:130px;white-space:normal;line-height:1.15} }
 @media (min-width:1101px) and (max-width:1250px){ .top .hello.tb{display:none!important} }
+/* ---- ANIMATIONS (MANU 2026-11-06 "add animations", version 14.2) ----
+   Short (120–320 ms), CSS only, opacity/transform only so phones stay smooth. Nothing moves when the phone or PC
+   is set to "reduce motion". Tables re-drawn by the 10-second refresh do NOT animate again (only on tab open). */
+@media (prefers-reduced-motion:no-preference){
+  @keyframes aFade{from{opacity:0}to{opacity:1}}
+  @keyframes aUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes aPop{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+  @keyframes aRight{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+  @keyframes aSheet{from{transform:translateY(100%)}to{transform:none}}
+  @keyframes aToast{from{opacity:0;transform:translate(-50%,16px) scale(.96)}to{opacity:1;transform:translate(-50%,0)}}
+  @keyframes aBadge{0%{transform:scale(.3)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+  @keyframes aShine{from{background-position:-160% 0}to{background-position:260% 0}}
+  /* tab open: the page fades in, cards and tables rise in one after another */
+  .view.on{animation:aFade .2s ease-out}
+  .view.anim-in .kpi,.view.anim-in .panel,.view.anim-in .tbl-wrap,.view.anim-in .xcard{animation:aUp .32s cubic-bezier(.2,.7,.2,1) both}
+  .view.anim-in .kpi:nth-child(2),.view.anim-in .xcard:nth-child(2){animation-delay:.04s}
+  .view.anim-in .kpi:nth-child(3),.view.anim-in .xcard:nth-child(3){animation-delay:.08s}
+  .view.anim-in .kpi:nth-child(4),.view.anim-in .xcard:nth-child(4){animation-delay:.12s}
+  .view.anim-in .kpi:nth-child(n+5),.view.anim-in .xcard:nth-child(n+5){animation-delay:.16s}
+  /* pop-ups: dark background fades, the box rises and grows a little */
+  .pop:not([hidden]),.vchg:not([hidden]),.vup:not([hidden]),.submit-ov:not([hidden]),.scrim.on{animation:aFade .18s ease-out}
+  .pop:not([hidden]) .popbox,.vchg:not([hidden]) .vchg-box,.vup:not([hidden]) .vup-box,.submit-ov:not([hidden]) .submit-box{animation:aPop .24s cubic-bezier(.2,.8,.2,1)}
+  .viewer[style*="flex"]{animation:aFade .18s ease-out}
+  .ch-sheet-bg{animation:aFade .18s ease-out}
+  .ch-sheet-bg > *{animation:aSheet .24s cubic-bezier(.2,.8,.2,1)}
+  /* chat, Ask JMTI and other side panels slide in */
+  .chdock:not([hidden]),.askbox:not([hidden]){animation:aRight .24s cubic-bezier(.2,.8,.2,1)}
+  /* messages slide up from the bottom */
+  #toast.toast{animation:aToast .24s cubic-bezier(.2,.8,.2,1)}
+  /* red counts on the bell and tabs pop when they appear */
+  .bell-n:not([hidden]){animation:aBadge .35s cubic-bezier(.3,1.6,.5,1)}
+  /* press feedback on chips, tabs and small buttons (main buttons already press down) */
+  .chip,.tab,.icon-btn{transition:transform .12s ease,background .2s,color .2s,box-shadow .2s}
+  .chip:active,.tab:active,.icon-btn:active{transform:scale(.95)}
+  /* table rows: soft highlight on hover (PC) */
+  table.xl tbody tr td{transition:background-color .15s}
+  /* sign-in card rises in */
+  .login .card{animation:aPop .4s cubic-bezier(.2,.8,.2,1) both}
+  /* version badge: a light shine passes once on open */
+  #verBadge{background-image:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);background-size:60% 100%;background-repeat:no-repeat;animation:aShine 1.2s ease-out .6s both}
+}
 </style>
 </head>
 <body>
@@ -1922,10 +1984,11 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <button class="btn alt" type="button" id="xIrList" hidden title="Every incident report sent, with its status">Incident reports <b class="ir-n" id="xIrN" hidden></b></button>
       <span class="x-fund" id="xFund" hidden></span>
       <label class="f">Account<select id="xAcct"><option value="">All accounts</option><option>COCA COLA CANLUBANG PLANT</option><option>COCA COLA SAN FERNANDO</option><option>OTHER ACCOUNTS</option></select></label>
-      <label class="f grow">Find<input id="xFind" placeholder="Truck, plate, customer, driver, shipment"></label>
       <button class="btn alt" type="button" id="xReport">Generate report</button>
       <button class="btn alt" type="button" id="xRdd" title="RDD for one date as a landscape PDF (pick the account)">Generate RDD</button>
+      <button class="btn alt" type="button" id="xRddCsv" title="RDD trips for payroll as a CSV file (Excel): pick the dates and the account">Generate RDD (CSV, payroll)</button>
       <div class="chips" id="xChips"></div>
+      <label class="f grow x-find">Find<input id="xFind" placeholder="Truck, plate, customer, driver, shipment"></label>
     </div>
     <p class="hint feed-hint" id="xFeedNote" hidden>Trips from <b>GENERAL DATABASE 2.0</b> get their status, truck, route and crew changed there, and new trips are typed there for now. Times, remarks, budget and fuel still save here.</p>
     <div class="panel xboard-panel" id="xBoardPanel" hidden>
@@ -2282,6 +2345,7 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <label class="f">To<input type="date" id="payrollTo"></label>
       <label class="f grow">Find<input id="payrollFind" placeholder="Name" autocomplete="off"></label>
       <button class="btn alt" type="button" id="payrollReport">Generate report (CSV)</button>
+      <button class="btn alt" type="button" id="payrollRdd" title="RDD trips for payroll as a CSV file (Excel): same dates as above, pick the account">Generate RDD (CSV)</button>
     </div>
     <div class="panel payroll-head" id="payrollSummary"><p class="hint" style="margin:0">Loading the payroll…</p></div>
     <div class="kpis kpis4" id="payrollKpi"></div>
@@ -2536,6 +2600,16 @@ function tripAcctW(t){
   const n = Object.values(w).reduce((x, v) => x + v, 0);
   return n > 0 ? {[acc]: n} : {};
 }
+/** SHIPMENT NO. or DTTR (MANU 2026-11-06 "in pod and billing separate the shipment in 2 columns, coca cola is title shipment no.,
+ *  Other Accounts is DTTR"): the same GENERAL cell (col G), shown under DTTR when the trip is an Other accounts trip. The account is
+ *  the one Truck Plan puts the trip under (counted account, else the truck's Truck assignment), else a Coca Cola source/destination. */
+function shipDttr(t){
+  const w = tripAcctW(t), top = Object.keys(w).sort((x, y) => w[y] - w[x])[0] || assignedAcct(t.truckNo, t.date);
+  if(top) return acctSec(top) === 2;
+  return !/COCACOLA|CCBPI/.test(nameKey(t.customer) + ' ' + nameKey(t.destination));
+}
+const shipNoOf = t => shipDttr(t) ? '' : (t.shipmentNo || ''), dttrOf = t => shipDttr(t) ? (t.shipmentNo || '') : '';
+const shipLbl = t => shipDttr(t) ? 'DTTR' : 'Shipment no.';
 /** The trip counts under another account than its route alone would give, because of its truck's assignment. */
 const movedByTruck = t => { const acc = assignedAcct(t.truckNo, t.date), w = acctWeights(t), ks = Object.keys(w); return !!acc && ks.length > 0 && !(ks.length===1 && ks[0]===acc); };
 let TRIP_W = {};
@@ -3382,6 +3456,7 @@ function showTab(t){
   if(t==='trips') S.sumMeasure = 'trips';
   document.querySelectorAll('#sumMeasure .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.f===S.sumMeasure));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id==='v-'+view));
+  { const v = $('v-'+view); if(v){ v.classList.remove('anim-in'); void v.offsetWidth; v.classList.add('anim-in'); clearTimeout(showTab._a); showTab._a = setTimeout(() => v.classList.remove('anim-in'), 1500); } }   // animations on tab open only (MANU 2026-11-06)
   if(t==='maintenance') return loadMaintenance();
   if(!S.boot && !['manpower','users'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
   ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
@@ -3565,7 +3640,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.1, APP_VERSION_DATE = '2026-11-06';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.2, APP_VERSION_DATE = '2026-11-06';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
@@ -3592,13 +3667,21 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
-  // MANU 2026-11-06 "ALL CHANGES TODAY, SHOW TO VERSION 14.1": everything released on 2026-11-06 is listed under 14.1
+  // MANU 2026-11-06 15:20 UTC "this is version 14.2": this afternoon's changes (from ~14:17 UTC)
+  {v:14.2, d:'2026-11-06', items:[
+    'Animations: tabs fade in with their cards rising one after another, pop-ups and the What changed box grow in, messages slide up, chat and Ask JMTI slide in, the bell count pops, chips and tabs press in when tapped, and the version badge shines once. All short and light; nothing moves if the phone or PC is set to reduce motion.',
+    'Truck Plan: every cell now wraps its text in narrower columns with the smallest spacing, so more columns fit on the screen (PC and phone).',
+    'POD and Billing: the shipment column is now two columns. SHIPMENT NO. shows it for Coca Cola trips (Canlubang and San Fernando) and DTTR for Other accounts trips. Same in the CSV downloads. Add trip and the trip pop-up call the box DTTR for Other accounts trucks.',
+    'Truck Plan on PC: the Find box moved to the second row and stretches to fill the space, so the whole search is readable.',
+    'Truck Plan and Payroll: new Generate RDD (CSV) button. Pick From, To and the account to download the RDD trips as a CSV for Excel, with trip count, km, driver, helpers and MANO.',
+    'POD and Billing: removed the BO, BO invoice, Shortlanded, SL invoice, CSWT, RR CSWT, ECD, TAR, TASIW, TASPN and TASDT columns (tables and CSV downloads). The "Document uploaded" time column is now called "Scanned".',
+    'POD and Billing: right after Endorsed to billing come ITS, RR IDTS, RR PALLET, IWTS and CHARGE INVOICE (same order in the CSV downloads; ITS and IWTS are the old IDTS and RR IWTS). POD and Billing tap a cell to type them, and each shows who encoded it.',
+    'POD and Billing: one Status changes column after CHARGE INVOICE lists every status time with who did it (SCANNED when a document is uploaded, PENDING, RECEIVED DOCUMENTS, TUKOD, ENDORSED TO BILLING), oldest first. The separate time columns were removed.']},
+  // MANU 2026-11-06 "ALL CHANGES TODAY, SHOW TO VERSION 14.1": the morning changes of 2026-11-06 (afternoon ones are 14.2)
   {v:14.1, d:'2026-11-06', items:[
-    'POD and Billing: new IDTS, RR IDTS, RR IWTS, CSWT, RR CSWT, ECD, TAR, TASIW, TASPN and TASDT columns. In POD they sit just before Documents, in Billing just before POD. POD and Billing tap a cell to type them, and each shows who encoded it.',
     'Shift endorsement shows only the 3 newest endorsements. Older ones are folded into "Show older"; tap it to open them and tap again to close.',
     'Tap the version in the top bar (or on the sign-in card) to see what changed in this version and earlier ones.',
     'Incident reports go to HR, with a bell alert and a status, and show who submitted them.',
-    'POD and Billing: new BO, BO INVOICE, SHORTLANDED and SL INVOICE columns, and each status change records the time and who updated it.',
     'Shipment number rule: one destination trip and one TUKOD per shipment number per day (TUKOD on other days is OK).',
     'TL and Supervisor get a pop-up listing trips from the past 7 days that have no shipment number.',
     'Purpose is now a dropdown, including MANO, and Accounting has its own purpose list.',
@@ -4744,6 +4827,7 @@ function initDispatcher(){
   $('xIrList').onclick = openIrList;
   $('xReport').onclick = openTruckPlanReport;
   $('xRdd').onclick = openRdd;
+  $('xRddCsv').onclick = openRddCsv;
   $('xAcct').onchange = () => { const d = xRange()[1]; if(!S.assign[d]) call('getAssignments', d).then(l => { S.assign[d] = l; renderDispatcher(); }).catch(e => toast(e.message, true)); renderDispatcher(); };
   $('xBoard').onclick = e => { const idle = e.target.closest('[data-idle]'); if(idle){ if(may('dispatchAdd')) openDispatchAdd(idle.dataset.idle); return; } const c = e.target.closest('[data-key]'); if(c) openDispatch(S.xTrips.find(t => t.key===c.dataset.key)); };
   filterChips($('xChips'), [['all','All'],['latest','Latest status'],['open','Not completed'],['Planned','Clip board'],['moving','On the road'],['Completed','Completed'],['other','Not on trip']], 'all', f => { S.xFilter = f; renderDispatcher(); });
@@ -4806,7 +4890,7 @@ function openDispatchAdd(truckNo, opt){
       <label class="f">Truck #<input id="naTruck" list="dlTrucks" autocomplete="off"></label>
       <label class="f">Plate<input id="naPlate" readonly placeholder="From the truck"></label>
       <label class="f">Status<select id="naSt"></select></label>
-      <label class="f naRoute">Shipment no<input id="naShip" autocomplete="off"></label>
+      <label class="f naRoute"><span id="naShipLbl">Shipment no.</span><input id="naShip" autocomplete="off"></label>
       <label class="f">Driver<input id="naDrv" readonly placeholder="From Truck assignment"></label>
       <label class="f">Helper<input id="naH1" readonly></label>
       <label class="f">Helper 2<input id="naH2" readonly></label>
@@ -4826,6 +4910,7 @@ function openDispatchAdd(truckNo, opt){
     const no = $('naTruck').value.trim(), list = isCokeTruck(day(), no) ? ADD_ST_COKE : ADD_ST_OTHER, cur = stKey() || stWant;
     const pick = list.includes(cur) ? cur : list[0];
     $('naSt').innerHTML = list.map(k => `<option value="${esc(k)}" ${k===pick ? 'selected' : ''}>${esc(stName(k))}</option>`).join('');
+    const ca = crewFor(day(), no); $('naShipLbl').textContent = ca && acctSec(ca.account || '') === 2 ? 'DTTR' : 'Shipment no.';
     showRoute();
   };
   $('naSt').onchange = () => { stWant = stKey(); showRoute(); fill(); };
@@ -5455,7 +5540,7 @@ function openDashReport(){
 function billingCsv(){
   const rows = S.billReportRows || [];
   if(!rows.length) return toast('Nothing to put in the report with these filters.', true);
-  const head = ['Trip date', 'Truck', 'Plate', 'Customer', 'Destination', 'Shipment', ...BOSL_CSV_HEAD, ...PC_CSV_HEAD];
+  const head = ['Trip date', 'Truck', 'Plate', 'Customer', 'Destination', 'SHIPMENT NO.', 'DTTR', ...BOSL_CSV_HEAD, ...PC_CSV_HEAD];
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const csv = '﻿' + [head, ...rows].map(r => r.map(q).join(',')).join('\r\n');
   const name = repFile('Billing', titleCase($('billAcct').value || 'All accounts'), 'csv');
@@ -5536,7 +5621,7 @@ function renderDispatcher(){
   });
   if(garL.length) body += restHead('acchd garhd', 'GARAGE', garL.length, 'every garage status, all accounts, not counted as trips; garage loaded stays on its route') + garL.map(t => tripRow(t, n++)).join('');
   if(notL.length) body += restHead('acchd nothd', 'NOT A TRIP', notL.length, 'no-trip reasons and other statuses, not counted as trips') + notL.map(t => tripRow(t, n++)).join('');
-  $('xList').innerHTML = list.length || idleTrucks.length ? `<div class="xl-wrap"><table class="xl" data-fz="0,1,2,3,4,5,6" data-fzp="0,3"><thead><tr><th>Next step</th><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th class="n">KMS</th><th class="n">Fuel (L)</th><th class="n">Budget</th><th class="n">MANO</th><th>Driver</th><th>Helper</th><th>Helper 2</th><th>Status</th>${MS_KEYS.map(k => `<th>${esc(MS_LABEL[k])}</th>`).join('')}<th>Remarks</th></tr></thead><tbody>${
+  $('xList').innerHTML = list.length || idleTrucks.length ? `<div class="xl-wrap"><table class="xl" data-fz="0,1,2,3,4,5,6" data-fzp="0,3"><thead><tr><th>Next step</th><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>${esc(acctSec($('xAcct').value)===2 ? 'DTTR' : acctSec($('xAcct').value) >= 0 ? 'Shipment no.' : 'Shipment no. / DTTR')}</th><th class="n">KMS</th><th class="n">Fuel (L)</th><th class="n">Budget</th><th class="n">MANO</th><th>Driver</th><th>Helper</th><th>Helper 2</th><th>Status</th>${MS_KEYS.map(k => `<th>${esc(MS_LABEL[k])}</th>`).join('')}<th>Remarks</th></tr></thead><tbody>${
     body}</tbody></table></div>` : `<div class="empty">Nothing to encode for ${esc(xRangeText())} with this filter.</div>`;
   freezeCols($('xList'));
 }
@@ -5586,7 +5671,7 @@ function openDispatch(t){
       <label class="f full">${esc(hdr(4,'Source'))}<input data-k="customer" list="dlCustomers" value="${esc(t.customer||'')}"${fedKey(t, 'customer') ? ' readonly' : ''}></label>
       <label class="f full">${esc(hdr(5,'Destination'))}<input data-k="destination" list="dlDest" value="${esc(t.destination||'')}"${fedKey(t, 'destination') ? ' readonly' : ''}></label>
       ${isTrip(t) ? `<p class="hint full" style="margin:0">${tripType(t) ? 'Trip type: ' + ttTag(t) + ' ' : 'Not a Coca Cola trip: '}${tripType(t)==='T1' ? 'Coca Cola → Coca Cola, counts 0.5 trip' : 'counts 1 trip'}${tkH(t) < 1 ? ' (TUKOD: half of that)' : ''}</p>` : ''}
-      ${field('shipmentNo',7,'Shipment no')}
+      ${field('shipmentNo',-1,shipLbl(t))}
       ${field('kms',6,'KMS','inputmode="decimal"')}
       ${field('budget',22,'Budget','inputmode="decimal"')}
       ${field('mano',0,'Fuel (liters)','inputmode="decimal" placeholder="e.g. 45.5"')}
@@ -5822,7 +5907,6 @@ function initPod(){
     if(e.target.closest('td[data-pst]')) return openPodStatus(t, e.target.closest('td'));
     if(e.target.closest('td[data-pdoc]')) return openPodDocs(t, e.target.closest('td'));
     if(e.target.closest('td[data-prem]')) return openPodRemarks(t, e.target.closest('td'));
-    if(e.target.closest('td[data-bosl]') && may('pod')) return openBosl(t, e.target.closest('td'), 'podSave');
     if(e.target.closest('td[data-pc]') && may('pod')) return openPc(t, e.target.closest('td'), 'podSave');
     openPod(t); };
   bindViews($('drBody'));
@@ -5864,9 +5948,9 @@ function renderPod(){
   S.podReady = ready;
   const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips in Waiting docs have scanned documents.</span><button class="btn road" type="button" id="podBulk">Mark all ${ready.length} ENDORSED TO BILLING</button></div>` : '';
   const docCell = t => t.podAt ? `<span class="docstate ok">Sent ${esc(t.podAt.slice(0,10))}</span>` : `<span class="docstate wait">${files(t).length ? files(t).length+' file(s) · to check' : 'No documents'}</span>`;
-  $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th>Driver</th><th>Helpers</th>${BOSL_TH}<th>POD remarks</th>${PC_TH}<th>Documents</th><th>Status</th></tr></thead><tbody>` +
+  $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>SHIPMENT NO.</th><th>DTTR</th><th>Driver</th><th>Helpers</th>${BOSL_TH}${PC_TH}<th>POD remarks</th><th>Documents</th><th>Status</th></tr></thead><tbody>` +
     list.map((t,i) => {
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('pod'))}<td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td>${pcTds(t, may('pod'))}<td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('pod'))}${pcTds(t, may('pod'))}<td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.podFilter==='completed' ? 'No trip endorsed to billing in these dates.' : 'Nothing left to check here.'}</div>`;
   freezeCols($('podList'));
 }
@@ -6047,33 +6131,41 @@ const podWhen = v => { const m = String(v || '').match(/^(\d{4}-\d{2}-\d{2})[ T]
 const nowStamp = () => { const d = new Date(Date.now() + (S.clockOff || 0)), p = n => String(n).padStart(2, '0'); return `${TODAY()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
 // BO / shortlanded and POD timestamps (MANU 2026-11-06 "add columns in POD and billing after helper column ... always show who updated or
 // encoded"): same 9 columns after Helpers in POD and Billing. Stamps come from the server as "yyyy-MM-dd HH:mm · NAME".
-const BOSL_KEYS = ['bo', 'boInv', 'sl', 'slInv'], BOSL_STAMPS = ['docUpAt', 'pendAt', 'rcvAt', 'tukodAt', 'endAt'];
-const BOSL_LABELS = ['BO', 'BO invoice', 'Shortlanded', 'SL invoice', 'Document uploaded', 'Pending', 'Received documents', 'Tukod', 'Endorsed to billing'];
-const BOSL_TH = BOSL_LABELS.map(l => `<th>${l}</th>`).join(''), BOSL_N = BOSL_LABELS.length;
+// MANU 2026-11-06 14:54 UTC: BO, BO invoice, Shortlanded, SL invoice removed (sheet columns stay); "Document uploaded" is now "Scanned".
+// MANU 2026-11-06 15:09 UTC "put all timestamps of status changes in one column after charge invoice including document uploaded tagged as
+// scanned; remove scanned, received documents, endorsed to billing time stamps": no separate time columns; one "Status changes" column
+// (last column of the ITS … CHARGE INVOICE group) lists each stamp, oldest first, e.g. "SCANNED · Nov 6, 2026 10:30 by ANA".
+const BOSL_STAMPS = ['docUpAt', 'pendAt', 'rcvAt', 'tukodAt', 'endAt'];
+const BOSL_LABELS = ['Scanned', 'Pending', 'Received documents', 'Tukod', 'Endorsed to billing'];
+const BOSL_TH = '', BOSL_N = 0;
 const POD_ST_KEY = {'PENDING': 'pendAt', 'RECEIVED DOCUMENTS': 'rcvAt', 'TUKOD': 'tukodAt', 'ENDORSED TO BILLING': 'endAt'};
 const whoSplit = v => { const p = String(v || '').split(' · '); return {at: p[0] || '', by: p.slice(1).join(' · ')}; };
 const whoText = v => { const w = whoSplit(v); return w.at ? podWhen(w.at) + (w.by ? ' by ' + w.by : '') : ''; };
 const whoCell = v => { const w = whoSplit(v); return w.at ? `${esc(podWhen(w.at))}${w.by ? `<br><small>by ${esc(w.by)}</small>` : ''}` : ''; };
-const boslTds = (t, ed) => { const by = whoSplit(t.boslAt).by;
-  return BOSL_KEYS.map(k => `<td class="${ed ? 'ed' : ''}" ${ed ? `data-bosl="${k}" title="Type BO / shortlanded"` : ''} style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`).join('') +
-    BOSL_STAMPS.map(k => `<td>${whoCell(t[k])}</td>`).join(''); };
-const boslCsv = t => BOSL_KEYS.map(k => t[k] || '').concat([whoText(t.boslAt)], BOSL_STAMPS.map(k => whoText(t[k])));
-const BOSL_CSV_HEAD = ['BO', 'BO invoice', 'Shortlanded', 'SL invoice', 'BO/SL encoded', 'Document uploaded', 'Pending', 'Received documents', 'Tukod', 'Endorsed to billing'];
+const stampList = t => BOSL_STAMPS.map((k, i) => ({l: BOSL_LABELS[i].toUpperCase(), ...whoSplit(t[k])})).filter(x => x.at).sort((x, y) => x.at < y.at ? -1 : x.at > y.at ? 1 : 0);
+const stampTd = t => `<td style="white-space:pre-wrap">${stampList(t).map(x => `<b>${esc(x.l)}</b> · ${esc(podWhen(x.at))}${x.by ? `<br><small>by ${esc(x.by)}</small>` : ''}`).join('<br>')}</td>`;
+const stampCsv = t => stampList(t).map(x => x.l + ' ' + podWhen(x.at) + (x.by ? ' by ' + x.by : '')).join('\n');
+const boslTds = () => '';
+const boslCsv = () => [];
+const BOSL_CSV_HEAD = [];
 const podStampLocal = (next, st) => { const k = POD_ST_KEY[st]; if(k) next[k] = nowStamp() + ' · ' + S.me.name; return next; };
 // IDTS … TASDT (MANU 2026-11-06 "IN POD AND BILLING, ADD THESE COLUMNS BEFORE DOCUMENTS COLUMN"): typed by POD / Billing, pcAt = who + when
-const PC_KEYS = ['idts', 'rrIdts', 'rrIwts', 'cswt', 'rrCswt', 'ecd', 'tar', 'tasiw', 'taspn', 'tasdt'];
-const PC_LABELS = ['IDTS', 'RR IDTS', 'RR IWTS', 'CSWT', 'RR CSWT', 'ECD', 'TAR', 'TASIW', 'TASPN', 'TASDT'];
-const PC_TH = PC_LABELS.map(l => `<th>${l}</th>`).join(''), PC_N = PC_KEYS.length;
+// CSWT, RR CSWT, ECD, TAR, TASIW, TASPN, TASDT removed (MANU 2026-11-06 14:54 UTC; sheet columns stay)
+// MANU 2026-11-06 15:03 UTC (Excel screenshot, columns I to M; DTTR already exists): after Endorsed to billing come ITS (= IDTS column),
+// RR IDTS, RR PALLET, IWTS (= RR IWTS column), CHARGE INVOICE. SHIPMENT NO. and DTTR stay next to Destination. All free text.
+const PC_KEYS = ['idts', 'rrIdts', 'rrPallet', 'rrIwts', 'chargeInv'];
+const PC_LABELS = ['ITS', 'RR IDTS', 'RR PALLET', 'IWTS', 'CHARGE INVOICE'];
+const PC_TH = PC_LABELS.map(l => `<th>${l}</th>`).join('') + '<th>Status changes</th>', PC_N = PC_KEYS.length + 1;
 const pcTds = (t, ed) => { const by = whoSplit(t.pcAt).by;
-  return PC_KEYS.map(k => `<td class="${ed ? 'ed' : ''}" ${ed ? `data-pc="${k}" title="Type IDTS / TAS"` : ''} style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`).join(''); };
-const pcCsv = t => PC_KEYS.map(k => t[k] || '').concat([whoText(t.pcAt)]);
-const PC_CSV_HEAD = PC_LABELS.concat(['IDTS/TAS encoded']);
-/** POD or Billing table: tap any IDTS … TASDT cell to type all ten (fn = podSave or billingSave). */
+  return PC_KEYS.map(k => `<td class="${ed ? 'ed' : ''}" ${ed ? `data-pc="${k}" title="Tap to type"` : ''} style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`).join('') + stampTd(t); };
+const pcCsv = t => PC_KEYS.map(k => t[k] || '').concat([whoText(t.pcAt), stampCsv(t)]);
+const PC_CSV_HEAD = PC_LABELS.concat(['Encoded', 'Status changes']);
+/** POD or Billing table: tap an ITS … CHARGE INVOICE cell to type them all (fn = podSave or billingSave). */
 function openPc(t, td, fn){
   if(!t) return;
   if(t._pending) return toast('Still saving — try again in a moment.');
   const w = whoSplit(t.pcAt);
-  podPop(td, `<div class="ce-h"><b>IDTS / TAS</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div>
+  podPop(td, `<div class="ce-h"><b>Documents info</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div>
     ${PC_KEYS.map((k, i) => `<label class="f">${PC_LABELS[i]}<input id="pc_${k}" value="${esc(t[k] || '')}" autocomplete="off"></label>`).join('')}
     ${w.at ? `<div class="hint">Last encoded ${esc(podWhen(w.at))}${w.by ? ' by ' + esc(w.by) : ''}</div>` : ''}
     <div class="ce-f"><span style="flex:1"></span><button class="btn alt" type="button" id="pcCancel">Cancel</button> <button class="btn" type="button" id="pcSave">Save</button></div>`, true);
@@ -6084,26 +6176,7 @@ function openPc(t, td, fn){
     PC_KEYS.forEach(k => { const v = $('pc_' + k).value.trim().toUpperCase().replace(/\s+/g, ' '); if(v !== String(t[k] || '')) data[k] = v; });
     closeCellEditor();
     if(!Object.keys(data).length) return toast('Nothing changed');
-    saveOptimistic({...t, ...data, pcAt: nowStamp() + ' · ' + S.me.name}, t, () => callQ(fn, refOf(t), data), () => 'IDTS / TAS saved');
-  };
-}
-/** POD or Billing table: tap BO / BO invoice / Shortlanded / SL invoice to type all four (fn = podSave or billingSave). */
-function openBosl(t, td, fn){
-  if(!t) return;
-  if(t._pending) return toast('Still saving — try again in a moment.');
-  const w = whoSplit(t.boslAt);
-  podPop(td, `<div class="ce-h"><b>BO / Shortlanded</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div>
-    ${BOSL_KEYS.map((k, i) => `<label class="f">${BOSL_LABELS[i]}<input id="bosl_${k}" value="${esc(t[k] || '')}" autocomplete="off"></label>`).join('')}
-    ${w.at ? `<div class="hint">Last encoded ${esc(podWhen(w.at))}${w.by ? ' by ' + esc(w.by) : ''}</div>` : ''}
-    <div class="ce-f"><span style="flex:1"></span><button class="btn alt" type="button" id="boslCancel">Cancel</button> <button class="btn" type="button" id="boslSave">Save</button></div>`, true);
-  const first = $('bosl_' + (td.dataset.bosl || 'bo')); if(first) first.focus();
-  $('boslCancel').onclick = closeCellEditor;
-  $('boslSave').onclick = () => {
-    const data = {};
-    BOSL_KEYS.forEach(k => { const v = $('bosl_' + k).value.trim().toUpperCase().replace(/\s+/g, ' '); if(v !== String(t[k] || '')) data[k] = v; });
-    closeCellEditor();
-    if(!Object.keys(data).length) return toast('Nothing changed');
-    saveOptimistic({...t, ...data, boslAt: nowStamp() + ' · ' + S.me.name}, t, () => callQ(fn, refOf(t), data), () => 'BO / shortlanded saved');
+    saveOptimistic({...t, ...data, pcAt: nowStamp() + ' · ' + S.me.name}, t, () => callQ(fn, refOf(t), data), () => 'Saved');
   };
 }
 /** POD "Download CSV": the trips the POD list shows now (dates, account, customer, find and chip as picked), oldest first. */
@@ -6135,9 +6208,9 @@ function podCsv(){
   if(!l.length) return toast('No trips shown to download.', true);
   const chip = ({tocheck:'All to check', pending:'Pending', waitdocs:'Waiting docs', recvdocs:'Received documents', tukod:'Tukod', completed:'Endorsed to Billing'})[S.podFilter] || '';
   saveCsvFile(`POD ${chip} ${$('podFrom').value} to ${$('podTo').value}.csv`.replace(/\s+/g, ' '),
-    ['#', 'Trip date', 'Trip ID', 'Truck', 'Plate', 'Customer', 'Destination', 'Shipment', 'Driver', 'Helpers', ...BOSL_CSV_HEAD, 'POD remarks', ...PC_CSV_HEAD, 'Documents', 'Status', 'Status updated', 'Updated by'],
-    l.map((t, i) => [i + 1, t.date, t.tripId || '', t.truckNo || '', t.plateNo || '', t.customer || '', t.destination || '', t.shipmentNo || '', t.driver || '',
-      [t.helper1, t.helper2].filter(Boolean).join(', '), ...boslCsv(t), t.pod || '', ...pcCsv(t), t.podAt ? 'Sent ' + String(t.podAt).slice(0, 10) : files(t).length ? files(t).length + ' file(s)' : 'No documents',
+    ['#', 'Trip date', 'Trip ID', 'Truck', 'Plate', 'Customer', 'Destination', 'SHIPMENT NO.', 'DTTR', 'Driver', 'Helpers', ...BOSL_CSV_HEAD, ...PC_CSV_HEAD, 'POD remarks', 'Documents', 'Status', 'Status updated', 'Updated by'],
+    l.map((t, i) => [i + 1, t.date, t.tripId || '', t.truckNo || '', t.plateNo || '', t.customer || '', t.destination || '', shipNoOf(t), dttrOf(t), t.driver || '',
+      [t.helper1, t.helper2].filter(Boolean).join(', '), ...boslCsv(t), ...pcCsv(t), t.pod || '', t.podAt ? 'Sent ' + String(t.podAt).slice(0, 10) : files(t).length ? files(t).length + ' file(s)' : 'No documents',
       podSt(t), t.podUpdAt ? podWhen(t.podUpdAt) : '', t.podUpdBy || '']));
 }
 function openPod(t){
@@ -6145,7 +6218,7 @@ function openPod(t){
   if(t._pending) return toast('Still saving — try again in a moment.');
   openPanel(t, `
     <div class="sec">Trip</div>
-    <dl class="kv"><dt>${esc(hdr(7,'Shipment'))}</dt><dd>${esc(t.shipmentNo||'—')}</dd><dt>Driver</dt><dd>${t.driver ? pLink(t.driver) : '—'}</dd><dt>Helpers</dt><dd>${crewLinks([t.helper1,t.helper2], ', ') || '—'}</dd><dt>KMS</dt><dd>${esc(t.kms||'—')}</dd><dt>Trip ID</dt><dd>${esc(t.tripId||'(given on first save)')}</dd></dl>
+    <dl class="kv"><dt>${esc(shipLbl(t))}</dt><dd>${esc(t.shipmentNo||'—')}</dd><dt>Driver</dt><dd>${t.driver ? pLink(t.driver) : '—'}</dd><dt>Helpers</dt><dd>${crewLinks([t.helper1,t.helper2], ', ') || '—'}</dd><dt>KMS</dt><dd>${esc(t.kms||'—')}</dd><dt>Trip ID</dt><dd>${esc(t.tripId||'(given on first save)')}</dd></dl>
     <div class="sec">Scanned documents</div>
     ${filesHtml(t)}
     <label class="upl" style="margin-top:10px">Upload scan (PDF or photo)<input type="file" id="podFile" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic" multiple></label>
@@ -6296,7 +6369,6 @@ function initBilling(){
   $('billList').onclick = e => {
     if(e.target.closest('#billBulk')) return bulkCheck('bill');
     const c=e.target.closest('[data-key]'); if(!c) return; const bt = S.billTrips.find(t=>t.key===c.dataset.key);
-    if(e.target.closest('td[data-bosl]') && may('billing')) return openBosl(bt, e.target.closest('td'), 'billingSave');
     if(e.target.closest('td[data-pc]') && may('billing')) return openPc(bt, e.target.closest('td'), 'billingSave');
     openBill(bt); };
   $('billTabs').onclick = e => { const b = e.target.closest('.chip'); if(!b) return;
@@ -6341,14 +6413,14 @@ function renderBilling(){
   const billOrder = t => t.billAt ? 2 : t.podAt ? 0 : 1;
   const since = t => String(t.podAt && t.podAt!=='saving' ? t.podAt : t.date);
   const byTrip = (a,b) => billOrder(a) - billOrder(b) || since(a).localeCompare(since(b)) || String(a.truckNo).localeCompare(String(b.truckNo),undefined,{numeric:true});
-  const head = groupRoutes(list, byTrip, () => false, 13 + BOSL_N + PC_N);   // no route header rows on Billing (MANU)
-  S.billReportRows = list.map(t => [fmtDay(t.date), String(t.truckNo || ''), t.plateNo || '', t.customer || '', plainDest(t.destination) || '', t.shipmentNo || '', ...boslCsv(t), ...pcCsv(t)]);   // Generate report (CSV)
+  const head = groupRoutes(list, byTrip, () => false, 14 + BOSL_N + PC_N);   // no route header rows on Billing (MANU)
+  S.billReportRows = list.map(t => [fmtDay(t.date), String(t.truckNo || ''), t.plateNo || '', t.customer || '', plainDest(t.destination) || '', shipNoOf(t), dttrOf(t), ...boslCsv(t), ...pcCsv(t)]);   // Generate report (CSV)
   const ready = S.billFilter==='tocheck' ? list.filter(t => !t._pending) : [];
   S.billReady = ready;
   const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips from POD are waiting for your check.</span><button class="btn road" type="button" id="billBulk">Mark all ${ready.length} checked</button></div>` : '';
   const stCell = t => t.billAt ? `<span class="docstate ok">Checked ${esc(t.billAt.slice(0,10))}</span>${t.invNo ? `<small>Invoice ${esc(t.invNo)}${t.invAmt ? ' · ₱' + Number(t.invAmt).toLocaleString('en-PH') : ''}</small>` : '<small class="dim">no invoice no.</small>'}` : t.podAt ? `<span class="docstate wait">From POD · ${files(t).length} file(s)</span>` : `<span class="docstate">Waiting for POD</span>`;
-  $('billList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th class="n">KMS</th><th>Driver</th><th>Helpers</th>${BOSL_TH}${PC_TH}<th>POD</th><th>Billing</th><th>Final status</th></tr></thead><tbody>` +
-    list.map((t,i) => (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${t.billAt ? 'var(--done)' : t.podAt ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td title="${esc(t.destination || '')}">${esc(plainDest(t.destination) || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td class="n">${esc(tripKm(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('billing'))}${pcTds(t, may('billing'))}<td>${esc(t.podAt && t.podAt!=='saving' ? t.podAt.slice(0,10) : t.podAt ? 'Saving…' : '')}${t.pod ? `<small>${esc(t.pod)}</small>` : ''}</td><td>${stCell(t)}</td><td>${esc(podSt(t))}</td></tr>`).join('') + `</tbody></table></div>`
+  $('billList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>SHIPMENT NO.</th><th>DTTR</th><th class="n">KMS</th><th>Driver</th><th>Helpers</th>${BOSL_TH}${PC_TH}<th>POD</th><th>Billing</th><th>Final status</th></tr></thead><tbody>` +
+    list.map((t,i) => (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${t.billAt ? 'var(--done)' : t.podAt ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td title="${esc(t.destination || '')}">${esc(plainDest(t.destination) || '—')}</td><td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td class="n">${esc(tripKm(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('billing'))}${pcTds(t, may('billing'))}<td>${esc(t.podAt && t.podAt!=='saving' ? t.podAt.slice(0,10) : t.podAt ? 'Saving…' : '')}${t.pod ? `<small>${esc(t.pod)}</small>` : ''}</td><td>${stCell(t)}</td><td>${esc(podSt(t))}</td></tr>`).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.billFilter==='tocheck' ? 'Nothing from POD to check in these dates.' : 'Nothing here for these dates.'}</div>`;
   freezeCols($('billList'));
 }
@@ -6358,7 +6430,7 @@ function openBill(t){
   const km = kmFor(t.customer, t.destination);
   openPanel(t, `
     <div class="sec">Trip</div>
-    <dl class="kv"><dt>${esc(hdr(7,'Shipment'))}</dt><dd>${esc(t.shipmentNo||'—')}</dd><dt>Source</dt><dd>${esc(t.customer)}</dd><dt>Destination</dt><dd>${esc(t.destination||'—')}</dd>
+    <dl class="kv"><dt>${esc(shipLbl(t))}</dt><dd>${esc(t.shipmentNo||'—')}</dd><dt>Source</dt><dd>${esc(t.customer)}</dd><dt>Destination</dt><dd>${esc(t.destination||'—')}</dd>
       <dt>CLIENT LIST</dt><dd>${km!=='' ? esc(km)+' km' : 'Not in CLIENT LIST yet — add it under Source, destination &amp; distance'}</dd>
       <dt>POD</dt><dd>${t.podAt ? `Checked by ${esc(t.podBy)} · ${esc(t.podAt)}` : 'Not checked by POD yet'}</dd><dt>POD remarks</dt><dd>${esc(t.pod||'—')}</dd></dl>
     <div class="sec">Documents</div>
@@ -7693,6 +7765,51 @@ function openRdd(){
       if(repSave(name, url)) toast('Saved ' + name); else { window.open(url, '_blank'); toast('The PDF opened in a new tab. Save it from there.'); }
       setTimeout(() => URL.revokeObjectURL(url), 10 * 60000);
     }).catch(e => { btn.disabled = false; btn.textContent = 'Generate PDF'; toast('Trips not loaded: ' + (e && e.message || e), true); });
+  };
+}
+/** Truck Plan › Generate RDD (CSV, payroll) (MANU 2026-11-06 "add generate rdd for payroll but csv"): the same trips, sections and
+ *  NO. as the RDD PDF, for a From–To range (one payroll week), as a CSV that opens in Excel. One row per trip leg, plus trip type,
+ *  trip count (T1 Coca Cola → Coca Cola 0.5, TUKOD 0.5, else 1), km and MANO pesos so payroll can total per driver/helper. */
+const rddCount = t => (cokeToCoke(t) ? 0.5 : 1) * tkH(t);
+const RDD_CSV_HEAD = ['DATE', 'ACCOUNT', 'NO.', 'TRIP ID', 'TRUCK NO', 'PLATE NUMBER', 'CUSTOMER', 'DESTINATION', 'SHIPMENT NUMBER', 'STATUS', 'TRIP TYPE', 'TRIP COUNT', 'KM', 'DRIVER', 'HELPER', 'HELPER 2', 'MANO', 'REMARKS'];
+function rddCsvRows(trips, from, to, pick){
+  const rows = [];
+  const days = []; for(let d = from; d <= to && days.length < 400; d = addDays(d, 1)) days.push(d);
+  days.forEach(day => rddSections(trips, day, pick).forEach(sec => sec.groups.forEach((g, gi) => g.forEach(t => {
+    const km = numOf(tripKm(t)), mano = Number(String(t.manoAmt ?? '').replace(/[^0-9.]/g, ''));
+    rows.push([day, titleCase(sec.name), gi + 1, t.tripId, t.truckNo, t.plateNo, t.customer, t.destination, t.shipmentNo, statusText(t),
+      tripType(t), rddCount(t), km > 0 ? km : '', t.driver, t.helper1, t.helper2, mano > 0 ? mano : '', t.remarks].map(v => String(v ?? '').trim()));
+  }))));
+  return rows;
+}
+function openRddCsv(from){   // from 'payroll': the Payroll tab's From–To and All accounts; else Truck Plan's dates and account
+  const pr = from === 'payroll', fv = id => ($(id) && $(id).value) || '';
+  const d0 = fv(pr ? 'payrollFrom' : 'xDate') || TODAY(), d1 = fv(pr ? 'payrollTo' : 'xTo') || d0;
+  const s0 = !pr && fv('xAcct') ? String(acctSec(fv('xAcct'))) : '';
+  openPop('Generate RDD (CSV, payroll)', 'Pick the dates (for example one payroll week) and the account. The CSV has one row per trip in the RDD order, with the trip count, km, driver, helpers and MANO, and opens in Excel.',
+    `<div class="repform"><label class="f">From<input type="date" id="rdcFrom" value="${esc(d0)}"></label><label class="f">To<input type="date" id="rdcTo" value="${esc(d1 < d0 ? d0 : d1)}"></label><label class="f">Account<select id="rdcAcct">${RDD_ACCTS.map(([v, t]) => `<option value="${v}" ${v === s0 ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label></div><p class="hint-line" id="rdcNote" style="margin:8px 0 0"></p>`,
+    `<button class="btn alt" type="button" onclick="closePop()">Close</button> <button class="btn road" type="button" id="rdcGo">Download CSV</button>`);
+  $('rdcGo').onclick = () => {
+    const from = $('rdcFrom').value, to = $('rdcTo').value || from, pick = $('rdcAcct').value, btn = $('rdcGo'), accName = (RDD_ACCTS.find(x => x[0] === pick) || RDD_ACCTS[0])[1];
+    if(!from) return toast('Pick the From date first.', true);
+    if(to < from) return toast('To cannot be before From.', true);
+    if((new Date(to) - new Date(from)) / 864e5 > 62) return toast('Pick at most 2 months at a time.', true);
+    btn.disabled = true; btn.textContent = 'Getting the trips…'; $('rdcNote').textContent = '';
+    fetchTrips(from, to).then(trips => {
+      btn.disabled = false; btn.textContent = 'Download CSV';
+      const rows = rddCsvRows(trips || [], from, to, pick);
+      const span = from === to ? fmtDay(from) : `${fmtDay(from)} to ${fmtDay(to)}`;
+      if(!rows.length){ $('rdcNote').textContent = `No trips for ${accName} on ${span}.`; return toast('No trips for that account on those dates.', true); }
+      const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const csv = '﻿' + [RDD_CSV_HEAD, ...rows].map(r => r.map(q).join(',')).join('\r\n');
+      const [fy, fm, fd] = from.split('-'), [ty, tm, td] = to.split('-');
+      const name = (`RDD payroll ${fm}-${fd}-${fy}` + (from === to ? '' : ` to ${tm}-${td}-${ty}`) + (pick !== '' ? ' ' + accName : '') + '.csv').replace(/[\\/:*?"<>|]/g, '-');
+      const url = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8'}));
+      const cnt = rows.reduce((a, r) => a + Number(r[11] || 0), 0);
+      $('rdcNote').textContent = `${span}: ${rows.length} row${rows.length === 1 ? '' : 's'}, ${fmtN(cnt)} trip${cnt === 1 ? '' : 's'} counted.`;
+      if(repSave(name, url)) toast('Saved ' + name); else toast('The file could not be saved on this device.', true);
+      setTimeout(() => URL.revokeObjectURL(url), 10 * 60000);
+    }).catch(e => { btn.disabled = false; btn.textContent = 'Download CSV'; toast('Trips not loaded: ' + (e && e.message || e), true); });
   };
 }
 /** Cuts a tall picture into A4-shaped JPEG pages, moving each cut up to a plain line (a row border or a gap) when one is near. */
@@ -10722,6 +10839,7 @@ function initPayroll(){
   $('payrollTo').onchange = () => { const f = $('payrollFrom').value, t = $('payrollTo').value; if(!t) return payrollRender(); payrollGo(f && f <= t && addDays(f, 61) >= t ? f : payrollCut(t, 0)[0], t); };
   $('payrollFind').oninput = () => { if(S.payroll && S.payroll.data) payrollTable(payrollRows()); };
   $('payrollReport').onclick = payrollCsv;
+  $('payrollRdd').onclick = () => openRddCsv('payroll');   // MANU 2026-11-06 "add the generate rdd in payroll tab"
   $('payrollDeductBtn').onclick = () => { if(!payrollCanEdit()) return; S.payroll.deduct = !payrollDeduct(); payrollRender(); };
   $('payrollSummary').onclick = e => {
     const b = e.target.closest('button'); if(!b || b.disabled) return;
