@@ -324,6 +324,16 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .lw-item .lw-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px}
 .lw-item .lw-wait{font-weight:800;color:#B42318;white-space:nowrap}
 .lw-item small{color:var(--muted)}
+.ir-st{display:inline-block;border-radius:999px;padding:2px 9px;font-size:10.5px;font-weight:800;letter-spacing:.02em;color:#fff;background:var(--c);white-space:normal}
+.lw-item.ir-item{border-left-color:#D97706;cursor:pointer}
+.lw-item.ir-item small{display:block}
+.ir-h{margin:4px 0 8px;font-size:13px;color:var(--ink)}
+.ir-clip{white-space:pre-wrap;word-break:break-word}
+.ir-txt{white-space:pre-wrap;word-break:break-word}
+.ir-tbl td:first-child{font-weight:700;color:var(--muted);width:120px;vertical-align:top}
+.poptbl tr.ir-unread td{background:#FFF7ED}
+small.ir-newtag{color:#D92D20 !important;font-weight:800}
+.ir-n{display:inline-block;min-width:18px;border-radius:999px;background:#D92D20;color:#fff;font-size:10.5px;padding:1px 5px;margin-left:4px}
 .lw-esc{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .esc-ask{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}.esc-ask .f{flex:1 1 220px;margin:0}.esc-ask textarea{width:100%;min-height:52px;resize:vertical;font:inherit}
 .mp-ph{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:4px}.mp-ph-pic{width:64px;height:64px;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;background:linear-gradient(145deg,#2E5BFF,#0A27B5);color:#fff;font-weight:800;font-size:20px;box-shadow:0 2px 8px rgba(10,31,143,.25)}
@@ -1435,6 +1445,20 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 .vup-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .vup-btns button,.vup-btns a{flex:1 1 160px;border:0;border-radius:12px;padding:12px 14px;font:700 15px system-ui,sans-serif;cursor:pointer;text-align:center;text-decoration:none}
 .vup-go{background:#B91C1C;color:#fff}.vup-later{background:#E8EEFF;color:#0A1F8F}
+.vchg{position:fixed;inset:0;z-index:99990;background:rgba(2,10,53,.72);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.vchg[hidden]{display:none}
+.vchg-box{background:linear-gradient(160deg,rgba(255,255,255,.97),rgba(232,238,255,.96));color:#0A1F8F;border-radius:18px;max-width:600px;width:100%;padding:18px 18px 14px;box-shadow:0 18px 60px rgba(0,0,0,.45),inset 0 1px 0 #fff;border-top:6px solid #2E5BFF;font-size:15px;line-height:1.45;max-height:calc(100vh - 32px);overflow:auto;white-space:normal;overflow-wrap:anywhere}
+.vchg-box h3{margin:0 0 4px;font-size:20px;color:#0A27B5}
+.vchg-box .vchg-sub{margin:0 0 10px;font-size:13px;color:#5B6B95}
+.vchg-v{border:1px solid #C9D6FF;border-radius:14px;padding:10px 12px;margin:10px 0;background:rgba(255,255,255,.8)}
+.vchg-v.cur{border-color:#2E5BFF;box-shadow:0 0 0 2px rgba(46,91,255,.18)}
+.vchg-v h4{margin:0 0 4px;font-size:16px;color:#0A1F8F;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.vchg-v h4 small{font-weight:400;color:#5B6B95;font-size:12px}
+.vchg-v h4 .vchg-tag{background:#2E5BFF;color:#fff;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700}
+.vchg-v ul{margin:4px 0 0;padding-left:20px}.vchg-v li{margin:4px 0}
+.vchg-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.vchg-btns button{flex:1 1 160px;border:0;border-radius:12px;padding:12px 14px;font:700 15px system-ui,sans-serif;cursor:pointer;background:linear-gradient(180deg,#2E5BFF,#0A27B5);color:#fff}
+#verBadge,#verLogin{cursor:pointer}
 .clk span{font-size:11px;color:#B9C8F5;font-weight:600}
 .clk:empty{display:none}
 
@@ -1540,6 +1564,9 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
 .sh-who{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--ink);margin-bottom:8px;padding-bottom:6px;border-bottom:1px dashed var(--line)}
 .sh-note .m:empty{display:none}
 .sh-note .t{white-space:pre-wrap;word-break:break-word;font-size:13.5px}
+.sh-more{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;margin:12px 0 10px;padding:10px 14px;border:1px solid rgba(46,91,255,.35);border-radius:12px;background:linear-gradient(180deg,rgba(46,91,255,.10),rgba(10,39,181,.06));color:#0A1F8F;font:700 13px/1.35 inherit;text-align:left;white-space:normal;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+.sh-more:hover{background:linear-gradient(180deg,rgba(46,91,255,.16),rgba(10,39,181,.10))}
+.sh-more b{font-size:11px;color:#2E5BFF}
 .sh-sec{font-weight:700;font-size:12.5px;color:var(--ink);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.4px}
 @media print{.sh-fab,.sh-panel{display:none!important}}
 
@@ -1891,6 +1918,8 @@ td.fuel-bad{background:#FEE2E2!important;color:#B91C1C!important;font-weight:700
       <button class="btn" type="button" id="xAddBtn" hidden>+ Add trip</button>
       <button class="btn alt" type="button" id="xDisbBtn" hidden>+ Disbursement</button>
       <button class="btn alt" type="button" id="xDelBtn" hidden title="Trips deleted from Truck Plan, with a button to put each one back">Deleted trips</button>
+      <button class="btn alt" type="button" id="xIrAdd" hidden title="Report an accident, breakdown, violation or other incident to HR">+ Incident report</button>
+      <button class="btn alt" type="button" id="xIrList" hidden title="Every incident report sent, with its status">Incident reports <b class="ir-n" id="xIrN" hidden></b></button>
       <span class="x-fund" id="xFund" hidden></span>
       <label class="f">Account<select id="xAcct"><option value="">All accounts</option><option>COCA COLA CANLUBANG PLANT</option><option>COCA COLA SAN FERNANDO</option><option>OTHER ACCOUNTS</option></select></label>
       <label class="f grow">Find<input id="xFind" placeholder="Truck, plate, customer, driver, shipment"></label>
@@ -2578,6 +2607,7 @@ const sinceText = d => { const n = daysSince(d); return n===null ? 'No trip in r
 const files = t => String(t.podFile||'').split(/\n|\s[|]\s/).map(x => x.trim()).filter(Boolean);
 
 function toast(msg, err, ms){
+  if(err && /Shipment number .+ already has a/.test(msg) && shipPop(msg)) return;   // shipment number rule: a pop-up, not a toast (MANU 2026-11-06)
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
@@ -2842,7 +2872,7 @@ $('askQ').onkeydown = e => { if(e.key==='Enter' && !e.shiftKey && !e.isComposing
 $('askBody').onclick = e => { const b = e.target.closest('[data-q]'); if(b) sendAsk(b.dataset.q); };
 
 function signOut(msg){
-  TOKEN = ''; S.lwN = 0; try{ if('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {}); }catch(e){} document.title = TITLE0; updateAppBadge.last = 0;
+  TOKEN = ''; S.lwN = 0; IR.list = []; IR.unread = 0; IR.v = ''; try{ if('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {}); }catch(e){} document.title = TITLE0; updateAppBadge.last = 0;
   store('jmti_token', null); store('jmti_me', null); store('jmti_mnt', null); lsClearData(); rcClear();
   resetMaintenance();
   Object.keys(TC).forEach(k => delete TC[k]); S.overdueSeen = null; S.odLocked = false; S.assign = {}; S.routes = S.people = S.users = null; S.aEdits = {}; HT.data = null; HT.canEdit = false; FU.data = null;
@@ -3191,8 +3221,10 @@ function loadBoot(){
     if(wasEmpty) showTab(S.tab); else { redrawAll(); if(S.tab==='assign') renderAssign(); }
     S.odPre = r.od ? {at: Date.now(), v: r.od} : null;   // overdue list and idle trucks came with it (dispatch roles)
     S.idlePre = r.idle ? {at: Date.now(), v: r.idle} : null;
+    S.nsPre = r.ns ? {at: Date.now(), v: r.ns} : null;   // trips of past days without a shipment number (TL / Supervisor)
     if(r.lw){ S.lw = r.lw; S.lwAt = Date.now(); renderLw(); }
-    Promise.resolve(checkOverdue()).then(() => checkIdle());
+    IR.v = ''; IR.list = []; IR.unread = 0; if(may('irView')) setTimeout(loadIr, 1200); else renderLw();   // incident reports on the bell
+    Promise.resolve(checkOverdue()).then(() => checkIdle()).then(() => setTimeout(() => checkNoShip(), 1500));
     setTimeout(prefetchTabs, 2500);
   }).catch(e => {
     if(e.net && S.boot){ toast('No signal. Showing what this phone saved' + syncAgo() + '.', false, 5000); return; }
@@ -3262,6 +3294,33 @@ function checkIdle(){
       }catch(err){ toast(err.message, true); b.disabled = false; }
     };
   }).catch(() => {});
+}
+/** Shipment number rule (MANU 2026-11-06, Code.gs shipRule_): one destination trip and one TUKOD a day per shipment number.
+ *  A refused save shows the server's reason, which names the trip that already has that shipment number, in a pop-up. */
+function shipPop(msg){
+  if(S.odLocked || !$('pop').hidden) return false;
+  const m = /: ([A-Z0-9-]+|row \d+) \(truck /.exec(msg), id = m ? m[1] : '';
+  const t = id && (S.trips || []).find(x => x.tripId===id);
+  openPop('⚠ Shipment number already used', '', `<p style="font-size:15px;line-height:1.5">${esc(msg.replace(/^Not (saved|added): /, ''))}</p>`,
+    (t && can('dispatcher') ? `<button class="btn alt" type="button" id="shipOpen">Open ${esc(id)}</button>` : '') + `<button class="btn" type="button" onclick="closePop()">OK</button>`);
+  const b = $('shipOpen'); if(b) b.onclick = () => { closePop(); openDispatch(t); };
+  return true;
+}
+/**
+ * Past trips without a shipment number (MANU 2026-11-06 "POP-UP TO TEAM LEADERS AND SUPERVISORS PREVIOUS DAYS WITH SHIPMENTS WITHOUT
+ * SHIPMENT NUMBER"): the server's list (Code.gs noShipList_, last 7 days before today) at app open, once the other pop-ups are closed.
+ * No lock: OK closes it. Tapping a trip opens it so the shipment number can be typed.
+ */
+const NOSHIP_ROLES = ['TEAM LEADER','SUPERVISOR'];
+function checkNoShip(list, tries){
+  if(!S.me || !NOSHIP_ROLES.includes(S.me.role)) return;
+  if(!list) return preOr('nsPre', 'noShipmentTrips').then(l => checkNoShip(l || [], 0)).catch(() => {});
+  if(!list.length) return;
+  if(S.odLocked || !$('pop').hidden || $('drawer').classList.contains('on')){ if((tries || 0) < 60) setTimeout(() => checkNoShip(list, (tries || 0) + 1), 5000); return; }
+  const live = list.map(t => (S.trips || []).find(x => x.key===t.key) || t).filter(t => !String(t.shipmentNo || '').trim());
+  if(!live.length) return;
+  popTrips(`⚠ No shipment number · ${live.length} trip${live.length===1?'':'s'}`, 'Trips of the past days with no SHIPMENT NUMBER. Tap a trip to open it and type the shipment number.',
+    live, `<button class="btn" type="button" onclick="closePop()">OK</button>`, () => '<b style="color:#B91C1C">No shipment number</b>', true);
 }
 const OVERDUE_ROLES = ['DISPATCHER','TEAM LEADER','SUPERVISOR'];
 const LOCK_ROLES = ['SUPERVISOR','TEAM LEADER'];   // locked until those trips' status is changed (server enforces it too); dispatchers only warned (MANU 16:32)
@@ -3506,7 +3565,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14, APP_VERSION_DATE = '2026-11-06';
+const APP_VERSION = 14.1, APP_VERSION_DATE = '2026-11-06';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
@@ -3528,6 +3587,39 @@ function verCheck(){
   if(!LIVE && !window.JMTI_API) return verShow(APP_VERSION);   // the preview has no separate server
   callServer('appVersion').then(r => verShow(Number(r && r.version) || 0)).catch(e => verShow(e && e.net ? null : 0));
 }
+/* What changed (MANU 2026-11-06 "WHEN VERSION IS CLICKED IN THE SYSTEM, THE CHANGES SHOULD SHOW"): tapping the version badge in the
+   top bar (or the version line on the sign-in card) opens a pop-up listing what changed, newest version first.
+   EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
+   d = date, items = plain-words list of what users will notice). */
+const APP_CHANGES = [
+  // MANU 2026-11-06 "ALL CHANGES TODAY, SHOW TO VERSION 14.1": everything released on 2026-11-06 is listed under 14.1
+  {v:14.1, d:'2026-11-06', items:[
+    'POD and Billing: new IDTS, RR IDTS, RR IWTS, CSWT, RR CSWT, ECD, TAR, TASIW, TASPN and TASDT columns. In POD they sit just before Documents, in Billing just before POD. POD and Billing tap a cell to type them, and each shows who encoded it.',
+    'Shift endorsement shows only the 3 newest endorsements. Older ones are folded into "Show older"; tap it to open them and tap again to close.',
+    'Tap the version in the top bar (or on the sign-in card) to see what changed in this version and earlier ones.',
+    'Incident reports go to HR, with a bell alert and a status, and show who submitted them.',
+    'POD and Billing: new BO, BO INVOICE, SHORTLANDED and SL INVOICE columns, and each status change records the time and who updated it.',
+    'Shipment number rule: one destination trip and one TUKOD per shipment number per day (TUKOD on other days is OK).',
+    'TL and Supervisor get a pop-up listing trips from the past 7 days that have no shipment number.',
+    'Purpose is now a dropdown, including MANO, and Accounting has its own purpose list.',
+    'New MANO AMOUNT column in Truck Plan and in the RDD.',
+    'Crew-change remarks are saved on the trip.',
+    'Source and Destination choices come only from the CLIENT LIST.',
+    'The nightly auto-fill of missing routes is turned off.']},
+  {v:12, d:'2026-11-05', items:[
+    'TUKOD overdue lock fixed: an old-dated TUKOD copy or a trip added today lifts the overdue lock.']}
+];
+function vchgShow(){
+  let o = document.getElementById('vchg');
+  if(!o){ o = document.createElement('div'); o.id = 'vchg'; o.className = 'vchg'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true');
+    o.addEventListener('click', e => { if(e.target === o) o.hidden = true; }); document.body.appendChild(o); }
+  const t = verText();
+  const list = APP_CHANGES.map(c => `<div class="vchg-v${c.v === APP_VERSION ? ' cur' : ''}"><h4>Version ${esc(c.v)} <small>${esc(c.d)}</small>${c.v === APP_VERSION ? '<span class="vchg-tag">This version</span>' : ''}</h4><ul>${c.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('');
+  o.innerHTML = `<div class="vchg-box"><h3>What changed</h3><p class="vchg-sub"${t.bad ? ' style="color:#B91C1C;font-weight:700"' : ''}>${esc(t.long)}</p>${list}<div class="vchg-btns"><button type="button" id="vchgOk">Close</button></div></div>`;
+  o.hidden = false;
+  $('vchgOk').onclick = () => { o.hidden = true; };
+}
+document.addEventListener('keydown', e => { const o = document.getElementById('vchg'); if(e.key === 'Escape' && o && !o.hidden) o.hidden = true; });
 /* Update pop-up (MANU 2026-11-05 "if current version is not updated, ask pop-up what users have to do"): when this page and the
    server carry different version numbers, a pop-up says in plain words what to do on this kind of device. Checked at open, at
    sign-in, every 10 minutes and when the app comes back on screen. No signal = no pop-up (sign-in is never blocked by it).
@@ -3632,7 +3724,7 @@ function clockTick(){
   DAY_SEEN = t;
 }
 setInterval(clockTick, 1000);
-setTimeout(() => { verShow(); verCheck(); $('verBadge').onclick = () => toast(verText().long, verText().bad, 8000); }, 0);
+setTimeout(() => { verShow(); verCheck(); $('verBadge').onclick = vchgShow; if($('verLogin')) $('verLogin').onclick = vchgShow; }, 0);
 document.addEventListener('visibilitychange', () => { if(!document.hidden) clockTick(); });
 clockTick();
 /** Counter chips (POD, Billing): items = [[key, label, count]]; tapping one filters the list. Rebuilt on every render. */
@@ -4648,6 +4740,8 @@ function initDispatcher(){
   $('xRefresh').onclick = refreshTruckPlan;
   $('xDisbBtn').onclick = () => openOpsForm('DISB', {});
   $('xDelBtn').onclick = openDeletedTrips;
+  $('xIrAdd').onclick = () => openIrForm();
+  $('xIrList').onclick = openIrList;
   $('xReport').onclick = openTruckPlanReport;
   $('xRdd').onclick = openRdd;
   $('xAcct').onchange = () => { const d = xRange()[1]; if(!S.assign[d]) call('getAssignments', d).then(l => { S.assign[d] = l; renderDispatcher(); }).catch(e => toast(e.message, true)); renderDispatcher(); };
@@ -5361,7 +5455,7 @@ function openDashReport(){
 function billingCsv(){
   const rows = S.billReportRows || [];
   if(!rows.length) return toast('Nothing to put in the report with these filters.', true);
-  const head = ['Trip date', 'Truck', 'Plate', 'Customer', 'Destination', 'Shipment'];
+  const head = ['Trip date', 'Truck', 'Plate', 'Customer', 'Destination', 'Shipment', ...BOSL_CSV_HEAD, ...PC_CSV_HEAD];
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const csv = '﻿' + [head, ...rows].map(r => r.map(q).join(',')).join('\r\n');
   const name = repFile('Billing', titleCase($('billAcct').value || 'All accounts'), 'csv');
@@ -5375,6 +5469,7 @@ function renderDispatcher(){
   const RF = restFlags(S.xCtx || S.xTrips);   // driver rest warnings (review 2026-11-04b #7)
   $('xAddBtn').hidden = !may('dispatchAdd');
   $('xDelBtn').hidden = !may('restoreTrip');
+  $('xIrAdd').hidden = !may('irAdd'); $('xIrList').hidden = !may('irView');
   $('xFeedNote').hidden = !feedOf();
   if(feedOf() && feedOf().end) $('xFeedNote').innerHTML = 'October trips come from <b>GENERAL DATABASE 2.0</b>: change their status, truck, route and crew there (it shows here within a minute). Trips from November on are added and changed here.';   // GENERAL gets its newest trips from 2.0 (Code.gs feed_)
   const q = $('xFind').value.toLowerCase().trim(), f = S.xFilter;
@@ -5727,6 +5822,8 @@ function initPod(){
     if(e.target.closest('td[data-pst]')) return openPodStatus(t, e.target.closest('td'));
     if(e.target.closest('td[data-pdoc]')) return openPodDocs(t, e.target.closest('td'));
     if(e.target.closest('td[data-prem]')) return openPodRemarks(t, e.target.closest('td'));
+    if(e.target.closest('td[data-bosl]') && may('pod')) return openBosl(t, e.target.closest('td'), 'podSave');
+    if(e.target.closest('td[data-pc]') && may('pod')) return openPc(t, e.target.closest('td'), 'podSave');
     openPod(t); };
   bindViews($('drBody'));
 }
@@ -5767,9 +5864,9 @@ function renderPod(){
   S.podReady = ready;
   const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips in Waiting docs have scanned documents.</span><button class="btn road" type="button" id="podBulk">Mark all ${ready.length} ENDORSED TO BILLING</button></div>` : '';
   const docCell = t => t.podAt ? `<span class="docstate ok">Sent ${esc(t.podAt.slice(0,10))}</span>` : `<span class="docstate wait">${files(t).length ? files(t).length+' file(s) · to check' : 'No documents'}</span>`;
-  $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th>Driver</th><th>Helpers</th><th>POD remarks</th><th>Documents</th><th>Status</th></tr></thead><tbody>` +
+  $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th>Driver</th><th>Helpers</th>${BOSL_TH}<th>POD remarks</th>${PC_TH}<th>Documents</th><th>Status</th></tr></thead><tbody>` +
     list.map((t,i) => {
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('pod'))}<td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td>${pcTds(t, may('pod'))}<td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.podFilter==='completed' ? 'No trip endorsed to billing in these dates.' : 'Nothing left to check here.'}</div>`;
   freezeCols($('podList'));
 }
@@ -5822,6 +5919,11 @@ function shiftRender(){
   const of = (d, sh) => notes.filter(n => n.date===d && n.shift===sh);
   const prev = of(r.prev.date, r.prev.shift), cur = of(r.now.date, r.now.shift);
   const older = notes.filter(n => !((n.date===r.prev.date && n.shift===r.prev.shift) || (n.date===r.now.date && n.shift===r.now.shift)));
+  // Only the 3 newest endorsements show; the rest fold into "Show older (N)" until tapped (MANU 2026-11-06 "SHOW ONLY 3 LATEST, THE REST ARE MINIMIZED")
+  const isNow = n => (n.date===r.prev.date && n.shift===r.prev.shift) || (n.date===r.now.date && n.shift===r.now.shift);
+  const lcard = n => card(n, isNow(n)).replace('<div class="m">', `<div class="m">${esc(shLabel(n.date, n.shift))}`);
+  const byNew = notes.slice().sort((x, y) => String(y.at).localeCompare(String(x.at)));
+  const top = byNew.slice(0, 3), rest = byNew.slice(3);
   const draft = lsGet('jmti_sh_draft_' + S.me.username + '_' + r.now.date + r.now.shift) || '';
   const form = !r.canAdd ? '' : r.mine ? '<p class="hint">You already submitted your endorsement for this shift.</p>'
     : `<label class="f">Your endorsement to the next shift<textarea id="shText" placeholder="Pending trucks, issues, instructions for the next shift">${esc(draft)}</textarea></label>
@@ -5832,11 +5934,11 @@ function shiftRender(){
       <div class="sh-find-row"><label class="f">From<input type="date" id="shFrom" value="${esc(SH.from || '')}"></label><label class="f">To<input type="date" id="shTo" value="${esc(SH.to || '')}"></label>
       <label class="f">Shift<select id="shShift"><option value="">Both</option><option value="DAY" ${SH.shift==='DAY' ? 'selected' : ''}>Day</option><option value="NIGHT" ${SH.shift==='NIGHT' ? 'selected' : ''}>Night</option></select></label></div>
       <div class="sh-find-row"><button class="btn alt" type="button" id="shGo">Search</button><button class="btn alt" type="button" id="shClear" ${SH.q || SH.from || SH.to || SH.shift ? '' : 'hidden'}>Clear</button></div>
-    </div><div id="shRes"></div><div id="shMain"><div class="sh-sec">From the previous shift</div><div class="hint" style="margin:-4px 0 8px">${esc(shLabel(r.prev.date, r.prev.shift))}</div>
-    ${prev.length ? prev.map(n => card(n, true)).join('') : '<p class="hint">No endorsement from the previous shift.</p>'}
-    <div class="sh-sec">This shift</div><div class="hint" style="margin:-4px 0 8px">${esc(shLabel(r.now.date, r.now.shift))}</div>
-    ${cur.map(n => card(n, true)).join('')}${form}
-    ${older.length ? `<div class="sh-sec">Earlier (last 14 days)</div>` + older.map(n => card(n).replace('<div class="m">', `<div class="m">${esc(shLabel(n.date, n.shift))}<br>`)).join('') : ''}</div>`;
+    </div><div id="shRes"></div><div id="shMain"><div class="sh-sec">Latest endorsements</div>
+    ${top.length ? top.map(n => lcard(n)).join('') : '<p class="hint">No endorsement yet.</p>'}
+    ${r.canAdd ? `<div class="sh-sec">Your endorsement · this shift</div><div class="hint" style="margin:-4px 0 8px">${esc(shLabel(r.now.date, r.now.shift))}</div>${form}` : ''}
+    ${rest.length ? `<button class="sh-more" type="button" id="shMore" aria-expanded="${SH.more ? 'true' : 'false'}"><span>${SH.more ? 'Hide older' : 'Show older'} (${rest.length})</span><b>${SH.more ? '▲' : '▼'}</b></button>
+    <div id="shOld" ${SH.more ? '' : 'hidden'}>${rest.map(n => lcard(n)).join('')}</div>` : ''}</div>`;
   SH.card = n => card(n).replace('<div class="m">', `<div class="m">${esc(shLabel(n.date, n.shift))}<br>`);
   const go = () => { SH.q = $('shQ').value.trim(); SH.from = $('shFrom').value; SH.to = $('shTo').value; SH.shift = $('shShift').value; shiftSearch(); };
   $('shGo').onclick = go; $('shQ').onkeydown = e => { if(e.key==='Enter') go(); };
@@ -5846,6 +5948,9 @@ function shiftRender(){
   if(latest) lsSet(shSeenKey(), latest);
   $('shDot').hidden = true;
   $('shMain').onclick = e => {
+    const mo = e.target.closest('#shMore');
+    if(mo){ SH.more = !SH.more; $('shOld').hidden = !SH.more; mo.setAttribute('aria-expanded', SH.more ? 'true' : 'false');
+      mo.innerHTML = `<span>${SH.more ? 'Hide older' : 'Show older'} (${rest.length})</span><b>${SH.more ? '▲' : '▼'}</b>`; return; }
     const rd = e.target.closest('[data-shread]'), ed = e.target.closest('[data-shedit]');
     if(rd){ rd.disabled = true; rd.textContent = 'Saving…';
       call('markShiftRead', +rd.dataset.shread, rd.dataset.u, rd.dataset.d).then(x => { SH.data = x; SH.got = Date.now(); shiftRender(); toast('Marked as read.'); })
@@ -5940,6 +6045,67 @@ function renderPodStats(){
 /** "2026-11-04 15:10" → "Nov 4, 2026 3:10 PM": when the POD status last changed or a document was uploaded (MANU 2026-11-04). */
 const podWhen = v => { const m = String(v || '').match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})/); if(!m) return String(v || ''); const h = +m[2]; return `${fmtDay(m[1])} ${(h % 12) || 12}:${m[3]} ${h < 12 ? 'AM' : 'PM'}`; };
 const nowStamp = () => { const d = new Date(Date.now() + (S.clockOff || 0)), p = n => String(n).padStart(2, '0'); return `${TODAY()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+// BO / shortlanded and POD timestamps (MANU 2026-11-06 "add columns in POD and billing after helper column ... always show who updated or
+// encoded"): same 9 columns after Helpers in POD and Billing. Stamps come from the server as "yyyy-MM-dd HH:mm · NAME".
+const BOSL_KEYS = ['bo', 'boInv', 'sl', 'slInv'], BOSL_STAMPS = ['docUpAt', 'pendAt', 'rcvAt', 'tukodAt', 'endAt'];
+const BOSL_LABELS = ['BO', 'BO invoice', 'Shortlanded', 'SL invoice', 'Document uploaded', 'Pending', 'Received documents', 'Tukod', 'Endorsed to billing'];
+const BOSL_TH = BOSL_LABELS.map(l => `<th>${l}</th>`).join(''), BOSL_N = BOSL_LABELS.length;
+const POD_ST_KEY = {'PENDING': 'pendAt', 'RECEIVED DOCUMENTS': 'rcvAt', 'TUKOD': 'tukodAt', 'ENDORSED TO BILLING': 'endAt'};
+const whoSplit = v => { const p = String(v || '').split(' · '); return {at: p[0] || '', by: p.slice(1).join(' · ')}; };
+const whoText = v => { const w = whoSplit(v); return w.at ? podWhen(w.at) + (w.by ? ' by ' + w.by : '') : ''; };
+const whoCell = v => { const w = whoSplit(v); return w.at ? `${esc(podWhen(w.at))}${w.by ? `<br><small>by ${esc(w.by)}</small>` : ''}` : ''; };
+const boslTds = (t, ed) => { const by = whoSplit(t.boslAt).by;
+  return BOSL_KEYS.map(k => `<td class="${ed ? 'ed' : ''}" ${ed ? `data-bosl="${k}" title="Type BO / shortlanded"` : ''} style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`).join('') +
+    BOSL_STAMPS.map(k => `<td>${whoCell(t[k])}</td>`).join(''); };
+const boslCsv = t => BOSL_KEYS.map(k => t[k] || '').concat([whoText(t.boslAt)], BOSL_STAMPS.map(k => whoText(t[k])));
+const BOSL_CSV_HEAD = ['BO', 'BO invoice', 'Shortlanded', 'SL invoice', 'BO/SL encoded', 'Document uploaded', 'Pending', 'Received documents', 'Tukod', 'Endorsed to billing'];
+const podStampLocal = (next, st) => { const k = POD_ST_KEY[st]; if(k) next[k] = nowStamp() + ' · ' + S.me.name; return next; };
+// IDTS … TASDT (MANU 2026-11-06 "IN POD AND BILLING, ADD THESE COLUMNS BEFORE DOCUMENTS COLUMN"): typed by POD / Billing, pcAt = who + when
+const PC_KEYS = ['idts', 'rrIdts', 'rrIwts', 'cswt', 'rrCswt', 'ecd', 'tar', 'tasiw', 'taspn', 'tasdt'];
+const PC_LABELS = ['IDTS', 'RR IDTS', 'RR IWTS', 'CSWT', 'RR CSWT', 'ECD', 'TAR', 'TASIW', 'TASPN', 'TASDT'];
+const PC_TH = PC_LABELS.map(l => `<th>${l}</th>`).join(''), PC_N = PC_KEYS.length;
+const pcTds = (t, ed) => { const by = whoSplit(t.pcAt).by;
+  return PC_KEYS.map(k => `<td class="${ed ? 'ed' : ''}" ${ed ? `data-pc="${k}" title="Type IDTS / TAS"` : ''} style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`).join(''); };
+const pcCsv = t => PC_KEYS.map(k => t[k] || '').concat([whoText(t.pcAt)]);
+const PC_CSV_HEAD = PC_LABELS.concat(['IDTS/TAS encoded']);
+/** POD or Billing table: tap any IDTS … TASDT cell to type all ten (fn = podSave or billingSave). */
+function openPc(t, td, fn){
+  if(!t) return;
+  if(t._pending) return toast('Still saving — try again in a moment.');
+  const w = whoSplit(t.pcAt);
+  podPop(td, `<div class="ce-h"><b>IDTS / TAS</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div>
+    ${PC_KEYS.map((k, i) => `<label class="f">${PC_LABELS[i]}<input id="pc_${k}" value="${esc(t[k] || '')}" autocomplete="off"></label>`).join('')}
+    ${w.at ? `<div class="hint">Last encoded ${esc(podWhen(w.at))}${w.by ? ' by ' + esc(w.by) : ''}</div>` : ''}
+    <div class="ce-f"><span style="flex:1"></span><button class="btn alt" type="button" id="pcCancel">Cancel</button> <button class="btn" type="button" id="pcSave">Save</button></div>`, true);
+  const first = $('pc_' + (td.dataset.pc || 'idts')); if(first) first.focus();
+  $('pcCancel').onclick = closeCellEditor;
+  $('pcSave').onclick = () => {
+    const data = {};
+    PC_KEYS.forEach(k => { const v = $('pc_' + k).value.trim().toUpperCase().replace(/\s+/g, ' '); if(v !== String(t[k] || '')) data[k] = v; });
+    closeCellEditor();
+    if(!Object.keys(data).length) return toast('Nothing changed');
+    saveOptimistic({...t, ...data, pcAt: nowStamp() + ' · ' + S.me.name}, t, () => callQ(fn, refOf(t), data), () => 'IDTS / TAS saved');
+  };
+}
+/** POD or Billing table: tap BO / BO invoice / Shortlanded / SL invoice to type all four (fn = podSave or billingSave). */
+function openBosl(t, td, fn){
+  if(!t) return;
+  if(t._pending) return toast('Still saving — try again in a moment.');
+  const w = whoSplit(t.boslAt);
+  podPop(td, `<div class="ce-h"><b>BO / Shortlanded</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div>
+    ${BOSL_KEYS.map((k, i) => `<label class="f">${BOSL_LABELS[i]}<input id="bosl_${k}" value="${esc(t[k] || '')}" autocomplete="off"></label>`).join('')}
+    ${w.at ? `<div class="hint">Last encoded ${esc(podWhen(w.at))}${w.by ? ' by ' + esc(w.by) : ''}</div>` : ''}
+    <div class="ce-f"><span style="flex:1"></span><button class="btn alt" type="button" id="boslCancel">Cancel</button> <button class="btn" type="button" id="boslSave">Save</button></div>`, true);
+  const first = $('bosl_' + (td.dataset.bosl || 'bo')); if(first) first.focus();
+  $('boslCancel').onclick = closeCellEditor;
+  $('boslSave').onclick = () => {
+    const data = {};
+    BOSL_KEYS.forEach(k => { const v = $('bosl_' + k).value.trim().toUpperCase().replace(/\s+/g, ' '); if(v !== String(t[k] || '')) data[k] = v; });
+    closeCellEditor();
+    if(!Object.keys(data).length) return toast('Nothing changed');
+    saveOptimistic({...t, ...data, boslAt: nowStamp() + ' · ' + S.me.name}, t, () => callQ(fn, refOf(t), data), () => 'BO / shortlanded saved');
+  };
+}
 /** POD "Download CSV": the trips the POD list shows now (dates, account, customer, find and chip as picked), oldest first. */
 // Late documents (review 2026-11-04 #10): completed trips still not endorsed to Billing after N days, grouped by driver.
 // POD and POD HEAD see it once a day after signing in; the "Late documents" button in the POD tab opens it any time.
@@ -5969,9 +6135,9 @@ function podCsv(){
   if(!l.length) return toast('No trips shown to download.', true);
   const chip = ({tocheck:'All to check', pending:'Pending', waitdocs:'Waiting docs', recvdocs:'Received documents', tukod:'Tukod', completed:'Endorsed to Billing'})[S.podFilter] || '';
   saveCsvFile(`POD ${chip} ${$('podFrom').value} to ${$('podTo').value}.csv`.replace(/\s+/g, ' '),
-    ['#', 'Trip date', 'Trip ID', 'Truck', 'Plate', 'Customer', 'Destination', 'Shipment', 'Driver', 'Helpers', 'POD remarks', 'Documents', 'Status', 'Status updated', 'Updated by'],
+    ['#', 'Trip date', 'Trip ID', 'Truck', 'Plate', 'Customer', 'Destination', 'Shipment', 'Driver', 'Helpers', ...BOSL_CSV_HEAD, 'POD remarks', ...PC_CSV_HEAD, 'Documents', 'Status', 'Status updated', 'Updated by'],
     l.map((t, i) => [i + 1, t.date, t.tripId || '', t.truckNo || '', t.plateNo || '', t.customer || '', t.destination || '', t.shipmentNo || '', t.driver || '',
-      [t.helper1, t.helper2].filter(Boolean).join(', '), t.pod || '', t.podAt ? 'Sent ' + String(t.podAt).slice(0, 10) : files(t).length ? files(t).length + ' file(s)' : 'No documents',
+      [t.helper1, t.helper2].filter(Boolean).join(', '), ...boslCsv(t), t.pod || '', ...pcCsv(t), t.podAt ? 'Sent ' + String(t.podAt).slice(0, 10) : files(t).length ? files(t).length + ' file(s)' : 'No documents',
       podSt(t), t.podUpdAt ? podWhen(t.podUpdAt) : '', t.podUpdBy || '']));
 }
 function openPod(t){
@@ -5996,7 +6162,7 @@ function openPod(t){
     const pod = $('podRemarks').value.trim().toUpperCase();
     if(checked===true) status = POD_DONE;
     const next = {...t, pod};
-    if(status!==undefined){ next.finalStatus = status; next.podUpdAt = nowStamp(); next.podUpdBy = S.me.name; }
+    if(status!==undefined){ next.finalStatus = status; next.podUpdAt = nowStamp(); next.podUpdBy = S.me.name; podStampLocal(next, status); }
     if(status===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; }
     else if(status!==undefined || checked===false){   // taken back from Billing (review 2026-11-04 #1)
       if(t.billAt && podSent(t)) return toast('Billing already checked this trip. Ask Billing to remove its check first.');
@@ -6069,7 +6235,7 @@ function openPodStatus(t, td){
     if(st===podSt(t)) return toast('Nothing changed');
     if(st===POD_DONE && !files(t).length && !confirm('No scanned document is uploaded for this trip. Mark ENDORSED TO BILLING and send to billing anyway?')) return;
     if(st!==POD_DONE && t.billAt && podSent(t)) return toast('Billing already checked this trip. Ask Billing to remove its check first.');
-    const next = {...t, finalStatus: st, podUpdAt: nowStamp(), podUpdBy: S.me.name}; if(st===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; } else { next.podAt = ''; next.podBy = ''; }
+    const next = podStampLocal({...t, finalStatus: st, podUpdAt: nowStamp(), podUpdBy: S.me.name}, st); if(st===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; } else { next.podAt = ''; next.podBy = ''; }
     saveOptimistic(next, t, () => callQ('podSave', refOf(t), {status: st}), () => st===POD_DONE ? 'ENDORSED TO BILLING — moved to billing' : 'Status: ' + st);
   };
   if($('podUndo')) $('podUndo').onclick = () => send(false);
@@ -6129,7 +6295,10 @@ function initBilling(){
   $('billReport').onclick = billingCsv;
   $('billList').onclick = e => {
     if(e.target.closest('#billBulk')) return bulkCheck('bill');
-    const c=e.target.closest('[data-key]'); if(c) openBill(S.billTrips.find(t=>t.key===c.dataset.key)); };
+    const c=e.target.closest('[data-key]'); if(!c) return; const bt = S.billTrips.find(t=>t.key===c.dataset.key);
+    if(e.target.closest('td[data-bosl]') && may('billing')) return openBosl(bt, e.target.closest('td'), 'billingSave');
+    if(e.target.closest('td[data-pc]') && may('billing')) return openPc(bt, e.target.closest('td'), 'billingSave');
+    openBill(bt); };
   $('billTabs').onclick = e => { const b = e.target.closest('.chip'); if(!b) return;
     $('billTabs').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c===b));
     $('billTrips').hidden = b.dataset.sub!=='trips'; $('billRoutes').hidden = b.dataset.sub!=='routes';
@@ -6172,14 +6341,14 @@ function renderBilling(){
   const billOrder = t => t.billAt ? 2 : t.podAt ? 0 : 1;
   const since = t => String(t.podAt && t.podAt!=='saving' ? t.podAt : t.date);
   const byTrip = (a,b) => billOrder(a) - billOrder(b) || since(a).localeCompare(since(b)) || String(a.truckNo).localeCompare(String(b.truckNo),undefined,{numeric:true});
-  const head = groupRoutes(list, byTrip, () => false, 13);   // no route header rows on Billing (MANU)
-  S.billReportRows = list.map(t => [fmtDay(t.date), String(t.truckNo || ''), t.plateNo || '', t.customer || '', plainDest(t.destination) || '', t.shipmentNo || '']);   // Generate report (CSV)
+  const head = groupRoutes(list, byTrip, () => false, 13 + BOSL_N + PC_N);   // no route header rows on Billing (MANU)
+  S.billReportRows = list.map(t => [fmtDay(t.date), String(t.truckNo || ''), t.plateNo || '', t.customer || '', plainDest(t.destination) || '', t.shipmentNo || '', ...boslCsv(t), ...pcCsv(t)]);   // Generate report (CSV)
   const ready = S.billFilter==='tocheck' ? list.filter(t => !t._pending) : [];
   S.billReady = ready;
   const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips from POD are waiting for your check.</span><button class="btn road" type="button" id="billBulk">Mark all ${ready.length} checked</button></div>` : '';
   const stCell = t => t.billAt ? `<span class="docstate ok">Checked ${esc(t.billAt.slice(0,10))}</span>${t.invNo ? `<small>Invoice ${esc(t.invNo)}${t.invAmt ? ' · ₱' + Number(t.invAmt).toLocaleString('en-PH') : ''}</small>` : '<small class="dim">no invoice no.</small>'}` : t.podAt ? `<span class="docstate wait">From POD · ${files(t).length} file(s)</span>` : `<span class="docstate">Waiting for POD</span>`;
-  $('billList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th class="n">KMS</th><th>Driver</th><th>Helpers</th><th>POD</th><th>Billing</th><th>Final status</th></tr></thead><tbody>` +
-    list.map((t,i) => (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${t.billAt ? 'var(--done)' : t.podAt ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td title="${esc(t.destination || '')}">${esc(plainDest(t.destination) || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td class="n">${esc(tripKm(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td><td>${esc(t.podAt && t.podAt!=='saving' ? t.podAt.slice(0,10) : t.podAt ? 'Saving…' : '')}${t.pod ? `<small>${esc(t.pod)}</small>` : ''}</td><td>${stCell(t)}</td><td>${esc(podSt(t))}</td></tr>`).join('') + `</tbody></table></div>`
+  $('billList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Shipment</th><th class="n">KMS</th><th>Driver</th><th>Helpers</th>${BOSL_TH}${PC_TH}<th>POD</th><th>Billing</th><th>Final status</th></tr></thead><tbody>` +
+    list.map((t,i) => (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${t.billAt ? 'var(--done)' : t.podAt ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td title="${esc(t.destination || '')}">${esc(plainDest(t.destination) || '—')}</td><td>${esc(t.shipmentNo || '')}</td><td class="n">${esc(tripKm(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('billing'))}${pcTds(t, may('billing'))}<td>${esc(t.podAt && t.podAt!=='saving' ? t.podAt.slice(0,10) : t.podAt ? 'Saving…' : '')}${t.pod ? `<small>${esc(t.pod)}</small>` : ''}</td><td>${stCell(t)}</td><td>${esc(podSt(t))}</td></tr>`).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.billFilter==='tocheck' ? 'Nothing from POD to check in these dates.' : 'Nothing here for these dates.'}</div>`;
   freezeCols($('billList'));
 }
@@ -6586,29 +6755,39 @@ const escText = (x, issue) => ['ESCALATION', 'PLATE: ' + (x.plateNo || '—'), '
   ...(issue ? ['ISSUE: ' + String(issue).replace(/\s+/g, ' ').trim()] : []),
   '', 'THANK YOU', (S.me && S.me.name) || ''].map(l => l.toUpperCase()).join('\n').trim();
 function renderLw(){
-  const n = (S.lw || []).length, b = $('lwBtn');
+  const lwn = mayLw() ? (S.lw || []).length : 0, irn = may('irView') ? irNew().length : 0, n = lwn + irn, b = $('lwBtn');
   if(!b) return;
-  // Notification bell (MANU 2026-10-13): red count of trips waiting too long; it rings when one appears that hasn't been seen
-  b.hidden = !mayLw(); $('lwN').textContent = n > 99 ? '99+' : n; $('lwN').hidden = !n;
-  S.lwN = mayLw() ? n : 0; updateAppBadge();
+  // Notification bell (MANU 2026-10-13): red count of trips waiting too long; it rings when one appears that hasn't been seen.
+  // Since 2026-11-06 also new incident reports (HR, Admin, Boss; the sender when HR changes the status) until opened.
+  b.hidden = !mayLw() && !may('irView'); $('lwN').textContent = n > 99 ? '99+' : n; $('lwN').hidden = !n;
+  S.lwN = n; updateAppBadge();
   const seen = new Set(lsGet('jmti_lw_seen') || []);
-  b.classList.toggle('ring', (S.lw || []).some(x => !seen.has(x.key)));
-  b.title = n ? `${n} trip${n===1 ? '' : 's'} with no status change for too long. Tap to see them and send an escalation.` : 'No trip waiting too long';
-  b.setAttribute('aria-label', n ? `Notifications: ${n} trip${n===1 ? '' : 's'} waiting too long` : 'Notifications: none');
+  b.classList.toggle('ring', !!irn || (mayLw() && (S.lw || []).some(x => !seen.has(x.key))));
+  const parts = [irn && `${irn} new incident report${irn===1 ? '' : 's'}`, lwn && `${lwn} trip${lwn===1 ? '' : 's'} waiting too long`].filter(Boolean);
+  b.title = parts.length ? parts.join(' · ') + '. Tap to see them.' : 'No notifications';
+  b.setAttribute('aria-label', parts.length ? 'Notifications: ' + parts.join(', ') : 'Notifications: none');
+  const xn = $('xIrN'); if(xn){ xn.textContent = irn; xn.hidden = !irn; }
   if(!$('pop').hidden && $('pop').classList.contains('lwpop')) renderLwPop();
 }
 function renderLwPop(){
-  const l = S.lw || [];
-  $('popSub').textContent = `${l.length} trip${l.length===1 ? '' : 's'} need${l.length===1 ? 's' : ''} an update`;
-  $('popBody').innerHTML = l.length ? `<p class="hint" style="margin:0 0 10px">No status change for more than 6 hours at a site, 12 hours on the way, or 24 hours at Clip Board. Update the trip in Truck Plan, or tap ESCALATION to send it.</p>`
+  const l = mayLw() ? S.lw || [] : [], ir = may('irView') ? irNew() : [];
+  $('popSub').textContent = [ir.length && `${ir.length} new incident report${ir.length===1 ? '' : 's'}`, mayLw() && `${l.length} trip${l.length===1 ? '' : 's'} need${l.length===1 ? 's' : ''} an update`].filter(Boolean).join(' · ') || 'Nothing new';
+  const irHtml = !may('irView') ? '' : `<h4 class="ir-h">Incident reports</h4>` + (ir.length ? ir.map(x => `<div class="lw-item ir-item rowbtn" data-iropen="${esc(x.id)}" role="button" tabindex="0" title="Open ${esc(x.id)}">
+      <div class="lw-top"><span><b>${esc(x.id)}</b> · ${esc(x.type)}</span>${irPill(x.status)}</div>
+      <div class="ir-clip">${esc(x.details)}</div>
+      <small>${x.truckNo ? 'Truck ' + esc(x.truckNo) + (x.plateNo ? ' · ' + esc(x.plateNo) : '') + ' · ' : ''}${irWhen(x)}</small>
+      <small class="ir-sub">Submitted by ${irBy(x)}${x.statusBy && x.byU===(S.me && S.me.username || '').toLowerCase() ? ` · status changed by ${esc(x.statusBy)}` : ''}</small></div>`).join('')
+      : '<p class="hint">No new incident reports.</p>') + `<p style="margin:0 0 12px"><button class="btn alt" type="button" data-irall>All incident reports</button></p>`;
+  if(!mayLw()){ $('popBody').innerHTML = irHtml; return; }
+  $('popBody').innerHTML = irHtml + (ir.length || may('irView') ? '<h4 class="ir-h">Waiting too long</h4>' : '') + (l.length ? `<p class="hint" style="margin:0 0 10px">No status change for more than 6 hours at a site, 12 hours on the way, or 24 hours at Clip Board. Update the trip in Truck Plan, or tap ESCALATION to send it.</p>`
     + l.map((x, i) => `<div class="lw-item"><div class="lw-top"><span>${tLink(x.truckNo, 'Truck ' + (x.truckNo || '—'))} · ${plLink(x.plateNo)}</span><span class="lw-wait">${esc(lwDur(x.since))}</span></div>
       <div><b>${esc(x.client || '—')}</b> → ${esc(x.place || '—')}</div>
       <small>${esc(x.status)}${lwWait(x.status)!==x.status ? ' (' + esc(lwWait(x.status).toLowerCase()) + ')' : ''} since ${esc(lwAtTxt(x.since))} · limit ${x.limitH} h${x.driver ? ' · ' + pLink(x.driver) : ''}${x.tripId ? ' · ' + esc(x.tripId) : ''}</small>
       <div class="lw-esc"><button class="btn" type="button" data-esc="${i}">ESCALATION</button><span class="dim" data-escnote="${i}"></span></div></div>`).join('')
-    : '<p class="hint">No trips are waiting too long right now.</p>';
+    : '<p class="hint">No trips are waiting too long right now.</p>');
 }
 function openLw(){
-  openPop('Waiting too long', '', '', `<button class="btn alt" type="button" onclick="loadLw()">Refresh</button><button class="btn" type="button" onclick="closePop()">Close</button>`);
+  openPop(may('irView') ? 'Notifications' : 'Waiting too long', '', '', `<button class="btn alt" type="button" onclick="loadLw(); loadIr()">Refresh</button><button class="btn" type="button" onclick="closePop()">Close</button>`);
   $('pop').classList.add('lwpop');
   lsSet('jmti_lw_seen', (S.lw || []).map(x => x.key).slice(-500));   // opened: stop ringing for these
   $('lwBtn').classList.remove('ring');
@@ -6641,10 +6820,156 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-esc]'); if(b && $('pop').classList.contains('lwpop')) askEsc(Number(b.dataset.esc));
   const g = e.target.closest('[data-escgo]'); if(g && $('pop').classList.contains('lwpop')) sendEsc(Number(g.dataset.escgo));
   if(e.target.closest('#lwBtn')) openLw();
+  const io = e.target.closest('[data-iropen]'); if(io && $('pop').classList.contains('lwpop') && !e.target.closest('.plink')) openIr(io.dataset.iropen, 'bell');
+  if(e.target.closest('[data-irall]') && $('pop').classList.contains('lwpop')) openIrList();
   if(e.target.closest('#chatBtn') && !FAB.moved){ if(dockShown()) hideDock(); else openChat(); }
   if(e.target.closest('#chdHide')) hideDock();
   if(e.target.closest('#obBtn')) openOutbox();
 });
+
+/* ===== Incident reports (MANU 2026-11-06 "add incident report button to truckplan, all submitted IR records go to HR, and shows
+ * on notification bell, when clicked will pop-up IR, if read, remove from notfication. add button to pop-up all IR in truckplan.
+ * IR shoudl status" + "show who submitted the IR")
+ * Code.gs irSave / irList / irStatus / irRead, tab INCIDENT REPORTS. Sent from Truck Plan (+ Incident report); the list opens from
+ * Truck Plan (Incident reports) and from the bell. HR, Admin and Boss get every new IR on the bell; the sender gets it back when HR
+ * changes the status. Opening an IR takes it off the bell (on every phone). The chat check carries a changed mark (irv). */
+const IR = {list: [], unread: 0, v: '', busy: false, types: [], statuses: [], canStatus: false, canAdd: false};
+const IR_ST_COLOR = {'NEW':'#D92D20', 'UNDER REVIEW':'#D97706', 'RESOLVED':'#16A34A', 'CLOSED':'#64748B'};
+const irPill = st => `<span class="ir-st" style="--c:${IR_ST_COLOR[st] || '#64748B'}">${esc(st)}</span>`;
+const irWhen = x => esc(fmtDay(x.date)) + (x.time ? ' ' + esc(clock12('0000-00-00T' + x.time)) : '');
+const irAt = at => at ? esc(fmtDay(String(at).slice(0, 10)) + ' ' + clock12(String(at).replace(' ', 'T'))) : '';
+const irBy = x => `<b>${esc(x.by || '—')}</b>${x.byRole ? ' · ' + esc(x.byRole) : ''} · ${irAt(x.at)}`;
+function loadIr(){
+  if(!S.me || !may('irView') || IR.busy) return;
+  IR.busy = true;
+  call('irList').then(r => { Object.assign(IR, r); IR.v = String(r.v || ''); renderLw(); irRedraw(); })
+    .catch(() => {}).finally(() => { IR.busy = false; });
+}
+function irMark(v){ if(v && v!==IR.v){ IR.v = v; loadIr(); } }
+const irNew = () => (IR.list || []).filter(x => x.unread);
+/** Pop-up of one IR. Opening it takes it off the bell. back = the pop-up to go back to ('list' or 'bell'). */
+function openIr(id, back){
+  const x = (IR.list || []).find(y => y.id===id); if(!x) return toast('That incident report is not on this phone yet. Refresh.', true);
+  if(x.unread){ x.unread = false; IR.unread = irNew().length; renderLw(); call('irRead', x.id).catch(() => {}); }
+  const row = (k, v) => v ? `<tr><td>${k}</td><td>${v}</td></tr>` : '';
+  const crew = [x.driver && 'Driver: ' + pLink(x.driver), x.helper1 && 'Helper: ' + pLink(x.helper1), x.helper2 && 'Helper 2: ' + pLink(x.helper2)].filter(Boolean).join('<br>');
+  const edit = IR.canStatus ? `<div class="form ir-hr" style="margin-top:12px">
+      <label class="f">Status<select id="irSt">${(IR.statuses || []).map(s => `<option ${s===x.status ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
+      <label class="f full">HR remarks<textarea id="irRem" rows="3" maxlength="1500" placeholder="Action taken by HR, findings, sanction">${esc(x.remarks || '')}</textarea></label>
+    </div>` : '';
+  openPop(`${x.id} · ${x.type}`, `${irPill(x.status)} Submitted by ${irBy(x)}`, `
+    <div class="tbl-wrap" style="max-height:none"><table class="poptbl ir-tbl"><tbody>
+      ${row('Submitted by', irBy(x))}
+      ${row('Incident date', irWhen(x))}
+      ${row('Type', esc(x.type))}
+      ${row('Truck', [x.truckNo && tLink(x.truckNo, 'Truck ' + x.truckNo), x.plateNo && plLink(x.plateNo)].filter(Boolean).join(' · '))}
+      ${row('Trip', esc(x.tripId))}
+      ${row('Crew', crew)}
+      ${row('Place', esc(x.place))}
+      ${row('What happened', `<div class="ir-txt">${esc(x.details)}</div>`)}
+      ${row('Action taken', x.action ? `<div class="ir-txt">${esc(x.action)}</div>` : '')}
+      ${row('Status', irPill(x.status) + (x.statusBy ? `<small>by ${esc(x.statusBy)} · ${irAt(x.statusAt)}</small>` : '<small>not yet reviewed by HR</small>'))}
+      ${!IR.canStatus ? row('HR remarks', x.remarks ? `<div class="ir-txt">${esc(x.remarks)}</div>` : '') : ''}
+    </tbody></table></div>${edit}`,
+    `<button class="btn alt" type="button" id="irBack">${back==='bell' ? 'Back to notifications' : 'All incident reports'}</button>${IR.canStatus ? ' <button class="btn road" type="button" id="irSave">Save status</button>' : ''} <button class="btn" type="button" onclick="closePop()">Close</button>`);
+  $('pop').dataset.kind = 'ir';
+  $('irBack').onclick = () => back==='bell' ? openLw() : openIrList();
+  if(IR.canStatus) $('irSave').onclick = async () => {
+    const b = $('irSave'); b.disabled = true; b.textContent = 'Saving…';
+    try{ const r = await call('irStatus', x.id, $('irSt').value, $('irRem').value);
+      const i = IR.list.findIndex(y => y.id===x.id); if(i >= 0) IR.list[i] = r; IR.unread = irNew().length; renderLw();
+      toast(`${x.id} is now ${r.status}`); openIr(x.id, back); }
+    catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Save status'; }
+  };
+}
+/** Every IR (newest first), with a status filter and find box. */
+function openIrList(){
+  openPop('Incident reports', '', '<p class="hint">Loading…</p>', `${IR.canAdd ? '<button class="btn road" type="button" id="irNewBtn">+ Incident report</button> ' : ''}<button class="btn alt" type="button" id="irRef">↻ Refresh</button> <button class="btn" type="button" onclick="closePop()">Close</button>`);
+  $('pop').dataset.kind = 'irlist';
+  if(IR.canAdd) $('irNewBtn').onclick = () => openIrForm();
+  $('irRef').onclick = () => { loadIr(); toast('Getting the newest incident reports…'); };
+  IR.f = IR.f || '';
+  drawIrList();
+  if(!IR.list.length || Date.now() - (IR.at || 0) > 15000){ IR.at = Date.now(); loadIr(); }
+  $('popBody').onclick = e => {
+    const c = e.target.closest('[data-irf]'); if(c){ IR.f = c.dataset.irf; drawIrList(); return; }
+    if(e.target.closest('.plink')) return;
+    const tr = e.target.closest('[data-ir]'); if(tr) openIr(tr.dataset.ir, 'list');
+  };
+}
+function drawIrList(){
+  if($('pop').hidden || $('pop').dataset.kind!=='irlist') return;
+  const q = (($('irFind') || {}).value || '').toLowerCase().trim(), all = IR.list || [];
+  const cnt = s => all.filter(x => x.status===s).length;
+  const l = all.filter(x => (!IR.f || x.status===IR.f) && (!q || [x.id, x.type, x.truckNo, x.plateNo, x.tripId, x.driver, x.helper1, x.helper2, x.place, x.details, x.by].join(' ').toLowerCase().includes(q)));
+  $('popSub').textContent = `${all.length} report${all.length===1 ? '' : 's'}${IR.unread ? ` · ${IR.unread} new for you` : ''} · newest first`;
+  const had = $('irFind'), pos = had ? had.selectionStart : null;
+  $('popBody').innerHTML = `<div class="chips ir-chips"><button type="button" class="chip" aria-pressed="${!IR.f}" data-irf="">All ${all.length}</button>${(IR.statuses || []).map(s => `<button type="button" class="chip" aria-pressed="${IR.f===s}" data-irf="${esc(s)}">${esc(s.charAt(0) + s.slice(1).toLowerCase())} ${cnt(s)}</button>`).join('')}</div>
+    <label class="f" style="margin:8px 0">Find<input id="irFind" value="${esc(q)}" placeholder="IR no, truck, plate, driver, who sent it, what happened"></label>
+    ${l.length ? `<div class="tbl-wrap" style="max-height:none"><table class="poptbl"><thead><tr><th>IR</th><th>Incident</th><th>Truck</th><th>Submitted by</th><th>Status</th></tr></thead><tbody>${l.map(x => `<tr class="rowbtn${x.unread ? ' ir-unread' : ''}" data-ir="${esc(x.id)}" title="Open ${esc(x.id)}">
+      <td><b>${esc(x.id)}</b>${x.unread ? '<small class="ir-newtag">NEW FOR YOU</small>' : ''}<small>${esc(x.type)}</small></td>
+      <td>${irWhen(x)}<small class="ir-clip">${esc(x.details)}</small></td>
+      <td>${esc(x.truckNo || '—')}<small>${esc(x.plateNo || '')}${x.driver ? ' · ' + esc(x.driver) : ''}</small></td>
+      <td>${esc(x.by || '—')}<small>${esc(x.byRole || '')} · ${irAt(x.at)}</small></td>
+      <td>${irPill(x.status)}${x.statusBy ? `<small>${esc(x.statusBy)}</small>` : ''}</td></tr>`).join('')}</tbody></table></div>`
+      : `<p class="hint">${all.length ? 'No report matches.' : IR.busy ? 'Loading…' : 'No incident reports yet.'}</p>`}`;
+  const f = $('irFind'); f.oninput = drawIrList;
+  if(had && pos!==null){ f.focus(); try{ f.setSelectionRange(pos, pos); }catch(e){} }
+}
+function irRedraw(){
+  if($('pop').hidden) return;
+  if($('pop').dataset.kind==='irlist') drawIrList();
+}
+/** The truck's trip on that date in Truck Plan (open one first, else the last), for the form to fill in. */
+function irTripOf(d, no){
+  const l = (S.xCtx || S.xTrips || []).filter(t => t.date===d && String(t.truckNo).trim().toUpperCase()===String(no).trim().toUpperCase());
+  return openTripOf(d, no) || l[l.length - 1] || null;
+}
+/** + Incident report: what happened, with the truck, trip and crew filled in from Truck Plan (can be changed). */
+function openIrForm(opt){
+  opt = opt || {};
+  const types = IR.types && IR.types.length ? IR.types : ['ACCIDENT', 'VEHICLE BREAKDOWN', 'TRAFFIC VIOLATION', 'CARGO DAMAGE / LOSS', 'LATE / NO SHOW', 'MISCONDUCT', 'CLIENT COMPLAINT', 'THEFT / LOSS', 'OTHER'];
+  const d0 = opt.date || TODAY(), now = nowLocal().slice(11, 16), ref = 'ir' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  openPop('Incident report', `Sent to HR. Submitted by <b>${esc((S.me && S.me.name) || '')}</b>.`, `
+    <div class="form">
+      <label class="f">Incident date<input id="irDate" type="date" value="${esc(d0)}" max="${esc(TODAY())}"></label>
+      <label class="f">Time<input id="irTime" type="time" value="${esc(opt.time || now)}"></label>
+      <label class="f">Type<select id="irType"><option value="">Pick one</option>${types.map(t => `<option>${esc(t)}</option>`).join('')}</select></label>
+      <label class="f">Truck #<input id="irTruck" list="dlTrucks" autocomplete="off" value="${esc(opt.truckNo || '')}" placeholder="Optional"></label>
+      <label class="f">Plate<input id="irPlate" autocomplete="off"></label>
+      <label class="f">Trip ID<input id="irTrip" autocomplete="off"></label>
+      <label class="f">Driver<input id="irDrv" autocomplete="off"></label>
+      <label class="f">Helper<input id="irH1" autocomplete="off"></label>
+      <label class="f">Helper 2<input id="irH2" autocomplete="off"></label>
+      <label class="f full">Place<input id="irPlace" maxlength="200" placeholder="Where it happened (e.g. SLEX Calamba exit, client warehouse)"></label>
+      <label class="f full">What happened<textarea id="irDet" rows="5" maxlength="3000" placeholder="Tell what happened, who was involved, any damage or injury"></textarea></label>
+      <label class="f full">Action taken<textarea id="irAct" rows="2" maxlength="1500" placeholder="Optional: what was done right away"></textarea></label>
+      <div class="full hint" id="irInfo"></div>
+    </div>`, `<button class="btn alt" type="button" onclick="closePop()">Cancel</button> <button class="btn road" type="button" id="irSend">Send to HR</button>`);
+  $('pop').dataset.kind = 'irform';
+  const fill = () => {
+    const d = $('irDate').value || d0, no = $('irTruck').value.trim(); if(!no) return;
+    const pl = plateFor(no), t = irTripOf(d, no), c = crewFor(d, no) || {};
+    $('irPlate').value = pl || $('irPlate').value;
+    $('irTrip').value = t ? t.tripId || '' : '';
+    $('irDrv').value = (t && t.driver) || c.driver || ''; $('irH1').value = (t && t.helper1) || c.helper1 || ''; $('irH2').value = (t && t.helper2) || c.helper2 || '';
+    if(t && !$('irPlace').value) $('irPlace').value = [t.customer, t.destination].filter(Boolean).join(' → ');
+    $('irInfo').textContent = !pl ? `Truck ${no} is not in PLATE. You can still send the report.` : t ? `Filled in from truck ${no}'s trip on ${fmtDay(d)}. Change anything that is wrong.` : `Truck ${no} has no trip in Truck Plan on ${fmtDay(d)}; crew from Truck assignment.`;
+  };
+  const day = () => { const d = $('irDate').value || d0; if(!S.assign[d]) call('getAssignments', d).then(l => { S.assign[d] = l; fill(); }).catch(() => {}); fill(); };
+  $('irTruck').onchange = fill; $('irDate').onchange = day;
+  if(opt.truckNo) day();
+  $('irSend').onclick = async () => {
+    const v = id => $(id).value.trim();
+    const d = {date:v('irDate'), time:v('irTime'), type:v('irType'), truckNo:v('irTruck'), plateNo:v('irPlate'), tripId:v('irTrip'), driver:v('irDrv'), helper1:v('irH1'), helper2:v('irH2'), place:v('irPlace'), details:v('irDet'), action:v('irAct'), ref};
+    if(!d.type){ $('irType').focus(); return toast('Pick the type of incident.', true); }
+    if(!d.details){ $('irDet').focus(); return toast('Type what happened.', true); }
+    const b = $('irSend'); b.disabled = true; b.textContent = 'Sending…';
+    try{ const r = await call('irSave', d); IR.list = [r].concat((IR.list || []).filter(x => x.id!==r.id)); IR.unread = irNew().length; renderLw();
+      toast(`${r.id} sent to HR`); openIr(r.id, 'list'); }
+    catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Send to HR'; }
+  };
+}
 
 /* ===== Reminders (MANU 2026-10-13 "improve the system"): PMS due, OR / franchise and license expiry ===== */
 const daysTxt = n => n < 0 ? `expired ${-n} day${n===-1 ? '' : 's'} ago` : n===0 ? 'expires today' : `expires in ${n} day${n===1 ? '' : 's'}`;
@@ -7808,6 +8133,7 @@ function chatPoll(){
   if(Date.now() - CH.actAt > 30000){ opt.act = true; CH.actAt = Date.now(); }   // who is active: every 30 s
   // riding along (Faster, 2026-11-02): who is online, the trips of the "trip completed" pop-up, the speed notes
   opt.tv = 1;   // ask for the trips changed mark (real time Truck Plan)
+  if(may('irView')) opt.ir = 1;   // incident reports changed mark (the bell)
   const ride = {on: !!(ON.want && mayOnline()), done: DN.want};
   if(ride.on) opt.on = 1;
   if(ride.done) opt.done = ride.done;
@@ -7817,6 +8143,7 @@ function chatPoll(){
       if(ride.on && d.online) onlineGot(d.online);
       if(ride.done && d.done && DN.want === ride.done) doneGot(d.done);
       if(d.tv!==undefined) tripsMark(String(d.tv));
+      if(d.irv!==undefined) irMark(String(d.irv));
       if(CH.user===u){ if(full) CH.full = true; if(d.v) CH.v = String(d.v); chatMerge(d); if(d.rv!==undefined) CH.rv = Number(d.rv) || 0; } })
     .catch(() => { CH.fail = Math.min(3, CH.fail + 1); }).finally(() => { CH.busy = false; });
 }
