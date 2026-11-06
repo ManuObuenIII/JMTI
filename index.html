@@ -3501,7 +3501,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 12, APP_VERSION_DATE = '2026-11-06';
+const APP_VERSION = 13, APP_VERSION_DATE = '2026-11-06';
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
@@ -4834,7 +4834,8 @@ function openTripOf(d, no){
   return list.find(t => String(t.truckNo).trim().toUpperCase()===String(no).trim().toUpperCase() && t.date===d && ((isTrip(t) && !DONE_ST.includes(stageOf(t))) || isHoldRow(t))) || null;   // a truck in a garage blocks Add trip too (MANU 2026-11-02)
 }
 /** Destinations of a source in CLIENT LIST, for a destination picker. */
-const destsOf = customer => { const c = S.boot.customers.find(x => nameKey(x)===nameKey(customer)); return c ? [...new Set(S.boot.destinations[c] || [])].sort() : []; };
+const destsOf = customer => { const k = nameKey(customer); if(!k) return []; const seen = {};   // every spelling of the source, one per destination (MANU 2026-11-06)
+  return S.boot.customers.filter(x => nameKey(x)===k).flatMap(c => S.boot.destinations[c] || []).filter(d => !seen[nameKey(d)] && (seen[nameKey(d)] = 1)).sort(); };
 /** A type-to-find list under an input (MANU 2026-11-02): every word typed must be in the choice; tap a choice to pick it.
  *  list() gives the choices, pick(v) runs on a tap, typed() on every key. Text wraps, nothing is cut off. */
 function findBox(inp, box, list, pick, typed){
