@@ -332,6 +332,15 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .ir-h{margin:4px 0 8px;font-size:13px;color:var(--ink)}
 .ir-clip{white-space:pre-wrap;word-break:break-word}
 .ir-txt{white-space:pre-wrap;word-break:break-word}
+/* Incident reports summary in Manpower (MANU 2026-11-06 "in Manpower, add incident reports summary") */
+.irs-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin:8px 0 10px}
+.irs-card{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:rgba(255,255,255,.55);text-align:left;cursor:pointer;font:inherit;color:inherit;border-left:4px solid var(--c,#64748B)}
+.irs-card b{display:block;font-size:20px;line-height:1.15;color:var(--ink)}
+.irs-card small{display:block;font-size:11px;color:var(--muted);white-space:normal}
+.irs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.irs-grid h4{margin:4px 0 6px;font-size:13px;color:var(--ink)}
+.irs-bar{height:6px;border-radius:999px;background:#2E5BFF;margin-top:3px;min-width:4px}
+.irs-more{margin-top:6px}
 .ir-tbl td:first-child{font-weight:700;color:var(--muted);width:120px;vertical-align:top}
 .poptbl tr.ir-unread td{background:#FFF7ED}
 small.ir-newtag{color:#D92D20 !important;font-weight:800}
@@ -2385,6 +2394,15 @@ html.th-color .fx-empty .cb{fill:var(--tc)}
   <section class="view" id="v-manpower">
     <div class="cols2">
       <div>
+        <div class="panel" id="irSumBox" hidden style="margin-bottom:14px">
+          <div class="bar" style="flex-wrap:wrap;align-items:flex-end">
+            <h3 style="margin:0;flex:1 1 200px">Incident reports summary</h3>
+            <label class="f">Dates<select id="irsSpan"><option value="all">All</option><option value="month">This month</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="year">This year</option></select></label>
+            <button class="btn alt" type="button" id="irsAll">All incident reports</button>
+            <button class="btn alt" type="button" id="irsRef" title="Get the newest incident reports">↻ Refresh</button>
+          </div>
+          <div id="irsBody"><p class="hint">Loading…</p></div>
+        </div>
         <div class="bar"><label class="f grow">Find<input id="mpFind" placeholder="Name or ID"></label><button class="btn alt" type="button" id="mpRefresh" style="align-self:flex-end" hidden title="Set drivers and helpers with no trip for 30 days to INACTIVE">↻ Refresh status</button></div>
         <div class="chips" id="mpChips" style="margin-bottom:10px"></div>
         <div class="hint-line" id="mpNote" style="margin:0 0 10px"></div>
@@ -2482,7 +2500,7 @@ html.th-color .fx-empty .cb{fill:var(--tc)}
       <div class="hint-line" id="clNote" style="margin:0 0 10px"></div>
       <div class="tbl-wrap" style="max-height:640px"><table id="clTbl"><thead><tr><th class="c">#</th><th>Source</th><th>Destination</th><th>Client</th><th>KM (one way)</th></tr></thead><tbody></tbody></table></div>
       <!-- MANU 2026-11-04 "check for missing trips that source and destination are not connected, auto fill" -->
-      <div class="panel" style="margin-top:14px" id="msrPanel">
+      <div class="panel" style="margin-top:14px" id="msrPanel" hidden>
         <h3 style="margin-top:0">Trips with a route not in the CLIENT LIST <small id="msrNote"></small></h3>
         <div class="bar" style="margin:0 0 8px"><p class="hint grow" id="msrHint" style="margin:0"></p><button class="btn" type="button" id="msrAdd" hidden>Add to CLIENT LIST</button></div>
         <div class="tbl-wrap" style="max-height:520px"><table id="msrTbl"><thead><tr><th class="c">Add</th><th>Source</th><th>Destination</th><th class="n">Trips</th><th>KM (one way)</th></tr></thead><tbody></tbody></table></div>
@@ -4021,7 +4039,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.2, APP_VERSION_DATE = '2026-11-06';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.3, APP_VERSION_DATE = '2026-11-06';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
@@ -4049,6 +4067,11 @@ function verCheck(){
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
   // MANU 2026-11-06 15:20 UTC "this is version 14.2": this afternoon's changes (from ~14:17 UTC)
+  {v:14.3, d:'2026-11-06', items:[
+    'Old trips no longer add sources and destinations. Add trip lists only what is typed in the CLIENT LIST (or added with "+ Add route" in Clients). The "Trips with a route not in the CLIENT LIST" box in Clients is gone.',
+    'Supervisors can now open the Manpower tab to see the roster, trips in a date range, the driver scorecard and the incident reports summary. Adding or editing people and setting them inactive stay with HR and Admin.',
+    'Manpower: new Incident reports summary at the top (HR, Admin, Boss). Counts by status with how many are waiting on HR, drivers and helpers named in reports (how many, open ones, latest date, types), reports by type and the trucks with the most reports. Pick the dates (All, this month, last 30 or 90 days, this year). Tap any count to open those reports.'
+  ]},
   {v:14.2, d:'2026-11-06', items:[
     'Look and feel: buttons, chips, tabs and rows show a soft ripple where you tap.',
     'Dashboard numbers count up when the tab opens and roll to the new number when they change. Trucks with trips and Trips completed get a small trend line over the days you picked (3 or more days).',
@@ -7251,7 +7274,7 @@ function initManpower(){
   $('mpPhDel').onclick = () => { MPH.set = ''; mpPhShow(); };
 }
 function loadManpower(){
-  loadMpRange(); loadScores();
+  loadMpRange(); loadScores(); irSumLoad();
   if(!S.people) S.people = lsGet('jmti_people');
   if(S.people) renderManpower(); else $('mpTbl').classList.add('loading');
   call('listManpower').then(p => { S.people = p; S.peopleFresh = 1; lsSet('jmti_people', p); renderManpower(); }).catch(e => toast(e.message, true)).finally(() => $('mpTbl').classList.remove('loading'));
@@ -7293,6 +7316,7 @@ async function refreshInactive(){
 }
 function renderManpower(){
   $('mpRefresh').hidden = !may('manpower');
+  { const ed = may('manpower') || may('viewAll'), fp = $('mpForm').closest('.panel'); fp.hidden = !ed; fp.parentElement.style.gridTemplateColumns = ed ? '' : '1fr'; }   // Supervisor: view only, no add / edit form (MANU 2026-11-06)
   renderMpRange();
   const q = $('mpFind').value.toLowerCase().trim();
   const all = S.people || [];
@@ -7504,7 +7528,8 @@ function openIr(id, back){
   };
 }
 /** Every IR (newest first), with a status filter and find box. */
-function openIrList(){
+function openIrList(o){
+  o = o || {}; IR.from = o.from || ''; IR.q0 = o.q || ''; if(o.f!==undefined) IR.f = o.f;   // from the Manpower summary: its dates, status or name
   openPop('Incident reports', '', '<p class="hint">Loading…</p>', `${IR.canAdd ? '<button class="btn road" type="button" id="irNewBtn">+ Incident report</button> ' : ''}<button class="btn alt" type="button" id="irRef">↻ Refresh</button> <button class="btn" type="button" onclick="closePop()">Close</button>`);
   $('pop').dataset.kind = 'irlist';
   if(IR.canAdd) $('irNewBtn').onclick = () => openIrForm();
@@ -7514,18 +7539,20 @@ function openIrList(){
   if(!IR.list.length || Date.now() - (IR.at || 0) > 15000){ IR.at = Date.now(); loadIr(); }
   $('popBody').onclick = e => {
     const c = e.target.closest('[data-irf]'); if(c){ IR.f = c.dataset.irf; drawIrList(); return; }
+    if(e.target.closest('[data-irfrom]')){ IR.from = ''; drawIrList(); return; }
     if(e.target.closest('.plink')) return;
     const tr = e.target.closest('[data-ir]'); if(tr) openIr(tr.dataset.ir, 'list');
   };
 }
 function drawIrList(){
   if($('pop').hidden || $('pop').dataset.kind!=='irlist') return;
-  const q = (($('irFind') || {}).value || '').toLowerCase().trim(), all = IR.list || [];
+  const q = ($('irFind') ? $('irFind').value : (IR.q0 || '')).toLowerCase().trim(), all = (IR.list || []).filter(x => !IR.from || x.date >= IR.from);
   const cnt = s => all.filter(x => x.status===s).length;
-  const l = all.filter(x => (!IR.f || x.status===IR.f) && (!q || [x.id, x.type, x.truckNo, x.plateNo, x.tripId, x.driver, x.helper1, x.helper2, x.place, x.details, x.by].join(' ').toLowerCase().includes(q)));
-  $('popSub').textContent = `${all.length} report${all.length===1 ? '' : 's'}${IR.unread ? ` · ${IR.unread} new for you` : ''} · newest first`;
+  const l = all.filter(x => (!IR.f || x.status===IR.f || (IR.f==='OPEN' && IRS_OPEN.includes(x.status))) && (!q || [x.id, x.type, x.truckNo, x.plateNo, x.tripId, x.driver, x.helper1, x.helper2, x.place, x.details, x.by].join(' ').toLowerCase().includes(q)));
+  $('popSub').textContent = `${all.length} report${all.length===1 ? '' : 's'}${IR.from ? ' since ' + fmtDay(IR.from) : ''}${IR.unread ? ` · ${IR.unread} new for you` : ''} · newest first`;
   const had = $('irFind'), pos = had ? had.selectionStart : null;
   $('popBody').innerHTML = `<div class="chips ir-chips"><button type="button" class="chip" aria-pressed="${!IR.f}" data-irf="">All ${all.length}</button>${(IR.statuses || []).map(s => `<button type="button" class="chip" aria-pressed="${IR.f===s}" data-irf="${esc(s)}">${esc(s.charAt(0) + s.slice(1).toLowerCase())} ${cnt(s)}</button>`).join('')}</div>
+    ${IR.from ? `<p class="hint-line" style="margin:6px 0 0">Showing reports since ${esc(fmtDay(IR.from))} (dates picked in Manpower). <button type="button" class="chip" data-irfrom="1">Show all dates</button></p>` : ''}
     <label class="f" style="margin:8px 0">Find<input id="irFind" value="${esc(q)}" placeholder="IR no, truck, plate, driver, who sent it, what happened"></label>
     ${l.length ? `<div class="tbl-wrap" style="max-height:none"><table class="poptbl"><thead><tr><th>IR</th><th>Incident</th><th>Truck</th><th>Submitted by</th><th>Status</th></tr></thead><tbody>${l.map(x => `<tr class="rowbtn${x.unread ? ' ir-unread' : ''}" data-ir="${esc(x.id)}" title="Open ${esc(x.id)}">
       <td><b>${esc(x.id)}</b>${x.unread ? '<small class="ir-newtag">NEW FOR YOU</small>' : ''}<small>${esc(x.type)}</small></td>
@@ -7538,8 +7565,83 @@ function drawIrList(){
   if(had && pos!==null){ f.focus(); try{ f.setSelectionRange(pos, pos); }catch(e){} }
 }
 function irRedraw(){
+  renderIrSum();
   if($('pop').hidden) return;
   if($('pop').dataset.kind==='irlist') drawIrList();
+}
+/* ===== Incident reports summary in Manpower (MANU 2026-11-06 "in Manpower, add incident reports summary")
+ * Same list as the bell and Truck Plan (Code.gs irList, newest 500). Counts by status, by type, by driver/helper (driver, helper
+ * and helper 2 named on the IR) and by truck, for the dates picked. Tapping a count opens the list with that filter. */
+const IRS_OPEN = ['NEW', 'UNDER REVIEW'];
+function irSumFrom(){
+  const v = ($('irsSpan') || {}).value || 'all', t = TODAY();
+  if(v==='month') return t.slice(0, 8) + '01';
+  if(v==='year') return t.slice(0, 5) + '01-01';
+  if(v==='30' || v==='90'){ const d = new Date(t + 'T00:00'); d.setDate(d.getDate() - Number(v) + 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  return '';
+}
+function irSumLoad(){
+  const box = $('irSumBox'); if(!box) return;
+  box.hidden = !may('irView'); if(box.hidden) return;
+  if(!box.dataset.wired){ box.dataset.wired = 1;
+    $('irsSpan').value = lsGet('jmti_irs_span') || 'all';
+    $('irsSpan').onchange = () => { lsSet('jmti_irs_span', $('irsSpan').value); renderIrSum(); };
+    $('irsAll').onclick = () => openIrList({from: irSumFrom(), f: ''});
+    $('irsRef').onclick = () => { IR.at = Date.now(); loadIr(); toast('Getting the newest incident reports…'); };
+    $('irsBody').onclick = e => {
+      if(e.target.closest('.plink')) return;
+      const k = e.target.closest('[data-irs]'); if(!k) return;
+      const [kind, val] = [k.dataset.irs, k.dataset.v || ''];
+      openIrList({from: irSumFrom(), f: kind==='st' ? val : '', q: kind==='st' ? '' : val});
+    };
+  }
+  renderIrSum();
+  if(!IR.list.length || Date.now() - (IR.at || 0) > 15000){ IR.at = Date.now(); loadIr(); }
+}
+function renderIrSum(){
+  const box = $('irSumBox'); if(!box || box.hidden) return;
+  const from = irSumFrom(), all = (IR.list || []).filter(x => !from || x.date >= from), t = TODAY();
+  const span = from ? `since ${fmtDay(from)}` : 'all dates';
+  if(!all.length){ $('irsBody').innerHTML = `<p class="hint">${IR.busy && !(IR.list || []).length ? 'Loading…' : `No incident reports (${esc(span)}).`}</p>`; return; }
+  const open = all.filter(x => IRS_OPEN.includes(x.status)), oldest = open.reduce((m, x) => Math.max(m, daysSince(x.date) || 0), 0);
+  const card = (label, n, c, kind, v, sub) => `<button type="button" class="irs-card" style="--c:${c}" data-irs="${kind}" data-v="${esc(v)}"><b>${fmtN(n)}</b>${esc(label)}${sub ? `<small>${sub}</small>` : ''}</button>`;
+  const cards = card('All reports', all.length, '#0A27B5', 'st', '', esc(span))
+    + (IR.statuses && IR.statuses.length ? IR.statuses : ['NEW', 'UNDER REVIEW', 'RESOLVED', 'CLOSED']).map(st => card(st.charAt(0) + st.slice(1).toLowerCase(), all.filter(x => x.status===st).length, IR_ST_COLOR[st] || '#64748B', 'st', st,
+        st==='NEW' && IR.unread ? `${IR.unread} not opened by you` : '')).join('')
+    + (open.length ? card('Waiting on HR', open.length, '#D92D20', 'st', 'OPEN', oldest ? `oldest ${oldest} day${oldest===1 ? '' : 's'} ago` : 'all from today') : '');
+  // by person (driver, helper, helper 2 on each IR)
+  const pos = {}; (S.people || []).forEach(p => { pos[nameKey(p.full)] = p; });
+  const per = {}, add = (n, as, x) => { n = String(n || '').trim(); if(!n) return; const k = nameKey(n);
+    const o = per[k] = per[k] || {name: n, as: {}, n: 0, open: 0, last: '', types: {}};
+    if(o.seen === x.id) return; o.seen = x.id;
+    o.n++; o.as[as] = 1; if(IRS_OPEN.includes(x.status)) o.open++; if(x.date > o.last) o.last = x.date; o.types[x.type] = (o.types[x.type] || 0) + 1; };
+  const trucks = {}, types = {};
+  all.forEach(x => { add(x.driver, 'Driver', x); add(x.helper1, 'Helper', x); add(x.helper2, 'Helper', x);
+    types[x.type] = (types[x.type] || 0) + 1;
+    const no = String(x.truckNo || '').trim(); if(no){ const o = trucks[no] = trucks[no] || {no, n: 0, open: 0, last: ''}; o.n++; if(IRS_OPEN.includes(x.status)) o.open++; if(x.date > o.last) o.last = x.date; } });
+  const noCrew = all.filter(x => !x.driver && !x.helper1 && !x.helper2).length;
+  const people = Object.values(per).sort((a, b) => b.n - a.n || b.last.localeCompare(a.last) || a.name.localeCompare(b.name));
+  const tl = Object.values(trucks).sort((a, b) => b.n - a.n || b.last.localeCompare(a.last));
+  const ty = Object.entries(types).sort((a, b) => b[1] - a[1]), tmax = ty.length ? ty[0][1] : 1;
+  IR.sumAll = IR.sumAll || {};
+  const cut = (l, k, n) => IR.sumAll[k] ? l : l.slice(0, n);
+  const more = (l, k, n) => l.length > n ? `<button type="button" class="chip irs-more" onclick="IR.sumAll['${k}']=!IR.sumAll['${k}'];renderIrSum()">${IR.sumAll[k] ? 'Show fewer' : `Show all (${l.length})`}</button>` : '';
+  const whoTxt = o => { const p = pos[nameKey(o.name)]; return esc(p && p.position ? p.position : Object.keys(o.as).join(' / ')) + (p && p.status && p.status!=='ACTIVE' ? ' · ' + esc(p.status) : ''); };
+  const topType = o => Object.entries(o.types).sort((a, b) => b[1] - a[1]).map(([k, n]) => esc(k.charAt(0) + k.slice(1).toLowerCase()) + (n > 1 ? ' ×' + n : '')).join(', ');
+  $('irsBody').innerHTML = `<div class="irs-cards">${cards}</div>
+    <div class="irs-grid">
+      <div><h4>Drivers and helpers named in reports</h4>${people.length ? `<div class="tbl-wrap" style="max-height:none"><table class="poptbl"><thead><tr><th>Name</th><th class="n">Reports</th><th>Latest</th></tr></thead><tbody>${cut(people, 'p', 8).map(o => `<tr>
+        <td><b>${pLink(o.name)}</b><small>${whoTxt(o)}</small><small>${topType(o)}</small></td>
+        <td class="n"><button type="button" class="chip" data-irs="q" data-v="${esc(o.name)}" title="Open the reports naming ${esc(o.name)}">${fmtN(o.n)}</button>${o.open ? `<small style="color:#D92D20;font-weight:700">${o.open} open</small>` : ''}</td>
+        <td>${esc(fmtDay(o.last))}<small>${(d => d===0 ? 'today' : d===1 ? '1 day ago' : d + ' days ago')(daysSince(o.last))}</small></td></tr>`).join('')}</tbody></table></div>${more(people, 'p', 8)}` : '<p class="hint">No driver or helper named.</p>'}
+        ${noCrew ? `<p class="hint-line" style="margin:6px 0 0">${noCrew} report${noCrew===1 ? '' : 's'} with no driver or helper named.</p>` : ''}</div>
+      <div><h4>By type</h4>${ty.map(([k, n]) => `<div class="rowbtn" data-irs="q" data-v="${esc(k)}" style="padding:4px 2px;cursor:pointer" title="Open the ${esc(k)} reports"><div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(k.charAt(0) + k.slice(1).toLowerCase())}</span><b>${fmtN(n)}</b></div><div class="irs-bar" style="width:${Math.round(n / tmax * 100)}%"></div></div>`).join('')}
+        <h4 style="margin-top:12px">Trucks with the most reports</h4>${tl.length ? `<div class="tbl-wrap" style="max-height:none"><table class="poptbl"><thead><tr><th>Truck</th><th class="n">Reports</th><th>Latest</th></tr></thead><tbody>${cut(tl, 't', 5).map(o => `<tr>
+          <td><b>${tLink(o.no, 'Truck ' + o.no)}</b></td>
+          <td class="n"><button type="button" class="chip" data-irs="q" data-v="${esc(o.no)}">${fmtN(o.n)}</button>${o.open ? `<small style="color:#D92D20;font-weight:700">${o.open} open</small>` : ''}</td>
+          <td>${esc(fmtDay(o.last))}</td></tr>`).join('')}</tbody></table></div>${more(tl, 't', 5)}` : '<p class="hint">No truck named.</p>'}</div>
+    </div>`;
 }
 /** The truck's trip on that date in Truck Plan (open one first, else the last), for the form to fill in. */
 function irTripOf(d, no){
@@ -10331,6 +10433,7 @@ async function saveNoDist(i){
 const MR = {data:null, off:new Set()};
 const mrKey = r => nameKey(r.source) + '|' + nameKey(r.destination);
 function loadMissing(){
+  if(true) return;   // MANU 2026-11-06 "STOP SYNC FROM PREVIOUS TRIPS TO ADD SOURCE AND DESTINATION": no routes from old trips
   renderMissing();
   return call('missingRoutes').then(d => { MR.data = d; renderMissing(); }).catch(e => { if(!MR.data) $('msrNote').textContent = '· ' + e.message; });
 }
