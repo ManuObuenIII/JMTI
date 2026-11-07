@@ -3413,7 +3413,7 @@ function openSettings(){
     const pre = e.target.closest('[data-cmpre]');
     if(pre){ cmykApply(pre.dataset.cmpre.split(',').map(Number)); return; }
     if(e.target.closest('#cmykBox')) return;
-    const tz = e.target.closest('[data-tsize]');
+    const tz = e.target.closest('button[data-tsize]');
     if(tz){ tsizeSet(tz.dataset.tsize); $('popBody').querySelectorAll('[data-tsize]').forEach(x => x.setAttribute('aria-pressed', String(x === tz))); toast('Text size: ' + tz.textContent); return; }
     const th = e.target.closest('[data-theme]');
     if(th){ themeSet(th.dataset.theme); $('cmykBox').hidden = th.dataset.theme !== 'color'; if(th.dataset.theme === 'color') cmykApply(cmykGet()); $('popBody').querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x === th))); toast('Theme: ' + th.textContent.replace(/^\S+ /, '')); return; }
@@ -12365,7 +12365,6 @@ function tsizeSet(k){
   const z = (TSIZES.find(x => x[0] === k) || TSIZES[1])[2];
   store('jmti_tsize', k === 'm' ? null : k);
   document.documentElement.style.zoom = z === 1 ? '' : String(z);
-  document.documentElement.dataset.tsize = k;
   try{ window.dispatchEvent(new Event('resize')); }catch(e){}
 }
 tsizeSet(tsizeNow());
