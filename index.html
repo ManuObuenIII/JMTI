@@ -1956,6 +1956,120 @@ html.th-color .fx-empty .cb{fill:var(--tc)}
   .fx-empty .q{animation:fxBob 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
   @keyframes fxBob{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-3px) rotate(8deg)}}
 }
+/* ===== UX PICKS + SIGN-IN VIDEO (MANU 2026-11-07): Today screen, alerts box, search, trip story, error help, tour, text size ===== */
+/* Today */
+#v-home .hm-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:2px 0 12px}
+#v-home .hm-head h2{margin:0;font-size:20px;color:var(--ink)}
+#v-home .hm-head small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+#v-home .hm-head .sp{flex:1}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:12px;align-items:start}
+.home-grid.loading{opacity:.6}
+.hm-strip{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.hm-strip span{background:rgba(255,255,255,.94);border-radius:14px;padding:10px 12px;font-size:12px;color:var(--muted);box-shadow:var(--sh-1,0 2px 8px rgba(0,0,0,.08))}
+.hm-strip b{display:block;font-size:24px;color:var(--ink);font-weight:800;line-height:1.1}
+.hm-sec{background:rgba(255,255,255,.96);border-radius:16px;padding:12px;box-shadow:var(--sh-2,0 6px 20px rgba(0,0,0,.1));border-left:5px solid #F59E0B}
+.hm-sec[data-sec="od"]{border-left-color:#DC2626}
+.hm-sec h3{display:flex;align-items:center;gap:10px;margin:0 0 8px;font-size:14.5px;color:var(--ink);flex-wrap:wrap}
+.hm-sec h3>span:nth-child(2){flex:1;min-width:150px}
+.hm-sec h3 small{display:block;font-weight:500;color:var(--muted);font-size:11.5px;margin-top:2px}
+.hm-ic{width:34px;height:34px;border-radius:10px;background:#FEF3C7;display:grid;place-items:center;font-size:17px;flex:none}
+.hm-n{min-width:32px;height:32px;padding:0 8px;border-radius:16px;background:#DC2626;color:#fff;display:grid;place-items:center;font-size:15px}
+.hm-go{padding:6px 10px;font-size:12px}
+.hm-r{display:grid;grid-template-columns:minmax(78px,auto) 1fr auto;gap:4px 10px;align-items:center;width:100%;text-align:left;background:#F6F8FD;border:1px solid #E3E8F5;border-radius:10px;padding:8px 10px;margin:5px 0 0;cursor:pointer;font:inherit;color:var(--ink)}
+.hm-r:hover{border-color:var(--accent,#2E5BFF);background:#EEF3FF}
+.hm-r small{display:block;color:var(--muted);font-size:11px;font-weight:500}
+.hm-t b{font-size:13.5px}
+.hm-m{font-size:12.5px;line-height:1.3;min-width:0;overflow-wrap:anywhere}
+.hm-w{text-align:right;font-size:11.5px}
+.hm-w small{margin-top:3px}
+@media (max-width:640px){ .hm-r{grid-template-columns:1fr auto} .hm-m{grid-column:1/-1;grid-row:2} .hm-strip{grid-template-columns:repeat(2,1fr)} }
+.hm-trucks{display:flex;flex-wrap:wrap;gap:6px}
+.hm-tk{background:#F6F8FD;border:1px solid #E3E8F5;border-radius:10px;padding:6px 9px;font-size:12.5px;cursor:pointer}
+.hm-tk small{display:block;color:var(--muted);font-size:10.5px}
+.hm-more{margin-top:8px;background:none;border:0;color:var(--accent,#2E5BFF);font:inherit;font-weight:700;font-size:12.5px;cursor:pointer;padding:4px 0}
+.hm-ok{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.hm-ok span{background:rgba(220,252,231,.95);color:#166534;border-radius:20px;padding:5px 11px;font-size:12px;font-weight:600}
+.hm-clear-all{grid-column:1/-1;background:rgba(255,255,255,.96);border-radius:16px;padding:26px;text-align:center}
+.hm-clear-all b{display:block;font-size:22px;color:#16A34A}
+.hm-at{grid-column:1/-1}
+/* Today's alerts */
+.alr{display:grid;gap:8px}
+.alr-r{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#F6F8FD;border:1px solid #E3E8F5;border-radius:12px;padding:12px;cursor:pointer;font:inherit;color:var(--ink)}
+.alr-r:hover{border-color:var(--accent,#2E5BFF)}
+.alr-ic{width:40px;height:40px;border-radius:12px;background:#FEF3C7;display:grid;place-items:center;font-size:20px;font-weight:800;flex:none}
+.alr-t{flex:1}
+.alr-t b{font-size:14.5px}
+.alr-t small{display:block;color:var(--muted);font-size:12px}
+.alr-n{min-width:34px;height:34px;padding:0 8px;border-radius:17px;background:#DC2626;color:#fff;display:grid;place-items:center;font-weight:800}
+.alr-r .sa{color:var(--muted);font-size:20px}
+/* Search */
+.srbtn svg{width:20px;height:20px}
+.sr-box{position:sticky;top:-12px;background:#fff;padding:2px 0 8px;z-index:1}
+.sr-box input{width:100%;font-size:16px;padding:11px 12px;border:2px solid var(--accent,#2E5BFF);border-radius:12px;box-sizing:border-box}
+.sr-box .hint{display:block;margin-top:4px}
+.sr-chips{display:flex;flex-wrap:wrap;gap:6px}
+.sr-chip{background:#F6F8FD;border:1px solid #E3E8F5;border-radius:20px;padding:5px 11px;font-size:13px}
+.srchpop .popbox{width:min(760px,100%)}
+/* Trip story */
+.ts-top{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 14px}
+.ts-kv{border-bottom:1px dashed #E3E8F5;padding:4px 0;font-size:13px}
+.ts-kv>span:first-child{display:block;color:var(--muted);font-size:11px}
+.ts-rem{margin-top:8px;background:#FFFBEB;border-radius:10px;padding:6px 10px;font-size:12.5px}
+.ts-rem p{margin:4px 0}
+.ts-tl,.ts-log{list-style:none;margin:4px 0;padding:0 0 0 16px;border-left:3px solid #C7D2FE}
+.ts-tl li,.ts-log li{position:relative;padding:4px 0 6px 6px;font-size:13px}
+.ts-tl li::before,.ts-log li::before{content:"";position:absolute;left:-23px;top:9px;width:11px;height:11px;border-radius:50%;background:#2E5BFF;border:2px solid #fff;box-shadow:0 0 0 1px #C7D2FE}
+.ts-tl li.k-pod::before{background:#7C3AED}.ts-tl li.k-bill::before{background:#16A34A}.ts-tl li.k-next::before{background:#fff;box-shadow:0 0 0 2px #F59E0B}
+.ts-tl li span,.ts-log li span{display:inline-block;min-width:150px;color:var(--muted);font-size:12px}
+.ts-tl li small,.ts-log li small{display:block;color:var(--muted);font-size:11.5px;overflow-wrap:anywhere}
+.ts-btn{background:rgba(46,91,255,.1);border:1px solid rgba(46,91,255,.35);color:#0A27B5;border-radius:12px;padding:2px 9px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+/* Error help */
+.errfix{font-size:15px;line-height:1.55;margin:4px 0}
+/* Sign-in video */
+.vgate{position:fixed;inset:0;z-index:2147480000;background:rgba(2,10,53,.94);display:flex;align-items:center;justify-content:center;padding:12px}
+.vgate[hidden]{display:none}
+body.vg-on{overflow:hidden}
+.vg-card{width:min(980px,100%);max-height:100%;display:flex;flex-direction:column;gap:10px;color:#fff}
+.vg-h b{font-size:18px;display:block}
+.vg-h small{color:rgba(255,255,255,.8);font-size:13px}
+.vg-stage{position:relative;background:#000;border-radius:14px;overflow:hidden;aspect-ratio:16/9;max-height:70vh}
+.vg-stage video{width:100%;height:100%;display:block;background:#000}
+.vg-stage.frame video{display:none}
+.vg-stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vg-play{position:absolute;inset:0;margin:auto;width:84px;height:84px;border-radius:50%;border:0;background:rgba(46,91,255,.92);color:#fff;font-size:34px;cursor:pointer;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.vg-play[hidden]{display:none}
+.vg-bar{display:flex;align-items:center;gap:10px}
+.vg-bar[hidden]{display:none}
+.vg-bar button{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:7px 11px;font:inherit;font-size:13px;cursor:pointer}
+.vg-prog{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.2);overflow:hidden}
+.vg-prog i{display:block;height:100%;width:0;background:#2E5BFF;transition:width .3s linear}
+#vgTime{font-variant-numeric:tabular-nums;font-size:13px;min-width:92px;text-align:right}
+.vg-f{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.vg-f #vgNote{flex:1;font-size:13.5px;font-weight:600}
+.vg-f .btn[disabled]{opacity:.45;cursor:not-allowed}
+.vg-f .btn.alt{background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
+@media (max-width:640px){ .vg-bar button{padding:6px 8px} #vgTime{min-width:0} .vg-stage{max-height:58vh} }
+.vga{display:grid;gap:10px}
+.vga-roles{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:4px}
+.chk{display:flex;align-items:center;justify-content:flex-start;gap:7px;font-size:13px;background:none;border:0;box-shadow:none;padding:0}
+.chk input[type=checkbox]{width:18px !important;height:18px !important;min-width:0 !important;min-height:0 !important;flex:none;margin:0;padding:0;box-shadow:none;appearance:auto;-webkit-appearance:checkbox;accent-color:#2E5BFF}
+/* Tour */
+.tour{position:fixed;inset:0;z-index:2147479000}
+.tour[hidden]{display:none}
+.tour.nohole{background:rgba(2,10,53,.72)}
+.tour-hole{position:fixed;border-radius:12px;box-shadow:0 0 0 200vmax rgba(2,10,53,.72);outline:3px solid #FBBF24;pointer-events:none;transition:all .25s ease}
+.tour-tip{position:fixed;background:#fff;color:var(--ink);border-radius:16px;padding:14px 16px;box-shadow:0 20px 60px rgba(0,0,0,.4);box-sizing:border-box}
+.tour-tip b{display:block;font-size:16px;margin-bottom:4px}
+.tour-tip p{margin:0 0 12px;font-size:13.5px;line-height:1.5}
+.tour-f{display:flex;align-items:center;gap:8px}
+.tour-f small{flex:1;color:var(--muted)}
+.tour-f .lnk{background:none;border:0;color:var(--muted);font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer}
+/* phones: the Search button fits on the same row as the bell and gear */
+@media (max-width:700px){ .top-inner .userchip{gap:5px} .top-inner .userchip .icon-btn.srbtn,.top-inner .userchip .icon-btn.bellbtn,.top-inner .userchip .icon-btn.setbtn{min-width:36px;width:36px;padding:0;display:inline-grid;place-items:center} .top-inner .userchip .icon-btn.bellbtn[hidden]{display:none} }
+/* Text size */
+.tsz{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tsz button{border:1px solid var(--line);background:#fff;border-radius:18px;padding:5px 11px;font:inherit;cursor:pointer}
+.tsz button[aria-pressed="true"]{background:var(--accent,#2E5BFF);color:#fff;border-color:transparent}
 </style>
 </head>
 <body>
@@ -2033,6 +2147,7 @@ html.th-color .fx-empty .cb{fill:var(--tc)}
     <div class="userchip"><button type="button" class="me-av empty" id="meAv" aria-label="My profile"></button><span class="nm"><b id="meName"></b></span><span class="role" id="meRole"></span>
       <button class="icon-btn onbtn" id="onBtn" type="button" hidden title="Who is signed in"></button>
       <button class="icon-btn obbtn" id="obBtn" type="button" hidden></button>
+      <button class="icon-btn srbtn" id="srchBtn" type="button" title="Search trips, trucks and people (/)" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
       <button class="icon-btn bellbtn" id="lwBtn" type="button" hidden aria-label="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v3.6L4.3 15.4A1 1 0 0 0 5.2 17h13.6a1 1 0 0 0 .9-1.6L18 12.6V9a6 6 0 0 0-6-6z" fill="currentColor"/><path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><b id="lwN" class="bell-n" hidden>0</b></button>
       <button class="icon-btn askbtn" id="askBtn" type="button" hidden title="Ask a question about the app's data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l1.9 5.2 5.2 1.9-5.2 1.9L12 16.7l-1.9-5.2-5.2-1.9 5.2-1.9z" fill="currentColor"/><path d="M18.5 14.5l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z" fill="currentColor" opacity=".7"/></svg>Ask JMTI</button>
       <button class="icon-btn setbtn" id="setBtn" type="button" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.9"/></svg></button>
@@ -2046,6 +2161,11 @@ html.th-color .fx-empty .cb{fill:var(--tc)}
   <div class="warn" id="loadErr" hidden style="margin-bottom:16px;display:flex;gap:12px;align-items:center;justify-content:space-between">
     <span id="loadErrMsg"></span><button class="icon-btn" id="loadRetry" type="button">Try again</button></div>
   <!-- ================= DASHBOARD ================= -->
+  <!-- Today (MANU 2026-11-07 UX pick 1): what needs this person now, per role -->
+  <section class="view" id="v-home">
+    <div class="hm-head"><div><h2 id="homeHi">Needs you now</h2><small id="homeSub"></small></div><span class="sp"></span><button class="btn alt" type="button" id="homeRefresh">↻ Refresh</button></div>
+    <div class="home-grid" id="homeBody"></div>
+  </section>
   <section class="view" id="v-dashboard">
     <div class="bar">
       <div class="chips" id="rangeChips"></div>
@@ -2683,6 +2803,19 @@ html.th-color .fx-empty .cb{fill:var(--tc)}
 </div>
 <div class="logo-loader" id="loadLogo" hidden aria-live="polite"><div class="logo-load"><img class="logo-copy" alt=""><span class="lroad"></span></div><span>Loading…</span></div>
 <div class="toast" id="toast" role="status"></div>
+<!-- Sign-in video (MANU 2026-11-07): can't be closed until the video ends -->
+<div class="vgate" id="vgate" hidden role="dialog" aria-modal="true" aria-labelledby="vgTitle">
+  <div class="vg-card">
+    <div class="vg-h"><b id="vgTitle"></b><small id="vgSub"></small></div>
+    <div class="vg-stage" id="vgStage"><video id="vgV" playsinline preload="auto" disablepictureinpicture controlslist="nodownload noplaybackrate noremoteplayback"></video><button type="button" class="vg-play" id="vgPlay" aria-label="Play">▶</button></div>
+    <div class="vg-bar" id="vgBar"><button type="button" id="vgPP">▶ Play</button><div class="vg-prog"><i id="vgFill"></i></div><span id="vgTime">0:00</span><button type="button" id="vgMute" aria-label="Sound on or off">🔊</button><button type="button" id="vgFs" aria-label="Full screen">⛶</button></div>
+    <div class="vg-f"><button class="btn alt" type="button" id="vgOut">Sign out</button><span id="vgNote"></span><button class="btn" type="button" id="vgDone" disabled>Continue</button></div>
+  </div>
+</div>
+<!-- First sign-in walk-through (MANU 2026-11-07 UX pick 13) -->
+<div class="tour" id="tour" hidden role="dialog" aria-modal="true" aria-labelledby="tourT"><div class="tour-hole" id="tourHole"></div>
+  <div class="tour-tip" id="tourTip"><b id="tourT"></b><p id="tourS"></p><div class="tour-f"><small id="tourN"></small><button type="button" class="lnk" id="tourSkip">Skip</button><button class="btn alt" type="button" id="tourBack">‹ Back</button><button class="btn" type="button" id="tourNext">Next ›</button></div></div>
+</div>
 
 <script>
 const LIVE = typeof google !== 'undefined' && google.script && google.script.run;
@@ -2709,7 +2842,7 @@ const MS_KEYS = ['srcArrive','loadStart','loadEnd','srcDepart','destArrive','unl
 const MS_COL = {srcArrive:12,loadStart:13,loadEnd:14,srcDepart:15,destArrive:16,unloadStart:17,unloadEnd:18,destDepart:19};
 const MS_LABEL = {srcArrive:'Source time in',loadStart:'Loading start',loadEnd:'Loading end',srcDepart:'Source time out',
   destArrive:'Destination time in',unloadStart:'Unloading start',unloadEnd:'Unloading end',destDepart:'Destination time out'};
-const TAB_NAME = {dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users',analytics:'System analytics'};
+const TAB_NAME = {home:'Today',dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users',analytics:'System analytics'};
 const NO_AUTH = ['login','getAppUrl','appVersion'];
 
 const S = { sum:null, sumAt:0, sumView:'week', sumMeasure:'trips', topView:'p7', me:null, boot:null, trips:[], range:{}, tab:'', stageFilter:'', shown:150,
@@ -2778,7 +2911,8 @@ const may = perm => !!(S.me && (S.me.perms||[]).includes(perm));   // server per
 // anymore, only supervisor can"); the server refuses the save too (DONE_LOCK_ROLES in Code.gs). Supervisor and Admin keep editing.
 const DONE_LOCK_ROLES = ['DISPATCHER', 'TEAM LEADER'];
 const doneLocked = t => !!(t && S.me && DONE_LOCK_ROLES.includes(S.me.role) && String(t.status || '').trim().toLowerCase() === 'completed');
-const DONE_LOCK_TXT = 'Completed, ask Supervisor. Only a Supervisor can change a Completed trip.';
+const DONE_LOCK_TXT = 'Completed, ask Supervisor. Only a Supervisor can change a Completed trip (the refuel can still be saved).';
+const DONE_OPEN_KEYS = ['mano', 'odo', 'fuelPrice'];   // refuel stays editable on a Completed trip (MANU 2026-11-07)
 const OPS_LOCKED = ['plateNo','driver','helper1','helper2','kms','budget'];   // dispatcher-only roles can't change these (truck: yes, MANU; its plate and crew follow)
 const CELL_RO = ['plateNo','kms'];   // Truck Plan cells never edited by hand: plate follows the truck, KMS comes from CLIENT LIST (MANU)
 const DATE_MOVE_DAYS = 30;   // a trip date can be moved this many days earlier or later (MANU 2026-11-02 "users should be able to edit Trip date"; Code.gs DATE_MOVE_DAYS)
@@ -3259,6 +3393,8 @@ function openSettings(){
     ${g('App', [
       row('ver', '🆕', 'What changed', esc(vt.long || ('Version ' + APP_VERSION))),
       `<div class="setr thr"><span class="si">🎨</span><span class="st">Theme<small>Saved on this phone or PC only</small><span class="thc">${THEMES.map(([k, n]) => `<button type="button" data-theme="${k}" aria-pressed="${themeNow() === k}">${n}</button>`).join('')}</span><span class="cmyk" id="cmykBox"${themeNow() === 'color' ? '' : ' hidden'}>${['C', 'M', 'Y', 'K'].map((n, i) => `<label title="${['Cyan', 'Magenta', 'Yellow', 'Black (key)'][i]}"><span>${n}</span><input type="range" min="0" max="100" step="1" data-cm="${i}" value="${cmykGet()[i]}" aria-label="${['Cyan', 'Magenta', 'Yellow', 'Black'][i]}"><input type="number" min="0" max="100" data-cmn="${i}" value="${cmykGet()[i]}" aria-label="${['Cyan', 'Magenta', 'Yellow', 'Black'][i]} %"></label>`).join('')}<span class="cm-prev"><span class="cm-sw" id="cmSw"></span><span class="hint" id="cmTxt"></span></span><span class="cm-pre">${CMYK_PRESETS.map(([n, v]) => `<button type="button" data-cmpre="${v.join(',')}" title="${n}" aria-label="${n}" style="background:${rgbHex(cmykRgb(v))}"></button>`).join('')}</span></span></span></div>`,
+      `<div class="setr thr"><span class="si">🔠</span><span class="st">Text size<small>Bigger or smaller letters, on this phone or PC only</small><span class="tsz">${TSIZES.map(([k, n]) => `<button type="button" data-tsize="${k}" aria-pressed="${tsizeNow() === k}">${n}</button>`).join('')}</span></span></div>`,
+      row('tour', '🧭', 'Show me around', 'The short tour of your screens'),
       row('anim', '✨', 'Animations', 'Moving effects and drifting logos, on this phone or PC only', ` role="switch" aria-checked="${!animOff()}"`),
       row('snd', '🔊', 'Sounds', 'Soft click and chime for saves, messages and alerts, on this phone or PC only', ` role="switch" aria-checked="${store('jmti_snd') === '1'}"`),
       badgeAsk() ? row('badge', '🔔', 'Show the count on the app icon', 'Unread chats on the JMTI icon') : '',
@@ -3266,7 +3402,7 @@ function openSettings(){
       row('reload', '⟳', 'Reload the app', 'Gets the newest version of the page'),
     ])}
     ${g('People', [ row('online', '🟢', 'Who is signed in', '') ])}
-    ${may('restoreTrip') ? g('Admin', [ row('deleted', '🗑', 'Deleted trips', 'Put back a trip deleted from Truck Plan') ]) : ''}
+    ${may('restoreTrip') || may('targets') ? g('Admin', [ may('restoreTrip') ? row('deleted', '🗑', 'Deleted trips', 'Put back a trip deleted from Truck Plan') : '', may('targets') ? row('video', '🎬', 'Sign-in video', 'The video Supervisors, Team leaders and Dispatchers watch at sign-in, and who finished it') : '' ]) : ''}
     ${g('', [ row('out', '⎋', 'Sign out', esc(S.me ? S.me.name + ' · ' + (S.me.role || '') : '')) ])}
   </div>`;
   openPop('Settings', '', body);
@@ -3275,6 +3411,8 @@ function openSettings(){
     const pre = e.target.closest('[data-cmpre]');
     if(pre){ cmykApply(pre.dataset.cmpre.split(',').map(Number)); return; }
     if(e.target.closest('#cmykBox')) return;
+    const tz = e.target.closest('[data-tsize]');
+    if(tz){ tsizeSet(tz.dataset.tsize); $('popBody').querySelectorAll('[data-tsize]').forEach(x => x.setAttribute('aria-pressed', String(x === tz))); toast('Text size: ' + tz.textContent); return; }
     const th = e.target.closest('[data-theme]');
     if(th){ themeSet(th.dataset.theme); $('cmykBox').hidden = th.dataset.theme !== 'color'; if(th.dataset.theme === 'color') cmykApply(cmykGet()); $('popBody').querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x === th))); toast('Theme: ' + th.textContent.replace(/^\S+ /, '')); return; }
     const b = e.target.closest('[data-set]'); if(!b) return;
@@ -3285,7 +3423,7 @@ function openSettings(){
     if(k === 'reload'){ vupReload(b); return; }
     closePop();
     ({prof: () => openProfile(), pw: () => showPwForm(false), ver: vchgShow, tab: () => { showTab(S.tab); toast('Refreshing ' + (TAB_NAME[S.tab] || 'this tab') + '…'); },
-      online: openOnline, deleted: openDeletedTrips, out: () => $('logoutBtn').click()})[k]?.();
+      online: openOnline, deleted: openDeletedTrips, tour: () => tourStart(), video: openVideoAdmin, out: () => $('logoutBtn').click()})[k]?.();
   };
 }
 $('setBtn').onclick = openSettings;
@@ -3622,7 +3760,7 @@ function enterApp(me){
   $('loginScreen').hidden = true; $('app').hidden = false; $('loadErr').hidden = true;
   $('meName').textContent = me.name; $('meRole').textContent = me.role;
   onlineStart(); profileStart(); setTimeout(() => bdayCheck(0), 2500); shiftStart();
-  setTimeout(podLateDaily, 6000);   // POD: late documents, once a day (review 2026-11-04 #10)
+  // POD late documents (review 2026-11-04 #10) now come in Today's alerts at sign-in (signinFlow, MANU 2026-11-07)
   S.rules = lsGet('jmti_rules') || null; call('appRules').then(r => { S.rules = r; lsSet('jmti_rules', r); }).catch(() => {});   // odometer / driver rest rules (review 2026-11-04b)
   $('askBtn').hidden = !ASK_ON;
   const tabs = me.tabs;
@@ -3633,7 +3771,7 @@ function enterApp(me){
   initOnce();
   fillRoleOptions();
 
-  const needsTrips = tabs.some(t => ['dashboard','fleet','planner','dispatcher','pod','billing','assign','disbursement','accounting','payroll'].includes(t));
+  const needsTrips = tabs.some(t => ['home','dashboard','fleet','planner','dispatcher','pod','billing','assign','disbursement','accounting','payroll'].includes(t));
   const cached = lsGet('jmti_boot');
   if(needsTrips && cached && cached._user === me.username){ cached.today = TODAY(); S.boot = cached; fillLists(); }
   S.tab = firstTab();
@@ -3661,6 +3799,7 @@ function bootRange(){
   const today = TODAY(), t = S.tab, v = id => $(id) && $(id).value;
   if((t==='dashboard' || t==='trips') && S.range && S.range.from) return [addDays(S.range.from,-3), addDays(S.range.to,3)];
   if(t==='dispatcher'){ const [f, t2] = xRange(); return [addDays(f,-3), addDays(t2,3)]; }
+  if(t==='home') return homeRange();   // Today (MANU 2026-11-07)
   const ids = {pod:['podFrom','podTo'], billing:['billFrom','billTo'], disbursement:['dbFrom','dbTo']}[t];
   if(ids && v(ids[0]) && v(ids[1]) && v(ids[0]) <= v(ids[1])) return [v(ids[0]), v(ids[1])];
   return [today, today];
@@ -3697,7 +3836,7 @@ function loadBoot(){
     S.nsPre = r.ns ? {at: Date.now(), v: r.ns} : null;   // trips of past days without a shipment number (TL / Supervisor)
     if(r.lw){ S.lw = r.lw; S.lwAt = Date.now(); renderLw(); }
     IR.v = ''; IR.list = []; IR.unread = 0; if(may('irView')) setTimeout(loadIr, 1200); else renderLw();   // incident reports on the bell
-    Promise.resolve(checkOverdue()).then(() => checkIdle()).then(() => setTimeout(() => checkNoShip(), 1500));
+    signinFlow();   // sign-in video, first-time tour, then ONE Today's alerts box (MANU 2026-11-07; the overdue lock still comes first when it applies)
     setTimeout(prefetchTabs, 2500);
   }).catch(e => {
     if(e.net && S.boot){ toast('No signal. Showing what this phone saved' + syncAgo() + '.', false, 5000); return; }
@@ -3827,6 +3966,8 @@ function checkOverdue(force){
 
 function firstTab(){
   const tabs = S.me.tabs;
+  // Today first each time the app is opened (MANU 2026-11-07 UX pick 1); a reload in the same window stays on the last tab
+  try{ const k = 'jmti_open_' + S.me.username; if(tabs.includes('home') && !sessionStorage.getItem(k)){ sessionStorage.setItem(k, '1'); return 'home'; } }catch(e){}
   const saved = store('jmti_tab_'+S.me.username);
   const want = saved==='units' ? 'fleet' : saved;
   return want && tabs.includes(want) ? want : tabs[0];
@@ -3857,8 +3998,8 @@ function showTab(t){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id==='v-'+view));
   { const v = $('v-'+view); if(v){ v.classList.remove('anim-in'); void v.offsetWidth; v.classList.add('anim-in'); clearTimeout(showTab._a); showTab._a = setTimeout(() => v.classList.remove('anim-in'), 1500); } }   // animations on tab open only (MANU 2026-11-06)
   if(t==='maintenance') return loadMaintenance();
-  if(!S.boot && !['manpower','users','analytics'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
-  ({dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, analytics:loadAnalytics, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
+  if(!S.boot && !['home','manpower','users','analytics'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
+  ({home:loadHome, dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, analytics:loadAnalytics, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
   if(['dashboard','manpower'].includes(t) || (t==='fleet' && may('fleet'))) loadReminders();
 }
 
@@ -4039,7 +4180,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.3, APP_VERSION_DATE = '2026-11-06';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.4, APP_VERSION_DATE = '2026-11-07';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
@@ -4067,6 +4208,20 @@ function verCheck(){
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
   // MANU 2026-11-06 15:20 UTC "this is version 14.2": this afternoon's changes (from ~14:17 UTC)
+  // MANU 2026-11-07 01:35 UTC "make this version 14.4": everything after the 14.3 GitHub push (809c379)
+  {v:14.4, d:'2026-11-07', items:[
+    'Truck Plan: on a Completed trip, Dispatchers and Team leaders can still save the refuel (Fuel liters, odometer and fuel price), from the Fuel cell or the trip pop-up. Everything else on a Completed trip stays locked for them.',
+    'Sign-in video: Supervisors, Team leaders and Dispatchers watch the JMTI Operations Job Descriptions video when they sign in. It can\'t be closed or skipped ahead; Continue opens only when the video ends. Each person watches it until they finish it once. Admin can change the video, the roles, or make it show at every sign-in in Settings > Sign-in video, and see who has finished it.',
+    'New Today screen opens first: a \"Needs you now\" list for your role (overdue trips, trips stuck on one step, assigned trucks without a trip, no-trip reasons missing, trips without a shipment number, late documents, trips POD endorsed but Billing hasn\'t checked, trips with missing crew for Payroll, new incident reports). Tap a line to open it.',
+    'At sign-in the separate pop-ups (overdue, no trip yesterday, no shipment number, late documents, incident reports) come together in one Today\'s alerts box. Tap one to see its list; closing it brings you back to the box. The overdue lock for Supervisors and Team leaders still comes first.',
+    'Search button (magnifier) in the top bar, or press / on a PC: find any trip by plate, truck number, driver, helper, shipment number, TRIP ID, customer or destination, plus matching trucks and people. Look further back goes to 90 days.',
+    'Trip story: one panel with everything about a trip (status, crew, route, budget, MANO, fuel, POD and Billing, a timeline of every time, and who changed what from the Change Log). Open it from Search, the Today screen, or the new Trip story button in the trip panel.',
+    'Clearer error messages: common blocks (truck already has an open trip, garage or hold row, Completed lock, overdue lock, truck not in PLATE or inactive, under maintenance, not allowed for your role) now explain what to do and give a button to fix it, such as Open that trip.',
+    'First sign-in walk-through: new users get a short tour of their own screens and buttons. Replay it any time from Settings > Show me around.',
+    'Text size in Settings: Small, Normal, Large or Extra large, saved on that phone or PC only.',
+    'Payroll users can now open the Truck Plan tab to look at trips (view only, nothing can be changed or saved from their login).',
+    'When a trip is set to TUKOD, the new On Site Destination trip it adds is now dated the next day (TUKOD on November 5, new trip on November 6).',
+  ]},
   {v:14.3, d:'2026-11-06', items:[
     'Old trips no longer add sources and destinations. Add trip lists only what is typed in the CLIENT LIST (or added with "+ Add route" in Clients). The "Trips with a route not in the CLIENT LIST" box in Clients is gone.',
     'Supervisors can now open the Manpower tab to see the roster, trips in a date range, the driver scorecard and the incident reports summary. Adding or editing people and setting them inactive stay with HR and Admin.',
@@ -5264,7 +5419,7 @@ function initDispatcher(){
     if(idle){ if(may('dispatchAdd')) openDispatchAdd(idle.dataset.idle); return; }
     const c = e.target.closest('[data-key]'); if(!c) return;
     const t = S.xTrips.find(x => x.key===c.dataset.key); if(!t) return;
-    const view = !may('dispatch');   // POD (MANU 2026-11-04 "add POD access to truckplan as viewer"): open the trip to read, nothing else
+    const view = !may('dispatch');   // POD (MANU 2026-11-04 "add POD access to truckplan as viewer") and PAYROLL (MANU 2026-11-07): open the trip to read, nothing else
     const nb = e.target.closest('[data-next]');
     if(nb && !view && !doneLocked(t)) return quickNext(t, nb.dataset.next);
     // MANO cell (MANU 2026-11-06): opens the Disbursement form for this trip with purpose MANO
@@ -5272,7 +5427,7 @@ function initDispatcher(){
     const td = e.target.closest('td.ed');
     // MANU 2026-11-04 "when budget cell is clicked, it should pop-up disbursement": the Disbursement form for this trip's crew
     if(td && td.dataset.f==='budget' && may('opsDisburse') && !$('xDisbBtn').hidden) return openOpsForm('DISB', {trip: t});
-    if(td && !view && doneLocked(t)) toast(DONE_LOCK_TXT, true);   // read-only pop-up below
+    if(td && !view && doneLocked(t) && !DONE_OPEN_KEYS.includes(td.dataset.f)) toast(DONE_LOCK_TXT, true);   // read-only pop-up below (refuel cell still opens)
     else if(td && !view) return openCellEditor(t, td.dataset.f, td);
     openDispatch(t);
   };
@@ -6154,11 +6309,11 @@ function openDispatch(t){
       () => callQ('cancelTrip', refOf(t), reason.toUpperCase()), () => 'Trip cancelled');
   };
   if(doneLocked(t)){   // Completed: Dispatcher / Team leader only read it (MANU 2026-11-06)
-    body.querySelectorAll('input,select,textarea').forEach(x => x.disabled = true);
+    body.querySelectorAll('input,select,textarea').forEach(x => { if(!DONE_OPEN_KEYS.includes(x.dataset.k) || x.readOnly) x.disabled = true; });
     body.querySelectorAll('[data-now],[data-clear]').forEach(b => b.remove());
-    body.insertAdjacentHTML('afterbegin', '<p class="hint fed-note"><b>Completed, ask Supervisor.</b> This trip is Completed, so only a Supervisor can change it (status, times, remarks, crew, cancel or delete).</p>');
-    $('drFoot').innerHTML = '<span class="hint" style="margin-right:auto"><b>Completed, ask Supervisor</b></span><button class="btn alt" id="drRoClose" type="button">Close</button>';
-    $('drRoClose').onclick = closeDrawer;
+    body.insertAdjacentHTML('afterbegin', '<p class="hint fed-note"><b>Completed, ask Supervisor.</b> This trip is Completed, so only a Supervisor can change it (status, times, remarks, crew, cancel or delete). You can still save the refuel: Fuel (liters), odometer and fuel price.</p>');
+    $('drFoot').innerHTML = '<span class="hint" style="margin-right:auto"><b>Completed, ask Supervisor</b></span><button class="btn alt" id="drRoClose" type="button">Close</button><button class="btn" id="drSave" type="button">Save refuel</button>';
+    $('drRoClose').onclick = closeDrawer; $('drSave').onclick = saveDispatch;
     return setTimeout(() => $('drClose').focus(), 230);
   }
   setTimeout(() => { const i = next && body.querySelector(`input[data-k="${next}"]`); (i || $('drClose')).focus(); }, 230);
@@ -6291,6 +6446,7 @@ async function saveDispatch(){
     if(v !== String(t[k]||'').slice(0, MS_KEYS.includes(k)?16:undefined)) patch[k] = v;
   });
   if(patch.status === statusText(t)) delete patch.status;
+  if(doneLocked(t)) Object.keys(patch).forEach(k => { if(!DONE_OPEN_KEYS.includes(k)) delete patch[k]; });   // Completed: only the refuel is sent
   if(patch.customer !== undefined || patch.destination !== undefined){
     const route = pickRoute(patch.customer ?? t.customer, patch.destination ?? t.destination);
     if(route.err) return toast(route.err, true);
@@ -8128,7 +8284,7 @@ const ROLE_NOTE = {'ADMIN':'Everything, including users.','BOSS':'Sees everythin
   'SUPERVISOR':'Dashboard, Truck assignment and Truck Plan; in Truck Plan changes only source and destination, and adds trips.','TEAM LEADER':'Dashboard, Fleet (view only), Truck assignment and Truck Plan.',
   'DISPATCHER':'Truck Plan only.','POD':'Checks completed trips, uploads scanned documents, endorses to billing.','POD HEAD':'Everything POD does, plus the POD analytics tab.','BILLING':'Checks trips POD sent; source, destination, distance and clients.',
   'HR':'Drivers and helpers (Manpower) and users, except Admin and Boss accounts.','MAINTENANCE':'Maintenance dashboard only.',
-  'ACCOUNTING':'Disbursement (trip budgets sent) and Accounting (inventory purchases with receipts, money summary).','PAYROLL':'Payroll and Disbursement (trip budgets sent).'};
+  'ACCOUNTING':'Disbursement (trip budgets sent) and Accounting (inventory purchases with receipts, money summary).','PAYROLL':'Payroll and Disbursement (trip budgets sent); Truck Plan view only.'};
 const ADMIN_ONLY_ROLES = ['ADMIN','BOSS'];   // only an admin creates, changes or gives these (HR manages the rest; same check on the server)
 function fillRoleOptions(){
   const roles = S.me.role==='ADMIN' ? ALL_ROLES : ALL_ROLES.filter(r => !ADMIN_ONLY_ROLES.includes(r));
@@ -12195,6 +12351,566 @@ function fxBadgeWatch(numId, btnId, kind){
 }
 fxBadgeWatch('lwN', 'lwBtn', 'chat'); fxBadgeWatch('chatN', 'chatBtn', 'chat');
 
+/* ===== UX PICKS (MANU 2026-11-07, reviews/jmti-ux-ideas-2026-11-07.md: 1 Today screen, 2 Today's alerts, 4 search, 5 trip story,
+ * 10 errors that say what to do, 13 walk-through, 14 text size) and the SIGN-IN VIDEO ("pop-up this video when supervisor, team leader
+ * and dispatcher log-in, cannot close, only close when the video is finished") ===== */
+
+// ---------- 14 Text size (Settings), saved on this phone or PC ----------
+const TSIZES = [['s', 'Small', 0.9], ['m', 'Normal', 1], ['l', 'Large', 1.12], ['xl', 'Extra large', 1.25]];
+function tsizeNow(){ const v = store('jmti_tsize'); return TSIZES.some(x => x[0] === v) ? v : 'm'; }
+function tsizeSet(k){
+  const z = (TSIZES.find(x => x[0] === k) || TSIZES[1])[2];
+  store('jmti_tsize', k === 'm' ? null : k);
+  document.documentElement.style.zoom = z === 1 ? '' : String(z);
+  document.documentElement.dataset.tsize = k;
+  try{ window.dispatchEvent(new Event('resize')); }catch(e){}
+}
+tsizeSet(tsizeNow());
+
+// ---------- helpers ----------
+/** The freshest copy of a trip this page has, by key or TRIP ID (all kept date ranges). */
+function uxTrip(key, tripId){
+  let best = null;
+  const lists = [S.trips || []].concat(Object.values(TC || {}));
+  for(const l of lists){ if(!Array.isArray(l)) continue; for(const t of l){ if((key && t.key === key) || (tripId && t.tripId === tripId)){ if(!best || t._pending) best = t; } } }
+  return best;
+}
+function uxAllTrips(){
+  const by = new Map();
+  [S.trips || []].concat(Object.values(TC || {})).forEach(l => { if(Array.isArray(l)) l.forEach(t => { if(t && t.key && (!by.has(t.key) || t._pending)) by.set(t.key, t); }); });
+  return [...by.values()];
+}
+const uxDispatchOk = () => can('dispatcher') && may('dispatch');
+/** Tap a trip anywhere in these screens: dispatch roles open it to edit, everyone else gets its story. */
+function uxOpenTrip(t, story){
+  if(!t) return;
+  const full = uxTrip(t.key, t.tripId) || t;
+  if(!story && uxDispatchOk() && full.key){ closePop(true); openDispatch(full); return; }
+  openStory(full);
+}
+const uxRow = (t, why, extra) => `<button type="button" class="hm-r" data-hk="${esc(t.key || '')}" data-tid="${esc(t.tripId || '')}">
+  <span class="hm-t"><b>Truck ${esc(t.truckNo || '—')}</b>${t.plateNo ? ` <small>${esc(t.plateNo)}</small>` : ''}</span>
+  <span class="hm-m">${esc(t.customer || '')}${t.destination ? ' → ' + esc(plainDest(t.destination)) : ''}<small>${esc(fmtDay(t.date))}${t.shipmentNo ? ' · ' + esc(t.shipmentNo) : ''}${t.driver ? ' · ' + esc(t.driver) : ''}</small></span>
+  <span class="hm-w">${t.status !== undefined ? `<span class="pill" style="--c:${colorOf(stageOf(t))}">${esc(statusText(t))}</span>` : ''}${why ? `<small>${why}</small>` : ''}</span>${extra || ''}</button>`;
+
+// ---------- SIGN-IN VIDEO ----------
+const VG = {};
+const vgFmt = s => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+/** At sign-in: Supervisor, Team leader and Dispatcher (Admin can change the roles) watch the video to the end before anything else. */
+function vidGate(){
+  if(!S.me) return Promise.resolve();
+  return call('signinVideo').then(r => {
+    if(!r || !r.id) return;
+    const doneK = 'jmti_vid_done_' + S.me.username + '_' + r.id;
+    if(r.every){ if(store('jmti_vid_tok') === TOKEN) return; }
+    else if(!r.show) return;
+    else if(lsGet(doneK)){ call('videoDone', r.id, lsGet(doneK)).catch(() => {}); return; }   // finished here but the server did not hear it: tell it again
+    return vgShow(r, false);
+  }).catch(() => {});   // no signal or an old Code.gs: never stop the app over the video
+}
+function vgShow(r, preview){
+  return new Promise(resolve => {
+    const g = $('vgate'), v = $('vgV');
+    Object.assign(VG, {r, max: 0, ended: false, ok: false, mode: 'video', preview: !!preview, resolve, left: 0});
+    $('vgTitle').textContent = r.title || 'Sign-in video';
+    $('vgSub').textContent = preview ? 'Preview (Admin): this is what the roles see at sign-in.' : 'Please watch the whole video before you start. Continue opens when it ends.';
+    $('vgDone').disabled = !preview; $('vgDone').textContent = preview ? 'Close preview' : 'Continue';
+    $('vgNote').textContent = ''; $('vgFill').style.width = '0%'; $('vgTime').textContent = '0:00';
+    $('vgStage').classList.remove('frame'); const fr = $('vgStage').querySelector('iframe'); if(fr) fr.remove();
+    $('vgBar').hidden = false; $('vgPlay').hidden = false;
+    g.hidden = false; document.body.classList.add('vg-on');
+    v.muted = false; v.src = 'https://drive.google.com/uc?export=download&id=' + encodeURIComponent(r.id); v.load();
+    clearTimeout(VG.to); VG.to = setTimeout(() => { if(!VG.ok && !g.hidden) vgFrame(); }, 25000);
+    const p = v.play(); if(p && p.then) p.then(() => { $('vgPlay').hidden = true; }).catch(() => { $('vgPlay').hidden = false; });
+  });
+}
+function vgTick(){
+  const v = $('vgV'), d = v.duration || 0;
+  $('vgFill').style.width = d ? Math.min(100, VG.max / d * 100) + '%' : '0%';
+  $('vgTime').textContent = vgFmt(v.currentTime) + ' / ' + (d ? vgFmt(d) : '…');
+}
+function vgEnd(){
+  if(VG.ended) return; VG.ended = true;
+  const r = VG.r, secs = Math.round(($('vgV').duration || (r.dur || 0) / 1000) || 0);
+  $('vgDone').disabled = false; $('vgDone').classList.add('sv-ok');
+  $('vgNote').textContent = '✓ Finished. Tap Continue.';
+  if(VG.preview) return;
+  store('jmti_vid_tok', TOKEN);
+  const doneK = 'jmti_vid_done_' + S.me.username + '_' + r.id; lsSet(doneK, secs);
+  call('videoDone', r.id, secs).then(() => lsSet(doneK, null)).catch(() => {});
+  try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+}
+/** The video could not play here (Drive refused it, or no signal for it): Drive's own player, and Continue opens after the video's length. */
+function vgFrame(){
+  if(VG.mode === 'frame' || VG.ended) return;
+  VG.mode = 'frame';
+  const v = $('vgV'); try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(e){}
+  $('vgStage').classList.add('frame'); $('vgPlay').hidden = true; $('vgBar').hidden = true;
+  $('vgStage').insertAdjacentHTML('beforeend', `<iframe src="https://drive.google.com/file/d/${encodeURIComponent(VG.r.id)}/preview" allow="autoplay; fullscreen" allowfullscreen title="${esc(VG.r.title || 'Video')}"></iframe>`);
+  VG.left = Math.ceil(((VG.r.dur || 300000) + 5000) / 1000);
+  clearInterval(VG.iv);
+  VG.iv = setInterval(() => {
+    if($('vgate').hidden){ clearInterval(VG.iv); return; }
+    if(document.hidden || VG.ended) return;   // counts only while the app is on screen
+    VG.left--; $('vgNote').textContent = VG.left > 0 ? 'Press ▶ on the video. Continue opens in ' + vgFmt(VG.left) + '.' : '';
+    if(VG.left <= 0){ clearInterval(VG.iv); vgEnd(); }
+  }, 1000);
+}
+function vgClose(){
+  const g = $('vgate'), v = $('vgV');
+  clearTimeout(VG.to); clearInterval(VG.iv);
+  try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(e){}
+  const fr = $('vgStage').querySelector('iframe'); if(fr) fr.remove();
+  g.hidden = true; document.body.classList.remove('vg-on');
+  const r = VG.resolve; VG.resolve = null; if(r) r();
+}
+(function vgInit(){
+  const v = $('vgV'); if(!v) return;
+  v.addEventListener('loadedmetadata', () => { VG.ok = true; vgTick(); });
+  v.addEventListener('timeupdate', () => { if(!v.seeking && v.currentTime > VG.max && v.currentTime - VG.max < 2.5) VG.max = v.currentTime; vgTick(); });
+  v.addEventListener('seeking', () => { if(v.currentTime > VG.max + 1) v.currentTime = VG.max; });   // no skipping ahead (going back is fine)
+  v.addEventListener('ratechange', () => { if(v.playbackRate !== 1) v.playbackRate = 1; });
+  v.addEventListener('play', () => { $('vgPlay').hidden = true; $('vgPP').textContent = '❚❚ Pause'; });
+  v.addEventListener('pause', () => { $('vgPP').textContent = '▶ Play'; });
+  v.addEventListener('ended', () => { if(VG.max >= (v.duration || 0) - 2.5) vgEnd(); else { v.currentTime = VG.max; v.play().catch(() => {}); } });
+  v.addEventListener('error', () => { if(!$('vgate').hidden && VG.mode === 'video') vgFrame(); });
+  v.addEventListener('contextmenu', e => e.preventDefault());
+  $('vgPlay').onclick = () => { v.play().catch(() => { v.muted = true; $('vgMute').textContent = '🔇'; v.play().catch(() => vgFrame()); }); };
+  $('vgPP').onclick = () => { if(v.paused) $('vgPlay').onclick(); else v.pause(); };
+  v.addEventListener('click', () => { if(VG.mode === 'video') $('vgPP').onclick(); });
+  $('vgMute').onclick = () => { v.muted = !v.muted; $('vgMute').textContent = v.muted ? '🔇' : '🔊'; };
+  $('vgFs').onclick = () => { const st = $('vgStage'); try{ if(document.fullscreenElement) document.exitFullscreen(); else if(st.requestFullscreen) st.requestFullscreen(); else if(v.webkitEnterFullscreen) v.webkitEnterFullscreen(); }catch(e){} };
+  $('vgDone').onclick = () => { if(VG.ended || VG.preview) vgClose(); };
+  $('vgOut').onclick = () => { vgClose(); $('logoutBtn').click(); };
+  // the video can't be closed: Esc and the other pop-ups' keys do nothing while it is up
+  document.addEventListener('keydown', e => { if(!$('vgate').hidden && e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+})();
+/** Settings > Sign-in video (Admin): the link, roles, once or every sign-in, and who has finished it. */
+function openVideoAdmin(){
+  openPop('Sign-in video', 'Loading…', '<p class="hint">Loading…</p>');
+  call('videoReport').then(drawVideoAdmin).catch(e => { $('popBody').innerHTML = `<p class="hint">${esc(e.message)}</p>`; });
+}
+function drawVideoAdmin(r){
+  const c = r.cfg || {}, seenN = r.people.filter(p => p.seen).length;
+  $('popSub').textContent = `${seenN} of ${r.people.length} people finished it${r.dur ? ' · video length ' + vgFmt(r.dur / 1000) : ''}`;
+  $('popBody').innerHTML = `<div class="vga">
+    <label class="f">Google Drive link of the video<input id="vaLink" value="${esc(c.id ? 'https://drive.google.com/file/d/' + c.id + '/view' : '')}" placeholder="Paste the Drive link (Share > Anyone with the link)"></label>
+    <label class="f">Title<input id="vaTitle" value="${esc(c.title || '')}"></label>
+    <div class="f"><span>Who must watch it</span><div class="vga-roles">${r.roles.filter(x => x !== 'BOSS').map(x => `<label class="chk"><input type="checkbox" value="${esc(x)}"${(c.roles || []).includes(x) ? ' checked' : ''}> ${esc(titleCase(x))}</label>`).join('')}</div></div>
+    <label class="chk"><input type="checkbox" id="vaOn"${c.on !== false ? ' checked' : ''}> Show the video at sign-in</label>
+    <label class="chk"><input type="checkbox" id="vaEvery"${c.every ? ' checked' : ''}> At every sign-in (not only until each person finishes it once)</label>
+    <label class="chk"><input type="checkbox" id="vaAgain"> Everyone watches it again (clears the list below)</label>
+  </div>
+  <div class="sec">Finished it</div>
+  <div class="tbl-wrap" style="max-height:none"><table class="poptbl"><thead><tr><th>Name</th><th>Role</th><th>Finished</th></tr></thead><tbody>${r.people.map(p => `<tr><td><b>${esc(p.name)}</b><small>${esc(p.username)}</small></td><td>${esc(titleCase(p.role))}</td><td>${p.seen ? '✓ ' + esc(p.seen) : '<b style="color:#B91C1C">Not yet</b>'}</td></tr>`).join('') || '<tr><td colspan="3" class="hint">No active users in those roles.</td></tr>'}</tbody></table></div>`;
+  $('popFoot').innerHTML = `<button class="btn alt" type="button" id="vaPrev">▶ Preview</button><button class="btn" type="button" id="vaSave">Save</button>`;
+  $('vaPrev').onclick = () => { const m = /[-\w]{25,}/.exec($('vaLink').value); if(!m) return toast('Paste the Drive link first.', true); closePop(); vgShow({id: m[0], title: $('vaTitle').value, dur: r.dur}, true); };
+  $('vaSave').onclick = () => {
+    const d = {link: $('vaLink').value, title: $('vaTitle').value, roles: [...$('popBody').querySelectorAll('.vga-roles input:checked')].map(x => x.value), on: $('vaOn').checked, every: $('vaEvery').checked, again: $('vaAgain').checked};
+    $('vaSave').disabled = true;
+    call('setSigninVideo', d).then(x => { toast('Sign-in video saved'); drawVideoAdmin(x); }).catch(e => { toast(e.message, true); $('vaSave').disabled = false; });
+  };
+}
+
+// ---------- 2 Today's alerts: one box at sign-in instead of pop-ups one after another ----------
+const ALR = {data: {}, back: false};
+function signinFlow(){
+  return vidGate().then(() => tourGate()).then(() => alertsAtSignin()).catch(() => {});
+}
+async function alertsAtSignin(){
+  if(!S.me) return;
+  const role = S.me.role, d = ALR.data = {};
+  if(OVERDUE_ROLES.includes(role) && may('dispatch')){ try{ d.od = await preOr('odPre', 'overdueTrips'); }catch(e){ d.od = []; } }
+  if(LOCK_ROLES.includes(role) && (d.od || []).some(t => !t.fed)){   // the overdue LOCK stays as it was: first, and nothing else until it is cleared
+    S.odPre = {at: Date.now(), v: d.od};
+    return Promise.resolve(checkOverdue()).then(() => checkIdle()).then(() => setTimeout(() => checkNoShip(), 1500));
+  }
+  if((d.od || []).length){ S.overdueSeen = S.overdueSeen || new Set(); d.od.forEach(t => S.overdueSeen.add(t.key)); S.odKeys = new Set(d.od.map(t => t.key)); S.odLocked = false; }
+  if(['DISPATCHER', 'TEAM LEADER', 'SUPERVISOR'].includes(role) && may('dispatch')){ try{ d.idle = await preOr('idlePre', 'idleYesterday'); }catch(e){} }
+  if(NOSHIP_ROLES.includes(role)){ try{ d.ns = await preOr('nsPre', 'noShipmentTrips'); }catch(e){} }
+  if(['POD', 'POD HEAD'].includes(role) && lsGet('jmti_podlate_seen_' + S.me.username) !== TODAY()){ try{ d.pl = await call('podLate', lsGet('jmti_podlate_days') || 3); lsSet('jmti_podlate_seen_' + S.me.username, TODAY()); }catch(e){} }
+  if(may('irView') && !IR.v){ await new Promise(r => setTimeout(r, 1500)); }
+  openAlerts(true);
+}
+function alertItems(){
+  const d = ALR.data, out = [], pick = S.me && ['DISPATCHER', 'TEAM LEADER'].includes(S.me.role);
+  if((d.od || []).length) out.push({k: 'od', ic: '⏰', n: d.od.length, t: 'Not completed 24 h after arriving', s: 'Change their status to Completed (or what they really are).'});
+  if(d.idle && (d.idle.trucks || []).length) out.push({k: 'idle', ic: '🚚', n: d.idle.trucks.length, t: 'No trip yesterday', s: pick ? 'Set a reason for each truck.' : 'A dispatcher or team leader sets the reason.'});
+  const ns = (d.ns || []).filter(t => { const l = uxTrip(t.key); return !String((l || t).shipmentNo || '').trim(); });
+  if(ns.length) out.push({k: 'ns', ic: '#', n: ns.length, t: 'Trips without a shipment number', s: 'Past days. Open each trip and type the shipment number.'});
+  if(d.pl && d.pl.trips && d.pl.trips.length) out.push({k: 'pl', ic: '📄', n: d.pl.trips.length, t: 'Late documents', s: `Completed trips not endorsed to Billing after ${d.pl.days}+ days.`});
+  if(may('irView') && IR.unread) out.push({k: 'ir', ic: '🚨', n: IR.unread, t: 'New incident reports', s: 'Reports you have not opened yet.'});
+  return out;
+}
+function openAlerts(atSignin){
+  if(!S.me || S.odLocked) return;
+  const items = alertItems();
+  if(!items.length){ if(!atSignin) toast('No alerts right now. 👍'); return; }
+  if(!$('pop').hidden || $('drawer').classList.contains('on') || !$('vgate').hidden){ if(atSignin) setTimeout(() => openAlerts(true), 4000); return; }
+  const total = items.reduce((a, x) => a + x.n, 0);
+  openPop(`🔔 Today's alerts · ${total}`, 'Everything that needs you, in one place. Tap one to see the list; you come back here when you close it.',
+    `<div class="alr">${items.map(x => `<button type="button" class="alr-r" data-alr="${x.k}"><span class="alr-ic">${x.ic}</span><span class="alr-t"><b>${esc(x.t)}</b><small>${esc(x.s)}</small></span><span class="alr-n">${x.n}</span><span class="sa">›</span></button>`).join('')}</div>`,
+    `${can('home') ? '<button class="btn alt" type="button" id="alrHome">Open the Today screen</button>' : ''}<button class="btn" type="button" id="alrOk">OK</button>`);
+  $('pop').dataset.kind = 'alerts';
+  $('alrOk').onclick = () => closePop();
+  if($('alrHome')) $('alrHome').onclick = () => { closePop(); showTab('home'); };
+  $('popBody').onclick = e => { const b = e.target.closest('[data-alr]'); if(b) alertOpen(b.dataset.alr); };
+}
+function alertOpen(k){
+  const d = ALR.data;
+  closePop(); ALR.back = k;
+  if(k === 'od'){ S.overdueSeen = new Set(); S.odPre = {at: Date.now(), v: d.od}; checkOverdue(); }
+  else if(k === 'idle'){ S.idlePre = {at: Date.now(), v: d.idle}; checkIdle(); }
+  else if(k === 'ns') checkNoShip(d.ns, 0);
+  else if(k === 'pl') showPodLate(d.pl);
+  else if(k === 'ir') openIrList({});
+  setTimeout(() => { if($('pop').hidden && ALR.back === k) ALR.back = false; }, 2500);   // nothing opened (already done): no return trip
+}
+/** After a list opened from Today's alerts closes, its count is read again and the alerts box comes back. */
+async function alertsBack(k){
+  const d = ALR.data;
+  try{
+    if(k === 'od') d.od = await call('overdueTrips');
+    if(k === 'idle') d.idle = await call('idleYesterday');
+    if(k === 'pl') d.pl = null;   // seen
+    if(k === 'ir' && IR.unread === undefined) IR.unread = 0;
+  }catch(e){}
+  if($('pop').hidden && !$('drawer').classList.contains('on')) openAlerts(false);
+}
+{
+  const _close = closePop;
+  closePop = function(force){
+    const r = _close.apply(this, arguments);
+    if(ALR.back && $('pop').hidden){ const k = ALR.back; ALR.back = false; setTimeout(() => { if($('pop').hidden && !$('drawer').classList.contains('on') && !S.odLocked) alertsBack(k); }, 300); }
+    return r;
+  };
+}
+
+// ---------- 1 Today: what needs this person now ----------
+const HM = {at: 0};
+const HOME_STUCK_H = 4;
+function homeRange(){ const today = TODAY(), wide = may('billing') || may('payroll') || may('pod') || may('podStats') || may('viewAll'); return [addDays(today, wide ? -14 : -2), today]; }
+function loadHome(force){
+  const body = $('homeBody'); if(!body || !S.me) return;
+  $('homeHi').textContent = 'Needs you now';
+  $('homeSub').textContent = `${fmtDay(TODAY())} · ${S.me.name} · ${titleCase(S.me.role)}`;
+  renderHome();
+  const jobs = [], [f, t] = homeRange();
+  if(may('viewTrips')) jobs.push((force || Date.now() - (FRESH[rk(f, t)] || 0) > FRESH_MS ? fetchTrips(f, t) : Promise.resolve(TC[rk(f, t)])).then(l => { HM.trips = l || []; }).catch(() => {}));
+  if(OVERDUE_ROLES.includes(S.me.role) && may('dispatch')) jobs.push(preOr('odPre', 'overdueTrips').then(l => { HM.od = l || []; S.odPre = {at: Date.now(), v: l}; }).catch(() => {}));
+  if(may('dispatch')){
+    jobs.push(call('idleYesterday').then(r => { HM.idle = r; }).catch(() => {}));
+    if(!S.assign[TODAY()]) jobs.push(call('getAssignments', TODAY()).then(l => { S.assign[TODAY()] = l; }).catch(() => {}));
+  }
+  if(NOSHIP_ROLES.includes(S.me.role)) jobs.push(call('noShipmentTrips').then(l => { HM.ns = l || []; }).catch(() => {}));
+  if(may('pod') || may('podStats')) jobs.push(call('podLate', lsGet('jmti_podlate_days') || 3).then(r => { HM.pl = r; }).catch(() => {}));
+  if(may('irView') && !IR.v) jobs.push(Promise.resolve(loadIr && loadIr()).catch(() => {}));
+  if(!HM.at) body.classList.add('loading');
+  Promise.all(jobs).finally(() => { HM.at = Date.now(); body.classList.remove('loading'); if(S.tab === 'home') renderHome(); });
+}
+function homeSecs(){
+  const today = TODAY(), [f] = homeRange(), now = Date.now(), secs = [];
+  const trips = (HM.trips || cachedTrips(f, today) || []).filter(t => t.date >= f && t.date <= today);
+  const todays = trips.filter(t => t.date === today);
+  const disp = may('dispatch');
+  const odKeys = new Set((HM.od || []).map(t => t.key));
+  if(OVERDUE_ROLES.includes(S.me.role) && disp) secs.push({k: 'od', ic: '⏰', t: 'Not completed 24 h after arriving', hint: 'Change their status, or the Supervisor and Team leader logins lock.', list: (HM.od || []).map(t => uxTrip(t.key) || t), why: t => { const a = toDate(t.overdueSince || t.destArrive); return a ? hrs(now - a) + ' since arrival' : ''; }});
+  if(disp){
+    const stuck = trips.filter(t => isTrip(t) && !['Completed', 'Tukod'].includes(stageOf(t)) && !isGarageLoaded(t) && !odKeys.has(t.key)).map(t => {
+      const lt = lastTime(t), d = lt ? toDate(lt.v) : null, ms = d ? now - d : (t.date < today ? now - new Date(t.date + 'T08:00:00').getTime() : 0);
+      return {t, ms, lt};
+    }).filter(x => x.ms >= HOME_STUCK_H * 36e5).sort((a, b) => b.ms - a.ms);
+    secs.push({k: 'stuck', ic: '⏳', t: `Trips stuck on one step (${HOME_STUCK_H} h or more)`, hint: 'No new time typed for a while. Call the crew or fill in the next time.', list: stuck.map(x => x.t), why: t => { const x = stuck.find(y => y.t === t); return x.lt ? `${esc(MS_LABEL[x.lt.k])} ${hrs(x.ms)} ago` : 'No times typed yet'; }});
+    const had = new Set(todays.filter(t => isTrip(t) || isHoldRow(t) || isGarageLoaded(t)).map(t => String(t.truckNo || '').trim()));
+    const free = (S.assign[today] || []).filter(a => a.account && a.truckNo && !had.has(String(a.truckNo).trim()));
+    secs.push({k: 'notrip', ic: '🚚', t: 'Assigned trucks without a trip today', hint: 'Assigned to an account in Truck assignment, but no trip or garage row today.', trucks: free, go: 'dispatcher'});
+    if(HM.idle) secs.push({k: 'idle', ic: '❓', t: 'No trip yesterday: reason missing', hint: ['DISPATCHER', 'TEAM LEADER'].includes(S.me.role) ? 'Tap to set a reason for each truck.' : 'A dispatcher or team leader sets the reason.', trucks: HM.idle.trucks || [], act: 'idle'});
+  }
+  if(NOSHIP_ROLES.includes(S.me.role)) secs.push({k: 'ns', ic: '#', t: 'Trips without a shipment number (past 7 days)', hint: 'Open each trip and type the shipment number.', list: (HM.ns || []).map(t => uxTrip(t.key) || t).filter(t => !String(t.shipmentNo || '').trim())});
+  if(may('pod') || may('podStats')) secs.push({k: 'pl', ic: '📄', t: `Late documents (${(HM.pl && HM.pl.days) || 3}+ days)`, hint: 'Completed, not yet endorsed to Billing. Send the list to the crew.', list: ((HM.pl && HM.pl.trips) || []).map(t => uxTrip(null, t.tripId) || {...t, key: t.tripId}), why: t => { const x = ((HM.pl && HM.pl.trips) || []).find(y => y.tripId === t.tripId); return x ? `<b>${x.age} days</b> · ${esc(x.status)}` : ''; }, act: 'pl', story: true});
+  if(may('billing')) secs.push({k: 'bill', ic: '🧾', t: 'Endorsed by POD, not checked by Billing', hint: 'From the last 14 days. Open Billing to check them.', list: trips.filter(t => t.podAt && !t.billAt), why: t => 'Endorsed ' + esc(podWhen(whoSplit(t.podAt).at || t.podAt)), go: 'billing', story: true});
+  if(may('payroll')){
+    const counted = trips.filter(t => isTrip(t) && t.date < today);
+    secs.push({k: 'crew', ic: '👷', t: 'Trips with no driver or helper (last 14 days)', hint: 'These would be paid to nobody. Ask dispatch to fill in the crew.', list: counted.filter(t => !String(t.driver || '').trim() || !String(t.helper1 || '').trim()), why: t => !String(t.driver || '').trim() ? '<b style="color:#B91C1C">No driver</b>' : 'No helper', story: true});
+    secs.push({k: 'open', ic: '🕓', t: 'Trips still not Completed after 2 days', hint: 'Their trip count and pay can still change.', list: counted.filter(t => t.date <= addDays(today, -2) && !['Completed', 'Tukod'].includes(stageOf(t)) && !isGarageLoaded(t)), story: true});
+  }
+  if(may('irView') && may('irStatus')) secs.push({k: 'ir', ic: '🚨', t: 'Incident reports not opened yet', hint: 'Tap to open the reports.', n: IR.unread || 0, act: 'ir'});
+  return {secs, todays};
+}
+function renderHome(){
+  const body = $('homeBody'); if(!body || !S.me) return;
+  const {secs, todays} = homeSecs();
+  const strip = may('viewTrips') ? (() => {
+    const tr = todays.filter(isTrip), done = tr.filter(t => ['Completed', 'Tukod'].includes(stageOf(t))).length, road = tr.length - done - tr.filter(t => stageOf(t) === 'Planned').length;
+    return `<div class="hm-strip"><span><b>${tr.length}</b>Trips today</span><span><b>${road}</b>On the road</span><span><b>${done}</b>Completed</span><span><b>${todays.filter(t => /cancel/i.test(statusText(t))).length}</b>Cancelled</span></div>`;
+  })() : '';
+  const n = s => s.n !== undefined ? s.n : (s.list || s.trucks || []).length;
+  const todo = secs.filter(s => n(s) > 0), clear = secs.filter(s => !n(s));
+  const LIM = 8;
+  const secHtml = s => {
+    const items = s.list || [], trucks = s.trucks || [], open = HM.open === s.k;
+    const rows = items.length ? (open ? items : items.slice(0, LIM)).map(t => uxRow(t, s.why ? s.why(t) : '')).join('')
+      : trucks.length ? `<div class="hm-trucks">${(open ? trucks : trucks.slice(0, 24)).map(a => `<span class="hm-tk" data-act="${s.act || ''}" data-go="${s.go || ''}"><b>${esc('Truck ' + a.truckNo)}</b><small>${esc(a.plateNo || '')}${a.account ? ' · ' + esc(titleCase(a.account)) : ''}${a.driver ? ' · ' + esc(a.driver) : ''}</small></span>`).join('')}</div>` : '';
+    const more = (items.length > LIM || trucks.length > 24) ? `<button type="button" class="hm-more" data-more="${s.k}">${open ? 'Show fewer' : 'Show all ' + (items.length || trucks.length)}</button>` : '';
+    const btn = s.go && can(s.go) ? `<button type="button" class="btn alt hm-go" data-go="${s.go}">Open ${esc(TAB_NAME[s.go])} ›</button>` : s.act ? `<button type="button" class="btn alt hm-go" data-act="${s.act}">${s.act === 'idle' ? 'Set reasons ›' : s.act === 'pl' ? 'Copy the list ›' : 'Open ›'}</button>` : '';
+    return `<section class="hm-sec" data-sec="${s.k}" ${s.story ? 'data-story="1"' : ''}><h3><span class="hm-ic">${s.ic}</span><span>${esc(s.t)}${s.hint ? `<small>${esc(s.hint)}</small>` : ''}</span><b class="hm-n">${n(s)}</b>${btn}</h3>${rows}${more}</section>`;
+  };
+  body.innerHTML = strip + (todo.length ? todo.map(secHtml).join('') : `<div class="hm-clear-all"><b>✓ All clear</b><span>Nothing needs you right now.</span></div>`)
+    + (clear.length ? `<div class="hm-ok">${clear.map(s => `<span>✓ ${esc(s.t.replace(/ \(.*\)$/, '').replace(/^(.)/, c => c))}: none</span>`).join('')}</div>` : '')
+    + (HM.at ? `<p class="hint hm-at">Updated ${new Date(HM.at).toLocaleTimeString('en-PH', {hour: 'numeric', minute: '2-digit'})}. Pull down or tap ↻ Refresh for the newest.</p>` : '');
+}
+function homeClick(e){
+  const more = e.target.closest('[data-more]'); if(more){ HM.open = HM.open === more.dataset.more ? '' : more.dataset.more; renderHome(); return; }
+  const go = e.target.closest('[data-go]'); if(go && go.dataset.go && can(go.dataset.go)){ showTab(go.dataset.go); return; }
+  const act = e.target.closest('[data-act]');
+  if(act && act.dataset.act){
+    const a = act.dataset.act;
+    if(a === 'idle'){ if(HM.idle){ S.idlePre = {at: Date.now(), v: HM.idle}; checkIdle(); } return; }
+    if(a === 'pl'){ if(HM.pl) showPodLate(HM.pl); return; }
+    if(a === 'ir'){ openIrList({}); return; }
+  }
+  const r = e.target.closest('.hm-r'); if(!r) return;
+  if(e.target.closest('.plink')) return;
+  const sec = r.closest('.hm-sec'), t = uxTrip(r.dataset.hk, r.dataset.tid) || (HM.pl && HM.pl.trips || []).map(x => ({...x, key: x.tripId})).find(x => x.tripId === r.dataset.tid);
+  uxOpenTrip(t, sec && sec.dataset.story === '1');
+}
+
+// ---------- 4 Search everything ----------
+const SR = {at: 0, back: 0};
+function openSearch(){
+  if(!S.me) return;
+  if(S.odLocked && !$('pop').hidden && $('pop').classList.contains('odlock')) return;
+  const trips = may('viewTrips');
+  openPop('🔍 Search', trips ? 'Plate, truck number, driver, helper, shipment number, TRIP ID, customer or destination' : 'Names of people',
+    `<div class="sr-box"><input id="srQ" type="search" autocomplete="off" placeholder="${trips ? 'e.g. CBQ 4410, TPAN 35951, SERATO' : 'Type a name'}" enterkeyhint="search"><span class="hint" id="srInfo"></span></div><div id="srRes" class="sr-res"></div>`,
+    trips ? `<button class="btn alt" type="button" id="srBack">Look further back (90 days)</button>` : '');
+  $('pop').classList.add('srchpop'); $('pop').dataset.kind = 'search';
+  const q = $('srQ'); setTimeout(() => q.focus(), 30);
+  q.oninput = () => { clearTimeout(SR.t); SR.t = setTimeout(renderSearch, 180); };
+  q.onkeydown = e => { if(e.key === 'Enter'){ e.preventDefault(); const b = $('srRes').querySelector('.hm-r'); if(b) b.click(); } };
+  if($('srBack')) $('srBack').onclick = () => { const today = TODAY(); $('srBack').disabled = true; $('srInfo').textContent = 'Getting older trips…'; fetchTrips(addDays(today, -90), addDays(today, -31)).then(() => { SR.back = 90; renderSearch(); $('srBack').remove(); }).catch(e => { toast(e.message, true); $('srBack').disabled = false; }); };
+  $('popBody').onclick = e => {
+    if(e.target.closest('.plink')) return;
+    const r = e.target.closest('.hm-r'); if(!r) return;
+    const t = uxTrip(r.dataset.hk, r.dataset.tid); if(t){ SR.q = q.value; openStory(t, true); }
+  };
+  if(SR.q){ q.value = SR.q; }
+  renderSearch();
+  if(trips && Date.now() - SR.at > 5 * 60000){
+    const today = TODAY(); $('srInfo').textContent = 'Getting the last 30 days…';
+    fetchTrips(addDays(today, -30), today).then(() => { SR.at = Date.now(); if($('srQ')) renderSearch(); }).catch(() => { if($('srInfo')) $('srInfo').textContent = ''; });
+  }
+}
+const srNorm = v => String(v || '').toUpperCase().replace(/[\s\-_.,]+/g, '');
+function renderSearch(){
+  const box = $('srRes'), qv = $('srQ') ? $('srQ').value.trim() : ''; if(!box) return;
+  const all = may('viewTrips') ? uxAllTrips() : [];
+  const days = new Set(all.map(t => t.date)).size;
+  $('srInfo').textContent = all.length ? `Searching ${all.length} trips over ${days} day${days === 1 ? '' : 's'}` : '';
+  if(qv.length < 2){ box.innerHTML = '<p class="hint">Type at least 2 letters or numbers.</p>'; return; }
+  const n = srNorm(qv), words = qv.toUpperCase().split(/\s+/).filter(Boolean);
+  const exact = t => [t.tripId, t.shipmentNo, t.plateNo].some(v => v && srNorm(v) === n) || String(t.truckNo || '') === qv;
+  const hit = t => {
+    if(exact(t)) return 3;
+    if([t.tripId, t.shipmentNo, t.plateNo].some(v => v && srNorm(v).includes(n))) return 2;
+    const hay = [t.truckNo && 'TRUCK ' + t.truckNo, t.driver, t.helper1, t.helper2, t.customer, t.destination, t.remarks].join(' | ').toUpperCase();
+    return words.every(w => hay.includes(w)) ? 1 : 0;
+  };
+  const found = all.map(t => ({t, s: hit(t)})).filter(x => x.s).sort((a, b) => b.s - a.s || (a.t.date < b.t.date ? 1 : a.t.date > b.t.date ? -1 : 0)).map(x => x.t);
+  const trucks = (S.boot && S.boot.trucks || []).filter(x => String(x.truckNo) === qv || srNorm(x.plateNo).includes(n)).slice(0, 6);
+  const names = new Set(); const nameHay = (S.people || []).map(p => p.name || [p.lastName, p.firstName].filter(Boolean).join(' , ')).concat(...all.slice(-3000).map(t => [t.driver, t.helper1, t.helper2]));
+  nameHay.forEach(x => { x = String(x || '').trim(); if(x && words.every(w => x.toUpperCase().includes(w))) names.add(x); });
+  const people = [...names].slice(0, 10);
+  box.innerHTML = (trucks.length ? `<div class="sec">Trucks</div><div class="sr-chips">${trucks.map(x => `<span class="sr-chip">${tLink(x.truckNo, 'Truck ' + x.truckNo)} <small>${esc(x.plateNo || '')}${x.status ? ' · ' + esc(x.status) : ''}</small></span>`).join('')}</div>` : '')
+    + (people.length ? `<div class="sec">People</div><div class="sr-chips">${people.map(x => `<span class="sr-chip">${pLink(x)}</span>`).join('')}</div>` : '')
+    + (found.length ? `<div class="sec">Trips · ${found.length}${found.length > 80 ? ' (newest 80 shown)' : ''}</div>${found.slice(0, 80).map(t => uxRow(t, '')).join('')}`
+      : (trucks.length || people.length ? '' : `<p class="hint">Nothing found for "${esc(qv)}"${SR.back ? ' in the last 90 days' : ' in the trips on this phone (last 30 days). Tap "Look further back" for older trips'}.</p>`));
+}
+document.addEventListener('keydown', e => {   // PC: "/" or Ctrl+K opens Search (not while typing)
+  if(!S.me || $('app').hidden) return;
+  const typing = e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]');
+  if((e.key === '/' && !typing) || ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K'))){ if(!$('vgate').hidden || !$('tour').hidden) return; e.preventDefault(); if($('pop').hidden || $('pop').dataset.kind !== 'search') openSearch(); }
+});
+
+// ---------- 5 Trip story ----------
+function openStory(t, fromSearch){
+  if(!t) return;
+  const ms = MS_KEYS.map(k => ({l: MS_LABEL[k], v: t[k]}));
+  const pod = typeof stampList === 'function' ? stampList(t) : [];
+  const ev = [];
+  ms.forEach(x => { if(x.v) ev.push({at: String(x.v).replace('T', ' ').slice(0, 16), l: x.l, kind: 'trip'}); });
+  pod.forEach(x => ev.push({at: x.at, l: 'POD: ' + titleCase(x.l), by: x.by, kind: 'pod'}));
+  if(t.podAt){ const w = whoSplit(t.podAt); ev.push({at: w.at || t.podAt, l: 'Endorsed to Billing', by: w.by || t.podBy, kind: 'pod'}); }
+  if(t.billAt){ const w = whoSplit(t.billAt); ev.push({at: w.at || t.billAt, l: 'Checked by Billing', by: w.by || t.billBy, kind: 'bill'}); }
+  ev.sort((a, b) => a.at < b.at ? -1 : a.at > b.at ? 1 : 0);
+  const next = MS_KEYS.find(k => !t[k]);
+  const kv = (k, v) => v || v === 0 ? `<div class="ts-kv"><span>${esc(k)}</span><b>${v}</b></div>` : '';
+  const crew = [t.driver && pLink(t.driver), t.helper1 && pLink(t.helper1), t.helper2 && pLink(t.helper2)].filter(Boolean).join(', ');
+  const body = `<div class="ts">
+    <div class="ts-top">
+      ${kv('Status', `<span class="pill" style="--c:${colorOf(stageOf(t))}">${esc(statusText(t))}</span>`)}
+      ${kv('Trip date', esc(fmtDay(t.date)))}
+      ${kv('TRIP ID', esc(t.tripId || ''))}
+      ${kv('Shipment no.', esc(t.shipmentNo || ''))}
+      ${kv('Truck', tLink(t.truckNo, 'Truck ' + (t.truckNo || '—')) + (t.plateNo ? ' · ' + esc(t.plateNo) : ''))}
+      ${kv('Route', esc(t.customer || '') + ' → ' + esc(plainDest(t.destination) || '—') + (t.kms ? ` <small>(${esc(t.kms)} km)</small>` : ''))}
+      ${kv('Crew', crew || '<span class="dim">No crew typed</span>')}
+      ${kv('Budget', t.budget ? '₱' + esc(t.budget) : '')}
+      ${kv('MANO', t.manoAmt ? '₱' + esc(t.manoAmt) : '')}
+      ${kv('Fuel (L)', esc(t.mano || ''))}
+      ${kv('POD status', esc(t.finalStatus || ''))}
+      ${kv('Invoice', esc([t.invNo, t.invAmt ? '₱' + t.invAmt : ''].filter(Boolean).join(' · ')))}
+    </div>
+    ${t.remarks || t.pod ? `<div class="ts-rem">${t.remarks ? `<p><b>Remarks</b> ${esc(t.remarks)}</p>` : ''}${t.pod ? `<p><b>POD remarks</b> ${esc(t.pod)}</p>` : ''}</div>` : ''}
+    <div class="sec">Timeline</div>
+    <ol class="ts-tl">${ev.map(x => `<li class="k-${x.kind}"><span>${esc(podWhen(x.at))}</span><b>${esc(x.l)}</b>${x.by ? `<small>by ${esc(x.by)}</small>` : ''}</li>`).join('')}${next && !['Completed', 'Tukod'].includes(stageOf(t)) ? `<li class="k-next"><span>Next</span><b>${esc(MS_LABEL[next])}</b><small>not typed yet</small></li>` : ''}</ol>
+    <div class="sec">Who changed what <small class="hint">from the Change Log</small></div>
+    <div id="tsLog"><p class="hint">${t.tripId ? 'Loading…' : 'This trip has no TRIP ID, so its changes cannot be listed.'}</p></div>
+  </div>`;
+  const foot = (fromSearch ? '<button class="btn alt" type="button" id="tsBack">‹ Back to search</button>' : '') + `<button class="btn alt" type="button" id="tsCopy">Copy</button>` + (uxDispatchOk() && t.key && !String(t.key).startsWith('tmp-') ? `<button class="btn" type="button" id="tsOpen">Open trip</button>` : '');
+  openPop(`📜 Trip story · Truck ${t.truckNo || '—'}`, `${esc(fmtDay(t.date))} · ${esc(t.customer || '')} → ${esc(plainDest(t.destination) || '—')}`, body, foot);
+  $('pop').dataset.kind = 'story';
+  if($('tsBack')) $('tsBack').onclick = () => openSearch();
+  if($('tsOpen')) $('tsOpen').onclick = () => { closePop(true); openDispatch(uxTrip(t.key) || t); };
+  $('tsCopy').onclick = () => {
+    const txt = [`Truck ${t.truckNo || ''} ${t.plateNo || ''} · ${fmtDay(t.date)} · ${t.tripId || ''}`, `${t.customer || ''} → ${plainDest(t.destination) || ''}${t.shipmentNo ? ' · Shipment ' + t.shipmentNo : ''}`, `Status: ${statusText(t)}`, `Crew: ${[t.driver, t.helper1, t.helper2].filter(Boolean).join(', ')}`].concat(ev.map(x => `- ${podWhen(x.at)} ${x.l}${x.by ? ' by ' + x.by : ''}`)).join('\n');
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('Trip story copied. Paste it in the chat or Viber.')).catch(() => toast('Copy did not work on this phone.', true));
+  };
+  if(t.tripId) call('tripStory', t.tripId).then(r => {
+    const box = $('tsLog'); if(!box || $('pop').dataset.kind !== 'story') return;
+    const clean = w => String(w || '').replace(/^\[[^\]]*\]\s*/, '').replace(new RegExp('\\s*trip ' + t.tripId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*·?', ''), ' ·').replace(/\s·\s·/g, ' ·').replace(/·\s*$/, '').trim();
+    box.innerHTML = (r.log || []).length ? `<ol class="ts-log">${r.log.map(x => `<li><span>${esc(x.at)}</span><b>${esc(x.by)}</b><small>${esc(clean(x.what))}</small></li>`).join('')}</ol>` : '<p class="hint">No changes recorded for this trip yet.</p>';
+  }).catch(e => { const box = $('tsLog'); if(box) box.innerHTML = `<p class="hint">${esc(e.message)}</p>`; });
+}
+{   // a "Trip story" button in the trip panel
+  const _open = openPanel;
+  openPanel = function(t){
+    const r = _open.apply(this, arguments);
+    if(t && $('drSub') && !$('drSub').querySelector('.ts-btn')) $('drSub').insertAdjacentHTML('beforeend', ` · <button type="button" class="ts-btn" data-storykey="${esc(t.key || '')}">📜 Trip story</button>`);
+    return r;
+  };
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-storykey]'); if(!b) return; const t = uxTrip(b.dataset.storykey) || S.drawerTrip; if(t) openStory(t); });
+}
+
+// ---------- 10 Errors that say what to do ----------
+const ERR_FIX = [
+  {re: /Truck (\S+) already has an open trip (?:on (\d{4}-\d{2}-\d{2})|on this date) \(([^)]+)\)/, title: 'Truck already on a trip',
+    text: m => `Truck ${m[1]} still has an open trip${m[2] ? ' on ' + fmtDay(m[2]) : ' that day'} (${m[3]}). A truck can have only one open trip a day. Finish that trip (Completed), cancel it, or change it instead of adding a new one.`,
+    btn: m => /^row /.test(m[3]) ? null : {label: 'Open ' + m[3], run: () => uxFind(m[3], m[2])}},
+  {re: /Truck (\S+) is in (.+?) on (this date|\d{4}-\d{2}-\d{2})\. Change that row's status/, title: 'Truck has a garage or hold row',
+    text: m => `Truck ${m[1]} is marked ${m[2]} on ${m[3] === 'this date' ? 'that day' : fmtDay(m[3])}. Change that row's status first (for example to Clip Board), then try again.`,
+    btn: () => can('dispatcher') ? {label: 'Open Truck Plan', run: () => showTab('dispatcher')} : null},
+  {re: /This trip is Completed, so only a Supervisor can change it/, title: 'Completed trips are locked',
+    text: () => 'This trip is already Completed, so Dispatchers and Team leaders cannot change, cancel or delete it any more. Ask a Supervisor to make the change. You can send them the trip from the chat.',
+    btn: () => typeof openChat === 'function' ? {label: 'Open chat', run: () => openChat()} : null},
+  {re: /^LOCKED: /, title: 'Locked: trips not completed',
+    text: m => m.input.replace(/^LOCKED: /, '') + ' Open the list, change each trip\'s status, and everything opens again.',
+    btn: () => ({label: 'Show those trips', run: () => { S.overdueSeen = new Set(); checkOverdue(true); }})},
+  {re: /Truck (\S+) is not in PLATE/, title: 'Truck not in the truck list', text: m => `Truck ${m[1]} is not in the truck list (PLATE tab). Check the truck number. If it is a new truck, ask Admin to add it in Fleet.`},
+  {re: /Truck (\S+) is INACTIVE/, title: 'Truck is inactive', text: m => `Truck ${m[1]} is marked INACTIVE in Fleet, so it can't get trips. Ask Admin to set it ACTIVE if it is back on the road.`},
+  {re: /Truck (\S+) is under maintenance: job order (\S+)/, title: 'Truck is under maintenance', text: m => m.input + ' Ask Maintenance to finish job order ' + m[2] + ', or to mark it Minor if the truck can run.'},
+  {re: /^Your role \(([^)]+)\) cannot do this/, title: 'Not allowed for your login', text: m => `Your login (${titleCase(m[1])}) can't do this. If your job needs it, ask Admin to change your role or do it for you.`},
+  {re: /^The server failed on (\S+) without saying why/, title: 'Something went wrong', text: m => `The server stopped while doing ${m[1]} and did not say why. Your change may not be saved. Tap ↻ Refresh, check the trip, and try once more. If it happens again, tell Admin (it is in System analytics).`},
+  {re: /^The app is busy: many people are saving at once/, toast: () => 'Many people are saving at once, so this was NOT saved yet. Wait 5 seconds and tap Save again.'}
+];
+function uxFind(tripId, date){
+  const t = uxTrip(null, tripId); if(t) return uxOpenTrip(t);
+  if(!date || !may('viewTrips')) return toast('Find ' + tripId + ' in Truck Plan.');
+  fetchTrips(date, date).then(() => { const x = uxTrip(null, tripId); if(x) uxOpenTrip(x); else toast('Find ' + tripId + ' in Truck Plan (' + fmtDay(date) + ').'); }).catch(e => toast(e.message, true));
+}
+{
+  const _toast = toast;
+  toast = function(msg, err){
+    if(err && typeof msg === 'string'){
+      const m0 = msg.replace(/^(Not (saved|added)|Could not save[^:]*): /, '');
+      for(const f of ERR_FIX){
+        const m = f.re.exec(m0); if(!m) continue;
+        if(f.toast) return _toast.call(this, f.toast(m), true, 7000);
+        const b = f.btn ? f.btn(m) : null;
+        if(!$('pop').hidden || !$('vgate').hidden) return _toast.call(this, f.text(m), true, 9000);
+        openPop('⚠ ' + f.title, '', `<p class="errfix">${esc(f.text(m))}</p>`, (b ? `<button class="btn alt" type="button" id="efGo">${esc(b.label)}</button>` : '') + `<button class="btn" type="button" id="efOk">OK</button>`);
+        $('pop').dataset.kind = 'errfix';
+        $('efOk').onclick = () => closePop();
+        if(b) $('efGo').onclick = () => { closePop(); b.run(); };
+        try{ fxSound && fxSound('err'); }catch(e){}
+        return;
+      }
+    }
+    return _toast.apply(this, arguments);
+  };
+}
+
+// ---------- 13 First sign-in walk-through ----------
+const TOUR = {i: 0, steps: [], done: null};
+function tourSteps(){
+  const r = S.me.role, disp = may('dispatch'), steps = [];
+  steps.push({sel: null, t: `Welcome, ${S.me.name.split(/[ ,]/)[0] || S.me.name}!`, s: 'A quick 1-minute tour of your screens. Tap Next, or Skip if you already know the app.'});
+  if(can('home')) steps.push({sel: '#v-home .hm-head', t: 'Today', s: 'Every time you open the app it starts here: what needs you now. Tap any line to open that trip.'});
+  steps.push({sel: '#tabMenuBtn', t: 'Menu', s: 'All your tabs are here' + (can('dispatcher') ? ': Truck Plan, ' : ': ') + S.me.tabs.filter(t => TAB_NAME[t] && t !== 'dispatcher' && t !== 'home').slice(0, 4).map(t => TAB_NAME[t]).join(', ') + '.'});
+  if(can('dispatcher') && disp) steps.push({sel: null, t: 'Truck Plan', s: 'Each row is a trip. Tap the Next step button to type the time the truck reached that step. "+ Add trip" adds a trip for a free truck.'});
+  if(can('pod')) steps.push({sel: null, t: 'POD', s: 'Set each trip\'s document status. Only POD and POD Head can send a trip to Billing (ENDORSED TO BILLING).'});
+  if(can('billing')) steps.push({sel: null, t: 'Billing', s: 'Trips POD endorsed show here. Check them and type the invoice number.'});
+  if(can('payroll')) steps.push({sel: null, t: 'Payroll', s: 'Pick the pay period. The Today screen shows trips with missing crew before you pay.'});
+  steps.push({sel: '#srchBtn', t: 'Search', s: 'Type a plate, driver, shipment number or TRIP ID to find any trip and see its whole story.'});
+  if(r !== 'HR') steps.push({sel: '#lwBtn', t: 'Bell', s: 'Trucks waiting too long and incident reports show here.'});
+  if(['TEAM LEADER', 'DISPATCHER'].includes(r)) steps.push({sel: '#shBtn', t: 'Shift endorsement', s: 'Write your end-of-shift notes here for the next shift.'});
+  steps.push({sel: '#chatBtn', t: 'Chat', s: 'Message the team or one person. You can drag this button.'});
+  steps.push({sel: '#setBtn', t: 'Settings', s: 'Your profile, password, text size, theme, and this tour again ("Show me around").'});
+  return steps.filter(x => !x.sel || (document.querySelector(x.sel) && document.querySelector(x.sel).getClientRects().length && !document.querySelector(x.sel).closest('[hidden]')));
+}
+function tourGate(){
+  if(!S.me || lsGet('jmti_tour_' + S.me.username)) return Promise.resolve();
+  return new Promise(res => setTimeout(() => tourStart(res), 600));
+}
+function tourStart(done){
+  if(!S.me) return done && done();
+  if(can('home') && S.tab !== 'home') showTab('home');
+  closePop(); TOUR.steps = tourSteps(); TOUR.i = 0; TOUR.done = done || null;
+  $('tour').hidden = false; tourDraw();
+}
+function tourEnd(){
+  $('tour').hidden = true; lsSet('jmti_tour_' + S.me.username, TODAY());
+  const d = TOUR.done; TOUR.done = null; if(d) d();
+}
+function tourDraw(){
+  const st = TOUR.steps[TOUR.i]; if(!st) return tourEnd();
+  const el = st.sel && document.querySelector(st.sel), hole = $('tourHole'), tip = $('tourTip');
+  const z = parseFloat(document.documentElement.style.zoom) || 1;
+  $('tourT').textContent = st.t; $('tourS').textContent = st.s; $('tourN').textContent = `${TOUR.i + 1} of ${TOUR.steps.length}`;
+  $('tourBack').hidden = TOUR.i === 0; $('tourNext').textContent = TOUR.i === TOUR.steps.length - 1 ? 'Done' : 'Next ›';
+  if(el){
+    el.scrollIntoView({block: 'nearest'});
+    const r = el.getBoundingClientRect(), pad = 6;
+    Object.assign(hole.style, {display: 'block', left: (r.left - pad) / z + 'px', top: (r.top - pad) / z + 'px', width: (r.width + pad * 2) / z + 'px', height: (r.height + pad * 2) / z + 'px'});
+    const vw = window.innerWidth / z, vh = window.innerHeight / z, tw = Math.min(340, vw - 24);
+    let left = Math.max(12, Math.min(vw - tw - 12, r.left / z + r.width / z / 2 - tw / 2)), top = (r.bottom + pad) / z + 12;
+    if(top + 190 > vh) top = Math.max(12, (r.top - pad) / z - 12 - 180);
+    Object.assign(tip.style, {left: left + 'px', top: top + 'px', width: tw + 'px', transform: ''});
+    tip.classList.remove('mid');
+  } else {
+    hole.style.display = 'none';
+    Object.assign(tip.style, {left: '50%', top: '50%', width: 'min(380px, calc(100% - 24px))', transform: 'translate(-50%,-50%)'});
+    tip.classList.add('mid');
+  }
+  $('tour').classList.toggle('nohole', !el);
+}
+(function tourInit(){
+  if(!$('tour')) return;
+  $('tourNext').onclick = () => { TOUR.i++; tourDraw(); };
+  $('tourBack').onclick = () => { TOUR.i = Math.max(0, TOUR.i - 1); tourDraw(); };
+  $('tourSkip').onclick = tourEnd;
+  window.addEventListener('resize', () => { if(!$('tour').hidden) tourDraw(); });
+  document.addEventListener('keydown', e => { if($('tour').hidden) return; if(e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); tourEnd(); } else if(e.key === 'ArrowRight' || e.key === 'Enter'){ e.preventDefault(); $('tourNext').click(); } else if(e.key === 'ArrowLeft') $('tourBack').click(); }, true);
+})();
+
+// ---------- wiring ----------
+if($('srchBtn')) $('srchBtn').onclick = openSearch;
+if($('homeBody')) $('homeBody').onclick = homeClick;
+if($('homeRefresh')) $('homeRefresh').onclick = () => { HM.at = 0; loadHome(true); };
+{   // signing out hides the video, the tour and the alerts' way back
+  const _out = signOut;
+  signOut = function(){ try{ if(!$('vgate').hidden) vgClose(); if(!$('tour').hidden){ TOUR.done = null; $('tour').hidden = true; } ALR.back = false; HM.at = 0; HM.trips = null; HM.od = HM.idle = HM.ns = HM.pl = null; }catch(e){} return _out.apply(this, arguments); };
+}
 window.__JMTI_READY = true;
 start();
 </script>
