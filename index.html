@@ -38,10 +38,10 @@ if ('serviceWorker' in navigator) {
     if (document.getElementById('swNew')) return;
     var b = document.createElement('div'); b.id = 'swNew';
     b.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:99999;background:#0A1F8F;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.3);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100vw - 32px)';
-    b.innerHTML = '<span>A new version of the app is ready. It switches by itself when you leave the app.</span>';
-    var r = document.createElement('button'); r.type = 'button'; r.textContent = 'Reload now';
+    b.innerHTML = '<span>A new version of the app is ready. Tap Update system, or it switches by itself when you leave the app.</span>';
+    var r = document.createElement('button'); r.type = 'button'; r.textContent = 'Update system';
     r.style.cssText = 'background:#fff;color:#0A1F8F;border:0;border-radius:8px;padding:6px 12px;font:700 14px system-ui,sans-serif;flex:none';
-    r.onclick = function(){ location.reload(); };
+    r.onclick = function(){ b.remove(); if (typeof updSystem === 'function') updSystem(); else location.reload(); };   // Update system screen (MANU 2026-11-07)
     b.appendChild(r); document.body.appendChild(b);
   });
 }
@@ -1459,6 +1459,26 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 .vup-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .vup-btns button,.vup-btns a{flex:1 1 160px;border:0;border-radius:12px;padding:12px 14px;font:700 15px system-ui,sans-serif;cursor:pointer;text-align:center;text-decoration:none}
 .vup-go{background:#B91C1C;color:#fff}.vup-later{background:#E8EEFF;color:#0A1F8F}
+/* Update system screen (MANU 2026-11-07 "generate a button to update system") */
+.upd{position:fixed;inset:0;z-index:100001;background:rgba(2,10,53,.86);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.upd[hidden]{display:none}
+.upd-box{background:#fff;color:#0A1F8F;border-radius:18px;max-width:460px;width:100%;padding:22px 20px 18px;box-shadow:0 18px 60px rgba(0,0,0,.45);border-top:6px solid #2E5BFF;font-size:15px;line-height:1.45;max-height:calc(100vh - 32px);overflow:auto;text-align:center}
+.upd-box.ok{border-top-color:#15803D}.upd-box.warn{border-top-color:#B45309}
+.upd-box h3{margin:6px 0 4px;font-size:21px}
+.upd-box p{margin:6px 0}
+.upd-big{position:relative;width:64px;height:64px;margin:0 auto 4px;display:grid;place-items:center;font-size:30px;font-weight:800}
+.upd-big.run::before{content:"";position:absolute;inset:0;border-radius:50%;border:5px solid #DCE5FF;border-top-color:#2E5BFF;animation:subspin .9s linear infinite}
+.upd-big.ok{background:#DCFCE7;color:#15803D;border-radius:50%}.upd-big.warn{background:#FEF3C7;color:#B45309;border-radius:50%}
+.upd-steps{list-style:none;margin:12px 0 4px;padding:0;text-align:left}
+.upd-steps li{display:flex;gap:10px;align-items:flex-start;padding:7px 4px;border-bottom:1px solid #EEF2FF;color:#94A3C4}
+.upd-steps li:last-child{border-bottom:0}
+.upd-steps li i{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 13px system-ui,sans-serif;font-style:normal;border:2px solid #CBD5EE}
+.upd-steps li.run{color:#0A1F8F;font-weight:700}.upd-steps li.run i{border-color:#DCE5FF;border-top-color:#2E5BFF;animation:subspin .9s linear infinite}
+.upd-steps li.done{color:#0A1F8F}.upd-steps li.done i{background:#15803D;border-color:#15803D;color:#fff}
+.upd-steps li small{display:block;font-weight:400;color:#5B6B95}
+.upd-note{font-size:13px;color:#5B6B95}
+.upd-new{text-align:left;background:#F4F7FF;border-radius:12px;padding:8px 12px;margin:10px 0;font-size:13px}.upd-new ul{margin:4px 0;padding-left:18px}
+@media (prefers-reduced-motion:reduce){.upd-big.run::before,.upd-steps li.run i{animation:none}}
 .vchg{position:fixed;inset:0;z-index:99990;background:rgba(2,10,53,.72);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
 .vchg[hidden]{display:none}
 .vchg-box{background:linear-gradient(160deg,rgba(255,255,255,.97),rgba(232,238,255,.96));color:#0A1F8F;border-radius:18px;max-width:600px;width:100%;padding:18px 18px 14px;box-shadow:0 18px 60px rgba(0,0,0,.45),inset 0 1px 0 #fff;border-top:6px solid #2E5BFF;font-size:15px;line-height:1.45;max-height:calc(100vh - 32px);overflow:auto;white-space:normal;overflow-wrap:anywhere}
@@ -1472,6 +1492,7 @@ body.viewonly #v-payroll .payroll-edit{display:none !important}
 .vchg-v ul{margin:4px 0 0;padding-left:20px}.vchg-v li{margin:4px 0}
 .vchg-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
 .vchg-btns button{flex:1 1 160px;border:0;border-radius:12px;padding:12px 14px;font:700 15px system-ui,sans-serif;cursor:pointer;background:linear-gradient(180deg,#2E5BFF,#0A27B5);color:#fff}
+.vchg-btns button#vchgOk,html.th-color .vchg-btns button#vchgOk{background:#E8EEFF;color:#0A1F8F;border:0}
 #verBadge,#verLogin{cursor:pointer}
 .clk span{font-size:11px;color:#B9C8F5;font-weight:600}
 .clk:empty{display:none}
@@ -1747,7 +1768,7 @@ html.th-day .bglogo{filter:none;opacity:calc(var(--o) * .7)}
 html.th-day header.top{background:rgba(10,39,181,.94)}
 html.th-day main{box-shadow:0 0 0 1px rgba(10,30,90,.08),inset 0 1px 0 #fff,0 30px 70px -34px rgba(10,30,90,.35)}
 html.th-day .pop,html.th-day .scrim{background:rgba(20,40,110,.28)}
-html.th-night main,html.th-night .popbox,html.th-night .vchg-box,html.th-night .vup-box,html.th-night .submit-box,html.th-night .drawer,
+html.th-night main,html.th-night .popbox,html.th-night .vchg-box,html.th-night .vup-box,html.th-night .upd-box,html.th-night .submit-box,html.th-night .drawer,
 html.th-night .askbox,html.th-night .chdock,html.th-night .ch-sheet-bg > *,html.th-night .login .card{filter:invert(.92) hue-rotate(180deg)}
 html.th-night main img,html.th-night main video,html.th-night main canvas,html.th-night .popbox img,html.th-night .popbox canvas,html.th-night .drawer img,
 html.th-night .chdock img,html.th-night .askbox img,html.th-night .ch-sheet-bg img,html.th-night .login .card img,html.th-night .viewer-in img{filter:invert(1.087) hue-rotate(180deg)}
@@ -3427,7 +3448,7 @@ function openSettings(){
       row('pw', '🔑', 'Change password', ''),
     ])}
     ${g('App', [
-      row('ver', '🆕', 'What changed', esc(vt.long || ('Version ' + APP_VERSION))),
+      row('ver', '🆕', 'What changed', esc(vt.long || ('Version ' + vName(APP_VERSION)))),
       `<div class="setr thr"><span class="si">🎨</span><span class="st">Theme<small>Saved on this phone or PC only</small><span class="thc">${THEMES.map(([k, n]) => `<button type="button" data-theme="${k}" aria-pressed="${themeNow() === k}">${n}</button>`).join('')}</span><span class="cmyk" id="cmykBox"${themeNow() === 'color' ? '' : ' hidden'}>${['C', 'M', 'Y', 'K'].map((n, i) => `<label title="${['Cyan', 'Magenta', 'Yellow', 'Black (key)'][i]}"><span>${n}</span><input type="range" min="0" max="100" step="1" data-cm="${i}" value="${cmykGet()[i]}" aria-label="${['Cyan', 'Magenta', 'Yellow', 'Black'][i]}"><input type="number" min="0" max="100" data-cmn="${i}" value="${cmykGet()[i]}" aria-label="${['Cyan', 'Magenta', 'Yellow', 'Black'][i]} %"></label>`).join('')}<span class="cm-prev"><span class="cm-sw" id="cmSw"></span><span class="hint" id="cmTxt"></span></span><span class="cm-pre">${CMYK_PRESETS.map(([n, v]) => `<button type="button" data-cmpre="${v.join(',')}" title="${n}" aria-label="${n}" style="background:${rgbHex(cmykRgb(v))}"></button>`).join('')}</span></span></span></div>`,
       `<div class="setr thr"><span class="si">🔠</span><span class="st">Text size<small>Bigger or smaller letters, on this phone or PC only</small><span class="tsz">${TSIZES.map(([k, n]) => `<button type="button" data-tsize="${k}" aria-pressed="${tsizeNow() === k}">${n}</button>`).join('')}</span></span></div>`,
       row('tour', '🧭', 'Show me around', 'The short tour of your screens'),
@@ -3435,7 +3456,7 @@ function openSettings(){
       row('snd', '🔊', 'Sounds', 'Soft click and chime for saves, messages and alerts, on this phone or PC only', ` role="switch" aria-checked="${store('jmti_snd') === '1'}"`),
       badgeAsk() ? row('badge', '🔔', 'Show the count on the app icon', 'Unread chats on the JMTI icon') : '',
       row('tab', '↻', 'Refresh this tab', 'Read the newest data now'),
-      row('reload', '⟳', 'Reload the app', 'Gets the newest version of the page'),
+      row('reload', '⟳', 'Update system', `Gets the newest version on this phone or PC. Now: version ${vName(APP_VERSION)}`),
     ])}
     ${g('People', [ row('online', '🟢', 'Who is signed in', '') ])}
     ${may('restoreTrip') || may('targets') ? g('Admin', [ may('restoreTrip') ? row('deleted', '🗑', 'Deleted trips', 'Put back a trip deleted from Truck Plan') : '', may('targets') ? row('video', '🎬', 'Sign-in video', 'The video Supervisors, Team leaders and Dispatchers watch at sign-in, and who finished it') : '' ]) : ''}
@@ -3456,7 +3477,7 @@ function openSettings(){
     if(k === 'anim'){ const on = animOff(); store('jmti_noanim', on ? null : '1'); document.documentElement.classList.toggle('noanim', !on); b.setAttribute('aria-checked', String(on)); toast(on ? 'Animations on' : 'Animations off'); return; }
     if(k === 'snd'){ const on = store('jmti_snd') !== '1'; store('jmti_snd', on ? '1' : null); b.setAttribute('aria-checked', String(on)); if(on) fxSound('chat'); toast(on ? 'Sounds on' : 'Sounds off'); return; }
     if(k === 'badge'){ Notification.requestPermission().then(() => { updateAppBadge.last = null; updateAppBadge(); b.remove(); }).catch(() => {}); return; }
-    if(k === 'reload'){ vupReload(b); return; }
+    if(k === 'reload'){ closePop(); updSystem(); return; }
     closePop();
     ({prof: () => openProfile(), pw: () => showPwForm(false), ver: vchgShow, tab: () => { showTab(S.tab); toast('Refreshing ' + (TAB_NAME[S.tab] || 'this tab') + '…'); },
       online: openOnline, deleted: openDeletedTrips, tour: () => tourStart(), video: openVideoAdmin, out: () => $('logoutBtn').click()})[k]?.();
@@ -4216,15 +4237,18 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.4, APP_VERSION_DATE = '2026-11-07';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.41, APP_VERSION_DATE = '2026-11-07';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+/* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
+   phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
+function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
 const VER = {server:undefined};
 function verText(){
   const sv = VER.server;
-  if(sv===undefined) return {short:`Version ${APP_VERSION}`, long:`This app page is version ${APP_VERSION} (${APP_VERSION_DATE}). Checking the server…`, bad:false};
-  if(sv===null) return {short:`Version ${APP_VERSION}`, long:`This app page is version ${APP_VERSION} (${APP_VERSION_DATE}). No signal, so the server version is not known.`, bad:false};
-  if(sv===APP_VERSION) return {short:`Version ${APP_VERSION}`, long:`Up to date: page and server are both version ${APP_VERSION} (${APP_VERSION_DATE}).`, bad:false};
-  if(!sv || sv < APP_VERSION) return {short:`Page v${APP_VERSION} · Server ${sv ? 'v' + sv : 'old'}`, long:`The server (Code.gs) is ${sv ? 'version ' + sv : 'older than version 1'}, the page is version ${APP_VERSION}. Admin: paste the latest Code.gs and Index.html, Save, then Deploy > Manage deployments > Edit > New version.`, bad:true};
-  return {short:`Page v${APP_VERSION} · Server v${sv}`, long:`The server is version ${sv} but this page is version ${APP_VERSION} (older). Close the app fully and open it again, or reload the page.`, bad:true};
+  if(sv===undefined) return {short:`Version ${vName(APP_VERSION)}`, long:`This app page is version ${vName(APP_VERSION)} (${APP_VERSION_DATE}). Checking the server…`, bad:false};
+  if(sv===null) return {short:`Version ${vName(APP_VERSION)}`, long:`This app page is version ${vName(APP_VERSION)} (${APP_VERSION_DATE}). No signal, so the server version is not known.`, bad:false};
+  if(sv===APP_VERSION) return {short:`Version ${vName(APP_VERSION)}`, long:`Up to date: page and server are both version ${vName(APP_VERSION)} (${APP_VERSION_DATE}).`, bad:false};
+  if(!sv || sv < APP_VERSION) return {short:`Page v${vName(APP_VERSION)} · Server ${sv ? 'v' + vName(sv) : 'old'}`, long:`The server (Code.gs) is ${sv ? 'version ' + vName(sv) : 'older than version 1'}, the page is version ${vName(APP_VERSION)}. Admin: paste the latest Code.gs and Index.html, Save, then Deploy > Manage deployments > Edit > New version.`, bad:true};
+  return {short:`Page v${vName(APP_VERSION)} · Server v${vName(sv)}`, long:`The server is version ${vName(sv)} but this page is version ${vName(APP_VERSION)} (older). Tap Update system to get the new version.`, bad:true};
 }
 function verShow(sv){
   if(sv!==undefined) VER.server = sv;
@@ -4232,6 +4256,7 @@ function verShow(sv){
   if(b){ b.textContent = t.short; b.classList.toggle('bad', t.bad); b.title = t.long; }
   if(l){ l.textContent = t.bad ? t.long : t.short + (VER.server===APP_VERSION ? ' · up to date' : ''); l.classList.toggle('bad', t.bad); }
   try { vupShow(); } catch(e){}
+  try { const o = $('upd'); if(updDone.paint && o && !o.hidden){ vupHide(); updDone.paint(); } } catch(e){}
 }
 function verCheck(){
   VER.at = Date.now();
@@ -4245,10 +4270,14 @@ function verCheck(){
 const APP_CHANGES = [
   // MANU 2026-11-06 15:20 UTC "this is version 14.2": this afternoon's changes (from ~14:17 UTC)
   // MANU 2026-11-07 01:35 UTC "make this version 14.4": everything after the 14.3 GitHub push (809c379)
-  {v:14.4, d:'2026-11-07', items:[
-    'Truck Plan: trips loaded ahead (for example loaded Saturday, dated Monday for delivery) now show. On screen they sit in a purple PRELOADED / DATED AHEAD section and are no longer listed as Waiting shipment; Generate report shows them with the trip date and "PRELOADED · for Mon". They still count as trips on their own date.',
+  // MANU 2026-11-07 15:36 UTC "make this version 14.1.1" (asked: 14.4.1, the step after 14.4)
+  {v:14.41, d:'2026-11-07', items:[
     'Dashboard: new "Driver ranking per account" part. For Coca Cola Canlubang, Coca Cola San Fernando and Other accounts it shows the top and bottom drivers (5, 10 or 20 each) by trips, counted like the Account summary, with days driven, km, km/L (red under 2), left the destination within 24 hours, and incidents. This month first; also Last month, the Dashboard dates or any From and To.',
     'Dashboard: new "Trucks without a driver" box under "Trucks without a trip". It lists every active truck whose saved crew in Truck assignment has no driver, one box per account, with its helpers and an Under maintenance tag, and a JPEG report button.',
+    'New Update system button (Settings, the version badge, the What changed pop-up and the update bar): it clears the old copy of the app on this phone or PC, shows each step while it updates, then says when it is done with the new version number. Nobody else is affected.',
+    'Versions can now have three parts, like 14.4.1.']},
+  {v:14.4, d:'2026-11-07', items:[
+    'Truck Plan: trips loaded ahead (for example loaded Saturday, dated Monday for delivery) now show. On screen they sit in a purple PRELOADED / DATED AHEAD section and are no longer listed as Waiting shipment; Generate report shows them with the trip date and "PRELOADED · for Mon". They still count as trips on their own date.',
     'Truck Plan: Supervisors can now change every detail of a Completed trip (status, times, date, route, shipment number, truck, crew, KMS, budget, fuel, remarks), from the cells or the trip pop-up. On trips that are not Completed they keep their usual limits.',
     'Truck Plan: on a Completed trip, Dispatchers and Team leaders can still save the refuel (Fuel liters, odometer and fuel price), from the Fuel cell or the trip pop-up. Everything else on a Completed trip stays locked for them.',
     'Sign-in video: Supervisors, Team leaders and Dispatchers watch the JMTI Operations Job Descriptions video when they sign in. It can\'t be closed or skipped ahead; Continue opens only when the video ends. Each person watches it until they finish it once. Admin can change the video, the roles, or make it show at every sign-in in Settings > Sign-in video, and see who has finished it.',
@@ -4319,10 +4348,11 @@ function vchgShow(){
   if(!o){ o = document.createElement('div'); o.id = 'vchg'; o.className = 'vchg'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true');
     o.addEventListener('click', e => { if(e.target === o) o.hidden = true; }); document.body.appendChild(o); }
   const t = verText();
-  const list = APP_CHANGES.map(c => `<div class="vchg-v${c.v === APP_VERSION ? ' cur' : ''}"><h4>Version ${esc(c.v)} <small>${esc(c.d)}</small>${c.v === APP_VERSION ? '<span class="vchg-tag">This version</span>' : ''}</h4><ul>${c.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('');
-  o.innerHTML = `<div class="vchg-box"><h3>What changed</h3><p class="vchg-sub"${t.bad ? ' style="color:#B91C1C;font-weight:700"' : ''}>${esc(t.long)}</p>${list}<div class="vchg-btns"><button type="button" id="vchgOk">Close</button></div></div>`;
+  const list = APP_CHANGES.map(c => `<div class="vchg-v${c.v === APP_VERSION ? ' cur' : ''}"><h4>Version ${esc(vName(c.v))} <small>${esc(c.d)}</small>${c.v === APP_VERSION ? '<span class="vchg-tag">This version</span>' : ''}</h4><ul>${c.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('');
+  o.innerHTML = `<div class="vchg-box"><h3>What changed</h3><p class="vchg-sub"${t.bad ? ' style="color:#B91C1C;font-weight:700"' : ''}>${esc(t.long)}</p>${list}<div class="vchg-btns"><button type="button" id="vchgUpd">⟳ Update system</button><button type="button" id="vchgOk">Close</button></div></div>`;
   o.hidden = false;
   $('vchgOk').onclick = () => { o.hidden = true; };
+  $('vchgUpd').onclick = () => { o.hidden = true; updSystem(); };
 }
 document.addEventListener('keydown', e => { const o = document.getElementById('vchg'); if(e.key === 'Escape' && o && !o.hidden) o.hidden = true; });
 /* Update pop-up (MANU 2026-11-05 "if current version is not updated, ask pop-up what users have to do"): when this page and the
@@ -4344,19 +4374,19 @@ function vupSteps(){
     : 'In Chrome: menu ⋮, then <b>Add to Home screen</b> / <b>Install app</b>';
   const S_ = {
     phoneApp: ['Phone (JMTI app on the home screen)', [
-      'Tap <b>Reload now</b> below.',
+      'Tap <b>Update system</b> below.',
       'Still this message? Close the JMTI app fully: open your recent apps and swipe JMTI away. Then open JMTI again.',
       `Still old? Open ${link} in ${vupIOS() ? 'Safari' : 'Chrome'}, pull the page down to refresh, then remove the old JMTI icon and add it again. ${reinstall}.`]],
     phoneWeb: ['Phone (in the browser)', [
-      'Tap <b>Reload now</b> below.',
+      'Tap <b>Update system</b> below.',
       'Still this message? Pull the page down to refresh.',
       `Still old? Close this tab and open ${window.JMTI_API ? link : 'the JMTI link'} again.`]],
     pcApp: ['Computer (JMTI desktop app)', [
-      'Click <b>Reload now</b> below.',
+      'Click <b>Update system</b> below.',
       'Still this message? Press <b>Ctrl + Shift + R</b> (or <b>Ctrl + F5</b>; Mac: <b>Cmd + Shift + R</b>).',
       'Still old? Close the JMTI window fully and open it again.']],
     pcWeb: ['Computer (in the browser)', [
-      'Click <b>Reload now</b> below.',
+      'Click <b>Update system</b> below.',
       'Still this message? Press <b>Ctrl + F5</b> or <b>Ctrl + Shift + R</b> (Mac: <b>Cmd + Shift + R</b>).',
       `Still old? Close the tab and open ${window.JMTI_API ? link : 'the JMTI link'} again.`]]
   };
@@ -4378,6 +4408,120 @@ async function vupReload(btn){
   try { if(window.caches){ const ks = await caches.keys(); await Promise.all(ks.filter(k => /^jmti-app/.test(k)).map(k => caches.delete(k))); } } catch(e){}
   location.replace(location.pathname + '?fresh=' + Date.now() + location.hash);
 }
+/* Update system (MANU 2026-11-07 "generate a button to update system. show that it is being updated then once updated they can use
+   the system"): one button that drops the old kept copy of the app on THIS phone/PC and opens the newest one. While it works a
+   screen shows each step with a spinner; after the restart the same screen says it is done, with the version, and a button back
+   into the app. Only this phone/PC is updated: nobody else is signed out or blocked. Changes waiting for signal (outbox) stay
+   saved on the phone through the update. Found in: Settings, the version badge (red = update), the update pop-up, the GitHub bar. */
+const UPD_KEY = 'jmti_upd';
+const UPD_STEPS = [
+  ['Checking for the newest version', 'Asking the server which version is out'],
+  ['Keeping your saved work', 'Changes on this phone or PC are sent or kept for later'],
+  ['Clearing the old copy of the app', 'Only on this phone or PC'],
+  ['Downloading the new version', ''],
+  ['Restarting the app', 'Opening the new version']];
+function updBox(html, cls){
+  let o = $('upd');
+  if(!o){ o = document.createElement('div'); o.id = 'upd'; o.className = 'upd'; o.setAttribute('role', 'alertdialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-live', 'polite'); document.body.appendChild(o); }
+  o.innerHTML = `<div class="upd-box${cls ? ' ' + cls : ''}">${html}</div>`;
+  o.hidden = false;
+  return o;
+}
+function updHide(){ const o = $('upd'); if(o) o.hidden = true; }
+const updWait = ms => new Promise(r => setTimeout(r, ms));
+const updTimeout = (p, ms) => Promise.race([p, updWait(ms).then(() => { throw new Error('timeout'); })]);
+function updStepsHtml(at, notes){
+  return `<ol class="upd-steps">${UPD_STEPS.map(([t, sub], i) => `<li class="${i < at ? 'done' : i === at ? 'run' : ''}"><i>${i < at ? '✓' : i === at ? '' : i + 1}</i><span>${esc(t)}${(notes[i] || sub) ? `<small>${esc(notes[i] || sub)}</small>` : ''}</span></li>`).join('')}</ol>`;
+}
+/** Step 0: the "Update the system?" card. Tapping Update now runs the steps. */
+function updSystem(){
+  const t = verText(), sv = VER.server, pageOld = typeof sv === 'number' && sv > APP_VERSION;
+  const waiting = S.me ? outbox().length : 0;
+  updBox(`<div class="upd-big ${pageOld ? 'warn' : ''}">${pageOld ? '!' : '⟳'}</div>
+    <h3>Update the system</h3>
+    <p>${pageOld ? `A newer version (<b>${esc(vName(sv))}</b>) is out. This phone or PC has version <b>${esc(vName(APP_VERSION))}</b>.` : `This phone or PC has version <b>${esc(vName(APP_VERSION))}</b>. Update to make sure you have the newest one.`}</p>
+    <p class="upd-note">It takes less than a minute. Only this phone or PC is updated: everyone else keeps working. ${waiting ? `Your ${waiting} change${waiting === 1 ? '' : 's'} waiting for signal stay${waiting === 1 ? 's' : ''} saved.` : ''} Anything typed but not yet saved will be lost, so save first.</p>
+    ${t.bad && !pageOld ? `<p class="upd-note">${esc(t.long)}</p>` : ''}
+    <div class="vup-btns"><button type="button" class="vup-go" id="updGo" style="background:#2E5BFF">Update now</button><button type="button" class="vup-later" id="updNo">Not now</button></div>`);
+  $('updGo').onclick = updRun;
+  $('updNo').onclick = updHide;
+}
+async function updRun(){
+  const notes = {}, git = vupGit();
+  const show = at => updBox(`<div class="upd-big run"></div><h3>Updating the system…</h3><p class="upd-note">Please wait and keep the app open.</p>${updStepsHtml(at, notes)}`);
+  // 1. newest version
+  show(0);
+  let sv = VER.server;
+  try { const r = await updTimeout(callServer('appVersion'), 15000); sv = Number(r && r.version) || 0; VER.server = sv; } catch(e){}
+  notes[0] = typeof sv === 'number' && sv ? 'Newest version: ' + vName(sv) : 'Server not reached, using what the app site has';
+  if(!git && !VER.url){ try { VER.url = await updTimeout(callServer('getAppUrl'), 10000) || ''; } catch(e){} }
+  await updWait(400);
+  // 2. saved work: send what waits for signal; what cannot be sent stays on the phone (kept through the update)
+  show(1);
+  if(S.me && outbox().length){
+    try { await updTimeout(flushOutbox(), 20000); } catch(e){}
+    const left = outbox().length;
+    notes[1] = left ? `${left} change${left === 1 ? '' : 's'} kept on this phone, sent when the signal is back` : 'All your changes are sent';
+  } else notes[1] = 'Nothing waiting to be sent';
+  await updWait(400);
+  // 3. old copy (GitHub app: the service worker and its kept page; Apps Script has no kept copy of its own)
+  show(2);
+  if(git){
+    try { if(navigator.serviceWorker){ const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r => r.unregister())); } } catch(e){}
+    try { if(window.caches){ const ks = await caches.keys(); await Promise.all(ks.filter(k => /^jmti-app/.test(k)).map(k => caches.delete(k))); } } catch(e){}
+    notes[2] = 'Old copy removed';
+  } else notes[2] = 'Nothing kept on this device';
+  await updWait(400);
+  // 4. new version: on the GitHub app, fetch the page fresh from the app site and read its version number
+  show(3);
+  let got = null;
+  if(git){
+    try {
+      const res = await updTimeout(fetch(location.pathname + '?check=' + Date.now(), {cache: 'reload'}), 20000);
+      const m = /const APP_VERSION = ([\d.]+),/.exec(await res.text()); got = m ? Number(m[1]) : null;
+    } catch(e){}
+    notes[3] = got ? 'Version ' + vName(got) + ' downloaded' : 'Will load on restart';
+  } else notes[3] = 'Loads from the server on restart';
+  await updWait(400);
+  // 5. restart; the next open shows "Update finished"
+  show(4);
+  vupSet(UPD_KEY, {from: APP_VERSION, got, sv, at: Date.now()});
+  const t = vupGet(VUP_TRY); vupSet(VUP_TRY, {sv, n: (t && t.sv === sv ? t.n : 0) + 1, at: Date.now()});
+  await updWait(600);
+  if(!git){
+    if(VER.url){ try { window.open(VER.url, '_top'); return; } catch(e){} }
+    location.reload(); return;
+  }
+  location.replace(location.pathname + '?fresh=' + Date.now() + location.hash);
+}
+/** After the restart: "Update finished" with the version, what is new, and a button back into the app. */
+function updDone(){
+  const u = vupGet(UPD_KEY);
+  if(!u || !(Date.now() - (u.at || 0) < 5 * 60000)) return;
+  vupSet(UPD_KEY, null);
+  const paint = () => {
+    const sv = VER.server, behind = typeof sv === 'number' && sv > APP_VERSION;
+    const cur = APP_CHANGES.find(c => c.v === APP_VERSION);
+    const news = cur && !behind ? `<div class="upd-new"><b>New in version ${esc(vName(APP_VERSION))}:</b><ul>${cur.items.slice(0, 4).map(i => `<li>${esc(i)}</li>`).join('')}</ul>${cur.items.length > 4 ? `<a href="#" id="updMore">See all changes</a>` : ''}</div>` : '';
+    updBox(behind
+      ? `<div class="upd-big warn">!</div><h3>Update finished, but still version ${esc(vName(APP_VERSION))}</h3>
+         <p>The server has version <b>${esc(vName(sv))}</b>, but the app site still gives version ${esc(vName(APP_VERSION))}. The new page may not be on the app site yet.</p>
+         <p class="upd-note">You can keep working. Try Update system again in a few minutes, or tell Admin.</p>
+         <div class="vup-btns"><button type="button" class="vup-go" id="updUse" style="background:#2E5BFF">Use the system</button></div>`
+      : `<div class="upd-big ok">✓</div><h3>The system is updated</h3>
+         <p>You are now on <b>version ${esc(vName(APP_VERSION))}</b> (${esc(APP_VERSION_DATE)})${u.from !== APP_VERSION ? `, up from version ${esc(vName(u.from))}` : ''}.</p>
+         ${u.from === APP_VERSION ? '<p class="upd-note">This was already the newest version. The app was refreshed.</p>' : ''}
+         ${news}
+         <div class="vup-btns"><button type="button" class="vup-go" id="updUse" style="background:#15803D">Use the system</button></div>`,
+      behind ? 'warn' : 'ok');
+    $('updUse').onclick = updHide;
+    if($('updMore')) $('updMore').onclick = e => { e.preventDefault(); updHide(); vchgShow(); };
+  };
+  paint();
+  updDone.paint = paint;   // redrawn once the server's version is known (verShow)
+}
+/** Badge and sign-in version line: red because this page is older = update screen; otherwise "What changed". */
+function verTap(){ const sv = VER.server; if(typeof sv === 'number' && sv > APP_VERSION) updSystem(); else vchgShow(); }
 function vupHide(){ const o = $('vup'); if(o) o.hidden = true; }
 function vupShow(){
   const sv = VER.server;
@@ -4391,7 +4535,7 @@ function vupShow(){
   if(later && later.sv === sv && later.pv === APP_VERSION && Date.now() < later.until) return vupHide();
   let o = $('vup');
   if(!o){ o = document.createElement('div'); o.id = 'vup'; o.className = 'vup'; o.setAttribute('role', 'alertdialog'); o.setAttribute('aria-modal', 'true'); document.body.appendChild(o); }
-  const ver = `<p class="vup-ver">This app: version ${APP_VERSION} · Server: ${sv ? 'version ' + sv : 'older than version 1'}</p>`;
+  const ver = `<p class="vup-ver">This app: version ${vName(APP_VERSION)} · Server: ${sv ? 'version ' + vName(sv) : 'older than version 1'}</p>`;
   if(pageOld){
     const t = vupGet(VUP_TRY), tries = t && t.sv === sv ? t.n : 0;
     if(!vupGit() && !VER.url && !VER.urlAsk){ VER.urlAsk = 1; callServer('getAppUrl').then(u => { VER.url = u || ''; }).catch(() => {}); }
@@ -4400,14 +4544,14 @@ function vupShow(){
       ${vupSteps()}
       ${tries >= 2 ? `<p class="vup-warn">Still old after ${tries} reloads. The new version may not be on the app site yet. Tell Admin (they need to update the app site), then try again in a few minutes.</p>` : ''}
       ${ver}
-      <div class="vup-btns"><button type="button" class="vup-go" id="vupGo">Reload now</button>${tries >= 2 ? '<button type="button" class="vup-later" id="vupLater">Use the app for now</button>' : ''}</div></div>`;
-    $('vupGo').onclick = e => vupReload(e.currentTarget);
+      <div class="vup-btns"><button type="button" class="vup-go" id="vupGo">Update system</button>${tries >= 2 ? '<button type="button" class="vup-later" id="vupLater">Use the app for now</button>' : ''}</div></div>`;
+    $('vupGo').onclick = () => { vupHide(); updSystem(); };
     if($('vupLater')) $('vupLater').onclick = () => { vupSet(VUP_LATER, {sv, pv: APP_VERSION, until: Date.now() + 10 * 60000}); vupHide(); };
   } else {
     if(VER.okSeen === sv) return vupHide();   // OK tapped once this session
     const admin = S.me && S.me.role === 'ADMIN';
     o.innerHTML = `<div class="vup-box"><h3>${admin ? 'Finish the update (Admin)' : 'The app is being updated'}</h3>
-      ${admin ? `<p>This page is version ${APP_VERSION} but the server (Apps Script) is still ${sv ? 'version ' + sv : 'older'}. To finish:</p>
+      ${admin ? `<p>This page is version ${vName(APP_VERSION)} but the server (Apps Script) is still ${sv ? 'version ' + vName(sv) : 'older'}. To finish:</p>
         <ol><li>Open Apps Script <b>JMTI DASH</b>.</li><li>Paste the latest <b>Code.gs</b> and <b>Index.html</b> (all of each), then <b>Save</b>.</li>
         <li><b>Deploy &gt; Manage deployments &gt; Edit (pencil) &gt; Version: New version &gt; Deploy</b>. Never "New deployment".</li></ol>`
       : `<p>Admin is updating the app. You can keep working. If some part shows an error, wait a few minutes and try again.</p>
@@ -4429,7 +4573,7 @@ function clockTick(){
   DAY_SEEN = t;
 }
 setInterval(clockTick, 1000);
-setTimeout(() => { verShow(); verCheck(); $('verBadge').onclick = vchgShow; if($('verLogin')) $('verLogin').onclick = vchgShow; }, 0);
+setTimeout(() => { try { updDone(); } catch(e){} verShow(); verCheck(); $('verBadge').onclick = verTap; if($('verLogin')) $('verLogin').onclick = verTap; }, 0);
 document.addEventListener('visibilitychange', () => { if(!document.hidden) clockTick(); });
 clockTick();
 /** Counter chips (POD, Billing): items = [[key, label, count]]; tapping one filters the list. Rebuilt on every render. */
@@ -6928,7 +7072,7 @@ function renderAnalytics(){
   const tabs = Object.entries(d.tabs || {}).sort((a,b) => b[1]-a[1]), maxT = Math.max(1, ...tabs.map(a => a[1]));
   const sdays = d.sdays || {}, maxSd = Math.max(1, ...days.map(x => sdays[x] && sdays[x].n ? sdays[x].ms / sdays[x].n : 0));
   const bg = d.bg || {days:[]}, bgDay = {}; (bg.days || []).forEach(x => { bgDay[x.date] = x; });
-  const verChip = v => !v ? '<span class="hint">—</span>' : `<span class="an-ver${Number(v)===sv ? '' : ' bad'}">${esc(String(v))}</span>`;
+  const verChip = v => !v ? '<span class="hint">—</span>' : `<span class="an-ver${Number(v)===sv ? '' : ' bad'}">${esc(vName(v))}</span>`;
   const ago = at => { if(!at) return '—'; const m = Math.round((live.now - at) / 60000); return m < 1 ? 'now' : m < 60 ? m + ' min ago' : Math.round(m / 60) + ' h ago'; };
   const roleRows = Object.entries(siRole).sort((a,b) => b[1].n - a[1].n || b[1].users - a[1].users);
   const userRows = plist.sort((a,b) => (b.n2 - a.n2) || (b.si - a.si) || String(a.n).localeCompare(String(b.n)));
@@ -6945,7 +7089,7 @@ function renderAnalytics(){
     ${(d.problems || []).length ? `<p class="hint" style="color:#B91C1C">Could not read: ${esc(d.problems.join('; '))}</p>` : ''}
     <div class="an-grid">
       ${panel('Online now', onNow.length + ' of ' + live.users.length + ' active accounts', onNow.length ? `<table class="xl an-t"><tbody>${onNow.sort((a,b) => b.at - a.at).map(u => `<tr><td>${esc(u.n)}<div class="hint">${esc(u.r)}${u.dev ? ' · ' + esc(u.dev) : ''}</div></td><td class="c">${verChip(u.pv)}</td><td class="c">${ago(u.at)}</td></tr>`).join('')}</tbody></table>` : '<p class="hint">Nobody right now.</p>')}
-      ${panel('Version in use', 'server is version ' + esc(String(sv)) + ', apps open in the last 6 h', Object.keys(vers).length ? `<table class="xl an-t"><tbody>${Object.entries(vers).sort((a,b) => Number(b[0]) - Number(a[0])).map(([v,n]) => `<tr><td>${verChip(v)}</td><td class="c"><b>${n}</b></td><td style="width:50%">${bar(n, live.users.filter(u => u.pv).length, Number(v)===sv ? '#16A34A' : '#B91C1C')}</td></tr>`).join('')}</tbody></table>${oldV.length ? `<p class="hint" style="color:#B91C1C">Old version: ${oldV.map(u => esc(u.n)).join(', ')}. They should reload the app.</p>` : ''}` : '<p class="hint">No app has checked in since this version was deployed.</p>')}
+      ${panel('Version in use', 'server is version ' + esc(vName(sv)) + ', apps open in the last 6 h', Object.keys(vers).length ? `<table class="xl an-t"><tbody>${Object.entries(vers).sort((a,b) => Number(b[0]) - Number(a[0])).map(([v,n]) => `<tr><td>${verChip(v)}</td><td class="c"><b>${n}</b></td><td style="width:50%">${bar(n, live.users.filter(u => u.pv).length, Number(v)===sv ? '#16A34A' : '#B91C1C')}</td></tr>`).join('')}</tbody></table>${oldV.length ? `<p class="hint" style="color:#B91C1C">Old version: ${oldV.map(u => esc(u.n)).join(', ')}. They should reload the app.</p>` : ''}` : '<p class="hint">No app has checked in since this version was deployed.</p>')}
       ${panel('Time in the app per day', 'everyone together, hours and minutes', dayTable(x => useDay[x] || 0, maxU, '#0A27B5', x => hmText(useDay[x])))}
       ${panel('Sign-ins per day', '', dayTable(x => siDay[x] || 0, maxSi, '#2E5BFF'))}
       ${panel('Changes saved per day', 'trips, POD, billing, money, people…', dayTable(x => act.days[x] || 0, maxAct, '#16A34A'))}
