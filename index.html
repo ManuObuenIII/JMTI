@@ -737,6 +737,9 @@ table.xl tr.routehd.mnthd span{color:#B91C1C}
 .fm-open{color:#64748B;font-weight:500}
 table.xl tbody tr.acchd.garhd td{background:#E2E8F0;color:#1E293B;border-color:#CBD5E1}
 table.xl tbody tr.acchd.nothd td{background:#FEF3C7;color:#78350F;border-color:#FCD34D}
+table.xl tbody tr.acchd.aheadhd td{background:#EDE9FE;color:#4C1D95;border-color:#C4B5FD}
+table.xl tr.acchd.aheadhd span{color:#6D28D9}
+.tag-ahead{display:inline-block;margin-left:4px;padding:1px 6px;border-radius:8px;background:#EDE9FE;color:#5B21B6;font-size:11px;font-weight:700;white-space:normal}
 table.xl tr.acchd.garhd span{color:#475569}
 table.xl tr.acchd.nothd span{color:#92400E}
 table.xl tr.idle.mnt td{background:#FFF7F7}
@@ -2070,6 +2073,25 @@ body.vg-on{overflow:hidden}
 .tsz{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .tsz button{border:1px solid var(--line);background:#fff;border-radius:18px;padding:5px 11px;font:inherit;cursor:pointer}
 .tsz button[aria-pressed="true"]{background:var(--accent,#2E5BFF);color:#fff;border-color:transparent}
+/* ===== Driver ranking per account (MANU 2026-11-07): top and bottom drivers side by side per account ===== */
+.drk-bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:4px 0 8px}
+.drk-bar label{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+.drk-how{margin:0 0 12px}
+.drk-acct{margin:0 0 18px}
+.drk-acct > h4{margin:0 0 8px;font-size:13px;color:var(--ink);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.drk-acct > h4 small{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px}
+.drk-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.drk-side h5{margin:0 0 6px;font-size:12px;font-weight:800;display:flex;gap:6px;align-items:center}
+.drk-side.top h5{color:#0E8A4A}
+.drk-side.bot h5{color:#C0262D}
+.drk-side .hs-tbl td.n,.drk-side .hs-tbl th.n{text-align:right;white-space:nowrap}
+.drk-side .hs-tbl td small{white-space:normal}
+.drk-side .tbl-wrap{overflow-x:auto}
+.drk-side .hs-tbl{min-width:600px}
+.drk-side .hs-tbl td:first-child small{white-space:nowrap}
+.drk-bad{color:#C0262D;font-weight:700}
+.drk-few{font-size:11.5px;color:var(--muted);margin:6px 0 0}
+@media (max-width:900px){ .drk-two{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -2190,6 +2212,7 @@ body.vg-on{overflow:hidden}
     <div class="kstrip" id="kstrip"><div class="kpis" id="kpis"></div><div class="alerts" id="alerts"></div></div>
     <div class="panel gar" id="garPanel"><h3>Trucks in garage <span class="sub" id="garSub"></span></h3><div class="gar-row" id="garRow"></div></div>
     <div class="panel gar" id="noTripPanel"><h3>Trucks without a trip <span class="sub" id="noTripSub"></span><button class="secsave" type="button" id="noTripJpg" data-ready="1" title="Download this list as a JPEG picture">JPEG report</button></h3><div class="gar-row" id="noTripRow"></div></div>
+    <div class="panel gar" id="noDrvPanel"><h3>Trucks without a driver <span class="sub" id="noDrvSub"></span><button class="secsave" type="button" id="noDrvJpg" data-ready="1" title="Download this list as a JPEG picture">JPEG report</button></h3><div class="gar-row" id="noDrvRow"></div></div>
     <div class="panel rem" id="remPanel" hidden></div>
     <div class="grid2">
       <div class="panel">
@@ -2225,6 +2248,17 @@ body.vg-on{overflow:hidden}
     <div class="panel sumpanel" id="topPanel">
       <div class="sumhead"><h3>Top 10 <small>trips counted like the accounts, then KMS</small></h3><div class="chips" id="topView"></div></div>
       <div class="tops" id="tops"></div>
+    </div>
+    <!-- MANU 2026-11-07 "show top performing drivers per account and bottom performing": Code.gs getDriverRanking -->
+    <div class="panel sumpanel" id="drkPanel" hidden>
+      <div class="sumhead"><h3>Driver ranking per account <small id="drkNote"></small></h3><div class="chips" id="drkPeriod"></div></div>
+      <div class="drk-bar">
+        <label>From <input type="date" id="drkFrom"></label><label>To <input type="date" id="drkTo"></label>
+        <div class="chips" id="drkAcct"></div><div class="chips" id="drkN"></div>
+        <button class="btn sm ghost" type="button" id="drkRefresh">↻ Refresh</button>
+      </div>
+      <p class="hint-line drk-how">Ranked by trips, counted like the Account summary (Coca Cola to Coca Cola 0.5, TUKOD 0.5, the trip after TUKOD 1, cancelled and non-trip statuses left out). Each driver is listed under the account they drove for most. Km/L is the Fuel monitoring rule; red is under 2 km/L. "Out in 24 h" = left the destination within 24 hours of Destination time in. Drivers with fewer than 3 days with a trip are listed apart, not ranked.</p>
+      <div id="drkBody"><div class="empty">Loading…</div></div>
     </div>
     <!-- MANU 2026-10-21 "add in dashboard 20 drivers and helpers earning the least": estimated trip income, pay roles only -->
     <div class="panel" id="lowPanel" hidden>
@@ -4212,6 +4246,9 @@ const APP_CHANGES = [
   // MANU 2026-11-06 15:20 UTC "this is version 14.2": this afternoon's changes (from ~14:17 UTC)
   // MANU 2026-11-07 01:35 UTC "make this version 14.4": everything after the 14.3 GitHub push (809c379)
   {v:14.4, d:'2026-11-07', items:[
+    'Truck Plan: trips loaded ahead (for example loaded Saturday, dated Monday for delivery) now show. On screen they sit in a purple PRELOADED / DATED AHEAD section and are no longer listed as Waiting shipment; Generate report shows them with the trip date and "PRELOADED · for Mon". They still count as trips on their own date.',
+    'Dashboard: new "Driver ranking per account" part. For Coca Cola Canlubang, Coca Cola San Fernando and Other accounts it shows the top and bottom drivers (5, 10 or 20 each) by trips, counted like the Account summary, with days driven, km, km/L (red under 2), left the destination within 24 hours, and incidents. This month first; also Last month, the Dashboard dates or any From and To.',
+    'Dashboard: new "Trucks without a driver" box under "Trucks without a trip". It lists every active truck whose saved crew in Truck assignment has no driver, one box per account, with its helpers and an Under maintenance tag, and a JPEG report button.',
     'Truck Plan: Supervisors can now change every detail of a Completed trip (status, times, date, route, shipment number, truck, crew, KMS, budget, fuel, remarks), from the cells or the trip pop-up. On trips that are not Completed they keep their usual limits.',
     'Truck Plan: on a Completed trip, Dispatchers and Team leaders can still save the refuel (Fuel liters, odometer and fuel price), from the Fuel cell or the trip pop-up. Everything else on a Completed trip stays locked for them.',
     'Sign-in video: Supervisors, Team leaders and Dispatchers watch the JMTI Operations Job Descriptions video when they sign in. It can\'t be closed or skipped ahead; Continue opens only when the video ends. Each person watches it until they finish it once. Admin can change the video, the roles, or make it show at every sign-in in Settings > Sign-in video, and see who has finished it.',
@@ -4456,6 +4493,7 @@ function initDashboard(){
   $('moreBtn').onclick = () => { S.shown += 300; renderTable(); };
   S.range = {from:today, to:today};
   $('dFrom').value = $('dTo').value = today;
+  initDriverRank();
 }
 function setRange(from, to){
   if(!from || !to) return; if(from>to) [from,to]=[to,from];
@@ -4465,6 +4503,8 @@ function loadDashboard(silent){
   const {from,to} = S.range; $('rangeChips')._mark(from,to);
   if(!silent) S.shown = 150;
   loadSummary(false);
+  if(DRK.period==='dash'){ $('drkFrom').value = from; $('drkTo').value = to; }
+  loadDriverRank();
   const cf = addDays(from, -3), ct = addDays(to, 3);
   document.querySelectorAll('.cmpf').forEach(e => e.hidden = !S.cmp);
   if(S.cmp) loadLastYear(from, to);
@@ -4553,7 +4593,7 @@ function renderIdleTrucks(){
   // MANU 2026-11-03 "ACTIVE TRUCKS WITH NO TRIP MEANS TRUCKS WITH CREWS": active = has a crew in Truck assignment (current crew);
   // inactive = no crew (also trucks marked INACTIVE in PLATE)
   const crew = S.assign[TODAY()] || [];
-  if(!S.assign[TODAY()] && !renderIdleTrucks.asked){ renderIdleTrucks.asked = 1; call('getAssignments', TODAY()).then(l => { S.assign[TODAY()] = l; renderIdleTrucks(); }).catch(() => {}); }
+  if(!S.assign[TODAY()] && !renderIdleTrucks.asked){ renderIdleTrucks.asked = 1; call('getAssignments', TODAY()).then(l => { S.assign[TODAY()] = l; renderIdleTrucks(); renderNoDriver(); }).catch(() => {}); }
   const hasCrewNo = no => crew.some(a => String(a.truckNo)===String(no) && (a.driver || a.helper1 || a.helper2));
   const groups = [['ACTIVE', 'Active trucks (with crew), no trip'], ['INACTIVE', 'Inactive trucks (no crew)']];
   const isAct = x => String(x.t.status || 'ACTIVE').toUpperCase() !== 'INACTIVE' && hasCrewNo(x.t.truckNo);
@@ -4563,6 +4603,29 @@ function renderIdleTrucks(){
     return `<div class="gar-box${l.length ? '' : ' zero'}"><div class="gar-h"><b>${l.length}</b><span>${esc(name)}</span></div>`
       + (l.length ? `<div class="gar-list">${l.map(x => `<span class="gar-t">${tLink(x.t.truckNo, 'Truck ' + x.t.truckNo)}${x.t.plateNo ? `<small>${esc(x.t.plateNo)}</small>` : ''}<small>${x.last ? `Last trip ${esc(fmtDay(x.last))} · ${x.days} day${x.days===1 ? '' : 's'} ago` : 'No trip on record'}</small>${x.st ? `<small>${esc(x.st)}</small>` : ''}</span>`).join('')}</div>` : '<p class="hint">Every truck here had a trip</p>') + `</div>`;
   }).join('');
+}
+/**
+ * MANU 2026-11-07 "show final trucks with no drivers" / "get data from database": every ACTIVE truck in PLATE whose SAVED crew in
+ * TRUCK ASSIGNMENT (today's current crew, read from the database) has no driver, one box per account. Unsaved edits are not counted.
+ */
+function renderNoDriver(){
+  const box = $('noDrvRow'); if(!box || !S.boot) return;
+  const jb = $('noDrvJpg'); if(jb && !jb.onclick){ if(!jb.querySelector('svg')) jb.insertAdjacentHTML('afterbegin', SEC_ICON);
+    jb.onclick = e => { e.stopPropagation(); if(jb.disabled) return; jb.disabled = true; const was = jb.innerHTML; jb.lastChild.textContent = 'Making…';
+      Promise.resolve(secShot($('noDrvPanel'), 'Trucks without a driver', {name: 'All accounts', line: 'All accounts · saved crew in Truck assignment as of ' + fmtDay(TODAY())}, 'jpg')).finally(() => { jb.disabled = false; jb.innerHTML = was; }); }; }
+  const crew = S.assign[TODAY()];
+  if(!crew){ $('noDrvSub').textContent = 'loading the crew…'; box.innerHTML = '<p class="hint">Loading the saved crew from Truck assignment…</p>'; return; }
+  const of = no => crew.find(a => String(a.truckNo)===String(no)) || {};
+  const rows = (S.boot.trucks || []).filter(t => t.truckNo && truckActive(t) && aNoDrv(of(t.truckNo)))
+    .sort((a, b) => (Number(a.truckNo) || 1e9) - (Number(b.truckNo) || 1e9) || String(a.truckNo).localeCompare(String(b.truckNo)));
+  $('noDrvSub').textContent = `${rows.length} truck${rows.length===1 ? '' : 's'} · saved crew as of ${fmtDay(TODAY())}`;
+  box.innerHTML = A_GROUPS.map(([k, name]) => {
+    const l = rows.filter(t => aGroupOf(of(t.truckNo))===k);
+    if(k==='none' && !l.length) return '';
+    return `<div class="gar-box${l.length ? '' : ' zero'}"><div class="gar-h"><b>${l.length}</b><span>${esc(name)}</span></div>`
+      + (l.length ? `<div class="gar-list">${l.map(t => { const c = of(t.truckNo), h = [c.helper1, c.helper2].filter(Boolean);
+        return `<span class="gar-t">${tLink(t.truckNo, 'Truck ' + t.truckNo)}${t.plateNo ? `<small>${esc(t.plateNo)}</small>` : ''}<small>${h.length ? 'Helper: ' + esc(h.join(', ')) : 'No crew'}</small>${aMnt(t) ? '<small>Under maintenance</small>' : ''}</span>`; }).join('')}</div>` : '<p class="hint">Every truck here has a driver</p>') + `</div>`;
+  }).join('') || '<p class="hint">Every active truck has a driver.</p>';
 }
 function renderDashboard(){
   if(!['dashboard','trips'].includes(S.tab)) return;
@@ -4604,6 +4667,7 @@ function renderDashboard(){
   $('lane').onclick = e => { const b=e.target.closest('.stop'); if(b) openStagePop(b.dataset.st); };
   renderGarages(all);
   renderIdleTrucks();
+  renderNoDriver();
 
   const done = count('Completed');
   const trucksOut = new Set(all.filter(isActiveRow).map(t => t.truckNo || t.plateNo).filter(Boolean)).size;
@@ -4747,6 +4811,78 @@ function renderTops(){
     return `<div><h4>${title}</h4>${list.length ? `<ol>${list.map((x,i) => `<li><span class="r">${i+1}</span><span class="nm" title="${esc(x[0])}">${esc(isTruck ? 'Truck ' + x[0] : x[0])}${isTruck && x[3] ? ` <small>${esc(x[3])}</small>` : ''}</span><span class="v"><b>${fmtN(x[1])}</b> trips<small>${x[2].toLocaleString('en-PH')} km</small></span><span></span><span class="bar" style="width:${x[1]/max*100}%"></span></li>`).join('')}</ol>` : '<p class="hint-line" style="margin:0">No trips yet.</p>'}</div>`;
   };
   $('tops').innerHTML = col('Drivers', t.drivers) + col('Helpers', t.helpers) + col('Trucks', t.trucks, true);
+}
+/**
+ * Driver ranking per account (MANU 2026-11-07 "show top performing drivers per account and bottom performing"): Code.gs
+ * getDriverRanking(from, to) ranks every driver with a counted trip inside the account they drove for most, by trips (then trips a
+ * day, then km), with days, km, km/L (Fuel monitoring rule, red under 2), out of the destination within 24 h and incidents beside
+ * it. Period: this month by default; Last month, the Dashboard dates or any From / To. Top and bottom N side by side per account.
+ */
+const DRK = {period:'month', acct:'', n:10, data:{}, busy:''};
+function drkRange(p){
+  const t = TODAY(), [y, m] = t.split('-').map(Number), ym = (yy, mm) => `${yy}-${String(mm).padStart(2,'0')}`;
+  if(p==='month') return {from: ym(y, m) + '-01', to: t};
+  if(p==='last'){ const ly = m===1 ? y - 1 : y, lm = m===1 ? 12 : m - 1; return {from: ym(ly, lm) + '-01', to: addDays(ym(y, m) + '-01', -1)}; }
+  if(p==='dash' && S.range) return {from: S.range.from, to: S.range.to};
+  return {from: $('drkFrom').value, to: $('drkTo').value};
+}
+function initDriverRank(){
+  if(!$('drkPanel')) return;
+  filterChips($('drkPeriod'), [['month','This month'],['last','Last month'],['dash','Dashboard dates']], DRK.period, v => { DRK.period = v; const r = drkRange(v); $('drkFrom').value = r.from; $('drkTo').value = r.to; loadDriverRank(); });
+  filterChips($('drkN'), [['5','5 each'],['10','10 each'],['20','20 each']], String(DRK.n), v => { DRK.n = Number(v); renderDriverRank(); });
+  $('drkFrom').onchange = $('drkTo').onchange = () => { DRK.period = 'custom'; $('drkPeriod').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', 'false')); loadDriverRank(); };
+  $('drkRefresh').onclick = () => { DRK.data = {}; loadDriverRank(); };
+  const r = drkRange('month'); $('drkFrom').value = r.from; $('drkTo').value = r.to;
+}
+function loadDriverRank(){
+  const box = $('drkPanel'); if(!box) return;
+  box.hidden = !(may('summary') || may('viewAll')); if(box.hidden) return;
+  let f = $('drkFrom').value, t = $('drkTo').value;
+  if(!f || !t){ const r = drkRange('month'); f = $('drkFrom').value = r.from; t = $('drkTo').value = r.to; }
+  if(f > t){ [f, t] = [t, f]; $('drkFrom').value = f; $('drkTo').value = t; }
+  const k = f + '|' + t; DRK.key = k;
+  const hit = DRK.data[k];
+  if(hit && Date.now() - hit._at < 600000){ renderDriverRank(); return; }
+  if(DRK.busy === k) return;
+  DRK.busy = k; renderDriverRank();
+  call('getDriverRanking', f, t).then(r => { r._at = Date.now(); DRK.data[k] = r; })
+    .catch(e => { DRK.err = {k, msg: e.message}; })
+    .finally(() => { if(DRK.busy === k) DRK.busy = ''; renderDriverRank(); });
+}
+function renderDriverRank(){
+  const box = $('drkBody'); if(!box || $('drkPanel').hidden) return;
+  const k = DRK.key, d = DRK.data[k];
+  if(!d){
+    box.innerHTML = DRK.err && DRK.err.k === k && DRK.busy !== k ? `<div class="empty">Could not load the ranking: ${esc(DRK.err.msg)}</div>` : '<div class="empty">Ranking the drivers…</div>';
+    $('drkNote').textContent = ''; return;
+  }
+  const name = a => a === 'NOT COUNTED IN AN ACCOUNT' ? 'Not counted in an account' : titleCase(a);
+  const accs = d.accounts.filter(a => a.ranked.length || a.few.length);
+  if(DRK.acct && !accs.some(a => a.account === DRK.acct)) DRK.acct = '';
+  filterChips($('drkAcct'), [['', 'All accounts']].concat(accs.map(a => [a.account, esc(name(a.account))])), DRK.acct, v => { DRK.acct = v; renderDriverRank(); });
+  const nDrv = accs.reduce((n, a) => n + a.ranked.length + a.few.length, 0);
+  $('drkNote').textContent = `${d.from === d.to ? fmtDay(d.from) : fmtDay(d.from) + ' to ' + fmtDay(d.to)} · ${nDrv} driver${nDrv === 1 ? '' : 's'}${DRK.busy === k ? ' · updating…' : ''}`;
+  const incTxt = x => Object.keys(x.incTypes || {}).map(t => `${x.incTypes[t]} ${titleCase(t)}`).join(', ');
+  const row = (x, total) => `<tr><td>${x.rank}<small>of ${total}</small></td><td><b>${pLink(x.name)}</b>${x.truck ? `<small>Truck ${esc(x.truck)}</small>` : ''}</td>`
+    + `<td class="n"><b>${fmtN(x.trips)}</b>${x.acctTrips !== x.trips ? `<small>${fmtN(x.acctTrips)} in this account</small>` : ''}</td>`
+    + `<td class="n">${x.days}<small>${x.perDay.toFixed(1)} a day</small></td>`
+    + `<td class="n">${Number(x.km).toLocaleString('en-PH')}</td>`
+    + `<td class="n">${x.kmPerL === null ? '—' : `<span class="${x.lowFuel ? 'drk-bad' : ''}">${x.kmPerL.toFixed(2)}</span>`}${x.refuels ? `<small>${x.refuels} refuel${x.refuels === 1 ? '' : 's'}</small>` : ''}</td>`
+    + `<td class="n">${x.onTimePct === null ? '—' : x.onTimePct + '%'}${x.late ? `<small class="drk-bad">${x.late} late${x.open ? `, ${x.open} still open` : ''}</small>` : x.judged ? `<small>${x.judged} judged</small>` : ''}</td>`
+    + `<td class="n">${x.incidents ? `<span class="drk-bad">${x.incidents}</span><small>${esc(incTxt(x))}</small>` : '—'}</td></tr>`;
+  const table = (list, total) => `<div class="tbl-wrap"><table class="hs-tbl"><thead><tr><th>#</th><th>Driver</th><th class="n">Trips</th><th class="n">Days</th><th class="n">Km</th><th class="n">Km/L</th><th class="n">Out in 24 h</th><th class="n">Incidents</th></tr></thead><tbody>${list.map(x => row(x, total)).join('')}</tbody></table></div>`;
+  const show = DRK.acct ? accs.filter(a => a.account === DRK.acct) : accs;
+  box.innerHTML = show.map(a => {
+    const R = a.ranked, n = R.length;
+    // fewer than 2 × N ranked: split them, so nobody is in both lists
+    const nTop = Math.min(DRK.n, Math.ceil(n / 2)), nBot = Math.min(DRK.n, n - nTop);
+    const top = R.slice(0, nTop), bot = R.slice(n - nBot).reverse();
+    const few = a.few.length ? `<p class="drk-few">Not ranked, fewer than ${d.minDays} days with a trip: ${a.few.map(x => `${pLink(x.name)} (${fmtN(x.trips)} trip${x.trips === 1 ? '' : 's'}, ${x.days} day${x.days === 1 ? '' : 's'})`).join(', ')}</p>` : '';
+    return `<div class="drk-acct"><h4>${esc(name(a.account))}<small>${n} ranked driver${n === 1 ? '' : 's'} · ${fmtN(a.trips)} trip${a.trips === 1 ? '' : 's'}</small></h4>`
+      + (n ? `<div class="drk-two"><div class="drk-side top"><h5>▲ Top ${top.length}</h5>${table(top, n)}</div>`
+        + `<div class="drk-side bot"><h5>▼ Bottom ${bot.length}</h5>${bot.length ? table(bot, n) : '<p class="hint-line" style="margin:0">Too few drivers for a bottom list.</p>'}</div></div>` : '<p class="hint-line" style="margin:0">No ranked driver in these dates.</p>')
+      + few + `</div>`;
+  }).join('') || '<div class="empty">No counted trips in these dates.</div>';
 }
 /* Monthly trip targets (MANU 2026-10-14 "add 7"): Admin sets a trip target per account per month (TARGETS tab);
    the Dashboard shows trips so far (counted like the Account summary, round trips 0.5 per leg), % of target and
@@ -5421,7 +5557,7 @@ function initDispatcher(){
     const idle = e.target.closest('[data-idle]');
     if(idle){ if(may('dispatchAdd')) openDispatchAdd(idle.dataset.idle); return; }
     const c = e.target.closest('[data-key]'); if(!c) return;
-    const t = S.xTrips.find(x => x.key===c.dataset.key); if(!t) return;
+    const t = S.xTrips.find(x => x.key===c.dataset.key) || (S.xCtx || []).find(x => x.key===c.dataset.key); if(!t) return;   // + preloaded trips dated ahead
     const view = !may('dispatch');   // POD (MANU 2026-11-04 "add POD access to truckplan as viewer") and PAYROLL (MANU 2026-11-07): open the trip to read, nothing else
     const nb = e.target.closest('[data-next]');
     if(nb && !view && !doneLocked(t)) return quickNext(t, nb.dataset.next);
@@ -5660,6 +5796,31 @@ function latestTrips(list){
     if(!b || rowNewer(t, b)) best[u] = t; });
   return list.filter(t => Object.values(best).includes(t));
 }
+/**
+ * Preloaded trips (MANU 2026-11-07 "preloaded trips on saturday that will be delivered on monday so it is dated on monday"):
+ * a truck loaded today for a later delivery has its trip row dated the delivery day. aheadPick gives, per truck, its trip dated
+ * after `after` (up to AHEAD_DAYS later): a started one (loading, on the road, garage loaded) first, then the earliest date.
+ * Truck Plan (screen) and its Generate report both use it, so both show the same preloaded trucks. Trip counts are unchanged:
+ * the trip still counts on its own date.
+ */
+const AHEAD_DAYS = 3;
+const aheadStarted = t => isGarageLoaded(t) || (STAGES.includes(stageOf(t)) && stageOf(t) !== 'Planned');
+function aheadPick(list, after){
+  const out = {}, last = addDays(after, AHEAD_DAYS);
+  (list || []).forEach(t => {
+    if(!(t.date > after && t.date <= last) || (!isActiveRow(t) && !isHoldRow(t))) return;
+    const k = String(t.truckNo || '').trim().toUpperCase(); if(!k) return;
+    const b = out[k];
+    if(!b || (aheadStarted(t) !== aheadStarted(b) ? aheadStarted(t) : t.date !== b.date ? t.date < b.date : rowNewer(t, b))) out[k] = t;
+  });
+  return out;
+}
+/** "PRELOADED · for Mon, Nov 9" (started) or "DATED AHEAD · Mon, Nov 9" (not started yet). */
+function aheadText(t){
+  const [y, m, d] = String(t.date).split('-').map(Number);
+  const day = new Date(y, m - 1, d).toLocaleDateString('en-PH', {weekday:'short', month:'short', day:'numeric'});
+  return aheadStarted(t) ? 'PRELOADED · for ' + day : 'DATED AHEAD · ' + day;
+}
 function renderAccountBoard(acc, d, trucks){
   const pool = xRange()[0] !== xRange()[1] ? latestTrips(S.xTrips) : S.xTrips;   // a date range: each truck's latest trip (MANU)
   $('xBoardPanel').hidden = !acc;
@@ -5673,6 +5834,8 @@ function renderAccountBoard(acc, d, trucks){
     const t = mine.reduce((b, x) => !b || rowNewer(x, b) ? x : b, null);
     const hold = holdOf(a.plateNo || plateFor(no));
     if(!t && hold) return {sort: 10, html: `<div class="xcard idle mnt" style="--c:#DC2626"><div class="top"><b>${esc(no)}</b><span class="tag-repair">UNDER MAINTENANCE</span></div><small>${esc(repairText(hold))}</small><small>${esc(a.driver || 'No driver')}</small><small>${esc(sinceText((S.boot.lastTrip||{})[no] || ''))}</small></div>`};
+    const ah = !t && !hold && xRange()[1] >= TODAY() ? aheadPick((S.xCtx || []).filter(x => String(x.truckNo).trim()===no), xRange()[1])[no.toUpperCase()] : null;
+    if(ah && !DONE_ST.includes(stageOf(ah))) return {sort: 8, html: `<button class="xcard" type="button" data-key="${esc(ah.key)}" style="--c:#7C3AED"><div class="top"><b>${esc(no)}</b><span class="pill" style="--c:${colorOf(isGarageLoaded(ah) ? 'Garage loaded' : stageOf(ah))}">${esc(statusText(ah))}</span></div><span class="tag-ahead">${esc(aheadText(ah))}</span><small>${esc(ah.customer)} → ${esc(ah.destination || '—')}</small><small>${esc(ah.driver || a.driver || 'No driver')}</small></button>`};
     if(!t) return {sort: 9, html: `<div class="xcard idle${may('dispatchAdd') ? ' rowbtn' : ''}" data-idle="${esc(no)}" ${may('dispatchAdd') ? 'title="Add a trip for this truck" role="button" tabindex="0"' : ''}><div class="top"><b>${esc(no)}</b><span class="dim">${esc(a.plateNo || plateFor(no))}</span></div><span>${xRange()[0]===xRange()[1] ? 'No trip on this date' : 'No trip in these dates'}</span><small>${esc(a.driver || 'No driver')}</small><small>${esc(sinceText((S.boot.lastTrip||{})[no] || ''))}</small></div>`};
     const st = stageOf(t), x = lastTime(t), dt = x ? toDate(x.v) : null;
     if(isGarageLoaded(t)) return {sort: STAGES.length, html: `<button class="xcard" type="button" data-key="${esc(t.key)}" style="--c:${colorOf('Garage loaded')}"><div class="top"><b>${esc(no)}</b><span class="pill" style="--c:${colorOf('Garage loaded')}">${esc(statusText(t))}</span></div><small>${esc([t.customer, t.destination].filter(Boolean).join(' → ') || fmtDay(t.date))}</small><small>${esc(a.driver || t.driver || 'No driver')}</small></button>`};
@@ -5934,15 +6097,16 @@ function openTruckPlanReport(){
   $('repGo').onclick = () => {
     const acc = $('repAcct').value, today = TODAY(), from = addDays(today, -(REP_LOOKBACK - 1));
     $('repGo').disabled = true; $('repGo').textContent = 'Getting the latest trips…';
-    Promise.all([S.assign[today] ? Promise.resolve(S.assign[today]) : call('getAssignments', today).then(l => (S.assign[today] = l)), fetchTrips(from, addDays(today, 1))])   // + tomorrow: Clip Board trips are entered a day ahead (MANU)
+    Promise.all([S.assign[today] ? Promise.resolve(S.assign[today]) : call('getAssignments', today).then(l => (S.assign[today] = l)), fetchTrips(from, addDays(today, AHEAD_DAYS))])   // + the next days: Clip Board trips are entered a day ahead (MANU), preloaded trips are dated the delivery day (MANU 2026-11-07)
       .then(([assign, trips]) => {
         $('repGo').disabled = false; $('repGo').textContent = 'Generate';
         const rows = truckPlanReportRows(acc, assign, trips);
         if(!rows.length) return toast('No trucks are assigned to this account.', true);
-        const cols = [{label:'Trip date', w:110}, {label:'Truck', w:70, bold:true}, {label:'Plate', w:110}, {label:'Customer', w:230},
+        const cols = [{label:'Trip date', w:150}, {label:'Truck', w:70, bold:true}, {label:'Plate', w:110}, {label:'Customer', w:230},
           {label:'Destination', w:260}, {label:'Status', w:160, pill:true}, {label:'Waiting for', w:200, wcolor:true}, {label:'Timelapse', w:110, wcolor:true}];
         const name = acc ? titleCase(acc) : 'All accounts';
-        const chips = TP_GROUPS.map(g => ({label: g.label, n: rows.filter(r => r._grp===g.key).length, color: g.color}));
+        const chips = TP_GROUPS.map(g => ({label: g.label, n: rows.filter(r => r._grp===g.key).length, color: g.color}))
+          .concat([{label: 'Preloaded / dated ahead', n: rows.filter(r => r._ahead).length, color: '#7C3AED'}]);
         repShow('Truck Plan report', repFile('Truck Plan', name, 'jpg'),
           repCanvas(`${name} · latest status of trucks`, [`${rows.length} truck${rows.length===1?'':'s'} assigned · each truck's most recent trip`], cols, truckPlanLayout(rows, acc),
             {chips, foot: `${rows.length} truck${rows.length===1?'':'s'}`}));
@@ -5957,8 +6121,9 @@ function truckPlanReportRows(acc, assign, trips){
   const newer = (p, q) => rowNewer(q, p) ? q : p;
   // trips dated tomorrow count in any status (MANU): a started one is the truck's latest; one still at Clip Board shows only
   // when the truck has no open trip now (so a truck unloading today keeps that status)
-  const today = TODAY(), cur = {}, next = {}, latest = {};
-  trips.forEach(t => { if(!isActiveRow(t) && !isHoldRow(t)) return; const k = tkey(t.truckNo); if(!k) return; const m = t.date > today ? next : cur; m[k] = m[k] ? newer(m[k], t) : t; });
+  const today = TODAY(), cur = {}, latest = {};
+  trips.forEach(t => { if(!isActiveRow(t) && !isHoldRow(t)) return; const k = tkey(t.truckNo); if(!k || t.date > today) return; cur[k] = cur[k] ? newer(cur[k], t) : t; });
+  const next = aheadPick(trips, today);   // dated after today (preloaded for a later delivery, or a Clip Board trip): MANU 2026-11-07
   new Set([...Object.keys(cur), ...Object.keys(next)]).forEach(k => {
     const c = cur[k], n = next[k];
     latest[k] = n && (stageOf(n) !== 'Planned' || !c || DONE_ST.includes(stageOf(c))) ? n : (c || n);
@@ -5985,11 +6150,13 @@ function truckPlanReportRows(acc, assign, trips){
     const open = t && !DONE_ST.includes(st);
     // completed trips are not shown (MANU 17:55): the truck shows its last trip date and WAITING FOR SHIPMENT only
     const mnt = wait === 'UNDER MAINTENANCE';
-    const r = [t ? fmtDay(t.date) : (lt ? fmtDay(lt) : '—'), no, a.plateNo || plateFor(no), open ? t.customer : '', open ? (t.destination || '') : mnt ? `${hold.jo} · ${joClassText(hold)}${hold.category ? ' · ' + hold.category : ''}` : (t || lt ? '' : 'No trip on record'),
+    const ahead = !!t && t.date > today;   // preloaded / dated ahead: the trip date says so, so nobody takes it for today's work
+    const r = [t ? fmtDay(t.date) + (ahead ? '\n' + aheadText(t) : '') : (lt ? fmtDay(lt) : '—'), no, a.plateNo || plateFor(no), open ? t.customer : '', open ? (t.destination || '') : mnt ? `${hold.jo} · ${joClassText(hold)}${hold.category ? ' · ' + hold.category : ''}` : (t || lt ? '' : 'No trip on record'),
       open ? statusText(t) : mnt ? 'Job order ' + String(hold.status || 'open').toLowerCase() : t ? 'No open trip' : 'No recent trip', wait, since];
     r._color = cssColor(colorOf(open ? st : 'Not on trip'));   // Garage loaded: its own color (st = 'Garage loaded')
     r._wcolor = mnt ? '#B91C1C' : wait === 'WAITING FOR SHIPMENT' ? '#B45309' : wait ? '#0F766E' : '';
     r._wait = wait ? ms : -1;
+    r._ahead = ahead && (open || hd);
     r._sec = acctSec(a.account);
     r._grp = gl ? 'garage' : hd ? hgrp : open ? (TP_GROUPS.find(g => g.stages.includes(st)) || {}).key || 'road' : mnt ? 'mnt' : 'ship';
     r._st = gl || hd ? STAGES.length : open ? STAGES.indexOf(st) : 99;
@@ -6156,8 +6323,7 @@ function renderDispatcher(){
   if(latestOnly){
     latestTrips(S.xTrips).forEach(t => { latestKey[t.key] = 1; });
   }
-  const list = S.xTrips.filter(t => {
-    if(latestOnly && !latestKey[t.key]) return false;
+  const keepRow = t => {
     if(accTrucks && !accTrucks.includes(String(t.truckNo).trim())) return false;
     const st = stageOf(t);
     if(f==='open' && (!isTrip(t) || DONE_ST.includes(st))) return false;
@@ -6165,7 +6331,16 @@ function renderDispatcher(){
     if((f==='Planned'||f==='Completed') && st!==f) return false;
     if(f==='other' && st!=='Not on trip' && st!=='No trip') return false;
     return !q || [t.truckNo,t.plateNo,t.customer,t.destination,t.driver,t.helper1,t.helper2,t.shipmentNo].join(' ').toLowerCase().includes(q);
-  });
+  };
+  const list = S.xTrips.filter(t => (!latestOnly || latestKey[t.key]) && keepRow(t));
+  // Preloaded / dated ahead (MANU 2026-11-07): when the To date is today or later, each truck's trip dated in the next days
+  // (aheadPick, the same pick as Generate report) shows in its own section; a not-started one only when the truck has no open trip.
+  const xEnd = xRange()[1], tk = t => String(t.truckNo || '').trim().toUpperCase();
+  const openNow = new Set((S.xCtx || S.xTrips).filter(t => t.date <= xEnd && (isActiveRow(t) || isHoldRow(t)) && !DONE_ST.includes(stageOf(t))).map(tk));
+  const aheadL = xEnd < TODAY() ? [] : Object.entries(aheadPick(S.xCtx || [], xEnd))
+    .filter(([k, t]) => !DONE_ST.includes(stageOf(t)) && (aheadStarted(t) || !openNow.has(k)) && keepRow(t)).map(([k, t]) => t)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.truckNo).localeCompare(String(b.truckNo), undefined, {numeric:true}));
+  const aheadNos = new Set(aheadL.map(t => String(t.truckNo).trim()));
   // Same source and destination together; inside a route by status (Planned → Completed), then longest waiting first
   // (time since the last milestone time), then truck no. Routes with the earliest status / longest wait come first.
   const now = Date.now();
@@ -6186,7 +6361,7 @@ function renderDispatcher(){
   const tm = v => v ? esc(toDate(v) ? toDate(v).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : v) : '';
   // every truck assigned to an account (or to the picked account) with no trip that day, grouped by account at the end
   const assignedNos = accTrucks || (S.assign[d] || []).filter(a => a.account).map(a => String(a.truckNo));
-  const idleTrucks = (f==='all' || f==='latest' || f==='other') ? assignedNos.filter(no => !S.xTrips.some(t => String(t.truckNo).trim()===no))
+  const idleTrucks = (f==='all' || f==='latest' || f==='other') ? assignedNos.filter(no => !aheadNos.has(no) && !S.xTrips.some(t => String(t.truckNo).trim()===no))
     .map(no => { const a = (S.assign[d] || []).find(x => String(x.truckNo)===no) || {}; return {no, a, rp: holdOf(a.plateNo || plateFor(no))}; })
     .filter(({no, a}) => !q || [no, a.plateNo, a.driver, a.helper1, a.helper2].join(' ').toLowerCase().includes(q)) : [];
     idleTrucks.sort((x,y) => secRank(x.a.account||'') - secRank(y.a.account||'') || (x.rp ? 1 : 0) - (y.rp ? 1 : 0) || x.no.localeCompare(y.no,undefined,{numeric:true}));
@@ -6196,7 +6371,7 @@ function renderDispatcher(){
   const idleRow = ({no, a}, n) => `<tr class="idle${may('dispatchAdd') ? ' rowbtn' : ''}" data-idle="${esc(no)}" ${may('dispatchAdd') ? 'title="Add a trip for this truck"' : ''} style="--c:#94A3B8"><td class="nx">${may('dispatchAdd') ? '<button class="nextbtn add" type="button">＋ Add trip</button>' : ''}</td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td class="dim">${xRange()[0]===xRange()[1] ? 'No trip on this date' : 'No trip in these dates'}</td><td class="dim">${esc(sinceText((S.boot.lastTrip || {})[no] || ''))}${may('dispatchAdd') ? ' · <b>tap to add a trip</b>' : ''}</td><td colspan="5"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Waiting shipment</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}<td></td></tr>`;
   const idleBlock = (items, start) => items.map((x, i) => (i===0 || (items[i-1].a.account||'') !== (x.a.account||'') || !!items[i-1].rp !== !!x.rp ? idleHead(x.a.account, items.filter(y => (y.a.account||'')===(x.a.account||'') && !!y.rp === !!x.rp).length, !!x.rp) : '') + (x.rp ? mntRow(x, start + i + 1) : idleRow(x, start + i + 1))).join('');
   const tripRow = (t, i) => { const st = stageOf(t), rp = repairOf(t.plateNo);
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="n" data-f="manoAmt" title="MANO given out for this trip (Disbursement, purpose MANO)">${t.manoAmt ? esc(pesoTxt(t.manoAmt)) : ''}</td><td class="ed" data-f="driver">${pLink(t.driver)}${RF[t.key] ? ` <span class="tag-rest" title="${esc(RF[t.key])}">⚠ rest</span>` : ''}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}<td class="ed xrem" data-f="remarks">${esc(t.remarks || '')}</td></tr>`; };   // Remarks last (MANU 2026-11-04 "in truckplan, add remarks at the last column")
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}${t.date > xEnd ? ` <span class="tag-ahead">${esc(aheadText(t))}</span>` : ''}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="n" data-f="manoAmt" title="MANO given out for this trip (Disbursement, purpose MANO)">${t.manoAmt ? esc(pesoTxt(t.manoAmt)) : ''}</td><td class="ed" data-f="driver">${pLink(t.driver)}${RF[t.key] ? ` <span class="tag-rest" title="${esc(RF[t.key])}">⚠ rest</span>` : ''}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}<td class="ed xrem" data-f="remarks">${esc(t.remarks || '')}</td></tr>`; };   // Remarks last (MANU 2026-11-04 "in truckplan, add remarks at the last column")
   const accHead = (a, nt, ni, nm) => `<tr class="acchd"><td colspan="${17 + MS_KEYS.length}"><div><b>${esc(a ? titleCase(a) : 'Not counted in an account')}</b> <span>· ${tripsTxt(nt)}${ni ? ` · ${ni} waiting shipment` : ''}${nm ? ` · ${nm} under maintenance` : ''}</span></div></td></tr>`;
   const restHead = (cls, label, k, note) => `<tr class="${cls}"><td colspan="${17 + MS_KEYS.length}"><div><b>${label}</b> <span>· ${k} row${k===1?'':'s'} · ${note}</span></div></td></tr>`;
   let body = '', n = 0;
@@ -6206,9 +6381,10 @@ function renderDispatcher(){
     if(!ts.length && !is.length) return;
     body += accHead(sec, xw(ts), is.filter(x => !x.rp).length, is.filter(x => x.rp).length) + ts.map(t => tripRow(t, n++)).join('') + idleBlock(is, n); n += is.length;
   });
+  if(aheadL.length) body += restHead('acchd aheadhd', 'PRELOADED / DATED AHEAD', aheadL.length, `trips dated after ${fmtDay(xEnd)}, loaded or planned already; they count on their own date`) + aheadL.map(t => tripRow(t, n++)).join('');
   if(garL.length) body += restHead('acchd garhd', 'GARAGE', garL.length, 'every garage status, all accounts, not counted as trips; garage loaded stays on its route') + garL.map(t => tripRow(t, n++)).join('');
   if(notL.length) body += restHead('acchd nothd', 'NOT A TRIP', notL.length, 'no-trip reasons and other statuses, not counted as trips') + notL.map(t => tripRow(t, n++)).join('');
-  $('xList').innerHTML = list.length || idleTrucks.length ? `<div class="xl-wrap"><table class="xl" data-fz="0,1,2,3,4,5,6" data-fzp="0,3"><thead><tr><th>Next step</th><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>${esc(acctSec($('xAcct').value)===2 ? 'DTTR' : acctSec($('xAcct').value) >= 0 ? 'Shipment no.' : 'Shipment no. / DTTR')}</th><th class="n">KMS</th><th class="n">Fuel (L)</th><th class="n">Budget</th><th class="n">MANO</th><th>Driver</th><th>Helper</th><th>Helper 2</th><th>Status</th>${MS_KEYS.map(k => `<th>${esc(MS_LABEL[k])}</th>`).join('')}<th>Remarks</th></tr></thead><tbody>${
+  $('xList').innerHTML = list.length || idleTrucks.length || aheadL.length ? `<div class="xl-wrap"><table class="xl" data-fz="0,1,2,3,4,5,6" data-fzp="0,3"><thead><tr><th>Next step</th><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>${esc(acctSec($('xAcct').value)===2 ? 'DTTR' : acctSec($('xAcct').value) >= 0 ? 'Shipment no.' : 'Shipment no. / DTTR')}</th><th class="n">KMS</th><th class="n">Fuel (L)</th><th class="n">Budget</th><th class="n">MANO</th><th>Driver</th><th>Helper</th><th>Helper 2</th><th>Status</th>${MS_KEYS.map(k => `<th>${esc(MS_LABEL[k])}</th>`).join('')}<th>Remarks</th></tr></thead><tbody>${
     body}</tbody></table></div>` : `<div class="empty">Nothing to encode for ${esc(xRangeText())} with this filter.</div>`;
   freezeCols($('xList'));
 }
