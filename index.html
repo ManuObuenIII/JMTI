@@ -4321,7 +4321,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.47, APP_VERSION_DATE = '2026-11-08';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.48, APP_VERSION_DATE = '2026-11-08';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4361,6 +4361,9 @@ const APP_CHANGES = [
   // MANU 2026-11-08 15:34 UTC "add escalation button at the bottom of the add trip" (14.4.5), then 15:42 "not on the add trip button": only in Truck Plan
   // MANU 2026-11-08 15:42 UTC "i want the button at the bottom of the first column together in one cell with the next step button": 14.4.6
   // MANU 2026-11-08 15:43 UTC "show here who are online" (the My day row at the top of the chat): 14.4.7
+  // MANU 2026-11-08 15:51 UTC "the update system did not work": next free number after 14.4.7
+  {v:14.48, d:'2026-11-08', items:[
+    'Update system now checks the newest version on the GitHub app too. It says which copy you are on (GitHub app or Apps Script page) and only says "updated" when that copy really is the newest. Otherwise it says what is behind and what to do (try again, or Admin pastes the files and deploys a New version).']},
   {v:14.47, d:'2026-11-08', items:[
     'Chat: the My day row at the top now also shows who is online right now, with a green dot, right after your own picture. People with a new My day come first. Tap someone online to send them a message, or tap a ring to watch their My day.'
   ]},
@@ -4548,20 +4551,36 @@ function updSystem(){
   updBox(`<div class="upd-big ${pageOld ? 'warn' : ''}">${pageOld ? '!' : '⟳'}</div>
     <h3>Update the system</h3>
     <p>${pageOld ? `A newer version (<b>${esc(vName(sv))}</b>) is out. This phone or PC has version <b>${esc(vName(APP_VERSION))}</b>.` : `This phone or PC has version <b>${esc(vName(APP_VERSION))}</b>. Update to make sure you have the newest one.`}</p>
-    <p class="upd-note">It takes less than a minute. Only this phone or PC is updated: everyone else keeps working. ${waiting ? `Your ${waiting} change${waiting === 1 ? '' : 's'} waiting for signal stay${waiting === 1 ? 's' : ''} saved.` : ''} Anything typed but not yet saved will be lost, so save first.</p>
+    <p class="upd-note">You are on ${updCopy()}. It takes less than a minute. Only this phone or PC is updated: everyone else keeps working. ${waiting ? `Your ${waiting} change${waiting === 1 ? '' : 's'} waiting for signal stay${waiting === 1 ? 's' : ''} saved.` : ''} Anything typed but not yet saved will be lost, so save first.</p>
     ${t.bad && !pageOld ? `<p class="upd-note">${esc(t.long)}</p>` : ''}
     <div class="vup-btns"><button type="button" class="vup-go" id="updGo" style="background:#2E5BFF">Update now</button><button type="button" class="vup-later" id="updNo">Not now</button></div>`);
   $('updGo').onclick = updRun;
   $('updNo').onclick = updHide;
 }
+/* MANU 2026-11-08 "the update system did not work, i updated the system but after updating it is still 14.4.1": the screen said
+   "updated" whenever the server had the same number, even when a newer version was out on the GitHub app (Apps Script copy not
+   pasted yet, or GitHub still handing out the old page). Now it also reads the version on the app site (GitHub, fresh, never a kept
+   copy), says which copy is open (GitHub app or Apps Script page), and only says "updated" when this copy really is the newest. */
+const UPD_SITE = 'https://manuobueniii.github.io/JMTI/';
+async function updSiteVer(){
+  try {
+    const u = (vupGit() ? location.pathname : UPD_SITE) + '?check=' + Date.now();
+    const res = await updTimeout(fetch(u, {cache: 'no-store'}), 15000);
+    if(!res.ok) return null;
+    const m = /const APP_VERSION = ([\d.]+),/.exec(await res.text()); return m ? Number(m[1]) : null;
+  } catch(e){ return null; }
+}
+const updCopy = () => vupGit() ? 'the GitHub app' : 'the Apps Script page';
 async function updRun(){
   const notes = {}, git = vupGit();
-  const show = at => updBox(`<div class="upd-big run"></div><h3>Updating the system…</h3><p class="upd-note">Please wait and keep the app open.</p>${updStepsHtml(at, notes)}`);
-  // 1. newest version
+  const show = at => updBox(`<div class="upd-big run"></div><h3>Updating the system…</h3><p class="upd-note">Please wait and keep the app open. Updating ${updCopy()}.</p>${updStepsHtml(at, notes)}`);
+  // 1. newest version: the server's and the app site's
   show(0);
   let sv = VER.server;
-  try { const r = await updTimeout(callServer('appVersion'), 15000); sv = Number(r && r.version) || 0; VER.server = sv; } catch(e){}
-  notes[0] = typeof sv === 'number' && sv ? 'Newest version: ' + vName(sv) : 'Server not reached, using what the app site has';
+  const [r, site] = await Promise.all([updTimeout(callServer('appVersion'), 15000).catch(() => undefined), updSiteVer()]);
+  if(r !== undefined){ sv = Number(r && r.version) || 0; VER.server = sv; }
+  const newest = Math.max(typeof sv === 'number' ? sv : 0, site || 0, APP_VERSION);
+  notes[0] = 'Newest version: ' + vName(newest) + (site ? ` (app site ${vName(site)}, server ${typeof sv === 'number' && sv ? vName(sv) : 'not reached'})` : '');
   if(!git && !VER.url){ try { VER.url = await updTimeout(callServer('getAppUrl'), 10000) || ''; } catch(e){} }
   await updWait(400);
   // 2. saved work: send what waits for signal; what cannot be sent stays on the phone (kept through the update)
@@ -4580,20 +4599,17 @@ async function updRun(){
     notes[2] = 'Old copy removed';
   } else notes[2] = 'Nothing kept on this device';
   await updWait(400);
-  // 4. new version: on the GitHub app, fetch the page fresh from the app site and read its version number
+  // 4. new version: on the GitHub app the page is fetched fresh (this also refreshes the browser's own copy)
   show(3);
   let got = null;
   if(git){
-    try {
-      const res = await updTimeout(fetch(location.pathname + '?check=' + Date.now(), {cache: 'reload'}), 20000);
-      const m = /const APP_VERSION = ([\d.]+),/.exec(await res.text()); got = m ? Number(m[1]) : null;
-    } catch(e){}
+    try { const res = await updTimeout(fetch(location.pathname, {cache: 'reload'}), 20000); const m = /const APP_VERSION = ([\d.]+),/.exec(await res.text()); got = m ? Number(m[1]) : null; } catch(e){}
     notes[3] = got ? 'Version ' + vName(got) + ' downloaded' : 'Will load on restart';
   } else notes[3] = 'Loads from the server on restart';
   await updWait(400);
-  // 5. restart; the next open shows "Update finished"
+  // 5. restart; the next open checks what it got and shows the result
   show(4);
-  vupSet(UPD_KEY, {from: APP_VERSION, got, sv, at: Date.now()});
+  vupSet(UPD_KEY, {from: APP_VERSION, got, sv, site, at: Date.now()});
   const t = vupGet(VUP_TRY); vupSet(VUP_TRY, {sv, n: (t && t.sv === sv ? t.n : 0) + 1, at: Date.now()});
   await updWait(600);
   if(!git){
@@ -4602,31 +4618,50 @@ async function updRun(){
   }
   location.replace(location.pathname + '?fresh=' + Date.now() + location.hash);
 }
-/** After the restart: "Update finished" with the version, what is new, and a button back into the app. */
+/** After the restart: the result. "Updated" only when this copy is the newest out; otherwise it says plainly what is behind. */
 function updDone(){
   const u = vupGet(UPD_KEY);
   if(!u || !(Date.now() - (u.at || 0) < 5 * 60000)) return;
   vupSet(UPD_KEY, null);
+  let site = u.site || null;
+  const btn = (id, txt, bg) => `<button type="button" class="${bg ? 'vup-go' : 'vup-later'}" id="${id}"${bg ? ` style="background:${bg}"` : ''}>${txt}</button>`;
+  const deploySteps = `<ol style="text-align:left"><li>Open Apps Script <b>JMTI DASH</b>.</li><li>Paste all of the latest <b>Code.gs</b> and <b>Index.html</b>, then <b>Save</b>.</li><li><b>Deploy &gt; Manage deployments &gt; Edit (pencil) &gt; Version: New version &gt; Deploy</b>.</li></ol>`;
   const paint = () => {
-    const sv = VER.server, behind = typeof sv === 'number' && sv > APP_VERSION;
-    const cur = APP_CHANGES.find(c => c.v === APP_VERSION);
-    const news = cur && !behind ? `<div class="upd-new"><b>New in version ${esc(vName(APP_VERSION))}:</b><ul>${cur.items.slice(0, 4).map(i => `<li>${esc(i)}</li>`).join('')}</ul>${cur.items.length > 4 ? `<a href="#" id="updMore">See all changes</a>` : ''}</div>` : '';
-    updBox(behind
-      ? `<div class="upd-big warn">!</div><h3>Update finished, but still version ${esc(vName(APP_VERSION))}</h3>
-         <p>The server has version <b>${esc(vName(sv))}</b>, but the app site still gives version ${esc(vName(APP_VERSION))}. The new page may not be on the app site yet.</p>
-         <p class="upd-note">You can keep working. Try Update system again in a few minutes, or tell Admin.</p>
-         <div class="vup-btns"><button type="button" class="vup-go" id="updUse" style="background:#2E5BFF">Use the system</button></div>`
-      : `<div class="upd-big ok">✓</div><h3>The system is updated</h3>
-         <p>You are now on <b>version ${esc(vName(APP_VERSION))}</b> (${esc(APP_VERSION_DATE)})${u.from !== APP_VERSION ? `, up from version ${esc(vName(u.from))}` : ''}.</p>
-         ${u.from === APP_VERSION ? '<p class="upd-note">This was already the newest version. The app was refreshed.</p>' : ''}
-         ${news}
-         <div class="vup-btns"><button type="button" class="vup-go" id="updUse" style="background:#15803D">Use the system</button></div>`,
-      behind ? 'warn' : 'ok');
+    const sv = typeof VER.server === 'number' ? VER.server : (typeof u.sv === 'number' ? u.sv : 0);
+    const git = vupGit(), me = APP_VERSION, newest = Math.max(sv || 0, site || 0, me);
+    const cur = APP_CHANGES.find(c => c.v === me);
+    const news = cur ? `<div class="upd-new"><b>New in version ${esc(vName(me))}:</b><ul>${cur.items.slice(0, 4).map(i => `<li>${esc(i)}</li>`).join('')}</ul>${cur.items.length > 4 ? `<a href="#" id="updMore">See all changes</a>` : ''}</div>` : '';
+    const vline = `<p class="upd-note">This is ${updCopy()}: version ${esc(vName(me))}. Server: ${sv ? 'version ' + esc(vName(sv)) : 'not known'}${site ? '. App site: version ' + esc(vName(site)) : ''}.</p>`;
+    let html, cls;
+    if(me < newest && git){
+      // the GitHub app opened an older page than the newest out (GitHub can take a few minutes to hand out a new release)
+      html = `<div class="upd-big warn">!</div><h3>Not updated yet: still version ${esc(vName(me))}</h3>
+        <p>Version <b>${esc(vName(newest))}</b> is out, but this phone or PC still opened version ${esc(vName(me))}. GitHub can take up to 10 minutes to hand out a new release.</p>
+        ${vline}<div class="vup-btns">${btn('updAgain', 'Try again', '#2E5BFF')}${btn('updUse', 'Use the system for now')}</div>`; cls = 'warn';
+    } else if(me < newest){
+      // Apps Script page: it shows what Admin last deployed; a newer version is on the GitHub app only
+      const admin = S.me && S.me.role === 'ADMIN';
+      html = `<div class="upd-big warn">!</div><h3>This copy is still version ${esc(vName(me))}</h3>
+        <p>You are on <b>the Apps Script page</b>. It shows the version Admin last deployed (${esc(vName(me))}). Version <b>${esc(vName(newest))}</b> is out on the GitHub app.</p>
+        ${admin ? `<p><b>To bring this page to ${esc(vName(newest))}:</b></p>${deploySteps}` : '<p>Use the GitHub app for the newest version, or ask Admin to deploy it here.</p>'}
+        ${vline}<div class="vup-btns">${btn('updGh', 'Open the GitHub app', '#2E5BFF')}${btn('updUse', 'Use this copy')}</div>`; cls = 'warn';
+    } else {
+      const srvOld = sv && sv < me;
+      html = `<div class="upd-big ok">✓</div><h3>The system is updated</h3>
+        <p>You are now on <b>version ${esc(vName(me))}</b>${u.from !== me ? `, up from version ${esc(vName(u.from))}` : ''}.</p>
+        ${u.from === me ? '<p class="upd-note">This was already the newest version. The app was refreshed.</p>' : ''}
+        ${srvOld ? `<p class="vup-warn" style="text-align:left">The server is still version ${esc(vName(sv))}, so some new parts may not work yet.${S.me && S.me.role === 'ADMIN' ? ' Admin, to finish:' : ' Tell Admin: "the server needs the New version deploy".'}</p>${S.me && S.me.role === 'ADMIN' ? deploySteps : ''}` : ''}
+        ${news}${vline}<div class="vup-btns">${btn('updUse', 'Use the system', '#15803D')}</div>`; cls = 'ok';
+    }
+    updBox(html, cls);
     $('updUse').onclick = updHide;
+    if($('updAgain')) $('updAgain').onclick = updRun;
+    if($('updGh')) $('updGh').onclick = () => { try { window.open(UPD_SITE + '?fresh=' + Date.now(), '_blank'); } catch(e){} };
     if($('updMore')) $('updMore').onclick = e => { e.preventDefault(); updHide(); vchgShow(); };
   };
   paint();
   updDone.paint = paint;   // redrawn once the server's version is known (verShow)
+  updSiteVer().then(v => { if(v && v !== site){ site = v; const o = $('upd'); if(o && !o.hidden) paint(); } });
 }
 /** Badge and sign-in version line: red because this page is older = update screen; otherwise "What changed". */
 function verTap(){ const sv = VER.server; if(typeof sv === 'number' && sv > APP_VERSION) updSystem(); else vchgShow(); }
