@@ -346,6 +346,10 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 small.ir-newtag{color:#D92D20 !important;font-weight:800}
 .ir-n{display:inline-block;min-width:18px;border-radius:999px;background:#D92D20;color:#fff;font-size:10.5px;padding:1px 5px;margin-left:4px}
 .lw-esc{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+/* escalation issue chips (Truck Plan ESCALATION pop-up) */
+.esc-chips{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:6px}
+.esc-chips button{font:inherit;font-size:12.5px;padding:6px 10px;border-radius:999px;border:1px solid var(--line,#ccd);background:rgba(255,255,255,.8);color:inherit;cursor:pointer}
+.esc-chips button:hover{background:#fff}
 .esc-ask{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}.esc-ask .f{flex:1 1 220px;margin:0}.esc-ask textarea{width:100%;min-height:52px;resize:vertical;font:inherit}
 .mp-ph{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:4px}.mp-ph-pic{width:64px;height:64px;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;background:linear-gradient(145deg,#2E5BFF,#0A27B5);color:#fff;font-weight:800;font-size:20px;box-shadow:0 2px 8px rgba(10,31,143,.25)}
 .mp-ph-pic img{width:100%;height:100%;object-fit:cover;display:block}.mp-ph-pick{cursor:pointer}.mp-ph small{flex:1 1 100%}
@@ -677,6 +681,10 @@ body.viewonly #billBulk, body.viewonly #billCheck, body.viewonly #billSaveBtn, b
 body.viewonly .panel:has(#routeForm), body.viewonly .panel:has(#mpForm), body.viewonly .panel:has(#userForm){display:none !important}
 .nextbtn:hover{background:var(--road,#1D7FB8);color:#fff}
 .nextbtn.add{border-color:#1E7B45;color:#1E7B45}
+/* Truck Plan ESCALATION (14.4.6): under the next step button in the same first cell */
+.nextbtn.escb{display:block;margin-top:3px;border-color:#D92D20;color:#B42318;background:rgba(255,240,240,.9)}
+.nextbtn.escb:hover{background:#D92D20;color:#fff}
+td.nx .nextbtn + .nextbtn.escb{margin-top:3px}
 .nextbtn.add:hover{background:#1E7B45;color:#fff}
 .bulkbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#F2F9FE;border:1px solid #CFE6F5;border-radius:10px;padding:10px 12px;margin:0 0 12px}
 .bulkbar span{font-size:13px;color:var(--ink)}
@@ -1095,14 +1103,13 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .ch-typing .dots i:nth-child(2){animation-delay:.2s}.ch-typing .dots i:nth-child(3){animation-delay:.4s}
 @keyframes chdot{0%,60%,100%{opacity:.45;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 
-/* Floating chat button (MANU 2026-10-14 "dont make chatroom fixed, add this button at the bottom right, make it movable"): bottom right
-   at first, drag it anywhere; tap opens the chat. On wide screens the chat opens as a window next to it; on phones as a pop-up. */
+/* Floating chat button (MANU 2026-10-14 "dont make chatroom fixed, add this button at the bottom right, make it movable"): bottom right;
+   not movable since 2026-11-08 (MANU "make that chat icon not movable"); tap opens the chat. On wide screens the chat opens as a window next to it; on phones as a pop-up. */
 .chat-fab{position:fixed;right:18px;bottom:18px;z-index:36;width:58px;height:58px;border-radius:50%;border:0;padding:0;background:#1F6FE5;
-  box-shadow:0 6px 18px rgba(2,8,40,.38),inset 0 -3px 0 rgba(0,0,0,.14);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;transition:transform .12s,box-shadow .12s}
+  box-shadow:0 6px 18px rgba(2,8,40,.38),inset 0 -3px 0 rgba(0,0,0,.14);cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;transition:transform .12s,box-shadow .12s}
 .chat-fab[hidden]{display:none}
 .chat-fab svg{width:58px;height:58px;display:block;pointer-events:none}
 .chat-fab:active{transform:scale(.95)}
-.chat-fab.drag{cursor:grabbing;transform:scale(1.08);box-shadow:0 14px 30px rgba(2,8,40,.45);transition:none}
 .chat-fab .fab-n{position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#DC2626;color:#fff;font-size:12px;font-weight:800;line-height:22px;text-align:center;box-shadow:0 0 0 2px #fff;pointer-events:none}
 .chat-fab.ring{animation:fabring 1.2s ease-in-out 4}
 @keyframes fabring{0%,100%{transform:scale(1)}15%{transform:scale(1.14) rotate(-8deg)}30%{transform:scale(1.08) rotate(7deg)}45%{transform:scale(1.1) rotate(-4deg)}60%{transform:scale(1)}}
@@ -2113,6 +2120,82 @@ body.vg-on{overflow:hidden}
 .drk-bad{color:#C0262D;font-weight:700}
 .drk-few{font-size:11.5px;color:var(--muted);margin:6px 0 0}
 @media (max-width:900px){ .drk-two{grid-template-columns:1fr} }
+/* My day (MANU 2026-11-08): rings, the row at the top of the chat, the full-screen viewer and the Add to my day screen */
+.md-ring{position:relative}
+.ms-avw.md-ring>.ms-av,.md-avw.md-ring>.ms-av{box-shadow:0 0 0 2px #fff,0 0 0 4.5px #1877F2}
+.ms-avw.md-ring.seen>.ms-av,.md-avw.md-ring.seen>.ms-av{box-shadow:0 0 0 2px #fff,0 0 0 4px #B0B3B8}
+.ms-avw.md-ring,.md-avw{cursor:pointer}
+.me-av.md-ring{box-shadow:0 0 0 2px #fff,0 0 0 4.5px #1877F2}
+.chat-fab.md-new::before{content:"";position:absolute;inset:-5px;border-radius:50%;border:3px solid #1877F2;box-shadow:0 0 0 2px #fff;pointer-events:none;animation:mdPulse 2.4s ease-in-out infinite}
+@keyframes mdPulse{50%{transform:scale(1.06);opacity:.75}}
+.md-strip{display:flex;gap:6px;overflow-x:auto;padding:4px 10px 8px;scrollbar-width:none}
+.md-strip::-webkit-scrollbar{display:none}
+.md-cell{flex:none;width:78px;display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:transparent;padding:4px 0;cursor:pointer;font:inherit;color:#050505}
+.md-cell small{font-size:11px;line-height:1.2;text-align:center;white-space:normal;word-break:normal;overflow-wrap:anywhere;max-width:100%}
+.md-avw{position:relative;display:inline-block;border-radius:50%}
+.md-cell .ms-av{width:54px;height:54px;font-size:17px}
+.md-avw.add .ms-av{opacity:.85}
+.md-avw.on::after{content:"";position:absolute;right:0;bottom:0;width:15px;height:15px;border-radius:50%;background:#31A24C;border:3px solid #fff;z-index:1}
+.md-plus{position:absolute;right:-3px;bottom:-2px;width:20px;height:20px;border-radius:50%;background:#1877F2;color:#fff;font-style:normal;font-weight:800;font-size:15px;line-height:18px;text-align:center;border:2px solid #fff}
+body.md-lock{overflow:hidden}
+.md-view{position:fixed;inset:0;z-index:300;background:#111;color:#fff;display:flex;flex-direction:column;max-width:560px;margin:0 auto;box-shadow:0 0 0 100vmax rgba(0,0,0,.88);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.md-bars{display:flex;gap:4px;padding:10px 10px 0}
+.md-bar{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.35);overflow:hidden}
+.md-bar i{display:block;height:100%;background:#fff}
+.md-head{display:flex;align-items:center;gap:10px;padding:10px 10px 8px}
+.md-head .ms-av{width:36px;height:36px}
+.md-who{flex:1;min-width:0;display:flex;flex-direction:column}
+.md-who b{font-size:15px}
+.md-who small{font-size:12px;opacity:.85}
+.md-ib,.md-x{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:18px;cursor:pointer;display:grid;place-items:center;padding:0}
+.md-ib svg,.md-x svg{width:20px;height:20px;fill:#fff;stroke:#fff}
+.md-stage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:12px;margin:0 6px}
+.md-stage img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.md-txt{position:relative;z-index:1;max-width:88%;text-align:center;font-size:26px;font-weight:800;line-height:1.3;white-space:pre-wrap;word-break:break-word;text-shadow:0 2px 6px rgba(0,0,0,.35);pointer-events:none}
+.md-txt.ph{position:absolute;left:6%;right:6%;bottom:8%;max-width:none;font-size:19px;font-weight:700;background:rgba(0,0,0,.45);border-radius:12px;padding:10px 12px}
+.md-txt.dim{opacity:.55}
+.md-load{font-size:14px;opacity:.8}
+.md-tap{position:absolute;top:0;bottom:0;width:38%;border:0;background:transparent;cursor:pointer;z-index:2;padding:0}
+.md-tap.l{left:0}.md-tap.r{right:0;width:62%}
+.md-foot{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:10px 10px calc(12px + env(safe-area-inset-bottom))}
+.md-foot .btn{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.3)}
+.md-top{display:flex;align-items:center;gap:10px;padding:10px}
+.md-top b{flex:1;font-size:16px}
+.md-new .md-stage{flex:1 1 auto;min-height:180px}
+.md-tools{padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;background:#1b1b1f;max-height:52vh;overflow-y:auto}
+.md-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.md-tools .btn.alt{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.3)}
+.md-bgs{display:flex;gap:6px;flex-wrap:wrap}
+.md-bg{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.5);cursor:pointer;padding:0}
+.md-bg[aria-pressed="true"]{border-color:#fff;box-shadow:0 0 0 2px #1877F2}
+.md-tools textarea{width:100%;box-sizing:border-box;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;padding:8px 10px;font:inherit;font-size:16px;resize:none}
+.md-mus b{font-size:13px}
+.md-tunes{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.md-tune{border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;border-radius:18px;padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+.md-tune[aria-pressed="true"]{background:#1877F2;border-color:#1877F2}
+.md-song{margin-top:6px;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.md-song input[type=range]{vertical-align:middle;width:55%}
+.md-note{font-size:12px;opacity:.75}
+.md-sheet .ch-sheet{z-index:310}
+.md-sheet{z-index:310!important}
+.md-vlist{max-height:55vh;overflow-y:auto;padding:4px 8px 10px}
+.pf-md{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 2px}
+body.md-lock #toast{z-index:320}
+/* Sign-in quote card (MANU 2026-11-08) */
+.qpop{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,10,53,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:qpIn .28s ease-out}
+.qpop[hidden]{display:none}
+.qpop.out{opacity:0;transition:opacity .2s}
+.qp-card{position:relative;max-width:420px;width:100%;padding:26px 24px 20px;border-radius:22px;text-align:center;color:#fff;background:linear-gradient(150deg,rgba(46,91,255,.55),rgba(10,39,181,.62) 55%,rgba(2,10,53,.72));border:1px solid rgba(255,255,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 24px 60px -18px rgba(2,10,53,.75);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);animation:qpPop .34s cubic-bezier(.2,1.3,.4,1)}
+.qp-mark{font:700 64px/0.6 Georgia,serif;color:rgba(255,255,255,.35);height:30px}
+.qp-hi{display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#C9D6FF;margin:4px 0 10px}
+.qp-card p{margin:0 0 12px;font-size:19px;line-height:1.45;font-weight:600;overflow-wrap:anywhere}
+.qp-by{display:block;font-size:13.5px;color:#DCE5FF;margin-bottom:18px}
+.qp-by::before{content:"\2014\00a0"}
+.qp-card .qp-ok{min-width:140px;background:#fff;color:#0A1F8F;border:0;font-weight:700;border-radius:999px;padding:10px 22px}
+@keyframes qpIn{from{opacity:0}to{opacity:1}}
+@keyframes qpPop{from{opacity:0;transform:translateY(14px) scale(.94)}to{opacity:1;transform:none}}
+@media (max-width:480px){.qp-card{padding:22px 18px 18px}.qp-card p{font-size:17px}}
+@media (prefers-reduced-motion:reduce){.qpop,.qp-card{animation:none}}
 </style>
 </head>
 <body>
@@ -2839,7 +2922,7 @@ body.vg-on{overflow:hidden}
   <div class="sh-head"><b>Shift endorsement</b><button class="icon-btn" type="button" id="shClose" aria-label="Close">✕</button></div>
   <div class="sh-body" id="shBody"><div class="empty">Loading…</div></div>
 </aside>
-<button class="chat-fab" id="chatBtn" type="button" hidden aria-label="Chat" title="Chat (drag to move)"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M11 14.5h22a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H19a4 4 0 0 1-4-4V20z" fill="#0B3FA8" opacity=".45"/><path d="M10 13h22a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V18.5z" fill="#fff"/><rect x="18" y="17.6" width="13.5" height="2.6" rx="1.3" fill="#8AB4F8"/><rect x="18" y="22.1" width="13.5" height="2.6" rx="1.3" fill="#8AB4F8"/><rect x="18" y="26.6" width="10" height="2.6" rx="1.3" fill="#8AB4F8"/></svg><b id="chatN" class="fab-n" hidden>0</b></button>
+<button class="chat-fab" id="chatBtn" type="button" hidden aria-label="Chat" title="Chat"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M11 14.5h22a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H19a4 4 0 0 1-4-4V20z" fill="#0B3FA8" opacity=".45"/><path d="M10 13h22a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V18.5z" fill="#fff"/><rect x="18" y="17.6" width="13.5" height="2.6" rx="1.3" fill="#8AB4F8"/><rect x="18" y="22.1" width="13.5" height="2.6" rx="1.3" fill="#8AB4F8"/><rect x="18" y="26.6" width="10" height="2.6" rx="1.3" fill="#8AB4F8"/></svg><b id="chatN" class="fab-n" hidden>0</b></button>
 <div class="soc-fab" id="socFab" hidden>
   <a class="vb" id="vbBtn" data-soc="viber" target="_top" rel="noopener" hidden aria-label="Viber" title="Viber"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C7 3 4 5.6 4 10.2c0 2.6 1 4.5 2.7 5.6V20l3-2.2c.7.1 1.5.2 2.3.2 5 0 8-2.6 8-7.8S17 3 12 3z" fill="#fff"/><path d="M9.3 7.6c.3-.2.7-.2.9.1l.9 1.3c.2.3.1.7-.1.9l-.5.4c.3.8 1.1 1.7 2 2.1l.4-.5c.2-.3.6-.3.9-.1l1.3.9c.3.2.4.6.1.9l-.5.6c-.4.5-1.1.6-1.7.4-2-.8-3.6-2.4-4.3-4.4-.2-.6 0-1.2.4-1.6z" fill="#7360F2"/></svg></a>
   <a class="ms" id="msBtn" data-soc="messenger" target="_blank" rel="noopener" hidden aria-label="Messenger" title="Messenger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C7 3 3.5 6.6 3.5 11.2c0 2.5 1.1 4.6 2.9 6.1V21l3.1-1.7c.8.2 1.6.3 2.5.3 5 0 8.5-3.6 8.5-8.3S17 3 12 3z" fill="#fff"/><path d="M6.8 13.9l3-4.7 2.6 2 2.9-2-3 4.7-2.6-2z" fill="#3B6BFF"/></svg></a>
@@ -3550,6 +3633,7 @@ function signOut(msg){
   hideDock(); $('chatBtn').hidden = true; $('shBtn').hidden = true; $('shPanel').hidden = true; $('socFab').hidden = true; SOC.user = ''; if(!$('pop').hidden && $('pop').classList.contains('chatpop')) closePop(true);   // the chat pop-up closes too
   askReset(); $('askBox').hidden = true; $('askBtn').hidden = true;
   PF.mine = null; PF.user = ''; if($('helloCard')) $('helloCard').hidden = true;
+  mdClose(); if($('mdNew')) $('mdNew').remove(); document.body.classList.remove('md-lock'); MD.list = []; MD.v = ''; MD.dv = ''; MD.known = null; MD.media = {}; MD.seenQ.clear(); mdRender();   // My day
   showLogin(msg);
 }
 
@@ -4237,7 +4321,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.41, APP_VERSION_DATE = '2026-11-07';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.47, APP_VERSION_DATE = '2026-11-08';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4271,6 +4355,30 @@ const APP_CHANGES = [
   // MANU 2026-11-06 15:20 UTC "this is version 14.2": this afternoon's changes (from ~14:17 UTC)
   // MANU 2026-11-07 01:35 UTC "make this version 14.4": everything after the 14.3 GitHub push (809c379)
   // MANU 2026-11-07 15:36 UTC "make this version 14.1.1" (asked: 14.4.1, the step after 14.4)
+  // MANU 2026-11-08: next small step 14.4.2
+  // MANU 2026-11-08 15:22 UTC "add my day of users that other users can see": 14.4.3
+  // MANU 2026-11-08 "upon log-in, pop-up a random inspirational quotes"
+  // MANU 2026-11-08 15:34 UTC "add escalation button at the bottom of the add trip" (14.4.5), then 15:42 "not on the add trip button": only in Truck Plan
+  // MANU 2026-11-08 15:42 UTC "i want the button at the bottom of the first column together in one cell with the next step button": 14.4.6
+  // MANU 2026-11-08 15:43 UTC "show here who are online" (the My day row at the top of the chat): 14.4.7
+  {v:14.47, d:'2026-11-08', items:[
+    'Chat: the My day row at the top now also shows who is online right now, with a green dot, right after your own picture. People with a new My day come first. Tap someone online to send them a message, or tap a ring to watch their My day.'
+  ]},
+  {v:14.46, d:'2026-11-08', items:[
+    'Truck Plan: an ESCALATION button now sits in the first column, under the next step button (on open trips). Tap it, pick or type the issue, then Copy escalation and paste it in Viber or any chat. It does not change the trip.'
+  ]},
+  {v:14.44, d:'2026-11-08', items:[
+    'Sign-in quote: after you sign in, a small card shows a short inspirational quote (about 50 built in, some about the road, safety and teamwork). It comes after the sign-in video, the walk-through, the overdue lock and Today\'s alerts, never on top of them. Tap Thanks or Let\'s go, or anywhere outside the card, to close it. The same quote does not come twice in a row on your phone or PC.'
+  ]},
+  {v:14.43, d:'2026-11-08', items:[
+    'New My day, like a Facebook or Messenger story: share a photo and/or a few words, with music if you like (6 built-in tunes, or 30 seconds of your own song). Everyone in the app can see it for 24 hours, then it is gone.',
+    'Open the chat to see the My day row at the top. A blue ring around someone\'s picture means a new My day, grey means you saw it. Tap it to watch full screen: tap the right side for the next one, the left side to go back, hold to pause.',
+    'Add yours with "Add to my day" at the top of the chat or in My profile. You can see who viewed yours and delete it any time. The photo and song are made small on your phone before sending.'
+  ]},
+  {v:14.42, d:'2026-11-08', items:[
+    'Truck Plan: ON THE WAY SOURCE is now in the trip status list, right before the source arrival statuses. It is an open trip like Clip Board and Dispatch In (it blocks Add trip for that truck) and counts as a trip the same way.',
+    'Chat: the round chat button no longer moves. It always sits at the bottom right on phone and PC, and a tap or click opens the chat. A place saved from dragging it before is cleared.'
+  ]},
   {v:14.41, d:'2026-11-07', items:[
     'Dashboard: new "Driver ranking per account" part. For Coca Cola Canlubang, Coca Cola San Fernando and Other accounts it shows the top and bottom drivers (5, 10 or 20 each) by trips, counted like the Account summary, with days driven, km, km/L (red under 2), left the destination within 24 hours, and incidents. This month first; also Last month, the Dashboard dates or any From and To.',
     'Dashboard: new "Trucks without a driver" box under "Trucks without a trip". It lists every active truck whose saved crew in Truck assignment has no driver, one box per account, with its helpers and an Under maintenance tag, and a JPEG report button.',
@@ -5698,6 +5806,13 @@ function initDispatcher(){
   $('xBoard').onclick = e => { const idle = e.target.closest('[data-idle]'); if(idle){ if(may('dispatchAdd')) openDispatchAdd(idle.dataset.idle); return; } const c = e.target.closest('[data-key]'); if(c) openDispatch(S.xTrips.find(t => t.key===c.dataset.key)); };
   filterChips($('xChips'), [['all','All'],['latest','Latest status'],['open','Not completed'],['Planned','Clip board'],['moving','On the road'],['Completed','Completed'],['other','Not on trip']], 'all', f => { S.xFilter = f; renderDispatcher(); });
   $('xList').onclick = e => {
+    if(e.target.closest('[data-esct]')){   // ESCALATION in the first column (14.4.6): before the row's own tap
+      const r = e.target.closest('[data-idle],[data-key]'); if(!r) return;
+      if(r.dataset.idle){ const no = r.dataset.idle, d = xRange()[1], a = (S.assign[d] || []).find(x => String(x.truckNo)===no) || crewFor(d, no) || {};
+        return openEscPop({truckNo:no, plateNo:a.plateNo || plateFor(no), date:d, status:'Waiting for shipment', driver:a.driver, helper1:a.helper1, helper2:a.helper2}); }
+      const t = S.xTrips.find(x => x.key===r.dataset.key) || (S.xCtx || []).find(x => x.key===r.dataset.key); if(!t) return;
+      return openEscPop({truckNo:t.truckNo, plateNo:t.plateNo, date:t.date, status:statusText(t), source:t.customer, destination:t.destination, driver:t.driver, helper1:t.helper1, helper2:t.helper2});
+    }
     const idle = e.target.closest('[data-idle]');
     if(idle){ if(may('dispatchAdd')) openDispatchAdd(idle.dataset.idle); return; }
     const c = e.target.closest('[data-key]'); if(!c) return;
@@ -5831,6 +5946,45 @@ function openDispatchAdd(truckNo, opt){
   };
   setTimeout(() => (!truckNo ? $('naTruck') : NO_ROUTE_ST.includes(stKey()) ? $('naSave') : $('naSrc')).focus(), 230);
 }
+/* Add trip ESCALATION (MANU 2026-11-08 "add escalation button at the bottom of the add trip"): the same escalation as the bell's
+ * Waiting too long list (type the issue, Copy escalation, paste in Viber or any chat), filled from the Add trip form: truck, plate,
+ * trip date, status, source, destination, crew with contact numbers (crewTel), the issue and the sender. Copy only: no trip is
+ * saved or changed, and Add trip works the same with or without it. */
+/** The ESCALATION text for a trip (Truck Plan first column). i: truckNo, plateNo, date, status,
+ *  source, destination ("CLIENT | place": the place is used), driver, helper1, helper2, tel {nameKey: number}. */
+function escInfoText(i, issue){
+  const dst = String(i.destination || ''), pipe = dst.indexOf('|'), place = (pipe >= 0 ? dst.slice(pipe + 1) : dst).trim();
+  return ['ESCALATION', 'TRUCK: ' + (i.truckNo || '—'), 'PLATE: ' + (i.plateNo || '—'), 'TRIP DATE: ' + (i.date ? fmtDay(i.date) : '—'),
+    'STATUS: ' + (i.status || '—'), 'SOURCE: ' + (i.source || '—'), 'DESTINATION: ' + (place || '—'), ...escCrew(i),
+    'ISSUE: ' + String(issue).replace(/\s+/g, ' ').trim(), '', 'THANK YOU', (S.me && S.me.name) || ''].map(l => String(l).toUpperCase()).join('\n').trim();
+}
+/** Truck Plan first column ESCALATION (MANU 2026-11-08 "at the bottom of the first column together in one cell with the next step
+ *  button"): a pop-up with the issue chips, the issue box and Copy escalation; copy only, the trip is not changed. */
+function openEscPop(i){
+  openPop('Escalation', esc(['Truck ' + (i.truckNo || '—'), i.plateNo, i.date ? fmtDay(i.date) : '', i.status].filter(Boolean).join(' · ')),
+    `<div class="lw-esc" id="tpEscBox"><div class="esc-ask"><div class="esc-chips">${NA_ESC_ISSUES.map(t => `<button type="button" data-tpiss="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+      <label class="f full">What is the issue?<textarea id="tpEscIssue" rows="2" maxlength="400" placeholder="Type the issue (e.g. waiting for unloading, no forklift)"></textarea></label></div>
+      <span class="dim" id="tpEscNote"></span></div>`,
+    `<button class="btn alt" type="button" onclick="closePop()">Close</button><button class="btn road" type="button" id="tpEscGo">Copy escalation</button>`);
+  $('popBody').onclick = e => { const c = e.target.closest('[data-tpiss]'); if(!c) return; const ta = $('tpEscIssue'), t = c.dataset.tpiss;
+    ta.value = ta.value.trim() ? ta.value.trim() + ', ' + t.toLowerCase() : t; ta.focus(); };
+  $('tpEscGo').onclick = async () => {
+    const issue = ($('tpEscIssue').value || '').trim(), note = m => { const n = $('tpEscNote'); if(n) n.textContent = m; };
+    if(!issue){ $('tpEscIssue').focus(); return toast('Type or pick the issue first.', true); }
+    const names = [i.driver, i.helper1, i.helper2].filter(Boolean);
+    let tel = {}; if(names.length){ note('Getting the crew contact numbers…'); tel = await call('crewTel', names).catch(() => ({})) || {}; }
+    const t = escInfoText({...i, tel}, issue), box = $('tpEscBox'); if(!box) return;
+    let pre = box.querySelector('pre'); if(!pre){ pre = document.createElement('pre'); box.appendChild(pre); } pre.textContent = t;
+    const ok = await (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => true, () => false);
+    if(ok){ note('Copied. Paste it in Viber or any chat.'); toast('Escalation copied.'); return; }
+    const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    note('Press copy, then paste it in Viber or any chat.');
+  };
+  setTimeout(() => { const ta = $('tpEscIssue'); if(ta) ta.focus(); }, 60);
+}
+const mayEsc = () => may('dispatch') || may('summary');
+const ESC_BTN = '<button class="nextbtn escb" type="button" data-esct="1" title="Copy an escalation about this truck to send in Viber or any chat">⚠ Escalation</button>';
+const NA_ESC_ISSUES = ['No crew assigned', 'No shipment yet', 'Truck problem', 'Waiting at the client', 'No fuel / budget'];
 /** Truck Plan "↻ Refresh" (MANU 2026-11-03 "ADD A MANUAL REFRESH IN TRUCKPLAN"): the shown dates come whole from the server
  *  now, not from this phone's kept copy; the crew and the ops fund too. */
 /** Fresh lists from the server (CLIENT LIST routes, customers, trucks, crew): MANU 2026-11-04 "when source and destination is added,
@@ -6515,7 +6669,7 @@ function renderDispatcher(){
   const idleRow = ({no, a}, n) => `<tr class="idle${may('dispatchAdd') ? ' rowbtn' : ''}" data-idle="${esc(no)}" ${may('dispatchAdd') ? 'title="Add a trip for this truck"' : ''} style="--c:#94A3B8"><td class="nx">${may('dispatchAdd') ? '<button class="nextbtn add" type="button">＋ Add trip</button>' : ''}</td><td class="c rn">${n}</td><td>${esc(xRangeText())}</td><td class="tk"><b>${tLink(no)}</b></td><td>${plLink(a.plateNo || plateFor(no))}</td><td class="dim">${xRange()[0]===xRange()[1] ? 'No trip on this date' : 'No trip in these dates'}</td><td class="dim">${esc(sinceText((S.boot.lastTrip || {})[no] || ''))}${may('dispatchAdd') ? ' · <b>tap to add a trip</b>' : ''}</td><td colspan="5"></td><td>${pLink(a.driver)}</td><td>${pLink(a.helper1)}</td><td>${pLink(a.helper2)}</td><td class="st"><span class="dot"></span>Waiting shipment</td>${MS_KEYS.map(() => '<td class="tm e"></td>').join('')}<td></td></tr>`;
   const idleBlock = (items, start) => items.map((x, i) => (i===0 || (items[i-1].a.account||'') !== (x.a.account||'') || !!items[i-1].rp !== !!x.rp ? idleHead(x.a.account, items.filter(y => (y.a.account||'')===(x.a.account||'') && !!y.rp === !!x.rp).length, !!x.rp) : '') + (x.rp ? mntRow(x, start + i + 1) : idleRow(x, start + i + 1))).join('');
   const tripRow = (t, i) => { const st = stageOf(t), rp = repairOf(t.plateNo);
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}${t.date > xEnd ? ` <span class="tag-ahead">${esc(aheadText(t))}</span>` : ''}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="n" data-f="manoAmt" title="MANO given out for this trip (Disbursement, purpose MANO)">${t.manoAmt ? esc(pesoTxt(t.manoAmt)) : ''}</td><td class="ed" data-f="driver">${pLink(t.driver)}${RF[t.key] ? ` <span class="tag-rest" title="${esc(RF[t.key])}">⚠ rest</span>` : ''}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}<td class="ed xrem" data-f="remarks">${esc(t.remarks || '')}</td></tr>`; };   // Remarks last (MANU 2026-11-04 "in truckplan, add remarks at the last column")
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}${mayEsc() && !t._pending && isTrip(t) && !DONE_ST.includes(st) ? ESC_BTN : ''}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}${t.date > xEnd ? ` <span class="tag-ahead">${esc(aheadText(t))}</span>` : ''}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="n" data-f="manoAmt" title="MANO given out for this trip (Disbursement, purpose MANO)">${t.manoAmt ? esc(pesoTxt(t.manoAmt)) : ''}</td><td class="ed" data-f="driver">${pLink(t.driver)}${RF[t.key] ? ` <span class="tag-rest" title="${esc(RF[t.key])}">⚠ rest</span>` : ''}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}<td class="ed xrem" data-f="remarks">${esc(t.remarks || '')}</td></tr>`; };   // Remarks last (MANU 2026-11-04 "in truckplan, add remarks at the last column")
   const accHead = (a, nt, ni, nm) => `<tr class="acchd"><td colspan="${17 + MS_KEYS.length}"><div><b>${esc(a ? titleCase(a) : 'Not counted in an account')}</b> <span>· ${tripsTxt(nt)}${ni ? ` · ${ni} waiting shipment` : ''}${nm ? ` · ${nm} under maintenance` : ''}</span></div></td></tr>`;
   const restHead = (cls, label, k, note) => `<tr class="${cls}"><td colspan="${17 + MS_KEYS.length}"><div><b>${label}</b> <span>· ${k} row${k===1?'':'s'} · ${note}</span></div></td></tr>`;
   let body = '', n = 0;
@@ -9226,41 +9380,16 @@ function placeDock(){
   d.style.top = below ? r.bottom + gap + 'px' : 'auto'; d.style.bottom = below ? 'auto' : h - r.top + gap + 'px';
   d.style.height = Math.max(300, Math.min(560, room)) + 'px';
 }
-/* Dragging the floating chat button: a move of 8 px or more is a drag (no tap); where it is dropped is remembered on this
-   device (jmti_fab, as a share of the screen so it stays in place when the window or phone turns). */
+/* The floating chat button stays put (MANU 2026-11-08 "make that chat icon not movable"): always bottom right, no dragging on
+   phone or PC. Any place saved by the old drag (jmti_fab) is removed so every device goes back to the corner. FAB.moved stays false
+   so a tap or click always opens the chat. */
 const FAB = {moved:false};
-function fabPlace(){
-  const b = $('chatBtn'); let p = null;
-  try{ p = JSON.parse(localStorage.getItem('jmti_fab') || 'null'); }catch(e){}
-  if(!p || !(p.x >= 0) || !(p.y >= 0)){ b.style.left = b.style.top = b.style.right = b.style.bottom = ''; return; }
-  const sz = b.offsetWidth || 58;
-  b.style.right = b.style.bottom = 'auto';
-  b.style.left = Math.min(Math.max(6, p.x * innerWidth - sz / 2), innerWidth - sz - 6) + 'px';
-  b.style.top = Math.min(Math.max(6, p.y * innerHeight - sz / 2), innerHeight - sz - 6) + 'px';
-}
 (() => {
-  const b = $('chatBtn'); let st = null;
-  b.addEventListener('pointerdown', e => { if(e.button) return; const r = b.getBoundingClientRect(); st = {x:e.clientX, y:e.clientY, dx:e.clientX - r.left, dy:e.clientY - r.top, id:e.pointerId}; FAB.moved = false; try{ b.setPointerCapture(e.pointerId); }catch(x){} });
-  b.addEventListener('pointermove', e => {
-    if(!st || e.pointerId!==st.id) return;
-    if(!FAB.moved && Math.hypot(e.clientX - st.x, e.clientY - st.y) < 8) return;
-    if(!FAB.moved){ FAB.moved = true; b.classList.add('drag'); b.classList.remove('ring'); }
-    const sz = b.offsetWidth;
-    b.style.right = b.style.bottom = 'auto';
-    b.style.left = Math.min(Math.max(6, e.clientX - st.dx), innerWidth - sz - 6) + 'px';
-    b.style.top = Math.min(Math.max(6, e.clientY - st.dy), innerHeight - sz - 6) + 'px';
-    if(dockShown()) placeDock(); placeSoc();
-  });
-  const end = () => {
-    if(!st) return; st = null; b.classList.remove('drag');
-    if(!FAB.moved) return;
-    const r = b.getBoundingClientRect();
-    try{ localStorage.setItem('jmti_fab', JSON.stringify({x:(r.left + r.width / 2) / innerWidth, y:(r.top + r.height / 2) / innerHeight})); }catch(x){}
-    setTimeout(() => { FAB.moved = false; }, 0);   // the click that ends a drag doesn't open the chat
-  };
-  b.addEventListener('pointerup', end); b.addEventListener('pointercancel', end);
-  addEventListener('resize', () => { fabPlace(); if(dockShown()) placeDock(); placeSoc(); });
-  fabPlace();
+  const b = $('chatBtn');
+  try{ localStorage.removeItem('jmti_fab'); }catch(e){}
+  b.style.left = b.style.top = b.style.right = b.style.bottom = '';
+  b.classList.remove('drag');
+  addEventListener('resize', () => { if(dockShown()) placeDock(); placeSoc(); });
 })();
 /* ---- Viber and Messenger buttons (MANU 2026-10-20 "it it possible to integrate viber inside the system like this" + "both viber and
    facebook messenger"; picked "Separate buttons"). Neither app can run inside a web page, so two round buttons beside the chat button
@@ -9512,6 +9641,7 @@ function chatPoll(){
       if(ride.on && d.online) onlineGot(d.online);
       if(ride.done && d.done && DN.want === ride.done) doneGot(d.done);
       if(d.tv!==undefined) tripsMark(String(d.tv));
+      if(d.dv!==undefined) mdMark(String(d.dv));   // My day
       if(d.irv!==undefined) irMark(String(d.irv));
       if(CH.user===u){ if(full) CH.full = true; if(d.v) CH.v = String(d.v); chatMerge(d); if(d.rv!==undefined) CH.rv = Number(d.rv) || 0; } })
     .catch(() => { CH.fail = Math.min(3, CH.fail + 1); }).finally(() => { CH.busy = false; });
@@ -9658,13 +9788,13 @@ function chatBuild(){
   if(CH.view==='list'){
     h.body.innerHTML = `${badgeAsk() ? '<div style="padding:8px 12px 0"><button class="btn alt" type="button" id="chBadge">Show the count on the app icon</button></div>' : ''}
       <div class="ms-find row top"><input id="chFind" type="search" placeholder="Search" aria-label="Search people and groups" autocomplete="off"><button type="button" class="ms-newg" id="chNewG" title="Make a group chat">+ New group</button>${close}</div>
-      <div class="ms-list" id="chList"></div>`;
+      <div class="md-strip" id="mdStrip" aria-label="My day"></div><div class="ms-list" id="chList"></div>`;
     h.foot.innerHTML = '';
     $('chFind').oninput = renderChatList;
   } else if(CH.view==='group'){
     return groupBuild(h, close);
   } else {
-    h.body.innerHTML = `<div class="ms-top"><button type="button" class="ms-ib" data-chback="1" title="All chats" aria-label="All chats">${MS_ICON.back}</button>${CH.conv!=='#team' && !isGroup(CH.conv) ? `<button type="button" class="ch-avb" data-chprof="${esc(CH.conv)}" aria-label="Profile">${avOn(chatAv(CH.conv), false, 'chAvW')}</button>` : avOn(chatAv(CH.conv), false, 'chAvW')}<div class="ms-name"${CH.conv!=='#team' && !isGroup(CH.conv) ? ` data-chprof="${esc(CH.conv)}"` : ''}><b id="chName">${esc(chatName(CH.conv))}${isBday(CH.conv) ? ' ' + BDAY : ''}</b><small id="chSub">${esc(convSub(CH.conv))}</small></div>${madeGroup(CH.conv) ? `<button type="button" class="ms-ib" data-chgrp="1" title="Members" aria-label="Members">${MS_ICON.people}</button>` : ''}${close}</div>
+    h.body.innerHTML = `<div class="ms-top"><button type="button" class="ms-ib" data-chback="1" title="All chats" aria-label="All chats">${MS_ICON.back}</button>${CH.conv!=='#team' && !isGroup(CH.conv) ? `<button type="button" class="ch-avb" data-chprof="${esc(CH.conv)}" aria-label="Profile">${mdAvOn(CH.conv, false, 'chAvW')}</button>` : avOn(chatAv(CH.conv), false, 'chAvW')}<div class="ms-name"${CH.conv!=='#team' && !isGroup(CH.conv) ? ` data-chprof="${esc(CH.conv)}"` : ''}><b id="chName">${esc(chatName(CH.conv))}${isBday(CH.conv) ? ' ' + BDAY : ''}</b><small id="chSub">${esc(convSub(CH.conv))}</small></div>${madeGroup(CH.conv) ? `<button type="button" class="ms-ib" data-chgrp="1" title="Members" aria-label="Members">${MS_ICON.people}</button>` : ''}${close}</div>
       <div class="ch-msgs" id="chMsgs"><p class="hint">Loading messages…</p></div>`;
     h.foot.innerHTML = `<div class="ch-typing" id="chTyping" aria-live="polite"></div>
       <div class="ch-reply" id="chReply" hidden></div>
@@ -9757,6 +9887,7 @@ async function groupSave(arg, done){
 }
 function chatClick(e){
   if(Date.now() - (CH.lpAt || 0) < 700) return;   // the tap that ends a long-press
+  if(CH.view!=='group'){ if(e.target.closest('[data-mdadd]')) return mdNew(); const mu = e.target.closest('[data-mdu]'); if(mu) return mdOpen(mu.dataset.mdu); }   // My day
   const mo = e.target.closest('[data-chmore]'); if(mo) return chatMenu(+mo.dataset.chmore);
   const rp = e.target.closest('[data-chreply]'); if(rp) return chatReplyTo(+rp.dataset.chreply);
   const rx = e.target.closest('[data-chrx]'); if(rx) return chatRxList(+rx.dataset.chrx);
@@ -9883,8 +10014,9 @@ function renderChatList(){
     .filter(c => (chatName(c) + ' ' + ((CH.users.find(u => u.username===c) || {}).role || '')).toLowerCase().includes(q));
   convs.sort((a, b) => ((last[b] || {}).id || 0) - ((last[a] || {}).id || 0));
   box.innerHTML = convs.map(c => { const m = last[c], n = chatUnread(c);
-    return `<button type="button" class="ms-item${n ? ' unread' : ''}" data-conv="${esc(c)}">${avOn(chatAv(c), c!=='#team' && !isGroup(c) && isActive(c))}<span class="ms-mid"><b>${esc(chatName(c))}${c!=='#team' && !isGroup(c) && isBday(c) ? ' ' + BDAY : ''}</b><small>${typ[c] ? `<i class="ms-typ">${esc(typ[c])}</i>` : m ? esc(msgPreview(m)) + ' · ' + esc(shortWhen(m.at)) : esc(convSub(c))}</small></span>${n ? `<span class="ms-n">${n > 99 ? '99+' : n}</span>` : ''}</button>`; }).join('')
+    return `<button type="button" class="ms-item${n ? ' unread' : ''}" data-conv="${esc(c)}">${c!=='#team' && !isGroup(c) ? mdAvOn(c, isActive(c)) : avOn(chatAv(c), false)}<span class="ms-mid"><b>${esc(chatName(c))}${c!=='#team' && !isGroup(c) && isBday(c) ? ' ' + BDAY : ''}</b><small>${typ[c] ? `<i class="ms-typ">${esc(typ[c])}</i>` : m ? esc(msgPreview(m)) + ' · ' + esc(shortWhen(m.at)) : esc(convSub(c))}</small></span>${n ? `<span class="ms-n">${n > 99 ? '99+' : n}</span>` : ''}</button>`; }).join('')
     || `<p class="hint" style="padding:12px">${q ? 'No one found.' : 'Loading chats…'}</p>`;
+  mdStrip();
 }
 /* Sending shows at once (MANU 2026-10-14 "why does it take long to send message?"): the bubble appears as "Sending…" the
    moment Send is tapped and the box is ready for the next message; the server saves them one after another in order (each
@@ -9944,6 +10076,8 @@ function actText(u){
 }
 const isActive = u => actText(u)==='Active now';
 const avOn = (html, on, id) => `<span class="ms-avw${on ? ' on' : ''}"${id ? ` id="${id}"` : ''}>${html}</span>`;
+/** The same with the My day ring of person c (a tap on it opens their My day). */
+const mdAvOn = (c, on, id) => { const h = avOn(chatAv(c), on, id); return typeof mdHas==='function' && mdHas(c) ? h.replace('class="ms-avw', `data-mdu="${esc(c)}" class="ms-avw${mdRing(c)}`) : h; };
 /** "9:41 AM" today, else "Oct 27, 9:41 AM" (Philippine time). */
 const msTime = ms => { const a = mnlAt(ms); return !a ? '' : a.slice(0, 10)===TODAY() ? clock12(a) : shortWhen(a) + ', ' + clock12(a); };
 const andList = n => n.length <= 3 ? n.join(', ').replace(/, ([^,]*)$/, ' and $1') : `${n.slice(0, 2).join(', ')} and ${n.length - 2} others`;
@@ -10258,6 +10392,7 @@ function openProfile(){
       <div class="pf-top"><div class="pf-photo" id="pfPic">${pic()}</div>
         <div class="pf-btns"><button type="button" class="btn alt" id="pfPick">${p.photo ? 'Change photo' : 'Add a photo'}</button><button type="button" class="btn alt" id="pfDel"${p.photo ? '' : ' hidden'}>Remove photo</button>
         <input type="file" id="pfIn" accept="${CH_PHOTO_TYPES}" hidden><small class="dim">${esc(S.me.name)} · ${esc(titleCase(S.me.role))}</small></div></div>
+      <div class="pf-md"><button type="button" class="btn alt" id="pfMdAdd">+ Add to my day</button>${mdMine().length ? `<button type="button" class="btn alt" id="pfMdSee">See my day (${mdMine().length})</button>` : ''}</div>
       <label class="f full">Birthday<input type="date" id="pfBday" value="${esc(p.birthday || '')}" min="1930-01-01" max="${TODAY()}"></label>
       <label class="f full">Motto in life<textarea id="pfMotto" maxlength="150" rows="2" placeholder="e.g. Safety first, always on time">${esc(p.motto || '')}</textarea></label>
       <small class="dim" id="pfN"></small>
@@ -10266,6 +10401,8 @@ function openProfile(){
   const cnt = () => { $('pfN').textContent = `${$('pfMotto').value.length} / 150`; }; cnt();
   actLog($('pfAct'), '');   // Activity log (MANU 2026-11-06)
   $('pfMotto').oninput = cnt;
+  $('pfMdAdd').onclick = () => { closePop(); mdNew(); };
+  if($('pfMdSee')) $('pfMdSee').onclick = () => { closePop(); mdOpen(S.me.username); };
   $('pfBack').onclick = () => closePop();
   $('pfPick').onclick = () => $('pfIn').click();
   $('pfIn').onchange = async e => {
@@ -10332,8 +10469,9 @@ function openProfileView(u){
     <b>${esc(x.name)}${bd ? ' ' + BDAY : ''}</b><small>${esc(titleCase(x.role))}${a ? ' · ' + esc(a) : ''}</small>
     ${x.m ? `<q>${esc(x.m)}</q>` : ''}
     ${x.b ? `<span class="pf-bd">${BDAY} ${bd ? 'Birthday today!' : 'Birthday: ' + esc(bdayText(x.b))}</span>` : ''}
+    ${mdHas(u) ? `<button type="button" class="btn alt" data-pfmd="1">\u25b6 See ${esc(chFirst(x.name))}'s day</button>` : ''}
     ${CH.view==='conv' && CH.conv===u ? '' : `<button type="button" class="btn" data-pfmsg="1">Message</button>`}</div>`,
-    e => { if(e.target.closest('[data-pfmsg]')){ chatSheetClose(); if(chatOpen()) chatGo(u); else openChat(u); } });
+    e => { if(e.target.closest('[data-pfmd]')){ chatSheetClose(); return mdOpen(u); } if(e.target.closest('[data-pfmsg]')){ chatSheetClose(); if(chatOpen()) chatGo(u); else openChat(u); } });
 }
 /** like = the send button was tapped: with an empty box it sends a 👍. */
 function chatSendNow(like){
@@ -10404,6 +10542,344 @@ async function chatSendFile(file){
   }catch(e){ toast(e.message, true); }
   finally{ CH.up = CH.up.filter(x => x!==up); if(up.url) URL.revokeObjectURL(up.url); renderChat(true); renderChatBtn(); }
 }
+/* ================= MY DAY (MANU 2026-11-08 "add my day of users that other users can see, should be able to add photo, text and music") =================
+   Like a Messenger / Facebook story: anyone posts a photo and/or text, with music if they like; everyone sees it for 24 hours.
+   A blue ring on a picture (chat list, the My day row at the top of the chat, the top-bar picture) means there is a My day not
+   seen yet, grey = seen. Tap opens it full screen: bars at the top, tap right = next, tap left = back, hold = pause. The poster
+   sees who viewed it and can delete it. Music: 6 tunes made right on the phone (no files, nothing to download) or a 30-second
+   clip of the poster's own song (cut and made small on the phone before sending). Code.gs MY DAY: mydayList, mydayPost,
+   mydayMedia, mydaySeen, mydayViews, mydayDelete; chatList hands dv (changes on every post or delete). */
+const MD = {v:'', list:[], busy:false, want:false, media:{}, seenQ:new Set(), seenT:0, known:null, view:null, ctx:null, tune:null, clip:null, muted:false};
+const MD_BG = ['linear-gradient(135deg,#0A27B5,#2E5BFF)', 'linear-gradient(135deg,#7B2FF7,#F107A3)', 'linear-gradient(135deg,#F7971E,#FFD200)', 'linear-gradient(135deg,#11998E,#38EF7D)',
+  'linear-gradient(135deg,#232526,#414345)', 'linear-gradient(135deg,#E52D27,#B31217)', 'linear-gradient(135deg,#00C6FF,#0072FF)', 'linear-gradient(135deg,#FC5C7D,#6A82FB)'];
+/* Built-in tunes: chords as semitones above the key, bars of 8 eighth notes; arp = which chord note plays on each eighth (-1 rest). */
+const MD_TUNES = [
+  {k:'t1', n:'Good morning', e:'🌅', bpm:96, key:60, w:'triangle', ch:[[0,4,7],[7,11,14],[9,12,16],[5,9,12]], arp:[0,1,2,1,3,1,2,1], hat:1, kick:0},
+  {k:'t2', n:'On the road', e:'🚚', bpm:118, key:62, w:'square', ch:[[0,4,7],[9,12,16],[5,9,12],[7,11,14]], arp:[0,2,1,2,0,2,3,2], hat:1, kick:1},
+  {k:'t3', n:'Chill', e:'☕', bpm:76, key:57, w:'sine', ch:[[0,3,7,10],[5,8,12,15],[10,14,17,20],[3,7,10,14]], arp:[0,-1,2,3,-1,1,2,-1], hat:0, kick:0},
+  {k:'t4', n:'Happy day', e:'😄', bpm:128, key:60, w:'triangle', ch:[[0,4,7],[5,9,12],[7,11,14],[0,4,7]], arp:[0,1,2,3,2,1,2,1], hat:1, kick:1},
+  {k:'t5', n:'Calm night', e:'🌙', bpm:64, key:52, w:'sine', ch:[[0,3,7],[-4,0,3],[3,7,10],[-2,2,5]], arp:[0,-1,1,-1,2,-1,1,-1], hat:0, kick:0},
+  {k:'t6', n:'Celebrate', e:'🎉', bpm:124, key:53, w:'sawtooth', ch:[[0,4,7],[7,11,14],[9,12,16],[5,9,12]], arp:[0,2,1,2,3,2,1,2], hat:1, kick:1}];
+const mdTune = k => MD_TUNES.find(t => t.k===k) || null;
+const mdMine = () => S.me ? MD.list.filter(x => x.u===S.me.username) : [];
+const mdOf = u => MD.list.filter(x => x.u===u);
+const mdHas = u => MD.list.some(x => x.u===u);
+const mdUnseen = u => MD.list.some(x => x.u===u && !x.seen);
+/** The ring class for a person's picture: 'md-ring' (new), 'md-ring seen', or ''. */
+const mdRing = u => !mdHas(u) ? '' : mdUnseen(u) ? ' md-ring' : ' md-ring seen';
+const mdAgo = at => { const m = Math.max(0, Math.round((Date.now() - at) / 60000)); return m < 1 ? 'Just now' : m < 60 ? m + 'm' : Math.floor(m / 60) + 'h'; };
+/**
+ * People in the My day row after you (MANU 2026-11-08 "show here who are online"): first everyone online now (signed in and
+ * active in the last 2 minutes, the chat's "Active now"; a green dot), those with a new My day first, then a seen one, then the
+ * rest by name; then the people who are not online but have a My day (new first, newest first).
+ */
+function mdRowPeople(){
+  const me = S.me ? S.me.username : '', by = {};
+  MD.list.forEach(x => { (by[x.u] = by[x.u] || []).push(x); });
+  const newest = u => by[u] ? by[u][by[u].length - 1].at : 0, rank = u => mdUnseen(u) ? 2 : by[u] ? 1 : 0;
+  const on = CH.users.map(u => u.username).filter(u => u!==me && isActive(u));
+  Object.keys(by).forEach(u => { if(u!==me && !on.includes(u) && isActive(u)) on.push(u); });
+  on.sort((a, b) => (rank(b) - rank(a)) || (newest(b) - newest(a)) || chatName(a).localeCompare(chatName(b)));
+  const off = Object.keys(by).filter(u => u!==me && !on.includes(u)).sort((a, b) => (mdUnseen(b) - mdUnseen(a)) || (newest(b) - newest(a)));
+  return on.concat(off);
+}
+/** The people with a My day, in the row's order (the viewer goes through them one after another). */
+const mdPeople = () => mdRowPeople().filter(mdHas);
+/** chatList's dv: something was posted or deleted, ask for the list again. */
+function mdMark(dv){
+  if(dv===undefined || dv===null) return;
+  if(String(dv)!==MD.dv){ MD.dv = String(dv); mdLoad(); }
+}
+function mdLoad(){
+  if(!S.me || !TOKEN) return;
+  if(MD.busy){ MD.want = true; return; }
+  MD.busy = true; const u = S.me.username;
+  call('mydayList', MD.list.length || MD.v ? MD.v : '').then(r => {
+    if(!S.me || S.me.username!==u || !r) return;
+    MD.v = String(r.v || '');
+    if(r.same) return;
+    const old = MD.known; MD.list = Array.isArray(r.list) ? r.list : [];
+    MD.seenQ.forEach(id => { const x = MD.list.find(y => y.id===id); if(x) x.seen = true; });   // seen here, not sent yet
+    MD.known = new Set(MD.list.map(x => x.id));
+    if(old){ const fresh = MD.list.filter(x => !old.has(x.id) && x.u!==u); if(fresh.length) toast(`📸 ${fresh[fresh.length - 1].n} added to their day. Open the chat to see it.`, false, 4500); }
+    mdRender();
+  }).catch(() => {}).finally(() => { MD.busy = false; if(MD.want){ MD.want = false; setTimeout(mdLoad, 300); } });
+}
+/** Rings everywhere: the chat list, the My day row, your top-bar picture, the chat button. */
+function mdRender(){
+  if(chatOpen() && CH.view==='list') renderChatList();
+  mdStrip();
+  const b = $('meAv'); if(b){ b.classList.toggle('md-ring', !!mdMine().length); }
+  const cb = $('chatBtn'); if(cb) cb.classList.toggle('md-new', !!S.me && MD.list.some(x => !x.seen && x.u!==S.me.username));
+}
+function mdStrip(){
+  const el = $('mdStrip'); if(!el || !S.me) return;
+  const me = S.me.username, mine = mdMine();
+  const cell = (u, label, extra) => `<button type="button" class="md-cell" data-mdu="${esc(u)}"><span class="md-avw${mdRing(u)}">${chatAv(u, false, u===me ? S.me.name : '')}${extra || ''}</span><small>${esc(label)}</small></button>`;
+  el.innerHTML = (mine.length ? cell(me, 'Your day', '<i class="md-plus" data-mdadd="1" title="Add to my day">+</i>')
+      : `<button type="button" class="md-cell" data-mdadd="1"><span class="md-avw add">${chatAv(me, false, S.me.name)}<i class="md-plus">+</i></span><small>Add to my day</small></button>`)
+    + mdRowPeople().map(u => { const on = isActive(u), has = mdHas(u), n = has ? mdOf(u)[0].n : chatName(u);
+      return `<button type="button" class="md-cell" ${has ? `data-mdu="${esc(u)}"` : `data-conv="${esc(u)}"`} title="${esc(n)}${on ? ' \u00b7 Active now' : ''}${has ? '' : ' \u00b7 tap to message'}"><span class="md-avw${mdRing(u)}${on ? ' on' : ''}">${chatAv(u, false, n)}</span><small>${esc(chFirst(n))}</small></button>`; }).join('');
+}
+/* ---------- Music ---------- */
+function mdCtx(){
+  const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null;
+  if(!MD.ctx) MD.ctx = new AC();
+  if(MD.ctx.state==='suspended') MD.ctx.resume().catch(() => {});
+  return MD.ctx;
+}
+/** Plays a built-in tune until mdStopMusic(). The notes are scheduled a little ahead so they keep time on a busy phone. */
+function mdPlayTune(k){
+  mdStopMusic(); const t = mdTune(k), c = mdCtx(); if(!t || !c) return;
+  const out = c.createGain(); out.gain.value = 0; out.connect(c.destination);
+  out.gain.linearRampToValueAtTime(MD.muted ? 0 : .32, c.currentTime + .6);
+  const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = t.w==='sine' ? 5000 : 2200; lp.connect(out);
+  const hz = m => 440 * Math.pow(2, (m - 69) / 12), step = 60 / t.bpm / 2;
+  let noise = null;
+  if(t.hat){ noise = c.createBuffer(1, c.sampleRate * .05, c.sampleRate); const d = noise.getChannelData(0); for(let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length); }
+  const note = (f, at, len, vol, wave, dest) => { const o = c.createOscillator(), g = c.createGain(); o.type = wave; o.frequency.value = f;
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(vol, at + .015); g.gain.exponentialRampToValueAtTime(.0008, at + len); o.connect(g); g.connect(dest || lp); o.start(at); o.stop(at + len + .05); };
+  const play = {out, n:0, next:c.currentTime + .08, timer:0, k};
+  const tick = () => {
+    while(play.next < c.currentTime + .25){
+      const i = play.n, bar = Math.floor(i / 8) % t.ch.length, s = i % 8, ch = t.ch[bar], at = play.next;
+      if(s===0){ note(hz(t.key - 24 + ch[0]), at, step * 7.5, .22, 'sine'); ch.forEach(x => note(hz(t.key + x), at, step * 8, .035, 'sine')); }
+      if(s===4) note(hz(t.key - 24 + ch[0] + (ch.length > 2 ? 7 : 0)), at, step * 3.5, .14, 'sine');
+      const a = t.arp[s]; if(a >= 0){ const m = t.key + 12 + ch[a % ch.length] + (a >= ch.length ? 12 : 0); note(hz(m), at, step * 1.6, t.w==='sine' ? .13 : t.w==='triangle' ? .1 : .045, t.w); }
+      if(t.kick && s % 4===0){ const o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(140, at); o.frequency.exponentialRampToValueAtTime(40, at + .18);
+        g.gain.setValueAtTime(.5, at); g.gain.exponentialRampToValueAtTime(.001, at + .22); o.connect(g); g.connect(out); o.start(at); o.stop(at + .25); }
+      if(noise && s % 2===1){ const b = c.createBufferSource(), g = c.createGain(), hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7000; b.buffer = noise; g.gain.value = .09; b.connect(hp); hp.connect(g); g.connect(out); b.start(at); }
+      play.n++; play.next += step;
+    }
+  };
+  tick(); play.timer = setInterval(tick, 60);
+  MD.tune = play;
+}
+/** Plays a song clip (an ArrayBuffer of the WAV or MP3 the poster sent). */
+async function mdPlayClip(buf, key){
+  mdStopMusic(); const c = mdCtx(); if(!c) return;
+  const ab = await new Promise((res, rej) => { const p = c.decodeAudioData(buf.slice(0), res, rej); if(p && p.then) p.then(res, rej); });
+  if(MD.clipKey && MD.clipKey!==key) return;
+  const src = c.createBufferSource(), g = c.createGain(); src.buffer = ab; src.loop = true;
+  g.gain.value = 0; g.gain.linearRampToValueAtTime(MD.muted ? 0 : .9, c.currentTime + .4); src.connect(g); g.connect(c.destination); src.start();
+  MD.clip = {src, g};
+}
+function mdStopMusic(){
+  const c = MD.ctx;
+  if(MD.tune){ clearInterval(MD.tune.timer); const o = MD.tune.out; try{ o.gain.cancelScheduledValues(c.currentTime); o.gain.setValueAtTime(o.gain.value, c.currentTime); o.gain.linearRampToValueAtTime(0, c.currentTime + .2); }catch(e){} setTimeout(() => { try{ o.disconnect(); }catch(e){} }, 400); MD.tune = null; }
+  if(MD.clip){ const k = MD.clip; try{ k.g.gain.linearRampToValueAtTime(0, c.currentTime + .2); k.src.stop(c.currentTime + .25); }catch(e){} MD.clip = null; }
+}
+function mdMute(on){
+  MD.muted = on; const c = MD.ctx; if(!c) return;
+  const g = MD.tune ? MD.tune.out.gain : MD.clip ? MD.clip.g.gain : null;
+  if(g){ g.cancelScheduledValues(c.currentTime); g.setValueAtTime(on ? 0 : (MD.tune ? .32 : .9), c.currentTime); }
+}
+const mdB64Buf = b64 => { const s = atob(b64), u = new Uint8Array(s.length); for(let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; };
+/** A story's photo (object URL) or song (ArrayBuffer), fetched once and kept while the page is open. */
+function mdMedia(x, kind){
+  const key = x.id + ':' + kind;
+  if(!MD.media[key]) MD.media[key] = call('mydayMedia', x.id, kind).then(r => kind==='photo' ? URL.createObjectURL(new Blob([mdB64Buf(r.data)], {type: r.type || 'image/jpeg'})) : mdB64Buf(r.data))
+    .catch(e => { delete MD.media[key]; throw e; });
+  return MD.media[key];
+}
+/** Cuts a song file to a 30-second clip from second `from`, one channel at 16 kHz, as a small WAV (about 1 MB). */
+async function mdCutSong(buf, from){
+  const c = mdCtx(); if(!c) throw new Error('This phone cannot play music here.');
+  const ab = await new Promise((res, rej) => { const p = c.decodeAudioData(buf.slice(0), res, rej); if(p && p.then) p.then(res, rej); });
+  const len = Math.min(30, Math.max(1, ab.duration - from)), rate = 16000;
+  const OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const oc = new OC(1, Math.ceil(len * rate), rate), src = oc.createBufferSource(); src.buffer = ab;
+  const g = oc.createGain(); g.gain.setValueAtTime(0, 0); g.gain.linearRampToValueAtTime(1, .5); g.gain.setValueAtTime(1, Math.max(.6, len - 1)); g.gain.linearRampToValueAtTime(0, len);
+  src.connect(g); g.connect(oc.destination); src.start(0, from, len);
+  const r = await new Promise((res, rej) => { oc.oncomplete = e => res(e.renderedBuffer); const p = oc.startRendering(); if(p && p.then) p.then(res, rej); });
+  const d = r.getChannelData(0), n = d.length, w = new DataView(new ArrayBuffer(44 + n * 2));
+  const str = (o, s) => { for(let i = 0; i < s.length; i++) w.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, 'RIFF'); w.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt '); w.setUint32(16, 16, true); w.setUint16(20, 1, true); w.setUint16(22, 1, true);
+  w.setUint32(24, rate, true); w.setUint32(28, rate * 2, true); w.setUint16(32, 2, true); w.setUint16(34, 16, true); str(36, 'data'); w.setUint32(40, n * 2, true);
+  for(let i = 0; i < n; i++){ const v = Math.max(-1, Math.min(1, d[i])); w.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7FFF, true); }
+  return {buf: w.buffer, dur: ab.duration};
+}
+const mdBufB64 = buf => { const u = new Uint8Array(buf); let s = ''; for(let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+/** The photo made small for My day: longest side 1080 px, JPEG. */
+function mdPrepPhoto(file){
+  return new Promise((resolve, reject) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const draw = (max, q) => { const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+        const x = c.getContext('2d'); x.fillStyle = '#000'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', q); };
+      let d = draw(1080, .8); if(d.length > 900000) d = draw(900, .7);
+      resolve(d);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('This photo could not be opened here. Try a JPEG or PNG photo.')); };
+    img.src = url;
+  });
+}
+/* ---------- Add to my day ---------- */
+function mdNew(){
+  if(!S.me) return;
+  if(navigator.onLine===false) return toast('My day needs signal. Try again when the signal is back.', true);
+  mdClose();
+  const st = {photo:'', text:'', bg:0, music:null, song:null, busy:false};
+  const o = document.createElement('div'); o.className = 'md-view md-new'; o.id = 'mdNew'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Add to my day');
+  o.innerHTML = `<div class="md-top"><button type="button" class="md-x" data-mdx="1" aria-label="Close">${MS_ICON.close}</button><b>Add to my day</b><button type="button" class="btn road md-post" id="mdPost">Share</button></div>
+    <div class="md-stage" id="mdNStage"><img id="mdNImg" alt="" hidden><div class="md-txt" id="mdNTxtShow"></div></div>
+    <div class="md-tools">
+      <div class="md-row"><button type="button" class="btn alt" id="mdNPhoto">📷 Photo</button><button type="button" class="btn alt" id="mdNNoPhoto" hidden>Remove photo</button>
+        <span class="md-bgs" id="mdNBgs">${MD_BG.map((g, i) => `<button type="button" class="md-bg" data-mdbg="${i}" style="background:${g}" aria-label="Background ${i + 1}" aria-pressed="${i===0}"></button>`).join('')}</span></div>
+      <textarea id="mdNText" maxlength="300" rows="2" placeholder="What's your day like?"></textarea>
+      <div class="md-mus"><b>🎵 Music</b><div class="md-tunes" id="mdNTunes"></div>
+        <div class="md-song" id="mdNSong" hidden><small id="mdNSongN"></small><label>Start at <input type="range" id="mdNFrom" min="0" max="0" step="1" value="0"> <span id="mdNFromT">0:00</span></label></div></div>
+      <input type="file" id="mdNPhotoIn" accept="image/*" hidden><input type="file" id="mdNSongIn" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg" hidden>
+      <small class="md-note">Everyone in the app can see it for 24 hours. You can see who viewed it.</small></div>`;
+  document.body.appendChild(o); document.body.classList.add('md-lock');
+  const tunes = () => { $('mdNTunes').innerHTML = `<button type="button" class="md-tune" data-mdt="" aria-pressed="${!st.music}">No music</button>`
+      + MD_TUNES.map(t => `<button type="button" class="md-tune" data-mdt="${t.k}" aria-pressed="${!!(st.music && st.music.k===t.k)}">${t.e} ${esc(t.n)}</button>`).join('')
+      + `<button type="button" class="md-tune" data-mdt="own" aria-pressed="${!!st.song}">🎧 ${st.song ? 'Your song' : 'Your own song'}</button>`; };
+  const show = () => {
+    const img = $('mdNImg'); img.hidden = !st.photo; if(st.photo) img.src = st.photo;
+    $('mdNStage').style.background = st.photo ? '#000' : MD_BG[st.bg];
+    const tx = $('mdNTxtShow'); tx.textContent = st.text || (st.photo ? '' : "What's your day like?"); tx.classList.toggle('ph', !!st.photo); tx.classList.toggle('dim', !st.text);
+    $('mdNNoPhoto').hidden = !st.photo; $('mdNPhoto').textContent = st.photo ? '📷 Change photo' : '📷 Photo';
+  };
+  const fmtS = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+  const songPlay = async () => { if(!st.song) return; try{ const r = await mdCutSong(st.song.raw, st.song.from); st.song.clip = r.buf; MD.clipKey = 'new'; await mdPlayClip(r.buf, 'new'); }catch(e){ toast('This song could not be played here. Try an MP3 or M4A file.', true); } };
+  tunes(); show();
+  o.onclick = e => {
+    if(e.target.closest('[data-mdx]')){ mdStopMusic(); o.remove(); document.body.classList.remove('md-lock'); return; }
+    const bg = e.target.closest('[data-mdbg]'); if(bg){ st.bg = +bg.dataset.mdbg; o.querySelectorAll('[data-mdbg]').forEach(b => b.setAttribute('aria-pressed', b===bg)); show(); return; }
+    const t = e.target.closest('[data-mdt]');
+    if(t){ const k = t.dataset.mdt;
+      if(k==='own'){ $('mdNSongIn').click(); return; }
+      st.music = k ? {k} : null; st.song = null; $('mdNSong').hidden = true; tunes();
+      if(k) mdPlayTune(k); else mdStopMusic(); return; }
+  };
+  $('mdNText').oninput = e => { st.text = e.target.value; show(); };
+  $('mdNPhoto').onclick = () => $('mdNPhotoIn').click();
+  $('mdNNoPhoto').onclick = () => { st.photo = ''; show(); };
+  $('mdNPhotoIn').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if(!f) return; try{ st.photo = await mdPrepPhoto(f); show(); }catch(err){ toast(err.message, true); } };
+  $('mdNSongIn').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if(!f) return;
+    if(f.size > 25 * 1048576) return toast('That song file is too big. Pick one under 25 MB.', true);
+    try{
+      const raw = await f.arrayBuffer(), c = mdCtx(); if(!c) throw new Error('x');
+      const ab = await new Promise((res, rej) => { const p = c.decodeAudioData(raw.slice(0), res, rej); if(p && p.then) p.then(res, rej); });
+      st.song = {raw, from:0, dur:ab.duration, name:f.name.replace(/\.\w+$/, '')}; st.music = null;
+      $('mdNSong').hidden = false; $('mdNSongN').textContent = `🎧 ${st.song.name} · a 30-second part plays`;
+      const r = $('mdNFrom'); r.max = String(Math.max(0, Math.floor(ab.duration - 30))); r.value = '0'; $('mdNFromT').textContent = '0:00';
+      tunes(); songPlay();
+    }catch(err){ toast('This song could not be opened here. Try an MP3 or M4A file.', true); }
+  };
+  $('mdNFrom').oninput = e => { $('mdNFromT').textContent = fmtS(+e.target.value); };
+  $('mdNFrom').onchange = e => { if(st.song){ st.song.from = +e.target.value; st.song.clip = null; songPlay(); } };
+  $('mdPost').onclick = async () => {
+    if(st.busy) return;
+    if(!st.photo && !st.text.trim()) return toast('Add a photo or type something first.', true);
+    st.busy = true; const b = $('mdPost'); b.disabled = true; b.textContent = 'Sharing…';
+    try{
+      const d = {text: st.text.trim(), bg: st.bg};
+      if(st.photo) d.photo = {data: st.photo.split(',')[1]};
+      if(st.music) d.music = {k: st.music.k};
+      else if(st.song){ if(!st.song.clip) st.song.clip = (await mdCutSong(st.song.raw, st.song.from)).buf; d.music = {name: st.song.name, type:'audio/wav', data: mdBufB64(st.song.clip), s: st.song.from}; }
+      const x = await call('mydayPost', d, 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+      if(st.photo) MD.media[x.id + ':photo'] = fetch(st.photo).then(r => r.blob()).then(bl => URL.createObjectURL(bl));
+      if(d.music && d.music.data) MD.media[x.id + ':music'] = Promise.resolve(st.song.clip);
+      if(!MD.list.some(y => y.id===x.id)) MD.list.push(x);
+      if(MD.known) MD.known.add(x.id);
+      mdStopMusic(); o.remove(); document.body.classList.remove('md-lock');
+      mdRender(); toast('Added to your day. Everyone can see it for 24 hours.');
+    }catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Share'; st.busy = false; }
+  };
+}
+/* ---------- Viewer ---------- */
+/** Opens the My day of person u (or the row's order starting at u). */
+function mdOpen(u){
+  if(!mdHas(u)) return;
+  mdCtx();   // the tap allows sound on this phone
+  const me = S.me ? S.me.username : '';
+  const people = u===me ? [me] : mdPeople();
+  let pi = Math.max(0, people.indexOf(u));
+  const firstNew = p => { const l = mdOf(p), i = l.findIndex(x => !x.seen); return i < 0 ? 0 : i; };
+  mdClose();
+  const o = document.createElement('div'); o.className = 'md-view'; o.id = 'mdView'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'My day');
+  document.body.appendChild(o); document.body.classList.add('md-lock');
+  const v = MD.view = {o, people, pi, si: firstNew(people[pi]), t0:0, left:0, total:0, timer:0, fillT:0, paused:false, holdAt:0, held:false, key:0};
+  const cur = () => mdOf(v.people[v.pi])[v.si];
+  const dur = x => x && x.mu ? 15000 : 6000;
+  const bars = () => { const l = mdOf(v.people[v.pi]); return l.map((x, i) => `<span class="md-bar"><i style="width:${i < v.si ? 100 : 0}%"${i===v.si ? ' id="mdFill"' : ''}></i></span>`).join(''); };
+  const fillNow = () => { const f = $('mdFill'), x = cur(); if(!f || !x || !v.total) return; const left = v.paused ? v.left : v.left - (Date.now() - v.t0); f.style.width = Math.max(0, Math.min(100, (1 - left / v.total) * 100)) + '%'; };
+  const run = ms => { clearTimeout(v.timer); clearInterval(v.fillT); v.total = ms; v.left = ms; v.t0 = Date.now(); v.paused = false; v.timer = setTimeout(next, ms); v.fillT = setInterval(fillNow, 80); };
+  const pause = () => { if(v.paused || !v.total) return; clearTimeout(v.timer); clearInterval(v.fillT); v.left = Math.max(0, v.left - (Date.now() - v.t0)); v.paused = true; fillNow(); if(MD.ctx) MD.ctx.suspend().catch(() => {}); };
+  const resume = () => { if(!v.paused) return; if(MD.ctx) MD.ctx.resume().catch(() => {}); v.paused = false; v.t0 = Date.now(); v.timer = setTimeout(next, v.left); v.fillT = setInterval(fillNow, 80); };
+  const draw = () => {
+    const x = cur(); if(!x) return mdClose();
+    clearTimeout(v.timer); clearInterval(v.fillT); v.total = 0; v.paused = false; mdStopMusic(); const key = ++v.key; MD.clipKey = 'v' + key;
+    const mine = x.u===me, t = x.mu && x.mu.k ? mdTune(x.mu.k) : null, admin = !!(S.me && S.me.role==='ADMIN');
+    o.innerHTML = `<div class="md-bars">${bars()}</div>
+      <div class="md-head"><span class="md-avw">${chatAv(x.u, true, x.n)}</span><span class="md-who"><b>${esc(mine ? 'Your day' : x.n)}</b><small>${esc(mdAgo(x.at))}${x.mu ? ` · 🎵 ${esc(t ? t.n : x.mu.n || 'Song')}` : ''}</small></span>
+        ${x.mu ? `<button type="button" class="md-ib" data-mdmute="1" aria-label="${MD.muted ? 'Sound on' : 'Sound off'}" title="${MD.muted ? 'Sound on' : 'Sound off'}">${MD.muted ? '🔇' : '🔊'}</button>` : ''}
+        ${mine || admin ? `<button type="button" class="md-ib" data-mddel="1" aria-label="Delete" title="Delete this My day">🗑️</button>` : ''}
+        <button type="button" class="md-ib" data-mdx="1" aria-label="Close" title="Close">${MS_ICON.close}</button></div>
+      <div class="md-stage" style="background:${x.p ? '#000' : MD_BG[x.bg || 0]}">${x.p ? '<div class="md-load">Loading photo…</div><img alt="" hidden>' : ''}${x.t ? `<div class="md-txt${x.p ? ' ph' : ''}">${esc(x.t)}</div>` : ''}
+        <button type="button" class="md-tap l" data-mdgo="-1" aria-label="Back"></button><button type="button" class="md-tap r" data-mdgo="1" aria-label="Next"></button></div>
+      <div class="md-foot">${mine ? `<button type="button" class="btn alt md-views" data-mdviews="1">👁 ${x.vc || 0} viewer${x.vc===1 ? '' : 's'}</button><button type="button" class="btn alt" data-mdadd="1">+ Add another</button>`
+        : `<button type="button" class="btn alt" data-mdmsg="1">💬 Send ${esc(chFirst(x.n))} a message</button>`}</div>`;
+    if(!mine && !x.seen){ x.seen = true; MD.seenQ.add(x.id); clearTimeout(MD.seenT); MD.seenT = setTimeout(mdSeenSend, 1500); }
+    const ready = [];
+    if(x.p) ready.push(mdMedia(x, 'photo').then(src => { if(v.key!==key) return; const im = o.querySelector('.md-stage img'); if(im){ im.src = src; im.hidden = false; } const l = o.querySelector('.md-load'); if(l) l.remove(); })
+      .catch(e => { const l = o.querySelector('.md-load'); if(l) l.textContent = e.message; }));
+    if(t) mdPlayTune(t.k);
+    else if(x.mu && x.mu.f) ready.push(mdMedia(x, 'music').then(buf => { if(v.key===key) return mdPlayClip(buf, 'v' + key); }).catch(() => {}));
+    Promise.all(ready).then(() => { if(v.key===key && $('mdView')===o){ run(dur(x)); if(v.held) pause(); } });
+    mdRender();
+  };
+  function next(){ const l = mdOf(v.people[v.pi]); if(v.si < l.length - 1){ v.si++; return draw(); } if(v.pi < v.people.length - 1){ v.pi++; v.si = firstNew(v.people[v.pi]); return draw(); } mdClose(); }
+  function prev(){ if(v.si > 0){ v.si--; return draw(); } if(v.pi > 0){ v.pi--; v.si = 0; return draw(); } draw(); }
+  // hold to pause (like Messenger); a short tap goes back or on
+  o.onpointerdown = e => { if(!e.target.closest('.md-stage')) return; v.holdAt = Date.now(); v.held = true; v.holdT = setTimeout(pause, 220); };
+  o.onpointerup = o.onpointercancel = () => { clearTimeout(v.holdT); v.held = false; if(v.paused && !$('chSheet')) resume(); };
+  o.onclick = async e => {
+    if(e.target.closest('[data-mdx]')) return mdClose();
+    const g = e.target.closest('[data-mdgo]'); if(g){ const held = v.holdAt && Date.now() - v.holdAt > 300; v.holdAt = 0; if(held) return; return +g.dataset.mdgo > 0 ? next() : prev(); }
+    if(e.target.closest('[data-mdmute]')){ mdMute(!MD.muted); const b = e.target.closest('[data-mdmute]'); b.textContent = MD.muted ? '🔇' : '🔊'; return; }
+    if(e.target.closest('[data-mdadd]')) return mdNew();
+    if(e.target.closest('[data-mdmsg]')){ const x = cur(); mdClose(); if(chatOpen()) chatGo(x.u); else openChat(x.u); setTimeout(() => { const ta = $('chText'); if(ta && !ta.value){ ta.value = 'About your My day: '; if(ta.oninput) ta.oninput(); ta.focus(); } }, 60); return; }
+    if(e.target.closest('[data-mdviews]')){ const x = cur(); pause(); mdViews(x, () => { if($('mdView')===o) resume(); }); return; }
+    if(e.target.closest('[data-mddel]')){ const x = cur(); pause();
+      if(!confirm('Delete this My day? Nobody will see it any more.')) return resume();
+      try{ await call('mydayDelete', x.id); MD.list = MD.list.filter(y => y.id!==x.id); toast('Deleted from My day'); if(!mdOf(v.people[v.pi]).length){ v.people.splice(v.pi, 1); if(v.pi >= v.people.length) return mdClose(); v.si = firstNew(v.people[v.pi]); } else v.si = Math.min(v.si, mdOf(v.people[v.pi]).length - 1); draw(); mdRender(); }
+      catch(err){ toast(err.message, true); resume(); }
+    }
+  };
+  v.key = 0; draw();
+}
+function mdViews(x, after){
+  chatSheet(`${shHead('Viewed by')}<div class="md-vlist" id="mdVList"><p class="hint" style="padding:10px">Loading…</p></div>`);
+  const sh = $('chSheet'); if(sh) sh.classList.add('md-sheet');
+  const watch = setInterval(() => { if(!$('chSheet')){ clearInterval(watch); if(after) after(); } }, 250);
+  call('mydayViews', x.id).then(l => {
+    x.vc = l.length; const el = $('mdVList'); if(!el) return;
+    el.innerHTML = l.length ? l.map(r => `<div class="cg-row">${chatAv(r.u, true, r.n)}<span class="ms-mid"><b>${esc(r.n)}</b><small>${esc(msTime(r.at))}</small></span></div>`).join('') : '<p class="hint" style="padding:10px">No one has viewed it yet.</p>';
+    const b = document.querySelector('[data-mdviews]'); if(b) b.textContent = `👁 ${l.length} viewer${l.length===1 ? '' : 's'}`;
+  }).catch(e => { const el = $('mdVList'); if(el) el.innerHTML = `<p class="hint" style="padding:10px">${esc(e.message)}</p>`; });
+}
+function mdSeenSend(){
+  const ids = [...MD.seenQ]; if(!ids.length) return;
+  call('mydaySeen', ids).then(() => { ids.forEach(id => MD.seenQ.delete(id)); }).catch(() => {});
+}
+function mdClose(){
+  const v = MD.view; if(v){ clearTimeout(v.timer); clearInterval(v.fillT); MD.view = null; }
+  mdStopMusic(); if(MD.ctx && MD.ctx.state==='suspended') MD.ctx.resume().catch(() => {});
+  const o = $('mdView'); if(o) o.remove();
+  if(!$('mdNew')) document.body.classList.remove('md-lock');
+  mdSeenSend(); mdRender();
+}
+document.addEventListener('keydown', e => {
+  const v = MD.view; if(!v || $('chSheet')) return;
+  if(e.key==='Escape'){ e.preventDefault(); e.stopImmediatePropagation(); mdClose(); }
+  else if(e.key==='ArrowRight'){ const b = v.o.querySelector('[data-mdgo="1"]'); if(b) b.click(); }
+  else if(e.key==='ArrowLeft'){ const b = v.o.querySelector('[data-mdgo="-1"]'); if(b) b.click(); }
+}, true);
 /* ================= Trip hardship rating (MANU 2026-10-13 "add ratings on trip hardships") =================
    1 (easy) to 5 (extreme) plus what made it hard. MANU 2026-10-20 "move the truck hardship rating to a new tab accessible by admin,
    supervisor and team leader": they rate each route in the Trip hardship tab (Code.gs ROUTE HARDSHIP, routeHardList, boot.routeHard;
@@ -12837,8 +13313,107 @@ function drawVideoAdmin(r){
 // ---------- 2 Today's alerts: one box at sign-in instead of pop-ups one after another ----------
 const ALR = {data: {}, back: false};
 function signinFlow(){
-  return vidGate().then(() => tourGate()).then(() => alertsAtSignin()).catch(() => {});
+  return vidGate().then(() => tourGate()).then(() => alertsAtSignin()).catch(() => {}).then(() => quoteAtSignin());   // quote last (MANU 2026-11-08)
 }
+/**
+ * Sign-in quote (MANU 2026-11-08 "upon log-in, pop-up a random inspirational quotes"): a small glass card with one random quote,
+ * once per sign-in (sessionStorage jmti_quote_<user> = that sign-in's token, so a reload does not show it again). Built in, no
+ * server call. It waits until the sign-in video, the walk-through, the overdue lock, Today's alerts and any other pop-up are
+ * closed (checked twice in a row, 1.5 s apart), and gives up after 3 minutes. The last 12 quotes on this device are skipped
+ * (localStorage jmti_quote_recent), so the same quote never comes twice in a row. Tap the button, outside the card, or Esc to close.
+ */
+const QUOTES = [
+  ["Alone we can do so little; together we can do so much.", "Helen Keller"],
+  ["If everyone is moving forward together, then success takes care of itself.", "Henry Ford"],
+  ["Coming together is a beginning, staying together is progress, and working together is success.", "Henry Ford"],
+  ["It does not matter how slowly you go as long as you do not stop.", "Confucius"],
+  ["Well done is better than well said.", "Benjamin Franklin"],
+  ["The journey of a thousand miles begins with one step.", "Lao Tzu"],
+  ["Do what you can, with what you have, where you are.", "Theodore Roosevelt"],
+  ["Believe you can and you're halfway there.", "Theodore Roosevelt"],
+  ["Great things are done by a series of small things brought together.", "Vincent van Gogh"],
+  ["Success is the sum of small efforts, repeated day in and day out.", "Robert Collier"],
+  ["Talent wins games, but teamwork and intelligence win championships.", "Michael Jordan"],
+  ["None of us is as smart as all of us.", "Ken Blanchard"],
+  ["The best way out is always through.", "Robert Frost"],
+  ["Act as if what you do makes a difference. It does.", "William James"],
+  ["Start where you are. Use what you have. Do what you can.", "Arthur Ashe"],
+  ["Hard work beats talent when talent doesn't work hard.", "Tim Notke"],
+  ["Opportunities don't happen. You create them.", "Chris Grosser"],
+  ["Don't watch the clock; do what it does. Keep going.", "Sam Levenson"],
+  ["Quality means doing it right when no one is looking.", "Henry Ford"],
+  ["Safety first is safety always.", "Charles M. Hayes"],
+  ["Teamwork makes the dream work.", "John C. Maxwell"],
+  ["Small deeds done are better than great deeds planned.", "Peter Marshall"],
+  ["Discipline is the bridge between goals and accomplishment.", "Jim Rohn"],
+  ["Motivation is what gets you started. Habit is what keeps you going.", "Jim Rohn"],
+  ["If you want to go fast, go alone. If you want to go far, go together.", "African proverb"],
+  ["The road to success is always under construction.", "Lily Tomlin"],
+  ["It always seems impossible until it's done.", "Nelson Mandela"],
+  ["Don't count the days, make the days count.", "Muhammad Ali"],
+  ["You don't have to be great to start, but you have to start to be great.", "Zig Ziglar"],
+  ["Nothing will work unless you do.", "Maya Angelou"],
+  ["Plans are nothing; planning is everything.", "Dwight D. Eisenhower"],
+  ["Be so good they can't ignore you.", "Steve Martin"],
+  ["The only way to do great work is to love what you do.", "Steve Jobs"],
+  ["Excellence is doing ordinary things extraordinarily well.", "John W. Gardner"],
+  ["The best preparation for tomorrow is doing your best today.", "H. Jackson Brown Jr."],
+  ["Little by little, one travels far.", "J. R. R. Tolkien"],
+  ["Many hands make light work.", "Proverb"],
+  ["A smooth sea never made a skilled sailor.", "Proverb"],
+  ["Kind words cost nothing but mean a lot.", "Proverb"],
+  ["Teamwork divides the task and multiplies the success.", "Unknown"],
+  ["Strive for progress, not perfection.", "Unknown"],
+  ["Every job is a self-portrait of the person who did it. Sign your work with excellence.", "Unknown"],
+  ["Done is better than perfect.", "Saying"],
+  ["Every mile is one mile closer to home.", "Road saying"],
+  ["Drive safe. Someone is waiting for you at home.", "Road safety saying"],
+  ["Patience on the road saves lives.", "Road safety saying"],
+  ["Keep your eyes on the road and your mind on the goal.", "Road saying"],
+  ["Check twice, drive once.", "Trucking saying"],
+  ["Take care of your truck, and it will take care of you.", "Trucking saying"],
+  ["Every load delivered on time is a promise kept.", "Trucking saying"],
+  ["Arriving late is better than not arriving at all.", "Road safety saying"],
+  ["A clean truck and a calm driver go a long way.", "Trucking saying"]
+];
+function quotePick(){
+  let rec = lsGet('jmti_quote_recent'); if(!Array.isArray(rec)) rec = [];
+  const all = QUOTES.map((_, i) => i), last = rec[rec.length - 1];
+  let pool = all.filter(i => !rec.includes(i)); if(!pool.length) pool = all.filter(i => i !== last);
+  const i = pool[Math.floor(Math.random() * pool.length)];
+  rec.push(i); lsSet('jmti_quote_recent', rec.slice(-12));
+  return QUOTES[i];
+}
+function quoteBusy(){
+  if(S.odLocked || document.hidden || !$('pop').hidden || !$('vgate').hidden || !$('tour').hidden) return true;
+  if($('drawer') && $('drawer').classList.contains('on')) return true;
+  return [...document.querySelectorAll('[role=dialog],[role=alertdialog],[aria-modal=true],.vchg')].some(el => el.id !== 'qpop' && !el.closest('#qpop, #drawer') && !el.hidden && el.getClientRects().length > 0 && !el.closest('[hidden]'));
+}
+function quoteAtSignin(tries, calm){
+  if(!S.me || !TOKEN) return;
+  const key = 'jmti_quote_' + S.me.username;
+  try{ if(sessionStorage.getItem(key) === String(TOKEN)) return; }catch(e){}
+  tries = tries || 0;
+  if(tries > 120) return;   // about 3 minutes
+  if(quoteBusy()) return setTimeout(() => quoteAtSignin(tries + 1, 0), 1500);
+  if(!calm) return setTimeout(() => quoteAtSignin(tries + 1, 1), 1500);   // free twice in a row (one alert list closing and the next opening)
+  try{ sessionStorage.setItem(key, String(TOKEN)); }catch(e){}
+  quoteShow();
+}
+function quoteShow(q){
+  q = q || quotePick();
+  let o = $('qpop');
+  if(!o){ o = document.createElement('div'); o.id = 'qpop'; o.className = 'qpop'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'false'); o.setAttribute('aria-labelledby', 'qpText');
+    o.addEventListener('click', e => { if(e.target === o || e.target.closest('[data-qok]')) quoteClose(); });
+    document.addEventListener('keydown', e => { if(e.key === 'Escape' && !$('qpop').hidden) quoteClose(); });
+    document.body.appendChild(o); }
+  const hi = S.me && S.me.name ? chFirst(S.me.name) : '';
+  const btn = Math.random() < .5 ? "Let's go" : 'Thanks';
+  o.innerHTML = `<div class="qp-card"><div class="qp-mark" aria-hidden="true">“</div><small class="qp-hi">${hi ? 'Good to see you, ' + esc(hi) + '. ' : ''}Today's thought</small><p id="qpText">${esc(q[0])}</p><span class="qp-by">${esc(q[1])}</span><button type="button" class="btn qp-ok" data-qok="1">${btn}</button></div>`;
+  o.hidden = false; o.classList.remove('out');
+  setTimeout(() => { const b = o.querySelector('.qp-ok'); if(b) b.focus({preventScroll: true}); }, 60);
+}
+function quoteClose(){ const o = $('qpop'); if(!o || o.hidden) return; o.classList.add('out'); setTimeout(() => { o.hidden = true; o.classList.remove('out'); }, 220); }
 async function alertsAtSignin(){
   if(!S.me) return;
   const role = S.me.role, d = ALR.data = {};
@@ -13176,7 +13751,7 @@ function tourSteps(){
   steps.push({sel: '#srchBtn', t: 'Search', s: 'Type a plate, driver, shipment number or TRIP ID to find any trip and see its whole story.'});
   if(r !== 'HR') steps.push({sel: '#lwBtn', t: 'Bell', s: 'Trucks waiting too long and incident reports show here.'});
   if(['TEAM LEADER', 'DISPATCHER'].includes(r)) steps.push({sel: '#shBtn', t: 'Shift endorsement', s: 'Write your end-of-shift notes here for the next shift.'});
-  steps.push({sel: '#chatBtn', t: 'Chat', s: 'Message the team or one person. You can drag this button.'});
+  steps.push({sel: '#chatBtn', t: 'Chat', s: 'Message the team or one person.'});
   steps.push({sel: '#setBtn', t: 'Settings', s: 'Your profile, password, text size, theme, and this tour again ("Show me around").'});
   return steps.filter(x => !x.sel || (document.querySelector(x.sel) && document.querySelector(x.sel).getClientRects().length && !document.querySelector(x.sel).closest('[hidden]')));
 }
