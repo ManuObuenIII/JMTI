@@ -365,6 +365,32 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .poptbl tr.ir-unread td{background:#FFF7ED}
 small.ir-newtag{color:#D92D20 !important;font-weight:800}
 .ir-n{display:inline-block;min-width:18px;border-radius:999px;background:#D92D20;color:#fff;font-size:10.5px;padding:1px 5px;margin-left:4px}
+/* Incident report responses (MANU 2026-11-10) */
+.irr-box{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.irr{border:1px solid var(--line);border-left:4px solid #64748B;border-radius:10px;padding:8px 10px;margin:0 0 8px;background:rgba(255,255,255,.6);font-size:13px;line-height:1.45}
+.irr.mine{border-left-color:#2E5BFF;background:rgba(46,91,255,.06)}
+.irr-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin-bottom:3px}
+.irr-top b{color:var(--ink)}
+.irr-top small{color:var(--muted);margin-left:auto}
+.irr-role{font-size:10.5px;font-weight:800;color:#0A27B5;background:rgba(46,91,255,.12);border-radius:999px;padding:1px 7px;white-space:normal}
+.irr-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.irr-pic{padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff;cursor:pointer;width:96px;height:96px}
+.irr-pic img{width:100%;height:100%;object-fit:cover;display:block}
+.irr-doc{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;max-width:100%;text-align:left;border:1px solid var(--line);border-radius:8px;background:#fff;padding:6px 9px;font:inherit;font-size:12.5px;color:var(--ink);cursor:pointer}
+.irr-doc span{word-break:break-word;white-space:normal;font-weight:700}
+.irr-doc small{color:var(--muted)}
+.irr-form{margin-top:10px}
+.irr-att{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.irr-att:empty{display:none}
+.irr-chip{display:inline-flex;flex-wrap:wrap;align-items:center;gap:2px 6px;max-width:100%;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 8px;background:rgba(46,91,255,.08);font-size:12px}
+.irr-chip img{width:22px;height:22px;border-radius:5px;object-fit:cover}
+.irr-chip span{word-break:break-word;white-space:normal}
+.irr-chip small{color:var(--muted)}
+.irr-x{border:0;background:#D92D20;color:#fff;border-radius:999px;width:20px;height:20px;line-height:18px;font-size:14px;cursor:pointer;padding:0}
+.irr-act{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.irr-act .btn{white-space:normal}
+@media (hover:hover) and (pointer:fine){ .irr-cam{display:none} }
+small.ir-rep{color:#0A27B5 !important;font-weight:700}
 .lw-esc{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 /* escalation issue chips (Truck Plan ESCALATION pop-up) */
 .esc-chips{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:6px}
@@ -4365,7 +4391,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.64, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.65, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4396,6 +4422,12 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-10 18:02 UTC "on incident report, there should be a thread of responses, a supervisor, team leader and dispatch should be able to respond and attach files"
+  {v:14.65, d:'2026-11-10', items:[
+    'Incident reports: each report now has a Responses thread under it. Supervisor, Team leader, Dispatcher, HR, Admin and the person who sent the report can respond.',
+    'Responses can carry photos and files (PDF, Word, Excel and others, up to 10 files of 10 MB each). On a phone, "Take photo" opens the camera. Tap a photo or file to open it.',
+    'A new response comes to the bell of the sender, HR, Admin, Boss and anyone who opened the report before. The list of reports shows how many responses each has.'
+  ]},
   // MANU 2026-11-10 11:07 UTC "add button in clients to search for the addresses of the source and destination and save them"
   {v:14.64, d:'2026-11-10', items:[
     'Clients: new "Find addresses" button. It looks up every source and destination that has no address yet on Google Maps, shows what it found, and saves the ones you keep ticked (you can fix an address before saving).',
@@ -8268,7 +8300,7 @@ function renderLwPop(){
       <div class="lw-top"><span><b>${esc(x.id)}</b> · ${esc(x.type)}</span>${irPill(x.status)}</div>
       <div class="ir-clip">${esc(x.details)}</div>
       <small>${x.truckNo ? 'Truck ' + esc(x.truckNo) + (x.plateNo ? ' · ' + esc(x.plateNo) : '') + ' · ' : ''}${irWhen(x)}</small>
-      <small class="ir-sub">Submitted by ${irBy(x)}${x.statusBy && x.byU===(S.me && S.me.username || '').toLowerCase() ? ` · status changed by ${esc(x.statusBy)}` : ''}</small></div>`).join('')
+      <small class="ir-sub">Submitted by ${irBy(x)}${x.statusBy && x.byU===(S.me && S.me.username || '').toLowerCase() ? ` · status changed by ${esc(x.statusBy)}` : ''}</small>${x.replies ? `<small class="ir-rep">💬 ${x.replies} response${x.replies===1 ? '' : 's'}${x.replyBy && x.replyByU!==irMe() ? ' · newest from ' + esc(x.replyBy) : ''}</small>` : ''}</div>`).join('')
       : '<p class="hint">No new incident reports.</p>') + `<p style="margin:0 0 12px"><button class="btn alt" type="button" data-irall>All incident reports</button></p>`;
   if(!mayLw()){ $('popBody').innerHTML = irHtml; return; }
   $('popBody').innerHTML = irHtml + (ir.length || may('irView') ? '<h4 class="ir-h">Waiting too long</h4>' : '') + (l.length ? `<p class="hint" style="margin:0 0 10px">No status change for more than 6 hours at a site, 12 hours on the way, or 24 hours at Clip Board. Update the trip in Truck Plan, or tap ESCALATION to send it.</p>`
@@ -8362,9 +8394,10 @@ function openIr(id, back){
       ${row('Action taken', x.action ? `<div class="ir-txt">${esc(x.action)}</div>` : '')}
       ${row('Status', irPill(x.status) + (x.statusBy ? `<small>by ${esc(x.statusBy)} · ${irAt(x.statusAt)}</small>` : '<small>not yet reviewed by HR</small>'))}
       ${!IR.canStatus ? row('HR remarks', x.remarks ? `<div class="ir-txt">${esc(x.remarks)}</div>` : '') : ''}
-    </tbody></table></div>${edit}`,
+    </tbody></table></div>${edit}${irThreadBox(x)}`,
     `<button class="btn alt" type="button" id="irBack">${back==='bell' ? 'Back to notifications' : 'All incident reports'}</button>${IR.canStatus ? ' <button class="btn road" type="button" id="irSave">Save status</button>' : ''} <button class="btn" type="button" onclick="closePop()">Close</button>`);
   $('pop').dataset.kind = 'ir';
+  bindIrThread(x);
   $('irBack').onclick = () => back==='bell' ? openLw() : openIrList();
   if(IR.canStatus) $('irSave').onclick = async () => {
     const b = $('irSave'); b.disabled = true; b.textContent = 'Saving…';
@@ -8373,6 +8406,110 @@ function openIr(id, back){
       toast(`${x.id} is now ${r.status}`); openIr(x.id, back); }
     catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Save status'; }
   };
+}
+/* ===== Incident report responses (MANU 2026-11-10 "on incident report, there should be a thread of responses, a supervisor, team
+ * leader and dispatch should be able to respond and attach files")
+ * Under each IR: the responses, oldest first, with photos and files. Supervisor, Team leader, Dispatcher, HR, Admin and the person
+ * who sent the IR respond; everyone who sees IRs reads them. Files go one by one (irUpload, photos made small on the phone like the
+ * chat), then irReply sends the text with them. A new response comes to the bell (Code.gs irUnread_). */
+const IRT = {id:'', list:[], canReply:false, loaded:false, busy:false, err:'', files:[], sending:false, ref:'', draft:''};
+const IR_REPLY_ROLES = ['ADMIN', 'HR', 'SUPERVISOR', 'TEAM LEADER', 'DISPATCHER'];
+const irMe = () => String(S.me && S.me.username || '').toLowerCase();
+const irCanReply = x => !!S.me && (IR_REPLY_ROLES.includes(S.me.role) || (x.byU===irMe() && may('irAdd')));
+const irFIco = m => /^image\//.test(m) ? '🖼️' : m==='application/pdf' ? '📄' : /sheet|excel|csv/.test(m) ? '📊' : /word/.test(m) ? '📝' : /presentation|powerpoint/.test(m) ? '📽️' : /zip/.test(m) ? '🗜️' : '📎';
+const irSize = n => !n ? '' : n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+const irRef = () => 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+/** The responses part of the IR pop-up (the list is redrawn alone, so a response being typed stays). */
+function irThreadBox(x){
+  if(IRT.id!==x.id){ IRT.files.forEach(f => f.url && URL.revokeObjectURL(f.url)); Object.assign(IRT, {id:x.id, list:[], loaded:false, err:'', files:[], ref:irRef(), draft:''}); }
+  const can = irCanReply(x);
+  return `<div class="irr-box"><h4 class="ir-h">💬 Responses <span id="irrN"></span></h4><div id="irThr"><p class="hint">Loading responses…</p></div>
+    ${can ? `<div class="irr-form">
+      <label class="f full">Your response<textarea id="irRTxt" rows="3" maxlength="3000" placeholder="What was done, findings, follow-up. Attach photos or documents if you have them.">${esc(IRT.draft || '')}</textarea></label>
+      <div id="irAtt" class="irr-att"></div>
+      <div class="irr-act">
+        <input type="file" id="irRFile" multiple hidden accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip">
+        <input type="file" id="irRCam" hidden accept="image/*" capture="environment">
+        <button class="btn alt" type="button" id="irRPick">📎 Attach file or photo</button>
+        <button class="btn alt irr-cam" type="button" id="irRShot">📷 Take photo</button>
+        <button class="btn road" type="button" id="irRSend">Send response</button>
+      </div></div>` : '<p class="hint-line" style="margin:6px 0 0">Your role can read the responses. Supervisor, Team leader, Dispatcher, HR and Admin respond.</p>'}</div>`;
+}
+function drawIrThread(){
+  const el = $('irThr'); if(!el) return;
+  const n = $('irrN'); if(n) n.textContent = IRT.loaded && IRT.list.length ? `(${IRT.list.length})` : '';
+  if(!IRT.loaded){ el.innerHTML = `<p class="hint">${esc(IRT.err || 'Loading responses…')}</p>`; return; }
+  const me = irMe();
+  el.innerHTML = IRT.list.length ? IRT.list.map(r => `<div class="irr${r.byU===me ? ' mine' : ''}">
+      <div class="irr-top"><b>${esc(r.by || r.byU || '—')}</b>${r.byRole ? `<span class="irr-role">${esc(r.byRole)}</span>` : ''}<small>${irAt(r.at)}</small></div>
+      ${r.text ? `<div class="ir-txt">${esc(r.text)}</div>` : ''}
+      ${(r.files || []).length ? `<div class="irr-files">${r.files.map(f => f.p
+        ? `<button type="button" class="irr-pic" data-irfile="${esc(f.id)}" data-n="${esc(f.n)}" title="Open ${esc(f.n)}"><img src="${esc(f.p)}" alt="${esc(f.n)}"></button>`
+        : `<button type="button" class="irr-doc" data-irfile="${esc(f.id)}" data-n="${esc(f.n)}" title="Open ${esc(f.n)}">${irFIco(f.m)} <span>${esc(f.n)}</span><small>${irSize(f.s)}</small></button>`).join('')}</div>` : ''}
+    </div>`).join('') : '<p class="hint" style="margin:0">No responses yet.</p>';
+}
+function drawIrAtt(){
+  const el = $('irAtt'); if(!el) return;
+  el.innerHTML = IRT.files.map((f, i) => `<span class="irr-chip">${f.url ? `<img src="${f.url}" alt="">` : irFIco(f.file.type)} <span>${esc(f.file.name)}</span><small>${irSize(f.file.size)}${f.up ? ' · sent' : ''}</small>${IRT.sending ? '' : `<button type="button" class="irr-x" data-irx="${i}" title="Remove" aria-label="Remove ${esc(f.file.name)}">×</button>`}</span>`).join('');
+}
+function loadIrThread(id){
+  if(IRT.busy) return;
+  IRT.busy = true;
+  call('irThread', id).then(r => { if(IRT.id!==id) return; Object.assign(IRT, {list:r.list || [], canReply:!!r.canReply, loaded:true, err:''}); drawIrThread(); })
+    .catch(e => { if(IRT.id===id && !IRT.loaded){ IRT.err = e.message; drawIrThread(); } })
+    .finally(() => { IRT.busy = false; });
+}
+function irAddFiles(list){
+  const room = 10 - IRT.files.length, add = Array.from(list || []);
+  if(add.length > room) toast(`Up to 10 files in one response.`, true);
+  add.slice(0, Math.max(0, room)).forEach(file => {
+    if(file.size > CH_MAX_MB * 1048576 && !/^image\//.test(file.type)) return toast(`${file.name} is larger than ${CH_MAX_MB} MB.`, true);
+    IRT.files.push({file, url:/^image\/(jpeg|png|webp|gif)$/.test(file.type) ? URL.createObjectURL(file) : ''});
+  });
+  drawIrAtt();
+}
+async function irSendReply(x){
+  const ta = $('irRTxt'), b = $('irRSend'), txt = ta.value.trim();
+  if(!txt && !IRT.files.length) return toast('Type a response or attach a file.', true);
+  if(navigator.onLine===false) return toast('Responses need signal. Try again when the signal is back.', true);
+  IRT.sending = true; b.disabled = true; drawIrAtt();
+  try{
+    const ids = [];
+    for(let i = 0; i < IRT.files.length; i++){
+      const f = IRT.files[i];
+      if(!f.up){
+        b.textContent = `Sending file ${i + 1} of ${IRT.files.length}…`;
+        const p = await chatPrep(f.file);
+        if(p.data.length * 0.75 > CH_MAX_MB * 1048576) throw new Error(`${f.file.name} is larger than ${CH_MAX_MB} MB.`);
+        f.up = await call('irUpload', x.id, p);   // kept: sending again after a lost answer does not send the file twice
+        drawIrAtt();
+      }
+      ids.push(f.up.id);
+    }
+    b.textContent = 'Sending…';
+    const r = await call('irReply', x.id, txt, ids, IRT.ref);
+    IRT.files.forEach(f => f.url && URL.revokeObjectURL(f.url));
+    Object.assign(IRT, {list:r.list || [], loaded:true, files:[], ref:irRef(), draft:''});
+    if(IRT.id===x.id && $('irRTxt')) $('irRTxt').value = '';
+    if(r.ir){ const i = IR.list.findIndex(y => y.id===x.id); if(i >= 0) IR.list[i] = r.ir; IR.unread = irNew().length; renderLw(); }
+    drawIrThread(); toast('Response sent');
+    const t = $('irThr'); if(t && t.lastElementChild) t.lastElementChild.scrollIntoView({block:'nearest', behavior:'smooth'});
+  }catch(e){ toast(e.message, true); }
+  finally{ IRT.sending = false; if($('irRSend')){ $('irRSend').disabled = false; $('irRSend').textContent = 'Send response'; } drawIrAtt(); }
+}
+/** Hooks the responses part up after openIr draws the pop-up. */
+function bindIrThread(x){
+  drawIrThread(); drawIrAtt(); loadIrThread(x.id);
+  $('popBody').onclick = e => {
+    const f = e.target.closest('[data-irfile]'); if(f) return viewFile(f.dataset.irfile, f.dataset.n, 'irFile');
+    const rm = e.target.closest('[data-irx]'); if(rm && !IRT.sending){ const g = IRT.files.splice(Number(rm.dataset.irx), 1)[0]; if(g && g.url) URL.revokeObjectURL(g.url); drawIrAtt(); }
+  };
+  if(!$('irRSend')) return;
+  $('irRTxt').oninput = e => { IRT.draft = e.target.value; };
+  $('irRPick').onclick = () => $('irRFile').click();
+  $('irRShot').onclick = () => $('irRCam').click();
+  $('irRFile').onchange = $('irRCam').onchange = e => { irAddFiles(e.target.files); e.target.value = ''; };
+  $('irRSend').onclick = () => irSendReply(x);
 }
 /** Every IR (newest first), with a status filter and find box. */
 function openIrList(o){
@@ -8406,7 +8543,7 @@ function drawIrList(){
       <td>${irWhen(x)}<small class="ir-clip">${esc(x.details)}</small></td>
       <td>${esc(x.truckNo || '—')}<small>${esc(x.plateNo || '')}${x.driver ? ' · ' + esc(x.driver) : ''}</small></td>
       <td>${esc(x.by || '—')}<small>${esc(x.byRole || '')} · ${irAt(x.at)}</small></td>
-      <td>${irPill(x.status)}${x.statusBy ? `<small>${esc(x.statusBy)}</small>` : ''}</td></tr>`).join('')}</tbody></table></div>`
+      <td>${irPill(x.status)}${x.statusBy ? `<small>${esc(x.statusBy)}</small>` : ''}${x.replies ? `<small class="ir-rep">💬 ${x.replies} response${x.replies===1 ? '' : 's'}</small>` : ''}</td></tr>`).join('')}</tbody></table></div>`
       : `<p class="hint">${all.length ? 'No report matches.' : IR.busy ? 'Loading…' : 'No incident reports yet.'}</p>`}`;
   const f = $('irFind'); f.oninput = drawIrList;
   if(had && pos!==null){ f.focus(); try{ f.setSelectionRange(pos, pos); }catch(e){} }
@@ -8415,6 +8552,11 @@ function irRedraw(){
   renderIrSum();
   if($('pop').hidden) return;
   if($('pop').dataset.kind==='irlist') drawIrList();
+  if($('pop').dataset.kind==='ir' && IRT.id && !IRT.sending){   // a new response or status while the IR is open: fetch the thread, keep it off the bell
+    const x = (IR.list || []).find(y => y.id===IRT.id);
+    if(x && x.unread){ x.unread = false; IR.unread = irNew().length; renderLw(); call('irRead', x.id).catch(() => {}); }
+    loadIrThread(IRT.id);
+  }
 }
 /* ===== Incident reports summary in Manpower (MANU 2026-11-06 "in Manpower, add incident reports summary")
  * Same list as the bell and Truck Plan (Code.gs irList, newest 500). Counts by status, by type, by driver/helper (driver, helper
