@@ -2782,6 +2782,7 @@ body.md-lock #toast{z-index:320}
         <label class="f grow">Find<input id="clFind" placeholder="Source, destination or client" autocomplete="off"></label>
         <button class="btn" type="button" id="clAddRoute" hidden>+ Add route</button>
         <button class="btn alt" type="button" id="clCokeKm" hidden>Fill Coca Cola km</button>
+        <button class="btn alt" type="button" id="clFindAddr" hidden>📍 Find addresses &amp; km</button>
         <button class="btn alt" type="button" id="clPayBtn" hidden>Record payment</button>
         <button class="btn alt" type="button" id="clCsv">Generate report (CSV)</button>
       </div>
@@ -4364,7 +4365,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.63, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.64, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4395,6 +4396,12 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-10 11:07 UTC "add button in clients to search for the addresses of the source and destination and save them"
+  {v:14.64, d:'2026-11-10', items:[
+    'Clients: new "Find addresses" button. It looks up every source and destination that has no address yet on Google Maps, shows what it found, and saves the ones you keep ticked (you can fix an address before saving).',
+    'Clients: the Addresses pop-up of a route has a "Search" button beside each address.',
+    'Clients: after the addresses are saved, the same button works out the missing distances (one way, by road on Google Maps) from the saved addresses. You check the km and save the ticked ones; a km already there is never changed.'
+  ]},
   // MANU 2026-11-10 09:02 UTC "add here button to show all trips regardless of the status" (POD chips)
   {v:14.63, d:'2026-11-10', items:[
     'POD: new "All trips" button after "Endorsed to Billing" lists every trip in the dates, whatever its POD status (pending, waiting docs, received, Tukod and already endorsed).',
@@ -11581,6 +11588,7 @@ function initBook(){
   $('clPayBtn').onclick = () => openPayForm('');
   $('clAddRoute').onclick = openAddRoute;
   $('clCokeKm').onclick = fillCoke;
+  $('clFindAddr').onclick = findAddrs;
   $('msrAdd').onclick = addMissing;
   $('msrTbl').onchange = e => { const b = e.target.closest('input[data-mr]'); if(!b || !MR.data) return; const r = MR.data.routes[Number(b.dataset.mr)]; if(!r) return;
     if(b.checked) MR.off.delete(mrKey(r)); else MR.off.add(mrKey(r)); renderMissing(); };
@@ -11695,16 +11703,106 @@ function openAddr(i){
   const x = CL.rows && CL.rows[i]; if(!x) return; const r = x.r;
   openPop('Addresses', `${esc(r.source)} → ${esc(plainDest(r.destination))}`, `
     <div class="form">
-      <label class="f full">Source address · ${esc(r.source)}<input id="adSrc" value="${esc(addrOf(r.source))}" autocomplete="off" placeholder="Street, town, province"></label>
-      <label class="f full">Destination address · ${esc(r.destination)}<input id="adDst" value="${esc(addrOf(r.destination))}" autocomplete="off" placeholder="Street, town, province"></label>
-      <p class="hint full" style="margin:0">One address per place: every route from or to it shows the same address.</p>
+      <label class="f full">Source address · ${esc(r.source)}<span style="display:flex;gap:6px"><input id="adSrc" style="flex:1" value="${esc(addrOf(r.source))}" autocomplete="off" placeholder="Street, town, province"><button class="btn alt" type="button" id="adSrcFind">Search</button></span></label>
+      <label class="f full">Destination address · ${esc(r.destination)}<span style="display:flex;gap:6px"><input id="adDst" style="flex:1" value="${esc(addrOf(r.destination))}" autocomplete="off" placeholder="Street, town, province"><button class="btn alt" type="button" id="adDstFind">Search</button></span></label>
+      <p class="hint full" style="margin:0">One address per place: every route from or to it shows the same address. Search looks it up on Google Maps; check it before you save.</p>
     </div>`, `<button class="btn alt" type="button" onclick="closePop()">Cancel</button> <button class="btn road" type="button" id="adSave">Save</button>`);
+  const srch = (bid, iid, place) => { $(bid).onclick = async () => {
+    const b = $(bid); b.disabled = true; b.textContent = 'Searching…';
+    try{ const f = (await call('findPlaceAddresses', [place]))[0] || {};
+      if(f.address){ $(iid).value = f.address; toast(f.partial ? 'Found a rough match. Please check it.' : 'Address found. Check it, then Save.'); }
+      else toast('Google Maps did not find this place. Please type it.', true); }
+    catch(e){ toast(e.message, true); }
+    b.disabled = false; b.textContent = 'Search';
+  }; };
+  srch('adSrcFind', 'adSrc', r.source); srch('adDstFind', 'adDst', r.destination);
   $('adSave').onclick = async () => {
     const items = [{place:r.source, address:$('adSrc').value.trim()}, {place:r.destination, address:$('adDst').value.trim()}].filter(y => y.address!==addrOf(y.place));
     if(!items.length) return toast('Nothing changed.');
     const btn = $('adSave'); btn.disabled = true; btn.textContent = 'Saving…';
     try{ CL.data.places = await call('savePlaceAddress', items); closePop(); renderBook(); toast('Address saved'); }
     catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Save'; }
+  };
+}
+/* Find addresses (MANU 2026-11-10 "add button in clients to search for the addresses of the source and destination and save them"):
+   every source and destination in the routes list with no address yet is looked up on Google Maps (15 at a time), then a list shows
+   what was found. Found ones come ticked; a rough match is marked; not-found ones stay unticked until something is typed. Each address
+   can be fixed before "Save ticked". Places that already have an address are not touched (tap the address under a route to change it). */
+const FA = {stop:false, list:[]};
+async function findAddrs(){
+  const seen = new Set(), todo = [];
+  (CL.rows || bookRoutes()).forEach(x => [x.r.source, x.r.destination].forEach(p => { const k = nameKey(p); if(!p || seen.has(k)) return; seen.add(k); if(!addrOf(p)) todo.push(p); }));
+  if(!todo.length) return findKms();
+  FA.stop = false; FA.list = [];
+  openPop('Find addresses', `${plural(todo.length, 'place')} with no address yet`, `<p class="hint" id="faProg" style="margin:0">Searching Google Maps… 0 of ${todo.length}</p><div id="faBody"></div>`,
+    `<button class="btn alt" type="button" id="faStop">Stop</button> <button class="btn road" type="button" id="faSave" hidden>Save ticked</button>`, true);
+  $('faStop').onclick = () => { FA.stop = true; };
+  for(let i = 0; i < todo.length && !FA.stop; i += 15){
+    if($('pop').hidden) return;
+    try{ FA.list.push(...await call('findPlaceAddresses', todo.slice(i, i + 15))); }
+    catch(e){ toast(e.message, true); break; }
+    if($('faProg')) $('faProg').textContent = `Searching Google Maps… ${Math.min(i + 15, todo.length)} of ${todo.length}`;
+  }
+  if($('pop').hidden || !$('faBody')) return;
+  const found = FA.list.filter(x => x.address).length;
+  $('faProg').textContent = `Found ${found} of ${FA.list.length}${FA.list.length < todo.length ? ` (stopped, ${todo.length - FA.list.length} not searched)` : ''}. Untick a wrong one or fix it, then press Save ticked. Not found: type it or leave it blank.`;
+  $('faStop').textContent = 'Close'; $('faStop').onclick = () => closePop();
+  $('faBody').innerHTML = `<div class="tbl-wrap" style="max-height:55vh;margin-top:8px"><table class="poptbl"><tbody>${FA.list.map((x, i) => `<tr>
+    <td class="c" style="width:28px"><input type="checkbox" data-fa="${i}" ${x.address ? 'checked' : ''} aria-label="Save this address"></td>
+    <td><b>${esc(plainDest(x.place))}</b><small>${esc(x.place.includes('|') ? x.place.split('|')[0].trim() : 'source')}${x.address ? (x.partial ? ' · <span class="db-left">rough match, please check</span>' : '') : ' · <span class="db-left">not found</span>'}</small>
+      <input data-fai="${i}" value="${esc(x.address)}" autocomplete="off" placeholder="Street, town, province" style="width:100%;margin-top:4px"></td></tr>`).join('')}</tbody></table></div>`;
+  $('faBody').oninput = e => { const n = e.target.dataset.fai; if(n!==undefined){ const cb = document.querySelector(`[data-fa="${n}"]`); if(cb) cb.checked = !!e.target.value.trim(); } };
+  const sv = $('faSave'); sv.hidden = false;
+  sv.onclick = async () => {
+    const items = FA.list.map((x, i) => ({place:x.place, address:(document.querySelector(`[data-fai="${i}"]`).value || '').trim(), on:document.querySelector(`[data-fa="${i}"]`).checked}))
+      .filter(y => y.on && y.address).map(({place, address}) => ({place, address}));
+    if(!items.length) return toast('Tick at least one address.', true);
+    sv.disabled = true;
+    try{
+      for(let i = 0; i < items.length; i += 40){ sv.textContent = `Saving ${Math.min(i + 40, items.length)} of ${items.length}…`; CL.data.places = await call('savePlaceAddress', items.slice(i, i + 40)); }
+      closePop(); renderBook(); toast(`${items.length} address${items.length===1 ? '' : 'es'} saved`); findKms();
+    }catch(e){ toast(e.message, true); sv.disabled = false; sv.textContent = 'Save ticked'; }
+  };
+}
+/* Missing km from the saved addresses (MANU 2026-11-10 "since addressed will be saved, get the distance of missing distances"): routes with
+   no km whose source and destination both have an address get the Google Maps road distance (one way), 10 at a time; the list shows them
+   ticked with the km editable, and "Save ticked" writes them with saveRouteKm. Routes that already have a km are never touched. */
+async function findKms(){
+  const rows = (CL.rows || bookRoutes()).filter(x => !hasKm(x.r)), todo = rows.filter(x => addrOf(x.r.source) && addrOf(x.r.destination)).map(x => ({source:x.r.source, destination:x.r.destination}));
+  const noAd = rows.length - todo.length;
+  if(!todo.length) return toast(rows.length ? `${plural(rows.length, 'route')} with no distance, but each is missing a source or destination address.` : 'Every route already has a distance.');
+  FA.stop = false; FA.km = [];
+  openPop('Find missing distances', `${plural(todo.length, 'route')} with addresses but no km`, `<p class="hint" id="fkProg" style="margin:0">Asking Google Maps… 0 of ${todo.length}</p><div id="fkBody"></div>`,
+    `<button class="btn alt" type="button" id="fkStop">Stop</button> <button class="btn road" type="button" id="fkSave" hidden>Save ticked</button>`, true);
+  $('fkStop').onclick = () => { FA.stop = true; };
+  for(let i = 0; i < todo.length && !FA.stop; i += 10){
+    if($('pop').hidden) return;
+    try{ FA.km.push(...await call('findRouteKm', todo.slice(i, i + 10))); }
+    catch(e){ toast(e.message, true); break; }
+    if($('fkProg')) $('fkProg').textContent = `Asking Google Maps… ${Math.min(i + 10, todo.length)} of ${todo.length}`;
+  }
+  if($('pop').hidden || !$('fkBody')) return;
+  const got = FA.km.filter(x => x.km > 0).length;
+  $('fkProg').textContent = `Found ${got} of ${FA.km.length} (one way, by road)${FA.km.length < todo.length ? `, stopped, ${todo.length - FA.km.length} not asked` : ''}.${noAd ? ` ${plural(noAd, 'other route')} with no km still need an address.` : ''} Check each km, untick or fix a wrong one, then Save ticked.`;
+  $('fkStop').textContent = 'Close'; $('fkStop').onclick = () => closePop();
+  $('fkBody').innerHTML = `<div class="tbl-wrap" style="max-height:55vh;margin-top:8px"><table class="poptbl"><tbody>${FA.km.map((x, i) => `<tr>
+    <td class="c" style="width:28px"><input type="checkbox" data-fk="${i}" ${x.km > 0 ? 'checked' : ''} aria-label="Save this distance"></td>
+    <td>${esc(x.source)}<small>→ ${esc(plainDest(x.destination))}${x.km > 0 ? '' : ' · <span class="db-left">no road found</span>'}</small><small class="cl-addr">📍 ${esc(addrOf(x.source))} → ${esc(addrOf(x.destination))}</small></td>
+    <td class="n" style="width:96px"><input data-fki="${i}" inputmode="decimal" value="${x.km > 0 ? x.km : ''}" placeholder="km" style="width:70px;text-align:right"> km</td></tr>`).join('')}</tbody></table></div>`;
+  $('fkBody').oninput = e => { const n = e.target.dataset.fki; if(n!==undefined){ const cb = document.querySelector(`[data-fk="${n}"]`); if(cb) cb.checked = Number(e.target.value) > 0; } };
+  const sv = $('fkSave'); sv.hidden = false;
+  sv.onclick = async () => {
+    const items = FA.km.map((x, i) => ({source:x.source, destination:x.destination, km:Number(document.querySelector(`[data-fki="${i}"]`).value), on:document.querySelector(`[data-fk="${i}"]`).checked}))
+      .filter(y => y.on && y.km > 0).map(({source, destination, km}) => ({source, destination, km}));
+    if(!items.length) return toast('Tick at least one distance.', true);
+    sv.disabled = true;
+    try{
+      for(let i = 0; i < items.length; i += 40){ sv.textContent = `Saving ${Math.min(i + 40, items.length)} of ${items.length}…`; await call('saveRouteKm', items.slice(i, i + 40)); }
+      items.forEach(y => { const x = (CL.rows || []).find(z => nameKey(z.r.source)===nameKey(y.source) && nameKey(z.r.destination)===nameKey(y.destination)); if(x) x.r.km = y.km;
+        if(S.boot && S.boot.km) S.boot.km[nameKey(y.source) + '|' + nameKey(y.destination)] = y.km; });
+      closePop(); renderBook(); toast(`${plural(items.length, 'distance')} saved`);
+      refreshBoot(); loadNoDist(); call('clientBook').then(x => { CL.data = x; afterBook(); }).catch(() => {});
+    }catch(e){ toast(e.message, true); sv.disabled = false; sv.textContent = 'Save ticked'; }
   };
 }
 /* Coca Cola km (MANU 2026-11-04 "THESE ARE CURRENT DISTANCES OF COCA COLA, CHECK FOR MISSING DISTANCES IN CLIENT LIST AND FILL MISSING"):
@@ -11726,7 +11824,7 @@ async function fillCoke(){
 }
 function afterBook(){
   const d = CL.data;
-  $('clProfitTab').hidden = !d.canProfit; $('clPayBtn').hidden = !d.canEdit; $('clAddRoute').hidden = !d.canEdit; $('clCokeKm').hidden = !d.canEdit;
+  $('clProfitTab').hidden = !d.canProfit; $('clPayBtn').hidden = !d.canEdit; $('clAddRoute').hidden = !d.canEdit; $('clCokeKm').hidden = !d.canEdit; $('clFindAddr').hidden = !d.canEdit;
   const sel = $('soaClient'), cur = sel.value;
   sel.innerHTML = '<option value="">Pick the client</option>' + d.clients.map(c => `<option value="${esc(c.client)}" ${c.client===cur ? 'selected' : ''}>${esc(c.client)}</option>`).join('');
   if(S.tab!=='clients') return;
