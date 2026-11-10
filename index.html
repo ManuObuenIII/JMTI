@@ -176,6 +176,8 @@ main{max-width:1680px;margin:0 auto;padding:14px 20px}
 .bar .grow{flex:1}
 #v-dispatcher > .bar > .x-find{flex:1 1 260px;min-width:260px}   /* MANU 2026-11-06: Truck Plan Find on the 2nd row, after the chips, filling the space */
 #v-dispatcher > .bar > .x-find input{width:100%}
+.bar > .find-row{flex:1 1 100%;order:99;min-width:0}   /* MANU 2026-11-10: POD + Billing Find on its own 2nd row, full width */
+.bar > .find-row input{width:100%}
 label.f{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;color:var(--muted)}
 input,select,textarea{border:1px solid var(--line);background:#fff;border-radius:var(--radius-s);padding:8px 10px;min-height:38px;width:100%}
 textarea{min-height:64px;resize:vertical}
@@ -2256,7 +2258,9 @@ body.md-lock #toast{z-index:320}
       return out.length ? '. Code there: ' + out.join(' | ') : '';
     } catch (e) { return ''; }
   };
-  setTimeout(function () { window.__jmtiShow(window.__jmtiErr || 'the page code did not load'); }, 5000);
+  /* 14.6.2: wait until the whole page has arrived before judging it. A fixed 5 s from here fired while a slow
+     connection was still bringing in the rest of the page, so the red bar showed even though the app then started fine. */
+  document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { window.__jmtiShow(window.__jmtiErr || 'the page code did not load'); }, 3000); });
 </script>
 <div id="demoBanner" class="demo" hidden>Preview with sample data. Sign in as admin, boss, supervisor, teamleader, dispatcher, pod, podhead, billing or hr — any password.</div>
 
@@ -2582,7 +2586,7 @@ body.md-lock #toast{z-index:320}
       <label class="f">To<input type="date" id="podTo"></label>
       <label class="f">Account<select id="podAcct"><option value="">All accounts</option></select></label>
       <label class="f">Customer<select id="podCust"><option value="">All customers</option></select></label>
-      <label class="f grow">Find<input id="podFind" placeholder="Truck, plate, shipment, customer"></label>
+      <label class="f grow find-row">Find<input id="podFind" placeholder="Truck, plate, shipment, customer"></label>
       <button class="btn alt" type="button" id="podReport">Generate report</button>
       <button class="btn alt" type="button" id="podCsv">Download CSV</button>
       <button class="btn alt" type="button" id="podLateBtn" title="Completed trips still waiting for documents">Late documents</button>
@@ -2630,7 +2634,7 @@ body.md-lock #toast{z-index:320}
         <label class="f">To<input type="date" id="billTo"></label>
         <label class="f">Account<select id="billAcct"><option value="">All accounts</option></select></label>
         <label class="f">Customer<select id="billCust"><option value="">All customers</option></select></label>
-        <label class="f grow">Find<input id="billFind" placeholder="Truck, plate, shipment, customer"></label>
+        <label class="f grow find-row">Find<input id="billFind" placeholder="Truck, plate, shipment, customer"></label>
         <button class="btn alt" type="button" id="billReport">Generate report (CSV)</button>
       </div>
       <div class="kpis kpis4" id="billKpi"></div>
@@ -4360,7 +4364,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.61, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.63, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4391,6 +4395,15 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-10 09:02 UTC "add here button to show all trips regardless of the status" (POD chips)
+  {v:14.63, d:'2026-11-10', items:[
+    'POD: new "All trips" button after "Endorsed to Billing" lists every trip in the dates, whatever its POD status (pending, waiting docs, received, Tukod and already endorsed).',
+    'POD and Billing: the Find box moved to its own second row and stretches the full width.'
+  ]},
+  // MANU 2026-11-10 06:31 UTC screenshot: red "page code did not load" bar over a working dashboard
+  {v:14.62, d:'2026-11-10', items:[
+    'Fixed: the red "The page could not start: the page code did not load" bar no longer shows on a slow connection when the app has actually opened fine.'
+  ]},
   // MANU 2026-11-10 "give access to HR as viewer"
   {v:14.61, d:'2026-11-10', items:[
     'HR users can now open the Truck Plan tab to look at trips and crews (view only: nothing can be changed or saved from an HR login).'
@@ -7181,15 +7194,15 @@ function renderPodNow(){
   const base = shown.filter(t => !podSent(t));   // ENDORSED TO BILLING trips have moved to Billing and leave POD (MANU)
   const POD_F = {tocheck: () => true, pending: t => podSt(t)==='PENDING', waitdocs: t => podSt(t)==='WAITING DOCS', recvdocs: t => podSt(t)==='RECEIVED DOCUMENTS', tukod: t => podSt(t)==='TUKOD'};
   const sent = shown.filter(podSent);   // Endorsed to Billing chip: trips already sent to billing stay viewable in POD (MANU 2026-10-08)
-  if(!POD_F[S.podFilter] && S.podFilter!=='completed') S.podFilter = 'tocheck';
+  if(!POD_F[S.podFilter] && S.podFilter!=='completed' && S.podFilter!=='alltrips') S.podFilter = 'tocheck';
   const podPending = base;
   kpiCards($('podKpi'), {total: shown.length, done: shown.filter(podSent), doneLabel: 'Endorsed to Billing',
     pending: podPending, pendingLabel: 'POD pending', pendingNote: `${base.filter(t => files(t).length).length} with scans · ${base.filter(t => !files(t).length).length} no documents`,
     turnLabel: 'Average time to POD', turnNote: 'trip completed → sent to billing', from: doneTime, to: t => stampDate(t.podAt),
     since: t => doneTime(t) || new Date(t.date + 'T23:59')});
-  counterChips($('podChips'), [['tocheck','All to check'],['pending','Pending'],['waitdocs','Waiting docs'],['recvdocs','Received documents'],['tukod','Tukod']].map(([k,l]) => [k, l, base.filter(POD_F[k]).length]).concat([['completed','Endorsed to Billing', sent.length]]),
+  counterChips($('podChips'), [['tocheck','All to check'],['pending','Pending'],['waitdocs','Waiting docs'],['recvdocs','Received documents'],['tukod','Tukod']].map(([k,l]) => [k, l, base.filter(POD_F[k]).length]).concat([['completed','Endorsed to Billing', sent.length], ['alltrips','All trips', shown.length]]),   // All trips: every trip whatever its POD status (MANU 2026-11-10)
     S.podFilter, f => { S.podFilter = f; renderPod(); });
-  const list = S.podFilter==='completed' ? sent : base.filter(POD_F[S.podFilter]);
+  const list = S.podFilter==='completed' ? sent : S.podFilter==='alltrips' ? shown.slice() : base.filter(POD_F[S.podFilter]);
   // same order as Truck Plan: by route; inside a route "to check" first (scans ready before no scans), then waiting longest
   // (oldest completion first), then truck no.
   const podOrder = t => t.podAt ? 2 : files(t).length ? 0 : 1;
@@ -7603,7 +7616,7 @@ function showPodLate(r){
 function podCsv(){
   const l = S.podShown || [];
   if(!l.length) return toast('No trips shown to download.', true);
-  const chip = ({tocheck:'All to check', pending:'Pending', waitdocs:'Waiting docs', recvdocs:'Received documents', tukod:'Tukod', completed:'Endorsed to Billing'})[S.podFilter] || '';
+  const chip = ({tocheck:'All to check', pending:'Pending', waitdocs:'Waiting docs', recvdocs:'Received documents', tukod:'Tukod', completed:'Endorsed to Billing', alltrips:'All trips'})[S.podFilter] || '';
   saveCsvFile(`POD ${chip} ${$('podFrom').value} to ${$('podTo').value}.csv`.replace(/\s+/g, ' '),
     ['#', 'Trip date', 'Trip ID', 'Truck', 'Plate', 'Customer', 'Destination', 'Document date', 'SHIPMENT NO.', 'DTTR', 'Driver', 'Helpers', ...BOSL_CSV_HEAD, ...PC_CSV_HEAD, 'POD remarks', 'Documents', 'Status', 'Status updated', 'Updated by'],
     l.map((t, i) => [i + 1, t.date, t.tripId || '', t.truckNo || '', t.plateNo || '', t.customer || '', t.destination || '', docDayOf(t), shipNoOf(t), dttrOf(t), t.driver || '',
@@ -14062,6 +14075,7 @@ if($('homeRefresh')) $('homeRefresh').onclick = () => { HM.at = 0; loadHome(true
   signOut = function(){ try{ if(!$('vgate').hidden) vgClose(); if(!$('tour').hidden){ TOUR.done = null; $('tour').hidden = true; } ALR.back = false; HM.at = 0; HM.trips = null; HM.od = HM.idle = HM.ns = HM.pl = null; }catch(e){} return _out.apply(this, arguments); };
 }
 window.__JMTI_READY = true;
+{ const _be = document.getElementById('bootErr'); if(_be && !window.__jmtiErr) _be.style.display = 'none'; }   // 14.6.2: started fine, so no start-up bar
 start();
 </script>
 <script>
