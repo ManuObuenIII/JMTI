@@ -2177,7 +2177,16 @@ body.md-lock{overflow:hidden}
 .md-tap{position:absolute;top:0;bottom:0;width:38%;border:0;background:transparent;cursor:pointer;z-index:2;padding:0}
 .md-tap.l{left:0}.md-tap.r{right:0;width:62%}
 .md-foot{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:10px 10px calc(12px + env(safe-area-inset-bottom))}
-.md-foot .btn{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.3)}
+.md-view .md-foot .btn,.md-view .md-foot .btn.alt,.md-view .md-tools .btn.alt,html .md-view .md-foot .btn{background:rgba(255,255,255,.18)!important;color:#fff!important;border:1px solid rgba(255,255,255,.45)!important;box-shadow:none!important;text-shadow:none!important;-webkit-text-fill-color:#fff}
+.md-view .md-foot .btn:active,.md-view .md-tools .btn.alt:active{background:rgba(255,255,255,.3)!important}
+.md-vrxs{opacity:.95}
+.md-rx{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
+.md-rxb{width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.12);font-size:23px;line-height:1;cursor:pointer;padding:0;display:grid;place-items:center;transition:transform .15s}
+.md-rxb:active{transform:scale(1.25)}
+.md-rxb[aria-pressed="true"]{background:rgba(255,255,255,.92);box-shadow:0 0 0 2px #1877F2;transform:scale(1.08)}
+.md-fly{position:fixed;z-index:330;font-size:28px;pointer-events:none;animation:mdFly 1.5s ease-out forwards}
+@keyframes mdFly{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:1;transform:translateY(-30px) scale(1.15)}100%{transform:translateY(-260px) scale(1.4);opacity:0}}
+.md-vrx{margin-left:auto;font-size:22px;flex:none}
 .md-top{display:flex;align-items:center;gap:10px;padding:10px}
 .md-top b{flex:1;font-size:16px}
 .md-new .md-stage{flex:1 1 auto;min-height:180px}
@@ -3663,7 +3672,7 @@ function signOut(msg){
   hideDock(); $('chatBtn').hidden = true; $('shBtn').hidden = true; $('shPanel').hidden = true; $('socFab').hidden = true; SOC.user = ''; if(!$('pop').hidden && $('pop').classList.contains('chatpop')) closePop(true);   // the chat pop-up closes too
   askReset(); $('askBox').hidden = true; $('askBtn').hidden = true;
   PF.mine = null; PF.user = ''; if($('helloCard')) $('helloCard').hidden = true;
-  mdClose(); if($('mdNew')) $('mdNew').remove(); document.body.classList.remove('md-lock'); MD.list = []; MD.v = ''; MD.dv = ''; MD.known = null; MD.media = {}; MD.seenQ.clear(); mdRender();   // My day
+  mdClose(); if($('mdNew')) $('mdNew').remove(); document.body.classList.remove('md-lock'); MD.list = []; MD.v = ''; MD.dv = ''; MD.known = null; MD.rxSeen = null; MD.rxPend = {}; MD.media = {}; MD.seenQ.clear(); mdRender();   // My day
   showLogin(msg);
 }
 
@@ -4351,7 +4360,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.58, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.6, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4382,6 +4391,15 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-10 "add payroll access to POD but viewer only"
+  // MANU 2026-11-10 02:55 UTC "why are the buttons at the bottom blank, add option to react emojis to the my day": 14.6
+  {v:14.6, d:'2026-11-10', items:[
+    'My day: the buttons under a story (Send a message, viewers, Add another) are clear again. With some color themes they showed white on white.',
+    'My day: react with 👍 ❤️ 😆 😮 😢 😠 under someone\'s story. Tap one and it floats up and is sent; tap it again to take it back. The person who posted sees who reacted with what next to "viewers", and gets a small notice.'
+  ]},
+  {v:14.59, d:'2026-11-10', items:[
+    'Payroll users can now open the POD tab to look at trips, their document status and the scanned documents (view only: they cannot change a status, remarks or upload files).'
+  ]},
   // MANU 2026-11-10 "check for possible bugs and errors" (bug sweep after 14.4.9 … 14.5.7)
   {v:14.58, d:'2026-11-10', items:[
     'Maintenance and Inventory on phones: tapping a tab there no longer stops with an error, and the last loaded data shows straight away again while the new data loads.',
@@ -7183,7 +7201,7 @@ function renderPodNow(){
   const docCell = t => t.podAt ? `<span class="docstate ok">Sent ${esc(t.podAt.slice(0,10))}</span>` : `<span class="docstate wait">${files(t).length ? files(t).length+' file(s) · to check' : 'No documents'}</span>`;
   $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Document date</th><th>SHIPMENT NO.</th><th>DTTR</th><th>Driver</th><th>Helpers</th>${BOSL_TH}${PC_TH}<th>POD remarks</th><th>Documents</th><th>Status</th></tr></thead><tbody>` +
     list.map((t,i) => {
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td>${docDateTd(t, may('pod'))}<td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('pod'))}${pcTds(t, may('pod'))}<td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td>${docDateTd(t, may('pod'))}<td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('pod'))}${pcTds(t, may('pod'))}<td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="${may('pod') || (may('docs') && files(t).length) ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : may('docs') && files(t).length ? 'data-pdoc="1" title="Open the scans"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.podFilter==='completed' ? 'No trip endorsed to billing in these dates.' : 'Nothing left to check here.'}</div>`;
   freezeCols($('podList'));
 }
@@ -7591,20 +7609,22 @@ function podCsv(){
 function openPod(t){
   if(!t) return;
   if(t._pending) return toast('Still saving — try again in a moment.');
+  const ro = !may('pod');   // PAYROLL (MANU 2026-11-10 "add payroll access to POD but viewer only"): read only, the server refuses its saves too
   openPanel(t, `
     <div class="sec">Trip</div>
     <dl class="kv"><dt>${esc(shipLbl(t))}</dt><dd>${esc(t.shipmentNo||'—')}</dd><dt>Driver</dt><dd>${t.driver ? pLink(t.driver) : '—'}</dd><dt>Helpers</dt><dd>${crewLinks([t.helper1,t.helper2], ', ') || '—'}</dd><dt>KMS</dt><dd>${esc(t.kms||'—')}</dd><dt>Trip ID</dt><dd>${esc(t.tripId||'(given on first save)')}</dd></dl>
     <div class="sec">Scanned documents</div>
     ${filesHtml(t)}
-    <label class="upl" style="margin-top:10px">Upload scan (PDF or photo)<input type="file" id="podFile" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic" multiple></label>
+    ${ro ? '' : `<label class="upl" style="margin-top:10px">Upload scan (PDF or photo)<input type="file" id="podFile" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic" multiple></label>`}
     <div id="podUp" class="hint" style="margin-top:6px"></div>
     <div class="sec">Check</div>
-    <div class="f">Status<div class="pst-pick" id="podStPick">${podPickSt().map(st => `<button type="button" class="pstat s-${st.toLowerCase().replace(/[^a-z]+/g,'-')}" data-st="${st}" aria-pressed="${podSt(t)===st}">${st}</button>`).join('')}</div>
+    <div class="f">Status<div class="pst-pick" id="podStPick">${podPickSt().map(st => `<button type="button" class="pstat s-${st.toLowerCase().replace(/[^a-z]+/g,'-')}" data-st="${st}" aria-pressed="${podSt(t)===st}"${ro ? ' disabled' : ''}>${st}</button>`).join('')}</div>
       <span class="hint">${may('podEndorse') ? 'ENDORSED TO BILLING sends the trip to billing. It then shows under the Endorsed to Billing chip.' : 'Only POD can set ENDORSED TO BILLING.'}</span></div>
-    <label class="f">${esc(hdr(24,'POD REMARKS'))}<textarea id="podRemarks">${esc(t.pod||'')}</textarea></label>
+    <label class="f">${esc(hdr(24,'POD REMARKS'))}<textarea id="podRemarks"${ro ? ' readonly' : ''}>${esc(t.pod||'')}</textarea></label>
     ${t.podAt ? `<p class="hint">Checked by ${esc(t.podBy)} on ${esc(t.podAt)} · ${esc(t.docStatus||'')}</p>` : ''}`,
-    t.podAt ? `${may('podEndorse') ? '<button class="btn alt" id="podUndo" type="button" style="margin-right:auto">Undo check</button>' : ''}<button class="btn" id="podSaveBtn" type="button">Save remarks</button>`
+    ro ? '' : t.podAt ? `${may('podEndorse') ? '<button class="btn alt" id="podUndo" type="button" style="margin-right:auto">Undo check</button>' : ''}<button class="btn" id="podSaveBtn" type="button">Save remarks</button>`
             : `<button class="btn alt" id="podSaveBtn" type="button" style="margin-right:auto">Save remarks</button>${may('podEndorse') ? '<button class="btn road" id="podCheck" type="button">ENDORSED TO BILLING — send to billing</button>' : ''}`);
+  if(ro) return;
   $('podFile').onchange = e => uploadFiles(t, [...e.target.files]);
   const send = (checked, status) => {
     const pod = $('podRemarks').value.trim().toUpperCase();
@@ -7641,14 +7661,14 @@ function podPop(td, html, wide){
 }
 /** POD table: tap Documents to see the scans and attach files (stored like the scan upload in the trip panel). */
 function openPodDocs(t, td){
-  if(!t || !may('pod')) return;
+  if(!t || !(may('pod') || may('docs'))) return;   // docs only (PAYROLL): look at the scans, no attach
   if(t._pending) return toast('Still saving — try again in a moment.');
   const p = podPop(td, `<div class="ce-h"><b>Documents</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div>${filesHtml(t)}
-    <label class="upl">Attach file (PDF or photo)<input type="file" id="pdFile" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic" multiple></label>
+    ${may('pod') ? '<label class="upl">Attach file (PDF or photo)<input type="file" id="pdFile" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic" multiple></label>' : ''}
     <div id="pdUp" class="hint"></div><div class="ce-f"><span style="flex:1"></span><button class="btn alt" type="button" id="pdClose">Close</button></div>`, true);
   $('pdClose').onclick = closeCellEditor;
   p.addEventListener('click', e => { const b = e.target.closest('[data-view]'); if(b) viewFile(b.dataset.view, b.dataset.n); });
-  $('pdFile').onchange = async e => {
+  if($('pdFile')) $('pdFile').onchange = async e => {
     let cur = t;
     for(const file of [...e.target.files]){
       if($('pdUp')) $('pdUp').textContent = `Uploading ${file.name}…`;
@@ -8931,7 +8951,7 @@ const ROLE_NOTE = {'ADMIN':'Everything, including users.','BOSS':'Sees everythin
   'SUPERVISOR':'Dashboard, Truck assignment and Truck Plan; in Truck Plan changes only source and destination, and adds trips.','TEAM LEADER':'Dashboard, Fleet (view only), Truck assignment and Truck Plan.',
   'DISPATCHER':'Truck Plan only.','POD':'Checks completed trips, uploads scanned documents, endorses to billing.','POD HEAD':'Everything POD does, plus the POD analytics tab.','BILLING':'Checks trips POD sent; source, destination, distance and clients.',
   'HR':'Drivers and helpers (Manpower) and users, except Admin and Boss accounts.','MAINTENANCE':'Maintenance dashboard only.',
-  'ACCOUNTING':'Disbursement (trip budgets sent) and Accounting (inventory purchases with receipts, money summary).','PAYROLL':'Payroll and Disbursement (trip budgets sent); Truck Plan view only.'};
+  'ACCOUNTING':'Disbursement (trip budgets sent) and Accounting (inventory purchases with receipts, money summary).','PAYROLL':'Payroll and Disbursement (trip budgets sent); Truck Plan and POD view only.'};
 const ADMIN_ONLY_ROLES = ['ADMIN','BOSS'];   // only an admin creates, changes or gives these (HR manages the rest; same check on the server)
 function fillRoleOptions(){
   const roles = S.me.role==='ADMIN' ? ALL_ROLES : ALL_ROLES.filter(r => !ADMIN_ONLY_ROLES.includes(r));
@@ -10744,7 +10764,7 @@ async function chatSendFile(file){
    sees who viewed it and can delete it. Music: 6 tunes made right on the phone (no files, nothing to download) or a 30-second
    clip of the poster's own song (cut and made small on the phone before sending). Code.gs MY DAY: mydayList, mydayPost,
    mydayMedia, mydaySeen, mydayViews, mydayDelete; chatList hands dv (changes on every post or delete). */
-const MD = {v:'', list:[], busy:false, want:false, media:{}, seenQ:new Set(), seenT:0, known:null, view:null, ctx:null, tune:null, clip:null, muted:false};
+const MD = {rxPend:{}, rxSeen:null, v:'', list:[], busy:false, want:false, media:{}, seenQ:new Set(), seenT:0, known:null, view:null, ctx:null, tune:null, clip:null, muted:false};
 const MD_BG = ['linear-gradient(135deg,#0A27B5,#2E5BFF)', 'linear-gradient(135deg,#7B2FF7,#F107A3)', 'linear-gradient(135deg,#F7971E,#FFD200)', 'linear-gradient(135deg,#11998E,#38EF7D)',
   'linear-gradient(135deg,#232526,#414345)', 'linear-gradient(135deg,#E52D27,#B31217)', 'linear-gradient(135deg,#00C6FF,#0072FF)', 'linear-gradient(135deg,#FC5C7D,#6A82FB)'];
 /* Built-in tunes: chords as semitones above the key, bars of 8 eighth notes; arp = which chord note plays on each eighth (-1 rest). */
@@ -10795,7 +10815,13 @@ function mdLoad(){
     if(r.same) return;
     const old = MD.known; MD.list = Array.isArray(r.list) ? r.list : [];
     MD.seenQ.forEach(id => { const x = MD.list.find(y => y.id===id); if(x) x.seen = true; });   // seen here, not sent yet
+    Object.keys(MD.rxPend).forEach(id => { const x = MD.list.find(y => y.id===id); if(x){ x.my = MD.rxPend[id]; x.seen = true; } });   // reacted here, not saved yet
+    const rxNow = new Set(); MD.list.filter(x => x.u===u).forEach(x => (x.rx || []).forEach(r => rxNow.add(x.id + '|' + r[0] + '|' + r[2])));
+    if(MD.rxSeen){ const fresh = []; MD.list.filter(x => x.u===u).forEach(x => (x.rx || []).forEach(r => { if(!MD.rxSeen.has(x.id + '|' + r[0] + '|' + r[2])) fresh.push(r); }));
+      if(fresh.length) toast(fresh.length > 1 ? `${fresh.map(r => r[2]).join(' ')} ${fresh.length} new reactions to your My day` : `${fresh[0][2]} ${chFirst(fresh[0][1])} reacted to your My day`, false, 4500); }
+    MD.rxSeen = rxNow;
     MD.known = new Set(MD.list.map(x => x.id));
+    document.querySelectorAll('#mdView [data-mdviews]').forEach(b => { const x = MD.list.find(y => y.id===b.dataset.mdviews); if(x) b.innerHTML = mdVText(x); });
     if(old){ const fresh = MD.list.filter(x => !old.has(x.id) && x.u!==u); if(fresh.length) toast(`📸 ${fresh[fresh.length - 1].n} added to their day. Open the chat to see it.`, false, 4500); }
     mdRender();
   }).catch(() => {}).finally(() => { MD.busy = false; if(MD.want){ MD.want = false; setTimeout(mdLoad, 300); } });
@@ -11017,8 +11043,10 @@ function mdOpen(u){
         <button type="button" class="md-ib" data-mdx="1" aria-label="Close" title="Close">${MS_ICON.close}</button></div>
       <div class="md-stage" style="background:${x.p ? '#000' : MD_BG[x.bg || 0]}">${x.p ? '<div class="md-load">Loading photo…</div><img alt="" hidden>' : ''}${x.t ? `<div class="md-txt${x.p ? ' ph' : ''}">${esc(x.t)}</div>` : ''}
         <button type="button" class="md-tap l" data-mdgo="-1" aria-label="Back"></button><button type="button" class="md-tap r" data-mdgo="1" aria-label="Next"></button></div>
-      <div class="md-foot">${mine ? `<button type="button" class="btn alt md-views" data-mdviews="1">👁 ${x.vc || 0} viewer${x.vc===1 ? '' : 's'}</button><button type="button" class="btn alt" data-mdadd="1">+ Add another</button>`
-        : `<button type="button" class="btn alt" data-mdmsg="1">💬 Send ${esc(chFirst(x.n))} a message</button>`}</div>`;
+      <div class="md-foot">${mine ? `<button type="button" class="btn md-btn md-views" data-mdviews="${esc(x.id)}">${mdVText(x)}</button><button type="button" class="btn md-btn" data-mdadd="1">+ Add another</button>`
+        : `<div class="md-rx" role="group" aria-label="React to this My day">${CH_RX.map(e => `<button type="button" class="md-rxb" data-mdrx="${e}" aria-pressed="${x.my===e}" aria-label="React ${e}" title="React ${e}">${e}</button>`).join('')}</div>
+          <button type="button" class="btn md-btn" data-mdmsg="1">💬 Send ${esc(chFirst(x.n))} a message</button>`}</div>`;
+    if(mine) call('mydayViews', x.id).then(l => { x.vc = l.filter(r => r.at).length; x.rx = l.filter(r => r.e).map(r => [r.u, r.n, r.e]); const b = o.querySelector(`[data-mdviews="${x.id}"]`); if(b) b.innerHTML = mdVText(x); }).catch(() => {});   // the newest count
     if(!mine && !x.seen){ x.seen = true; MD.seenQ.add(x.id); clearTimeout(MD.seenT); MD.seenT = setTimeout(mdSeenSend, 1500); }
     const ready = [];
     if(x.p) ready.push(mdMedia(x, 'photo').then(src => { if(v.key!==key) return; const im = o.querySelector('.md-stage img'); if(im){ im.src = src; im.hidden = false; } const l = o.querySelector('.md-load'); if(l) l.remove(); })
@@ -11038,6 +11066,7 @@ function mdOpen(u){
     const g = e.target.closest('[data-mdgo]'); if(g){ const held = v.holdAt && Date.now() - v.holdAt > 300; v.holdAt = 0; if(held) return; return +g.dataset.mdgo > 0 ? next() : prev(); }
     if(e.target.closest('[data-mdmute]')){ mdMute(!MD.muted); const b = e.target.closest('[data-mdmute]'); b.textContent = MD.muted ? '🔇' : '🔊'; return; }
     if(e.target.closest('[data-mdadd]')) return mdNew();
+    const rb = e.target.closest('[data-mdrx]'); if(rb) return mdReact(cur(), rb.dataset.mdrx, rb);
     if(e.target.closest('[data-mdmsg]')){ const x = cur(); mdClose(); if(chatOpen()) chatGo(x.u); else openChat(x.u); setTimeout(() => { const ta = $('chText'); if(ta && !ta.value){ ta.value = 'About your My day: '; if(ta.oninput) ta.oninput(); ta.focus(); } }, 60); return; }
     if(e.target.closest('[data-mdviews]')){ const x = cur(); pause(); mdViews(x, () => { if($('mdView')===o) resume(); }); return; }
     if(e.target.closest('[data-mddel]')){ const x = cur(); pause();
@@ -11048,14 +11077,39 @@ function mdOpen(u){
   };
   v.key = 0; draw();
 }
+/** "👁 5 viewers · ❤️ 2 👍 1" for the poster's own My day. */
+function mdVText(x){
+  const n = x.vc || 0, c = {}; (x.rx || []).forEach(r => { c[r[2]] = (c[r[2]] || 0) + 1; });
+  const rx = CH_RX.filter(e => c[e]).map(e => `${e} ${c[e]}`).join(' ');
+  return `👁 ${n} viewer${n===1 ? '' : 's'}${rx ? ` <span class="md-vrxs">· ${esc(rx)}</span>` : ''}`;
+}
+/**
+ * React to someone's My day (MANU 2026-11-10 "add option to react emojis to the my day"): a tap on 👍 ❤️ 😆 😮 😢 😠 under the
+ * story shows it at once (the emoji floats up) and saves it (Code.gs mydayReact); the same one again takes it back. The poster
+ * sees who reacted with what under "viewers" and gets a small notice.
+ */
+function mdReact(x, e, btn){
+  if(!x || !S.me || x.u===S.me.username) return;
+  const was = x.my || '', now = was===e ? '' : e;
+  x.my = now; x.seen = true; MD.rxPend[x.id] = now;
+  document.querySelectorAll('#mdView [data-mdrx]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mdrx===now));
+  if(now && btn){
+    const r = btn.getBoundingClientRect();
+    for(let i = 0; i < 6; i++){ const f = document.createElement('span'); f.className = 'md-fly'; f.textContent = now;
+      f.style.left = (r.left + r.width / 2 - 14 + (i - 2.5) * 12) + 'px'; f.style.top = (r.top - 6) + 'px'; f.style.animationDelay = (i * 70) + 'ms';
+      document.body.appendChild(f); setTimeout(() => f.remove(), 1700); }
+  }
+  call('mydayReact', x.id, now).then(() => { if(MD.rxPend[x.id]===now) delete MD.rxPend[x.id]; })
+    .catch(err => { if(MD.rxPend[x.id]===now){ delete MD.rxPend[x.id]; x.my = was; document.querySelectorAll('#mdView [data-mdrx]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mdrx===was)); } toast(err.message, true); });
+}
 function mdViews(x, after){
   chatSheet(`${shHead('Viewed by')}<div class="md-vlist" id="mdVList"><p class="hint" style="padding:10px">Loading…</p></div>`);
   const sh = $('chSheet'); if(sh) sh.classList.add('md-sheet');
   const watch = setInterval(() => { if(!$('chSheet')){ clearInterval(watch); if(after) after(); } }, 250);
   call('mydayViews', x.id).then(l => {
-    x.vc = l.length; const el = $('mdVList'); if(!el) return;
-    el.innerHTML = l.length ? l.map(r => `<div class="cg-row">${chatAv(r.u, true, r.n)}<span class="ms-mid"><b>${esc(r.n)}</b><small>${esc(msTime(r.at))}</small></span></div>`).join('') : '<p class="hint" style="padding:10px">No one has viewed it yet.</p>';
-    const b = document.querySelector('[data-mdviews]'); if(b) b.textContent = `👁 ${l.length} viewer${l.length===1 ? '' : 's'}`;
+    x.vc = l.filter(r => r.at).length; x.rx = l.filter(r => r.e).map(r => [r.u, r.n, r.e]); const el = $('mdVList'); if(!el) return;
+    el.innerHTML = l.length ? l.map(r => `<div class="cg-row">${chatAv(r.u, true, r.n)}<span class="ms-mid"><b>${esc(r.n)}</b><small>${r.at ? esc(msTime(r.at)) : 'Reacted'}</small></span>${r.e ? `<span class="md-vrx" title="Reacted ${esc(r.e)}">${esc(r.e)}</span>` : ''}</div>`).join('') : '<p class="hint" style="padding:10px">No one has viewed it yet.</p>';
+    const b = document.querySelector('#mdView [data-mdviews]'); if(b) b.innerHTML = mdVText(x);
   }).catch(e => { const el = $('mdVList'); if(el) el.innerHTML = `<p class="hint" style="padding:10px">${esc(e.message)}</p>`; });
 }
 function mdSeenSend(){
