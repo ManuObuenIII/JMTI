@@ -4360,7 +4360,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.6, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.61, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4391,6 +4391,10 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-10 "give access to HR as viewer"
+  {v:14.61, d:'2026-11-10', items:[
+    'HR users can now open the Truck Plan tab to look at trips and crews (view only: nothing can be changed or saved from an HR login).'
+  ]},
   // MANU 2026-11-10 "add payroll access to POD but viewer only"
   // MANU 2026-11-10 02:55 UTC "why are the buttons at the bottom blank, add option to react emojis to the my day": 14.6
   {v:14.6, d:'2026-11-10', items:[
@@ -8950,7 +8954,7 @@ const ALL_ROLES = ['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD',
 const ROLE_NOTE = {'ADMIN':'Everything, including users.','BOSS':'Sees everything Admin sees, changes nothing (view only).',
   'SUPERVISOR':'Dashboard, Truck assignment and Truck Plan; in Truck Plan changes only source and destination, and adds trips.','TEAM LEADER':'Dashboard, Fleet (view only), Truck assignment and Truck Plan.',
   'DISPATCHER':'Truck Plan only.','POD':'Checks completed trips, uploads scanned documents, endorses to billing.','POD HEAD':'Everything POD does, plus the POD analytics tab.','BILLING':'Checks trips POD sent; source, destination, distance and clients.',
-  'HR':'Drivers and helpers (Manpower) and users, except Admin and Boss accounts.','MAINTENANCE':'Maintenance dashboard only.',
+  'HR':'Drivers and helpers (Manpower) and users, except Admin and Boss accounts; Truck Plan view only.','MAINTENANCE':'Maintenance dashboard only.',
   'ACCOUNTING':'Disbursement (trip budgets sent) and Accounting (inventory purchases with receipts, money summary).','PAYROLL':'Payroll and Disbursement (trip budgets sent); Truck Plan and POD view only.'};
 const ADMIN_ONLY_ROLES = ['ADMIN','BOSS'];   // only an admin creates, changes or gives these (HR manages the rest; same check on the server)
 function fillRoleOptions(){
