@@ -64,6 +64,10 @@ if ('serviceWorker' in navigator) {
    to the Apps Script web app (doPost in Code.gs) as fetch requests. On the Apps Script page itself this does nothing. */
 (function(){
   var API = 'https://script.google.com/macros/s/AKfycbwOSjMBYolkEesACiseK0eyHGq_yR3nrytA3zoaaw4UBfZjCRdV7nEsNEFM9GoEjXZWZg/exec';
+  // ERROR LOG 2026-11-10: most "did not answer" rows came in bursts (5-7 requests in the same minute from one person): the phone
+  // locked or switched apps and cut every request in flight. The page notes when it was last hidden so callServer can ask again.
+  window.JMTI_HID = 0;
+  document.addEventListener('visibilitychange', function(){ if (document.hidden) window.JMTI_HID = Date.now(); });
   if (!/github\.io$/.test(location.hostname) || (window.google && google.script)) return;
   window.JMTI_API = API;
   function online(){
@@ -79,6 +83,7 @@ if ('serviceWorker' in navigator) {
         // MANU 2026-11-05: a call can fail with the internet working (Google sends back its own error page, which the app
         // cannot read). Only say "no signal" when Google itself cannot be reached either.
         return online().then(function(up){
+          if (document.hidden || window.JMTI_HID >= t0) { var se = new Error('The request was cut when the app went to the background ("' + fn + '"). Try again.'); se.slept = true; throw se; }
           if (up) throw new Error('The server did not answer "' + fn + '" (your internet is working). Try again in a minute. If it keeps happening, tell Admin: open Apps Script JMTI DASH, run any function once to approve permissions, then deploy a New version.');
           throw new Error('No connection to the server. Check the internet and try again.');
         });
@@ -768,6 +773,7 @@ table.xl tr.idle.mnt td small{display:block;color:#7B8798}
 table.xl td.ed{cursor:cell}
 table.xl td.ed:hover{outline:1px solid var(--road);outline-offset:-1px;background:#F2F9FE}
 table.xl td.sel{outline:2px solid #1E7B45;outline-offset:-2px;background:#EAF6EE !important}
+table.xl td.cell-last{outline:2px solid #16A34A;outline-offset:-2px;box-shadow:inset 0 0 0 9999px rgba(22,163,74,.10)}   /* POD/Billing: the cell you just saved (keepPlace, 14.5.2) */
 .cell-ed{position:fixed;z-index:65;background:#fff;border:1px solid #B9C6D8;border-radius:10px;box-shadow:0 12px 32px rgba(14,42,92,.22);padding:10px;width:280px;display:flex;flex-direction:column;gap:8px}
 .cell-ed .ce-h{display:flex;flex-direction:column;gap:1px}
 .cell-ed .ce-h b{color:var(--ink);font-size:12.5px}
@@ -3318,11 +3324,11 @@ function callServer(fn, ...args){
       }
       if(/^AUTH:/.test(msg) || /AUTH:/.test(msg)) { signOut(msg.replace(/^.*AUTH:\s{0,}/,'')); }
       const m2 = msg.replace(/^Error:\s{0,}/,'').replace(/^.*AUTH:\s{0,}/,'').trim();
-      if(!/AUTH:/.test(msg) && fn!=='login') spdAdd(fn, Date.now() - t0, -1, m2 || 'failed without a message');   // counted in System analytics (ERROR LOG)
+      if(!/AUTH:/.test(msg) && fn!=='login' && errWorthLog(fn, m2, e)) spdAdd(fn, Date.now() - t0, -1, m2 || 'failed without a message');   // counted in System analytics (ERROR LOG)
       reject(new Error(/^(Error|undefined|null)?$/i.test(m2) ? 'The server failed on ' + fn + ' without saying why.' : m2));   // says which request failed (MANU 2026-11-03 bare "Error")
     };
     const t0 = Date.now();
-    const done = v => { if(NET.down){ NET.down = false; renderOutbox(); } if(!window.JMTI_API) spdAdd(fn, Date.now() - t0); resolve(v); };   // the GitHub app's own notes come from its fetch (with the server's part)
+    const done = v => { POLL_MISS[fn] = 0; if(NET.down){ NET.down = false; renderOutbox(); } if(!window.JMTI_API) spdAdd(fn, Date.now() - t0); resolve(v); };   // the GitHub app's own notes come from its fetch (with the server's part)
     if (!LIVE) return setTimeout(() => { if(!navigator.onLine) return fail(new Error('NetworkError: Connection failure due to HTTP 0')); try{ done(DEMO[fn](...a)); }catch(e){ fail(e); } }, 450);
     // 30 people at once (MANU 2026-10-28): when Google is busy (its 30 at-once runs are full) or another save holds the sheet,
     // the same call is tried again after a short random wait, up to 3 times, before anyone sees an error.
@@ -3351,11 +3357,22 @@ const BUSY_RE = /app is busy|server is busy|simultaneous invocations|too many (s
 /** Reads may also be asked again after a passing server hiccup or a dropped answer (with signal). */
 const READ_RETRY_RE = /Service (Spreadsheets|Drive|Cache|Properties)?.{0,40}(timed out|failed|unavailable|error)|Internal error|server error occurred|try again later|did not answer properly/i;
 const RETRY_SKIP = /^(chatList|whoOnline|chatTyping)$/;   // asked again on their own every few seconds anyway
+/* ERROR LOG clean-up (MANU 2026-11-10 "access denied errors are not errors"): answers that are the app's rules working, not failures */
+const RULE_MSG_RE = /^Your role\b.*cannot do this|^LOCKED:|already has a destination trip|already has an open trip|is Completed, so only|has money entries|^This trip is Completed/i;
+const POLL_MISS = {};   // background checks missed in a row (chatList, whoOnline): logged from the 3rd
+function errWorthLog(fn, msg, e){
+  if(RULE_MSG_RE.test(msg) || (e && e.slept) || /went to the background/.test(msg)) return false;
+  if(document.hidden || ((window.JMTI_HID || 0) > Date.now() - 15000)) return false;   // the phone slept during it
+  if(RETRY_SKIP.test(fn)){ POLL_MISS[fn] = (POLL_MISS[fn] || 0) + 1; return POLL_MISS[fn] >= 3; }
+  return true;
+}
+/* Small reads that are safe to ask again (not in READ_FNS so they are not kept in the browser copy) */
+const SAFE_REPEAT = /^(appVersion|appRules|shiftNotes|podLate|myProfile|garageLatest)$/;
 function mayRetry(fn, e){
   const msg = String((e && e.message) || e);
   if(BUSY_RE.test(msg)) return true;
-  if(!READ_FNS.test(fn)) return false;
-  return READ_RETRY_RE.test(msg) || (isNetErr(msg) && navigator.onLine!==false);
+  if(!READ_FNS.test(fn) && !SAFE_REPEAT.test(fn)) return false;
+  return READ_RETRY_RE.test(msg) || /did not answer "|went to the background/.test(msg) || (isNetErr(msg) && navigator.onLine!==false);
 }
 
 /* ===== This browser keeps a copy of what it reads (MANU 2026-10-14 "even though data is saved in Drive, it should be saved in browser cache") =====
@@ -4334,7 +4351,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.51, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.58, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4365,6 +4382,38 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-10 "check for possible bugs and errors" (bug sweep after 14.4.9 … 14.5.7)
+  {v:14.58, d:'2026-11-10', items:[
+    'Maintenance and Inventory on phones: tapping a tab there no longer stops with an error, and the last loaded data shows straight away again while the new data loads.',
+    'POD and Billing: after you tap a cell and then scroll away, the 10-second refresh no longer pulls the table back to that cell.'
+  ]},
+  // MANU 2026-11-10 "when too many people are saving at the same time, make a traffic of the data"
+  {v:14.57, d:'2026-11-10', items:[
+    'Saving when many people save at once: instead of "The app is busy … NOT saved", the change now waits in line on your phone and saves by itself a few seconds later, in the order you made them. The top bar shows "🚦 Busy · N in line" until it is done, then "Saved". Works for Truck Plan changes, trip edits, POD, Billing, Cancel trip, Add trip and chat messages.'
+  ]},
+  // MANU 2026-11-10 "check the error log to check how to fix the errors" + "access denied errors are not errors"
+  {v:14.56, d:'2026-11-10', items:[
+    'HR logins no longer get "Your role (HR) cannot do this" each time the app opens: the first load no longer asks for trips they cannot see.',
+    'Truck Plan / Dashboard: a cleared or wrong date box no longer stops the trips from loading with "Invalid time value"; it shows today instead.',
+    'When a phone locks or switches apps in the middle of a request, the app now asks again once it is back instead of saying "The server did not answer". Reads (lists, chat, versions, endorsements) also try again on their own.',
+    'ERROR LOG keeps only real failures: "not allowed for your role" and rule messages (Completed trip, LOCKED overdue, shipment number already used, open trip already there, money entries) are no longer written there, and the chat / online checks are logged only after 3 misses in a row.'
+  ]},
+  // MANU 2026-11-10 (screenshot) Save on "Driver ranking per account" stuck on "Making picture…": "Failed to execute 'createPattern'"
+  {v:14.55, d:'2026-11-10', items:[
+    'Dashboard: Save (JPEG picture or PDF) on "Driver ranking per account" works again. A very thin line in the part made the picture maker stop with "createPattern … width or height of 0". The same fix covers every Save picture and PDF in the app.'
+  ]},
+  // MANU 2026-11-10 "why is this showing no data" (Disbursement, Operations fund empty)
+  {v:14.54, d:'2026-11-10', items:[
+    'Disbursement: the Operations fund list, its totals and its buttons show again. With two or more trips with a budget in the dates picked, the page stopped before drawing them, so the list stayed empty.'
+  ]},
+  // MANU 2026-11-10 "after tukod status, and new trip is generated, the timestamps should be carried over to the new trip and the new trip should be the day after the tukod trip"
+  {v:14.53, d:'2026-11-10', items:[
+    'TUKOD: the new On Site Destination trip is dated the day after the TUKOD trip and gets its times (Source time in, Loading start and end, Source time out, Destination time in). The times are now saved together with the new trip, so nobody sees it for a moment without them.'
+  ]},
+  // MANU 2026-11-10 "in pod and billing when adding data, it should not go back to the first column after submission"
+  {v:14.52, d:'2026-11-10', items:[
+    'POD and Billing: after you save a cell, the table stays where you were (same column, same row) instead of jumping back to the first column. The cell you just saved gets a green outline for a few seconds so you can carry on along the row.'
+  ]},
   // MANU 2026-11-10 "stop the auto get source and destination from database"
   {v:14.51, d:'2026-11-10', items:[
     'Source and Destination come only from the CLIENT LIST tab. Old trips never add a source, a destination or a route any more,.',
@@ -6277,6 +6326,44 @@ function freezeCols(box){
     cols.forEach((i, n) => { const c = r.cells[i]; if(!c) return; c.classList.add('fz'); if(n===cols.length-1) c.classList.add('fzlast'); c.style.left = lefts[i] + 'px'; }); });
 }
 window.addEventListener('resize', () => ['xList','podList','billList'].forEach(id => freezeCols($(id))));
+/** KEEP PLACE (MANU 2026-11-10 "in pod and billing when adding data, it should not go back to the first column after submission"):
+ *  POD and Billing redraw the whole table after every save, which put the table back at the first column and the top.
+ *  Now the table's left/right and up/down scroll (and the page scroll) are put back after each redraw, as long as the same
+ *  chip, find, account, customer and dates are shown (changing one of those still starts at the top). The last cell tapped
+ *  gets a green outline for 4 s, and if its row moved out of sight the table scrolls just enough to show it. */
+const PLACE = {};
+function keepPlace(id, sigOf, draw){
+  const box = $(id); if(!box || !box.getClientRects().length) return draw();   // tab not on screen: nothing to keep
+  const p = PLACE[id] = PLACE[id] || {};
+  if(!box._kpOn){ box._kpOn = 1;
+    box.addEventListener('click', e => { const td = e.target.closest('td'), tr = td && td.closest('tr[data-key]'); if(tr) p.cell = {key: tr.dataset.key, col: td.cellIndex, at: Date.now()}; }, true);
+    box.addEventListener('scroll', e => { if(e.target.classList && e.target.classList.contains('xl-wrap')){ p.l = e.target.scrollLeft; p.t = e.target.scrollTop; } }, true);
+    ['wheel', 'touchmove', 'keydown'].forEach(ev => box.addEventListener(ev, () => { p.moved = Date.now(); }, {capture: true, passive: true})); }   // the person scrolled by hand (14.5.8)
+  let sig = ''; try{ sig = sigOf(); }catch(e){}
+  const w0 = box.querySelector('.xl-wrap');
+  if(w0){ p.l = w0.scrollLeft; p.t = w0.scrollTop; }
+  const same = p.sig === sig, y = pgY();
+  p.sig = sig;
+  const out = draw();
+  const w = box.querySelector('.xl-wrap');
+  if(!same){ p.l = p.t = 0; p.cell = null; return out; }
+  if(w){ w.scrollLeft = p.l || 0; w.scrollTop = p.t || 0; }
+  if(pgY() !== y){ window.scrollTo(window.scrollX, y); if(document.body && document.documentElement.classList.contains('inframe')) document.body.scrollTop = y; }
+  const c = p.cell;
+  if(w && c && Date.now() - c.at < 60000){   // only right after a tap/save, so the 10 s refresh doesn't flash it again
+    const tr = [...w.querySelectorAll('tr[data-key]')].find(r => r.dataset.key === c.key), td = tr && tr.cells[c.col];
+    if(td){
+      td.classList.add('cell-last'); clearTimeout(p.tm); p.tm = setTimeout(() => td.classList.remove('cell-last'), 4000);
+      const wr = w.getBoundingClientRect(), r = td.getBoundingClientRect(), hd = (w.querySelector('thead') || {}).offsetHeight || 0;
+      if(p.moved > c.at) return out;   // scrolled away since the tap: a refresh keeps their place instead of pulling them back to that cell (14.5.8)
+      if(r.top < wr.top + hd) w.scrollTop -= wr.top + hd - r.top + 8; else if(r.bottom > wr.bottom) w.scrollTop += r.bottom - wr.bottom + 8;
+      const fz = [...tr.cells].filter(x => x.classList.contains('fzlast')).map(x => x.getBoundingClientRect().right)[0] || wr.left;
+      if(!td.classList.contains('fz')){ if(r.left < fz) w.scrollLeft -= fz - r.left + 8; else if(r.right > wr.right) w.scrollLeft += r.right - wr.right + 8; }
+      p.l = w.scrollLeft; p.t = w.scrollTop;
+    }
+  }
+  return out;
+}
 function groupRoutes(list, byTrip, showHead, cols, rank){
   const routeKey = t => nameKey(t.customer) + '|' + nameKey(t.destination);
   const groups = {};
@@ -7060,7 +7147,8 @@ function loadPod(){
   const f = $('podFrom').value, t = $('podTo').value; $('podRange')._mark(f,t);
   return withTrips(f, t, list => { if($('podFrom').value!==f || $('podTo').value!==t) return; S.podTrips = list; renderPod(); }, $('podList'));
 }
-function renderPod(){
+function renderPod(){ return keepPlace('podList', () => [S.podFilter, $('podFind').value, $('podAcct').value, $('podCust').value, $('podFrom').value, $('podTo').value].join('|'), renderPodNow); }
+function renderPodNow(){
   if(S.tab!=='pod') return;
   const q = $('podFind').value.toLowerCase().trim();
   const done = S.podTrips.filter(t => stageOf(t)==='Completed');
@@ -7598,7 +7686,6 @@ function openPodStatus(t, td){
     const next = podStampLocal({...t, finalStatus: st, podUpdAt: nowStamp(), podUpdBy: S.me.name}, st); if(st===POD_DONE){ next.podAt = 'saving'; next.podBy = S.me.name; } else { next.podAt = ''; next.podBy = ''; }
     saveOptimistic(next, t, () => callQ('podSave', refOf(t), {status: st}), () => st===POD_DONE ? 'ENDORSED TO BILLING — moved to billing' : 'Status: ' + st);
   };
-  if($('podUndo')) $('podUndo').onclick = () => send(false);
 }
 async function uploadFiles(t, list){
   for(const file of list){
@@ -7677,7 +7764,8 @@ function loadBilling(){
   const f = $('billFrom').value, t = $('billTo').value; $('billRange')._mark(f,t);
   return withTrips(f, t, list => { if($('billFrom').value!==f || $('billTo').value!==t) return; S.billTrips = list; renderBilling(); }, $('billList'));
 }
-function renderBilling(){
+function renderBilling(){ return keepPlace('billList', () => [S.billFilter, $('billFind').value, $('billAcct').value, $('billCust').value, $('billFrom').value, $('billTo').value].join('|'), renderBillingNow); }
+function renderBillingNow(){
   if(S.tab!=='billing') return;
   const q = $('billFind').value.toLowerCase().trim();
   const done = S.billTrips.filter(t => stageOf(t)==='Completed');
@@ -8921,6 +9009,19 @@ async function saveUserForm(e){
  * The pop-up is drawn as a picture (html2canvas, loaded from cdnjs the first time) and cut into A4 pages,
  * at a light line between rows where it can. Forms and report pickers don't get the button. */
 const H2C_URL = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+/* MANU 2026-11-10 "Picture not made: Failed to execute 'createPattern' … width or height of 0" (Save on Driver ranking per account):
+   html2canvas draws a gradient background on a canvas of the part's size, and a part under 1 px wide or tall (a hairline,
+   a squeezed cell) gives a 0 px canvas that the browser refuses. Such a background is invisible anyway, so a 0 px picture becomes
+   a clear 1 px one, and a gradient stop that is not a number is skipped. Every JPEG / PDF save uses this (Dashboard parts, pop-ups). */
+(() => {
+  const P = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype, G = window.CanvasGradient && CanvasGradient.prototype;
+  if(P && P.createPattern && !P.createPattern._safe){ const cp = P.createPattern;
+    P.createPattern = function(img, rep){ if(img && (!(img.width >= 1) || !(img.height >= 1))){ const z = document.createElement('canvas'); z.width = z.height = 1; img = z; } return cp.call(this, img, rep); };
+    P.createPattern._safe = 1; }
+  if(G && G.addColorStop && !G.addColorStop._safe){ const ac = G.addColorStop;
+    G.addColorStop = function(o, col){ if(!isFinite(o)) return; try{ ac.call(this, Math.min(1, Math.max(0, o)), col); }catch(e){} };
+    G.addColorStop._safe = 1; }
+})();
 let h2cLoading = null;
 function loadH2C(){
   if(window.html2canvas) return Promise.resolve();
@@ -9358,13 +9459,18 @@ const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}
 const obKey = () => 'jmti_outbox_' + (S.me ? S.me.username : '');
 const outbox = () => (S.me && lsGet(obKey())) || [];
 const isNetErr = e => /No connection to the server|NetworkError|HTTP 0|Failed to fetch|Load failed|network error|offline/i.test(String((e && e.message) || e));
-function queueSave(fn, args){
+function queueSave(fn, args, why){
   const ref = args[0] || {}, l = outbox();
   const it = {id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), fn, args, at: TODAY() + ' ' + new Date().toTimeString().slice(0, 5),
     key: fn==='chatSend' ? '' : ref.tripId || '', label: fn==='chatSend' ? `Chat · ${chatName(args[0] || '#team')}` : `Truck ${ref.truckNo || '—'} · ${ref.date ? fmtDay(ref.date) : ''}`};
+  if(why==='busy') OB.busy = Date.now();
+  if(why==='busy' || (navigator.onLine && !NET.down && OB.busy)) it.busy = 1;
   l.push(it); lsSet(obKey(), l); renderOutbox();
-  if(navigator.onLine) setTimeout(flushOutbox, 1500);
-  const e = new Error('No signal: saved on this phone. It will be sent when the signal is back.'); e.queued = it.id; return e;
+  if(navigator.onLine) setTimeout(flushOutbox, it.busy ? 2500 + Math.random() * 2500 : 1500);
+  const ahead = l.length - 1;
+  const e = new Error(it.busy ? `Many people are saving right now. Your change is in line${ahead ? ` behind ${ahead} other${ahead===1 ? '' : 's'}` : ''} and will save by itself in a few seconds. You can keep working.`
+    : 'No signal: saved on this phone. It will be sent when the signal is back.');
+  e.queued = it.id; return e;
 }
 /** Like call(), for trip saves: without signal (or while older changes still wait) the change joins the outbox instead. */
 function callQ(fn, ...args){
@@ -9372,7 +9478,8 @@ function callQ(fn, ...args){
   const r = args[0];   // a trip added without signal has no row yet: change it once it is sent
   if(!['dispatchAddTrip', 'chatSend'].includes(fn) && r && typeof r==='object' && !r.tripId && !r.row) return Promise.reject(new Error('This trip is still waiting to be sent. Change it after the signal is back.'));
   if(!navigator.onLine || outbox().length) return Promise.reject(queueSave(fn, args));
-  return call(fn, ...args).catch(e => { if(isNetErr(e)) throw queueSave(fn, args); throw e; });
+  // Traffic line (MANU 2026-11-10): a save refused because many people save at once waits in line here and is sent again by itself
+  return call(fn, ...args).catch(e => { if(isNetErr(e)) throw queueSave(fn, args); if(BUSY_RE.test(String((e && e.message) || e))) throw queueSave(fn, args, 'busy'); throw e; });
 }
 /** The trip as shown while its change waits (kept with the queued change, so it survives closing the app). */
 function obKeepTrip(id, trip){
@@ -9386,17 +9493,20 @@ async function flushOutbox(){
   if(OB.sending || !S.me || !TOKEN || !navigator.onLine) return renderOutbox();
   let l = outbox(); if(!l.length) return renderOutbox();
   OB.sending = true; renderOutbox();
-  let sent = 0, refused = 0;
+  let sent = 0, refused = 0, lined = 0;
   try{
     while(l.length){
       const it = l[0];
       try{
         const up = await call(it.fn, ...it.args);
-        sent++; l = outbox().filter(x => x.id!==it.id); lsSet(obKey(), l);
+        sent++; if(it.busy) lined++; OB.busy = 0; l = outbox().filter(x => x.id!==it.id); lsSet(obKey(), l);
         if(it.fn==='chatSend'){ chatMerge({msgs: [up]}); continue; }
         if(up && up.key && !l.some(x => x.key===it.key)){ delete PENDING[it.key]; delete up.note; applyLocal(up, it.key); }
       }catch(e){
         if(isNetErr(e) || !TOKEN) break;   // still no signal, or signed out: keep it for later
+        if(BUSY_RE.test(String((e && e.message) || e))){   // still busy: stays first in line, tried again in a few seconds
+          OB.busy = Date.now(); clearTimeout(OB.busyT); OB.busyT = setTimeout(flushOutbox, 4000 + Math.random() * 4000); break;
+        }
         refused++; l = outbox().filter(x => x.id!==it.id); lsSet(obKey(), l);
         if(!l.some(x => x.key===it.key)) delete PENDING[it.key];
         if(/^tmp-/.test(it.key)) removeLocal(it.key);   // a trip added without signal that the server refused
@@ -9405,7 +9515,7 @@ async function flushOutbox(){
     }
   } finally {
     OB.sending = false; renderOutbox();
-    if(sent && !refused) toast(`Signal is back: ${sent} change${sent===1 ? '' : 's'} sent`);
+    if(sent && !refused) toast(lined === sent ? `Saved: ${sent} change${sent===1 ? '' : 's'} that waited in line` : `Signal is back: ${sent} change${sent===1 ? '' : 's'} sent`);
     if(refused){ Object.keys(FRESH).forEach(k => delete FRESH[k]); if(S.tab && S.boot) showTab(S.tab); }   // show the server's copy again
   }
 }
@@ -9414,14 +9524,15 @@ function renderOutbox(){
   const n = outbox().length, off = !navigator.onLine || NET.down;
   b.hidden = !S.me || (!n && !off);
   b.classList.toggle('off', off);
-  b.innerHTML = off ? `No signal${n ? ` · <b>${n}</b> waiting to send` : ''}` : OB.sending ? `Sending <b>${n}</b>…` : `<b>${n}</b> waiting to send`;
-  b.title = off ? 'No signal. Changes are kept on this phone and sent when the signal is back.' : 'Changes kept on this phone. Tap to see them or send now.';
+  const busy = !off && n && OB.busy;
+  b.innerHTML = off ? `No signal${n ? ` · <b>${n}</b> waiting to send` : ''}` : busy ? `🚦 Busy · <b>${n}</b> in line` : OB.sending ? `Sending <b>${n}</b>…` : `<b>${n}</b> waiting to send`;
+  b.title = off ? 'No signal. Changes are kept on this phone and sent when the signal is back.' : busy ? 'Many people are saving at once. Your changes wait in line on this phone and save by themselves in a few seconds.' : 'Changes kept on this phone. Tap to see them or send now.';
 }
 function openOutbox(){
   const l = outbox(), name = {encodeTrip:'Truck Plan change', editTrip:'Trip change', podSave:'POD change', billingSave:'Billing change', cancelTrip:'Cancel trip', dispatchAddTrip:'Add trip', chatSend:'Message'};
   const what = it => { if(it.fn==='chatSend') return it.args[1]; if(it.fn==='cancelTrip') return 'Reason: ' + it.args[1]; if(it.fn==='dispatchAddTrip'){ const d = it.args[0]; return [stName(d.status || 'clip board'), d.customer, d.destination].filter(Boolean).join(' · '); }
     const p = it.args[1] || {}; return Object.keys(p).filter(k => !k.startsWith('__')).map(k => `${k}: ${p[k]===true ? 'yes' : p[k]===false ? 'no' : p[k]}`).join(', '); };
-  openPop('Waiting to send', (navigator.onLine && !NET.down ? 'These changes are on this phone and will be sent in this order.' : 'No signal. These changes are on this phone and will be sent when the signal is back.') + ` Trips shown are what this phone saved${syncAgo()}.`,
+  openPop('Waiting to send', (navigator.onLine && !NET.down && OB.busy ? 'Many people are saving at once, so these changes are waiting in line. They save by themselves in this order in a few seconds. ' : '') + (navigator.onLine && !NET.down ? 'These changes are on this phone and will be sent in this order.' : 'No signal. These changes are on this phone and will be sent when the signal is back.') + ` Trips shown are what this phone saved${syncAgo()}.`,
     l.length ? `<div class="tbl-wrap"><table class="poptbl"><thead><tr><th>Saved at</th><th>Trip</th><th>Change</th></tr></thead><tbody>${l.map(it => `<tr><td>${esc(it.at)}</td><td>${esc(it.label)}<small>${esc(name[it.fn] || it.fn)}</small></td><td style="overflow-wrap:anywhere">${esc(what(it))}</td></tr>`).join('')}</tbody></table></div>`
       : '<p class="hint">Nothing is waiting. Everything is saved.</p>',
     `<button class="btn alt" type="button" onclick="closePop()">Close</button>${l.length && navigator.onLine ? ' <button class="btn" type="button" id="obSend">Send now</button>' : ''}`);
@@ -10584,7 +10695,7 @@ function chatPush(p){
       if(CH.conv===p.conv) chatMarkRead(p.conv);
       if(!CH.out.some(x => x.st==='send')) setTimeout(() => { if(!CH.busy){ CH.at = Date.now(); chatPoll(); } }, 300);   // brings in anything sent just before (and keeps ids in order)
     }catch(e){
-      if(e.queued){ CH.out = CH.out.filter(x => x!==p); toast('No signal: the message will be sent when the signal is back.', false, 4000); }   // now in the outbox ("Waiting for signal")
+      if(e.queued){ CH.out = CH.out.filter(x => x!==p); toast(/in line/.test(e.message) ? 'Many people are sending right now: the message is in line and will send by itself.' : 'No signal: the message will be sent when the signal is back.', false, 4000); }   // now in the outbox ("Waiting for signal")
       else { p.st = 'fail'; p.err = e.message; toast(e.message, true); }
     }
     renderChat(); renderChatBtn();
@@ -11901,7 +12012,7 @@ function renderDisb(){
   if(S.tab!=='disbursement') return;
   const data = DB.data, q = $('dbFind').value.toLowerCase().trim();
   const acc = fillAcctSelect($('dbAcct'));
-  const all = (S.dbTrips || []).map(dbRow).filter(r => (isTrip(r.t) && r.budget > 0) || r.es.length);
+  const all = (S.dbTrips || []).map(t => dbRow(t))   /* not .map(dbRow): map's index went in as the entries list and broke the whole tab (14.5.4) */.filter(r => (isTrip(r.t) && r.budget > 0) || r.es.length);
   const rows = all.filter(r => tripInAcct(r.t, acc) && (!q || [r.t.truckNo, r.t.plateNo, r.t.customer, r.t.destination, crewText(r.t), r.t.tripId,
     ...r.es.map(e => [e.entryNo, e.paidTo, e.txnNo].join(' '))].join(' ').toLowerCase().includes(q)));
   const F = {tosend: r => r.left > 0, sent: r => r.sent > 0 && r.left===0, all: () => true};
