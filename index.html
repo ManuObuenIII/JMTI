@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, interactive-widget=resizes-content">
 <!-- maximum-scale=1: the phone never zooms in on its own when a box is tapped to type (MANU 2026-11-02 "when typing on mobile phone do not zoom");
      iPhones still let people pinch to zoom by hand. The same is set in Code.gs doGet (addMetaTag) for the Apps Script copy. -->
+<script>
+/* Chat and endorsement buttons stay put on phones (MANU 2026-11-10 "the buttons chatbox and endorsement icons should not move with the
+   scroll on mobile phone"): on the Apps Script link the app sits inside Google's frame, and phones (iPhones most of all) stretch that
+   frame to the full length of the page, so the chat button, the endorsement button and the phone top bar scrolled away with the page.
+   There the page now scrolls inside its own body, so things pinned to the screen stay pinned. The GitHub app is not in a frame: no change. */
+(function(){ var d = document.documentElement; try{ if(window.self !== window.top && matchMedia('(pointer:coarse)').matches) d.classList.add('inframe'); }catch(e){} })();
+function pgY(){ return window.scrollY || (document.body && document.body.scrollTop) || 0; }   // how far the page is scrolled (either way)
+function pgTop(){ window.scrollTo(0, 0); if(document.body) document.body.scrollTop = 0; }
+</script>
+<style>
+html.inframe{height:100%;overflow:hidden}
+:where(html.inframe) body{height:100%;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+</style>
 <title>JMTI Operations</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b5394">
@@ -4151,7 +4164,7 @@ function sizeMaintenance(){
   f.style.height = Math.max(460, window.innerHeight - f.getBoundingClientRect().top - 12) + 'px';
 }
 function loadMaintenance(){
-  window.scrollTo(0, 0);
+  pgTop();
   if(!$('mntFrame') && !MNT.busy){
     const SC = '<' + '/script>';
     const shim = '<' + 'script>window.google = parent.google; window.__EMBED = true; window.__LOGO = parent.document.getElementById("logoMain").src; document.documentElement.className = "embed";' + SC;
@@ -4321,7 +4334,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.48, APP_VERSION_DATE = '2026-11-08';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.51, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4352,6 +4365,15 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-10 "stop the auto get source and destination from database"
+  {v:14.51, d:'2026-11-10', items:[
+    'Source and Destination come only from the CLIENT LIST tab. Old trips never add a source, a destination or a route any more,.',
+    'Clients, Trips with no distance yet: only routes that are already in the CLIENT LIST are listed. Saving a km no longer adds a new route; add one with "+ Add route".'
+  ]},
+  // MANU 2026-11-10 "in POD and billing, add document date column between destination and shipment number column; the ITS column, make it IDTS"
+  {v:14.5, d:'2026-11-10', items:[
+    'POD and Billing: new Document date column between Destination and SHIPMENT NO. Tap it to pick the day; it saves with the other document fields and shows who encoded it. Also in the CSV downloads.',
+    'POD and Billing: the ITS column is named IDTS again.']},
   // MANU 2026-11-06 15:20 UTC "this is version 14.2": this afternoon's changes (from ~14:17 UTC)
   // MANU 2026-11-07 01:35 UTC "make this version 14.4": everything after the 14.3 GitHub push (809c379)
   // MANU 2026-11-07 15:36 UTC "make this version 14.1.1" (asked: 14.4.1, the step after 14.4)
@@ -4361,6 +4383,11 @@ const APP_CHANGES = [
   // MANU 2026-11-08 15:34 UTC "add escalation button at the bottom of the add trip" (14.4.5), then 15:42 "not on the add trip button": only in Truck Plan
   // MANU 2026-11-08 15:42 UTC "i want the button at the bottom of the first column together in one cell with the next step button": 14.4.6
   // MANU 2026-11-08 15:43 UTC "show here who are online" (the My day row at the top of the chat): 14.4.7
+  // MANU 2026-11-10 01:02 UTC "should get latest garage status even from previous days": 14.4.9
+  // MANU 2026-11-10 01:03 UTC "the buttons chatbox and endorsement icons should not move with the scroll on mobile phone": also 14.4.9
+  {v:14.49, d:'2026-11-10', items:[
+    'Dashboard "Trucks in garage": a truck parked in a garage on an earlier day now stays in its garage box (marked "Since" and the day) until a newer status moves it.',
+    'Phones: the chat button and the Endorsement button stay in their corners while you scroll (they moved with the page on the Apps Script link). The top bar stays at the top too.']},
   // MANU 2026-11-08 15:51 UTC "the update system did not work": next free number after 14.4.7
   {v:14.48, d:'2026-11-08', items:[
     'Update system now checks the newest version on the GitHub app too. It says which copy you are on (GitHub app or Apps Script page) and only says "updated" when that copy really is the newest. Otherwise it says what is behind and what to do (try again, or Admin pastes the files and deploys a New version).']},
@@ -4792,6 +4819,7 @@ function loadDashboard(silent){
   loadSummary(false);
   if(DRK.period==='dash'){ $('drkFrom').value = from; $('drkTo').value = to; }
   loadDriverRank();
+  loadGarLast(to);
   const cf = addDays(from, -3), ct = addDays(to, 3);
   document.querySelectorAll('.cmpf').forEach(e => e.hidden = !S.cmp);
   if(S.cmp) loadLastYear(from, to);
@@ -4843,20 +4871,32 @@ function renderLowPay(){
  * Trucks in each garage (MANU 2026-10-28 "add to the main dashbaord the count of trucks and what trucks are in each garage"):
  * each truck's latest row in the Dashboard's dates and filters; a garage status puts it under that garage.
  */
+/** Latest garage row per truck up to the Dashboard's last date, earlier days included (server garageLatest). */
+const GARL = {to:'', at:0, list:[]};
+function loadGarLast(to){
+  if(GARL.to===to && Date.now() - GARL.at < 120000) return;
+  GARL.at = Date.now();
+  call('garageLatest', to).then(l => { if(!Array.isArray(l)) return; GARL.to = to; GARL.list = l; GARL.at = Date.now(); if(S.range && S.range.to===to) renderDashboard(); })
+    .catch(() => {});   // server not updated yet: tries again in 2 minutes
+}
 const GAR_BOX = [['GARAGE CANLUBANG', 'Canlubang'], ['GARAGE MEYCAUAYAN', 'Meycauayan'], ['GARAGE SAN FERNANDO', 'San Fernando'], ['GARAGE', 'Garage, no place given'], ['GARAGE LOADED', 'Garage loaded (with cargo), no place given']];
 function renderGarages(all){
   const box = $('garRow'); if(!box) return;
   const last = {};
   all.forEach(t => { const k = String(t.truckNo || '').trim(); if(!k) return; const p = last[k]; if(!p || rowNewer(t, p)) last[k] = t; });
+  // MANU 2026-11-10 "should get latest garage status even from previous days": a truck with no row in these dates keeps the
+  // garage status of its latest earlier row (garageLatest), until a newer status moves it
+  const r0 = S.range || {}, seen = new Set((S.trips || []).map(t => String(t.truckNo || '').trim()));
+  if(GARL.to===r0.to) GARL.list.filter(dashPass()).forEach(t => { const k = String(t.truckNo || '').trim(); if(k && !seen.has(k) && !last[k]) last[k] = Object.assign({old: true}, t); });
   const by = {}; GAR_BOX.forEach(([k]) => { by[k] = []; });
   // GARAGE LOADED <place> goes in that place's box, marked Loaded (MANU 2026-11-02 "even garage loaded must be included here")
   Object.values(last).forEach(t => { const st = statusText(t).toUpperCase().replace(/\s+/g, ' '), k = by[st] ? st : st.replace(/^GARAGE LOADED (?=\S)/, 'GARAGE '); if(by[k]) by[k].push(t); });
   const n = Object.values(by).reduce((a, l) => a + l.length, 0), r = S.range || {};
-  $('garSub').textContent = `${n} truck${n===1 ? '' : 's'} · latest status ${r.from===r.to ? 'on ' + fmtDay(r.to) : 'from ' + fmtDay(r.from) + ' to ' + fmtDay(r.to)}`;
+  $('garSub').textContent = `${n} truck${n===1 ? '' : 's'} · latest status up to ${fmtDay(r.to)}, earlier days included`;
   box.innerHTML = GAR_BOX.filter(([k], i) => i < 3 || by[k].length).map(([k, name]) => {
     const l = by[k].sort((a, b) => (Number(a.truckNo) || 1e9) - (Number(b.truckNo) || 1e9) || String(a.truckNo).localeCompare(String(b.truckNo)));
     return `<div class="gar-box${l.length ? '' : ' zero'}"><div class="gar-h"><b>${l.length}</b><span>${esc(name)}</span></div>`
-      + (l.length ? `<div class="gar-list">${l.map(t => `<span class="gar-t">${tLink(t.truckNo, 'Truck ' + t.truckNo)}${t.plateNo ? `<small>${esc(t.plateNo)}</small>` : ''}${k!=='GARAGE LOADED' && isGarageLoaded(t) ? '<small class="gar-ld">Loaded</small>' : ''}</span>`).join('')}</div>` : '<p class="hint">No truck here</p>') + `</div>`;
+      + (l.length ? `<div class="gar-list">${l.map(t => `<span class="gar-t">${tLink(t.truckNo, 'Truck ' + t.truckNo)}${t.plateNo ? `<small>${esc(t.plateNo)}</small>` : ''}${k!=='GARAGE LOADED' && isGarageLoaded(t) ? '<small class="gar-ld">Loaded</small>' : ''}${t.old ? `<small>Since ${esc(shortDay(t.date))}</small>` : ''}</span>`).join('')}</div>` : '<p class="hint">No truck here</p>') + `</div>`;
   }).join('');
 }
 /**
@@ -6627,7 +6667,7 @@ function openDashReport(){
 function billingCsv(){
   const rows = S.billReportRows || [];
   if(!rows.length) return toast('Nothing to put in the report with these filters.', true);
-  const head = ['Trip date', 'Truck', 'Plate', 'Customer', 'Destination', 'SHIPMENT NO.', 'DTTR', ...BOSL_CSV_HEAD, ...PC_CSV_HEAD];
+  const head = ['Trip date', 'Truck', 'Plate', 'Customer', 'Destination', 'Document date', 'SHIPMENT NO.', 'DTTR', ...BOSL_CSV_HEAD, ...PC_CSV_HEAD];
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const csv = '﻿' + [head, ...rows].map(r => r.map(q).join(',')).join('\r\n');
   const name = repFile('Billing', titleCase($('billAcct').value || 'All accounts'), 'csv');
@@ -7053,9 +7093,9 @@ function renderPod(){
   S.podReady = ready;
   const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips in Waiting docs have scanned documents.</span><button class="btn road" type="button" id="podBulk">Mark all ${ready.length} ENDORSED TO BILLING</button></div>` : '';
   const docCell = t => t.podAt ? `<span class="docstate ok">Sent ${esc(t.podAt.slice(0,10))}</span>` : `<span class="docstate wait">${files(t).length ? files(t).length+' file(s) · to check' : 'No documents'}</span>`;
-  $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>SHIPMENT NO.</th><th>DTTR</th><th>Driver</th><th>Helpers</th>${BOSL_TH}${PC_TH}<th>POD remarks</th><th>Documents</th><th>Status</th></tr></thead><tbody>` +
+  $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Document date</th><th>SHIPMENT NO.</th><th>DTTR</th><th>Driver</th><th>Helpers</th>${BOSL_TH}${PC_TH}<th>POD remarks</th><th>Documents</th><th>Status</th></tr></thead><tbody>` +
     list.map((t,i) => {
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td><td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('pod'))}${pcTds(t, may('pod'))}<td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td>${docDateTd(t, may('pod'))}<td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('pod'))}${pcTds(t, may('pod'))}<td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.podFilter==='completed' ? 'No trip endorsed to billing in these dates.' : 'Nothing left to check here.'}</div>`;
   freezeCols($('podList'));
 }
@@ -7394,18 +7434,24 @@ const podStampLocal = (next, st) => { const k = POD_ST_KEY[st]; if(k) next[k] = 
 // MANU 2026-11-06 15:03 UTC (Excel screenshot, columns I to M; DTTR already exists): after Endorsed to billing come ITS (= IDTS column),
 // RR IDTS, RR PALLET, IWTS (= RR IWTS column), CHARGE INVOICE. SHIPMENT NO. and DTTR stay next to Destination. All free text.
 const PC_KEYS = ['idts', 'rrIdts', 'rrPallet', 'rrIwts', 'chargeInv'];
-const PC_LABELS = ['ITS', 'RR IDTS', 'RR PALLET', 'IWTS', 'CHARGE INVOICE'];
+const PC_LABELS = ['IDTS', 'RR IDTS', 'RR PALLET', 'IWTS', 'CHARGE INVOICE'];   // ITS → IDTS (MANU 2026-11-10)
+// Document date (MANU 2026-11-10 "add document date column between destination and shipment number"): key docDate (sheet DOCUMENT DATE),
+// its own column after Destination, typed in the same pop-up as IDTS … CHARGE INVOICE (pcAt = who + when).
+const docDayOf = t => String(t.docDate || '').slice(0, 10);
+const docDateTd = (t, ed) => { const d = docDayOf(t), by = whoSplit(t.pcAt).by;
+  return `<td class="${ed ? 'ed' : ''}" ${ed ? 'data-pc="docDate" title="Tap to pick the document date"' : ''}>${d ? esc(fmtDay(d)) : ''}${d && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`; };
 const PC_TH = PC_LABELS.map(l => `<th>${l}</th>`).join('') + '<th>Status changes</th>', PC_N = PC_KEYS.length + 1;
 const pcTds = (t, ed) => { const by = whoSplit(t.pcAt).by;
   return PC_KEYS.map(k => `<td class="${ed ? 'ed' : ''}" ${ed ? `data-pc="${k}" title="Tap to type"` : ''} style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`).join('') + stampTd(t); };
 const pcCsv = t => PC_KEYS.map(k => t[k] || '').concat([whoText(t.pcAt), stampCsv(t)]);
 const PC_CSV_HEAD = PC_LABELS.concat(['Encoded', 'Status changes']);
-/** POD or Billing table: tap an ITS … CHARGE INVOICE cell to type them all (fn = podSave or billingSave). */
+/** POD or Billing table: tap a Document date or IDTS … CHARGE INVOICE cell to type them all (fn = podSave or billingSave). */
 function openPc(t, td, fn){
   if(!t) return;
   if(t._pending) return toast('Still saving — try again in a moment.');
   const w = whoSplit(t.pcAt);
   podPop(td, `<div class="ce-h"><b>Documents info</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div>
+    <label class="f">Document date<input id="pc_docDate" type="date" value="${esc(docDayOf(t))}"></label>
     ${PC_KEYS.map((k, i) => `<label class="f">${PC_LABELS[i]}<input id="pc_${k}" value="${esc(t[k] || '')}" autocomplete="off"></label>`).join('')}
     ${w.at ? `<div class="hint">Last encoded ${esc(podWhen(w.at))}${w.by ? ' by ' + esc(w.by) : ''}</div>` : ''}
     <div class="ce-f"><span style="flex:1"></span><button class="btn alt" type="button" id="pcCancel">Cancel</button> <button class="btn" type="button" id="pcSave">Save</button></div>`, true);
@@ -7414,6 +7460,7 @@ function openPc(t, td, fn){
   $('pcSave').onclick = () => {
     const data = {};
     PC_KEYS.forEach(k => { const v = $('pc_' + k).value.trim().toUpperCase().replace(/\s+/g, ' '); if(v !== String(t[k] || '')) data[k] = v; });
+    const dd = $('pc_docDate').value || ''; if(dd !== docDayOf(t)) data.docDate = dd;
     closeCellEditor();
     if(!Object.keys(data).length) return toast('Nothing changed');
     saveOptimistic({...t, ...data, pcAt: nowStamp() + ' · ' + S.me.name}, t, () => callQ(fn, refOf(t), data), () => 'Saved');
@@ -7448,8 +7495,8 @@ function podCsv(){
   if(!l.length) return toast('No trips shown to download.', true);
   const chip = ({tocheck:'All to check', pending:'Pending', waitdocs:'Waiting docs', recvdocs:'Received documents', tukod:'Tukod', completed:'Endorsed to Billing'})[S.podFilter] || '';
   saveCsvFile(`POD ${chip} ${$('podFrom').value} to ${$('podTo').value}.csv`.replace(/\s+/g, ' '),
-    ['#', 'Trip date', 'Trip ID', 'Truck', 'Plate', 'Customer', 'Destination', 'SHIPMENT NO.', 'DTTR', 'Driver', 'Helpers', ...BOSL_CSV_HEAD, ...PC_CSV_HEAD, 'POD remarks', 'Documents', 'Status', 'Status updated', 'Updated by'],
-    l.map((t, i) => [i + 1, t.date, t.tripId || '', t.truckNo || '', t.plateNo || '', t.customer || '', t.destination || '', shipNoOf(t), dttrOf(t), t.driver || '',
+    ['#', 'Trip date', 'Trip ID', 'Truck', 'Plate', 'Customer', 'Destination', 'Document date', 'SHIPMENT NO.', 'DTTR', 'Driver', 'Helpers', ...BOSL_CSV_HEAD, ...PC_CSV_HEAD, 'POD remarks', 'Documents', 'Status', 'Status updated', 'Updated by'],
+    l.map((t, i) => [i + 1, t.date, t.tripId || '', t.truckNo || '', t.plateNo || '', t.customer || '', t.destination || '', docDayOf(t), shipNoOf(t), dttrOf(t), t.driver || '',
       [t.helper1, t.helper2].filter(Boolean).join(', '), ...boslCsv(t), ...pcCsv(t), t.pod || '', t.podAt ? 'Sent ' + String(t.podAt).slice(0, 10) : files(t).length ? files(t).length + ' file(s)' : 'No documents',
       podSt(t), t.podUpdAt ? podWhen(t.podUpdAt) : '', t.podUpdBy || '']));
 }
@@ -7653,14 +7700,14 @@ function renderBilling(){
   const billOrder = t => t.billAt ? 2 : t.podAt ? 0 : 1;
   const since = t => String(t.podAt && t.podAt!=='saving' ? t.podAt : t.date);
   const byTrip = (a,b) => billOrder(a) - billOrder(b) || since(a).localeCompare(since(b)) || String(a.truckNo).localeCompare(String(b.truckNo),undefined,{numeric:true});
-  const head = groupRoutes(list, byTrip, () => false, 14 + BOSL_N + PC_N);   // no route header rows on Billing (MANU)
-  S.billReportRows = list.map(t => [fmtDay(t.date), String(t.truckNo || ''), t.plateNo || '', t.customer || '', plainDest(t.destination) || '', shipNoOf(t), dttrOf(t), ...boslCsv(t), ...pcCsv(t)]);   // Generate report (CSV)
+  const head = groupRoutes(list, byTrip, () => false, 15 + BOSL_N + PC_N);   // no route header rows on Billing (MANU)
+  S.billReportRows = list.map(t => [fmtDay(t.date), String(t.truckNo || ''), t.plateNo || '', t.customer || '', plainDest(t.destination) || '', docDayOf(t), shipNoOf(t), dttrOf(t), ...boslCsv(t), ...pcCsv(t)]);   // Generate report (CSV)
   const ready = S.billFilter==='tocheck' ? list.filter(t => !t._pending) : [];
   S.billReady = ready;
   const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips from POD are waiting for your check.</span><button class="btn road" type="button" id="billBulk">Mark all ${ready.length} checked</button></div>` : '';
   const stCell = t => t.billAt ? `<span class="docstate ok">Checked ${esc(t.billAt.slice(0,10))}</span>${t.invNo ? `<small>Invoice ${esc(t.invNo)}${t.invAmt ? ' · ₱' + Number(t.invAmt).toLocaleString('en-PH') : ''}</small>` : '<small class="dim">no invoice no.</small>'}` : t.podAt ? `<span class="docstate wait">From POD · ${files(t).length} file(s)</span>` : `<span class="docstate">Waiting for POD</span>`;
-  $('billList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>SHIPMENT NO.</th><th>DTTR</th><th class="n">KMS</th><th>Driver</th><th>Helpers</th>${BOSL_TH}${PC_TH}<th>POD</th><th>Billing</th><th>Final status</th></tr></thead><tbody>` +
-    list.map((t,i) => (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${t.billAt ? 'var(--done)' : t.podAt ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td title="${esc(t.destination || '')}">${esc(plainDest(t.destination) || '—')}</td><td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td class="n">${esc(tripKm(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('billing'))}${pcTds(t, may('billing'))}<td>${esc(t.podAt && t.podAt!=='saving' ? t.podAt.slice(0,10) : t.podAt ? 'Saving…' : '')}${t.pod ? `<small>${esc(t.pod)}</small>` : ''}</td><td>${stCell(t)}</td><td>${esc(podSt(t))}</td></tr>`).join('') + `</tbody></table></div>`
+  $('billList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Document date</th><th>SHIPMENT NO.</th><th>DTTR</th><th class="n">KMS</th><th>Driver</th><th>Helpers</th>${BOSL_TH}${PC_TH}<th>POD</th><th>Billing</th><th>Final status</th></tr></thead><tbody>` +
+    list.map((t,i) => (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${t.billAt ? 'var(--done)' : t.podAt ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td title="${esc(t.destination || '')}">${esc(plainDest(t.destination) || '—')}</td>${docDateTd(t, may('billing'))}<td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td class="n">${esc(tripKm(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('billing'))}${pcTds(t, may('billing'))}<td>${esc(t.podAt && t.podAt!=='saving' ? t.podAt.slice(0,10) : t.podAt ? 'Saving…' : '')}${t.pod ? `<small>${esc(t.pod)}</small>` : ''}</td><td>${stCell(t)}</td><td>${esc(podSt(t))}</td></tr>`).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.billFilter==='tocheck' ? 'Nothing from POD to check in these dates.' : 'Nothing here for these dates.'}</div>`;
   freezeCols($('billList'));
 }
@@ -9162,6 +9209,7 @@ async function popPdf(){
     const box = document.querySelector('#pop .popbox'), W = 960;
     const who = S.me ? `Prepared by ${S.me.name || S.me.username}${S.me.role ? ' (' + titleCase(S.me.role) + ')' : ''} · ` : '';
     const prep = doc => {
+      doc.documentElement.classList.remove('inframe');   // the picture is the whole part, not the phone screen
       const pop = doc.getElementById('pop'), b = pop.querySelector('.popbox');
       pop.style.cssText += `;position:absolute;inset:auto;left:0;top:0;width:${W}px;height:auto;display:block;padding:0;background:#fff;overflow:visible;backdrop-filter:none;-webkit-backdrop-filter:none`;
       b.classList.add('pdfing'); b.style.cssText += `;width:${W}px;max-width:none;max-height:none;margin:0;border-radius:0;box-shadow:none;background:#fff`;
@@ -9228,6 +9276,7 @@ async function secShot(el, title, f, kind){
     const W = Math.min(2400, Math.max(960, tw));
     el.setAttribute('data-shot', '1');
     const prep = doc => {
+      doc.documentElement.classList.remove('inframe');   // the picture is the whole part, not the phone screen
       const c = doc.querySelector('[data-shot]'), w = doc.createElement('div');
       // the part alone at the top of the page, on white, at computer width (the Dashboard's own classes so it keeps its look)
       w.id = 'v-dashboard'; w.className = 'view'; w.style.cssText = `display:block;position:absolute;left:0;top:0;width:${W}px;margin:0;padding:0;background:#fff`;
@@ -9633,7 +9682,7 @@ document.addEventListener('keydown', e => {
     const im = document.createElement('img'); im.alt = ''; const lg = $('logoMain'); if(lg) im.src = lg.src; ind.appendChild(im); document.body.appendChild(ind); return ind; };
   const show = p => { const d = mk(); d.classList.remove('snap'); d.style.opacity = Math.min(1, p / PULL); d.style.transform = `translateY(${p - 60}px) rotate(${p * 4}deg)`; d.classList.toggle('ready', p >= PULL); };
   const hide = () => { if(!ind) return; ind.classList.add('snap'); ind.classList.remove('ready', 'spin'); ind.style.opacity = 0; ind.style.transform = 'translateY(-70px)'; };
-  const blocked = t => !mq.matches || busy || !S.me || $('app').hidden || window.scrollY > 0 || !$('submitOv').hidden
+  const blocked = t => !mq.matches || busy || !S.me || $('app').hidden || pgY() > 0 || !$('submitOv').hidden
     || document.querySelector('.pop:not([hidden]), .vchg:not([hidden]), .vup:not([hidden]), .chdock:not([hidden]), .askbox:not([hidden]), .viewer[style*="flex"], #drawer.on, .scrim.on')
     || (t && t.closest && t.closest('input, textarea, select, [contenteditable], .chdock, .askbox, .drawer, .pop, .ch-sheet-bg'))
     || (t && (function(n){ for(; n && n !== document.body; n = n.parentElement){ if(n.scrollTop > 0) return true; } return false; })(t));
@@ -9650,7 +9699,7 @@ document.addEventListener('keydown', e => {
     if(y0 === null) return;
     const dy = e.touches[0].clientY - y0, dx = Math.abs(e.touches[0].clientX - x0);
     if(!on && (dy <= 0 || dx > dy)){ if(dx > 10 || dy < -4) y0 = null; return; }   // sideways (wide tables) or scrolling up: not a pull
-    if(window.scrollY > 0){ y0 = null; if(on) hide(); on = false; return; }
+    if(pgY() > 0){ y0 = null; if(on) hide(); on = false; return; }
     if(dy > 8){ on = true; if(e.cancelable) e.preventDefault(); pull = Math.min(110, (dy - 8) * 0.5); show(pull); }
   }, {passive:false});
   const done = () => { if(y0 === null) return; y0 = null; if(!on) return; on = false; if(pull >= PULL) refresh(); else hide(); pull = 0; };
@@ -11395,7 +11444,7 @@ function renderNoDist(){
   if(!d){ body.innerHTML = '<tr><td colspan="4" class="empty-cell">Looking for trips with no distance…</td></tr>'; return; }
   const n = d.routes.reduce((a, r) => a + r.trips, 0);
   $('ndNote').textContent = `· ${plural(n, 'trip')} on ${plural(d.routes.length, 'route')} since ${fmtDay(d.from)}${d.noDest ? `, plus ${plural(d.noDest, 'trip')} with no destination` : ''}`
-    + (ed ? '. Type the km once per route: it goes to the CLIENT LIST and every trip on that route with blank KMS uses it.' : '. View only.');
+    + (ed ? '. Only CLIENT LIST routes are listed. Type the km once per route: it goes to that CLIENT LIST row and every trip on that route with blank KMS uses it.' : '. View only.');
   body.innerHTML = d.routes.length ? d.routes.map((r, i) => `<tr><td>${esc(r.source || '—')}<small>→ ${esc(plainDest(r.destination))}${r.inList ? '' : ' · not in the CLIENT LIST'}</small></td><td class="n">${fmtN(r.trips)}</td>`
     + `<td>${esc(fmtDay(r.last))}${r.first!==r.last ? `<small>since ${esc(fmtDay(r.first))}</small>` : ''}</td>`
     + `<td>${ed && (r.inList || addOk) ? `<div class="nd-km"><input data-nd="${i}" inputmode="decimal" placeholder="km" autocomplete="off" aria-label="KM"><button class="btn alt" type="button" data-ndsave="${i}">Save</button></div>`
@@ -13107,7 +13156,7 @@ const FX_TIPS = {
   'source time in': 'Truck arrived at the source (pick-up).', 'loading start': 'Loading started at the source.', 'loading end': 'Loading finished.',
   'source time out': 'Truck left the source.', 'destination time in': 'Truck arrived at the destination. Overdue 24 hours after this if not Completed.',
   'unloading start': 'Unloading started.', 'unloading end': 'Unloading finished.', 'destination time out': 'Truck left the destination.',
-  'remarks': 'Notes from Dispatcher, TL or Admin.', 'its': 'ITS document number (POD/Billing).', 'rr idts': 'RR IDTS document number.',
+  'remarks': 'Notes from Dispatcher, TL or Admin.', 'idts': 'IDTS document number (POD/Billing).', 'document date': 'Date on the trip documents (POD/Billing). Tap to pick it.', 'rr idts': 'RR IDTS document number.',
   'rr pallet': 'RR PALLET document number.', 'iwts': 'IWTS document number.', 'charge invoice': 'Charge invoice number.',
   'status changes': 'Every POD status time and who did it, oldest first.', 'scanned': 'When the POD document was uploaded.',
   'tukod': 'Trip ended at the source side: counts 0.5. The copy after TUKOD counts 1.', 'clip board': 'Trip planned, crew has the clip board.',
@@ -13898,8 +13947,9 @@ start();
   function size(){ var h = bar(); if(!h) return; if(!mq.matches){ document.body.style.removeProperty('--tbH'); return; }
     if(!mini && h.offsetHeight) document.body.style.setProperty('--tbH', h.offsetHeight + 'px'); }
   function onScroll(){ if(!mq.matches){ if(mini){ mini = false; document.body.classList.remove('tb-mini'); } return; }
-    var m = window.scrollY > 90; if(m !== mini){ mini = m; document.body.classList.toggle('tb-mini', m); if(!m) setTimeout(size, 0); } }
+    var m = pgY() > 90; if(m !== mini){ mini = m; document.body.classList.toggle('tb-mini', m); if(!m) setTimeout(size, 0); } }
   window.addEventListener('scroll', onScroll, {passive:true});
+  if(document.body) document.body.addEventListener('scroll', onScroll, {passive:true});   // the page scrolls in its body inside the Apps Script frame on phones
   window.addEventListener('resize', function(){ size(); onScroll(); });
   if(mq.addEventListener) mq.addEventListener('change', function(){ size(); onScroll(); });
   function watch(){ var h = bar(); if(!h) return setTimeout(watch, 500); size(); if(window.ResizeObserver) new ResizeObserver(size).observe(h); }
