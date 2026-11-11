@@ -1398,7 +1398,7 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .br-head{margin:0 0 10px;font-size:14px;line-height:1.45}
 .br-tbl tfoot td{font-weight:700;border-top:2px solid #CBD5E1}
 .br-ph-h{margin:16px 0 8px}
-.nd-km{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.cl-addr{white-space:normal;overflow-wrap:anywhere}.nd-km input{width:90px;min-width:0}
+#clTbl tr.cl-iss td{background:rgba(245,158,11,.08)}.cl-err{display:block;color:#B45309;white-space:normal;overflow-wrap:anywhere;margin-top:4px}.pl-errs{background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.45);border-radius:10px;padding:8px 12px;margin:0 0 10px;color:#92400E}.pl-errs ul{margin:4px 0 6px 18px;padding:0}.pl-errs li{white-space:normal;overflow-wrap:anywhere}.nd-km{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.cl-addr{white-space:normal;overflow-wrap:anywhere}.nd-km input{width:90px;min-width:0}
 .cl-rates input.cl-km{width:80px;min-width:0;text-align:right}
 #lowTbl td:first-child,.hs-tbl td.n,.hs-tbl th.n{white-space:nowrap}   /* peso amounts stay on one line */
 .br-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
@@ -2262,6 +2262,53 @@ body.md-lock #toast{z-index:320}
 @keyframes qpPop{from{opacity:0;transform:translateY(14px) scale(.94)}to{opacity:1;transform:none}}
 @media (max-width:480px){.qp-card{padding:22px 18px 18px}.qp-card p{font-size:17px}}
 @media (prefers-reduced-motion:reduce){.qpop,.qp-card{animation:none}}
+/* Planned trips (MANU 2026-11-11) */
+.pl-panel{margin-bottom:14px}
+.pl-panel h3{flex-wrap:wrap;align-items:center;justify-content:flex-start}
+.pl-panel h3 .sp{flex:1}
+.pl-panel h3 .btn{padding:6px 12px;font-size:12.5px}
+.pl-panel.pl-hide h3{margin-bottom:0}
+.pl-sec{font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+.pl-sec:first-child{margin-top:0}
+.pl-row{display:grid;grid-template-columns:minmax(0,1fr) 130px 120px 110px;gap:4px 12px;align-items:center;padding:7px 10px;border:1px solid var(--line);border-left:4px solid #D97706;border-radius:var(--radius-s);background:#fff;margin-bottom:5px;cursor:pointer;color:var(--text)}
+.pl-row.ok{border-left-color:#16A34A}.pl-row.over{border-left-color:#7C3AED}
+.pl-row:hover{border-color:var(--ink)}
+.pl-rt{font-size:13px;overflow-wrap:anywhere}
+.pl-rt small,.pl-num small{display:block;font-size:11.5px;color:var(--muted);font-weight:500}
+.pl-num{font-size:12.5px}.pl-num b{font-size:15px}
+.pl-bar{height:8px;border-radius:99px;background:#E2E8F0;overflow:hidden}
+.pl-bar i{display:block;height:100%;background:#D97706;border-radius:99px}
+.pl-row.ok .pl-bar i{background:#16A34A}.pl-row.over .pl-bar i{background:#7C3AED}
+.pl-go{font-weight:800;font-size:12.5px;color:#B45309;text-align:right}
+.pl-row.ok .pl-go{color:#15803D}.pl-row.over .pl-go{color:#6D28D9}
+.pl-ex{display:flex;flex-wrap:wrap;gap:6px}
+.pl-ex span{font-size:12px;padding:4px 9px;border-radius:99px;background:#F1F5F9;border:1px solid var(--line);cursor:pointer;overflow-wrap:anywhere;color:var(--text)}
+.pl-by{margin:8px 0 0}
+table.xl tr.routehd i.pl-tag{font-style:normal;font-weight:700;font-size:11.5px;padding:2px 8px;border-radius:99px;margin-left:6px;white-space:nowrap}
+table.xl tr.routehd i.pl-tag.due{background:#FEF3C7;color:#92400E}
+table.xl tr.routehd i.pl-tag.ok{background:#DCFCE7;color:#166534}
+table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
+.pl-top{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:10px}
+.pl-lines{display:flex;flex-direction:column;gap:8px}
+.pl-ed{display:grid;grid-template-columns:24px minmax(0,1fr) minmax(0,2fr) 80px 40px;gap:8px;align-items:end;padding:8px;border:1px solid var(--line);border-radius:var(--radius-s);background:#F8FAFC}
+.pl-ed .pl-n{align-self:center;color:var(--muted);grid-row:1 / 3}
+.pl-ed .pl-tk{grid-column:2}.pl-ed .pl-note{grid-column:3 / 5}.pl-ed .pl-x{grid-column:5;grid-row:1}
+.pl-ed select,.pl-ed input{width:100%;min-width:0}
+.pl-ed .pl-x{padding:8px 0}
+.pl-addrow{display:flex;gap:12px;align-items:center;margin:10px 0 4px;flex-wrap:wrap}
+.hm-pl{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:7px 4px;border-top:1px solid var(--line);font-size:13px;overflow-wrap:anywhere}
+.hm-pl small{display:block;color:var(--muted);font-size:11.5px}
+.hm-pl .pl-go{white-space:nowrap}
+@media (max-width:760px){
+  .pl-row{grid-template-columns:minmax(0,1fr) auto}
+  .pl-row .pl-bar{grid-column:1 / -1;order:3}
+  .pl-top{grid-template-columns:1fr 1fr}
+  .pl-top .f:last-child{grid-column:1 / -1}
+  .pl-ed{grid-template-columns:1fr 1fr}
+  .pl-ed .pl-n{grid-row:auto}.pl-ed .pl-x{grid-column:2;grid-row:auto}.pl-ed .pl-trips{grid-column:1}
+  .pl-ed .pl-x::after{content:' Remove'}
+  .pl-ed .pl-n,.pl-ed .pl-src,.pl-ed .pl-dst,.pl-ed .pl-tk,.pl-ed .pl-note{grid-column:1 / -1}
+}
 </style>
 </head>
 <body>
@@ -2576,6 +2623,10 @@ body.md-lock #toast{z-index:320}
       <label class="f grow x-find">Find<input id="xFind" placeholder="Truck, plate, customer, driver, shipment"></label>
     </div>
     <p class="hint feed-hint" id="xFeedNote" hidden>Trips from <b>GENERAL DATABASE 2.0</b> get their status, truck, route and crew changed there, and new trips are typed there for now. Times, remarks, budget and fuel still save here.</p>
+    <div class="panel pl-panel" id="xPlanPanel" hidden>
+      <h3><span id="xPlanTitle">📋 Planned trips</span> <small id="xPlanNote"></small><span class="sp"></span><button class="btn alt" type="button" id="xPlanToggle">Hide</button> <button class="btn" type="button" id="xPlanEdit" hidden>+ Plan trips</button></h3>
+      <div id="xPlanBody"></div>
+    </div>
     <div class="panel xboard-panel" id="xBoardPanel" hidden>
       <h3><span id="xBoardTitle"></span> <small id="xBoardNote"></small></h3>
       <div class="xstages" id="xStages"></div>
@@ -3314,7 +3365,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
+const WRITES = ['savePlannedTrips','deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 /* Save buttons (MANU 2026-11-06 pick 13): the button pressed just before a save gets a spinner, then a green check,
@@ -4426,7 +4477,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.71, APP_VERSION_DATE = '2026-11-11';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.73, APP_VERSION_DATE = '2026-11-11';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4457,6 +4508,18 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-11 02:57 UTC "when the soure and destination are clicked pop-up details and make it editable, also show possible errors"
+  {v:14.73, d:'2026-11-11', items:[
+    'Clients → Routes & distance: tap a source or a destination to open its card: name, client, address (with Search and a Google Maps link) and every route from or to it with its km.',
+    'Admin and Billing can rename a source or destination there, or move a destination to another client. The new name is changed on the CLIENT LIST, the trips, rates, trip hardship and the address, so old trips keep their route and km. The old text is kept in the NAME CASE BACKUP tab.',
+    'New chip "Possible errors": routes that look wrong, with the reason under each one: same route twice, destination with no client or with two "|", a client that is really a source name, a client that looks like another client, places that look like another place (spelling) or share one street address, km over 500, or a way back with a very different km.'
+  ]},
+  // MANU 2026-11-11 02:45 UTC "add planned trips to be used as guide by supervisor and team leader"
+  {v:14.72, d:'2026-11-11', items:[
+    'Planned trips: the Supervisor, Team leader or Admin types how many trips each route needs on a day (Truck Plan → + Plan trips), with the trucks meant for it and a note if needed. "Copy" brings in another day\'s plan.',
+    'Truck Plan shows the plan at the top: per route the trips already added, how many are completed and how many are still to go, plus trips on routes not in the plan. Each blue route title says "plan 5 · 2 to go". Tap a route to show its trips.',
+    'Today screen: "Planned trips still to send today" lists the routes that are still short. The plan is only a guide: trips are added and counted the same as before.'
+  ]},
   // MANU 2026-11-11 02:31 UTC "i cant submit my day"
   {v:14.71, d:'2026-11-11', items:[
     'My day: Share works again. It stopped with a red "columns do not match" error after reactions were added.'
@@ -6303,7 +6366,7 @@ function refreshTruckPlan(){
   const dh = lsGet('jmti_dh') || {}; Object.keys(dh).forEach(d => { if(d >= cf && d <= ct) delete dh[d]; }); lsSet('jmti_dh', dh);   // whole dates, not only changes
   Object.keys(TC).forEach(k => { const [a, z] = k.split('|'); if(a <= ct && z >= cf) delete TC[k]; });
   Object.keys(FRESH).forEach(k => { delete FRESH[k]; });
-  delete S.assign[t]; OPS.fundAt = 0; TV.due = false;
+  delete S.assign[t]; OPS.fundAt = 0; TV.due = false; PL.at[t] = 0;
   b.disabled = true; b.textContent = '↻ Refreshing…';
   Promise.all([loadDispatcher(), refreshBoot()]).then(() => toast('Truck Plan is up to date.')).catch(e => toast(e.message, true))
     .finally(() => { b.disabled = false; b.textContent = '↻ Refresh'; });
@@ -6356,6 +6419,7 @@ const xRangeText = () => { const [f, t] = xRange(); return f === t ? fmtDay(f) :
 function loadDispatcher(){
   const [f, t] = xRange(), d = t;
   loadOpsFund();
+  loadPlans(d);   // planned trips of the To date
   if(!S.assign[d]) call('getAssignments', d).then(l => { S.assign[d] = l; renderDispatcher(); }).catch(() => {});
   // 3 days either side too, so a round trip's other leg is found (as on the Dashboard); S.xTrips keeps the picked dates only
   return withTrips(addDays(f,-3), addDays(t,3), list => { const [f2, t2] = xRange(); if(f2!==f || t2!==t) return; S.xCtx = list; S.xTrips = list.filter(x => x.date >= f && x.date <= t); renderDispatcher(); }, $('xList'));
@@ -6525,7 +6589,151 @@ function keepPlace(id, sigOf, draw){
   }
   return out;
 }
-function groupRoutes(list, byTrip, showHead, cols, rank){
+/* PLANNED TRIPS (MANU 2026-11-11 "add planned trips to be used as guide by supervisor and team leader"): the Supervisor,
+   Team leader or Admin types how many trips each route needs on a day (+ the trucks meant for it and a note). Truck Plan shows
+   the plan above the list with the trips already added on each route and how many are still to go; each blue route title says
+   it too, and the Today screen lists the routes still short. A guide only: it adds, blocks and counts nothing. */
+const PL = {d:{}, at:{}, busy:{}, canEdit:false, cur:null};
+const plKey = (s, d) => nameKey(s) + '|' + nameKey(d);
+const plSec = l => { const w = acctWeights({customer: l.source, destination: l.destination}), top = Object.keys(w).sort((x, y) => w[y] - w[x])[0] || ''; const r = acctSec(top); return r < 0 ? 3 : r; };
+const PL_SEC = ['Coca Cola Canlubang', 'Coca Cola San Fernando', 'Other accounts', 'Not counted in an account'];
+function loadPlans(date, force){
+  if(!may('planView') || !date) return Promise.resolve([]);
+  if(!force && PL.at[date] && Date.now() - PL.at[date] < 60000) return Promise.resolve(PL.d[date]);
+  if(PL.busy[date]) return PL.busy[date];
+  return PL.busy[date] = call('getPlannedTrips', date, date).then(r => {
+    PL.d[date] = (r.plans || {})[date] || []; PL.canEdit = !!r.canEdit; PL.at[date] = Date.now(); PL.err = '';
+    if(S.tab === 'dispatcher') renderDispatcher();
+    return PL.d[date];
+  }).catch(e => { PL.err = e.message; if(S.tab === 'dispatcher') renderPlanPanel(); return PL.d[date] || []; })
+    .finally(() => { delete PL.busy[date]; });
+}
+/** The plan of a date next to its trips: per route the trips added (any status but cancelled / no trip; a TUKOD and the same truck's
+ *  next trip on that route count once), completed ones and how many are still to go. Routes with trips but no plan go in `extra`. */
+function planRows(date, trips){
+  const by = {};
+  (trips || []).filter(t => t.date === date && isActiveRow(t)).forEach(t => { const k = plKey(t.customer, t.destination); (by[k] = by[k] || []).push(t); });
+  const tk = t => String(t.truckNo || '').trim().toUpperCase();
+  const count = l => { const c = l.filter(t => !(stageOf(t) === 'Tukod' && tk(t) && l.some(x => x !== t && tk(x) === tk(t) && stageOf(x) !== 'Tukod'))); return {added: c.length, done: c.filter(t => ['Completed', 'Tukod'].includes(stageOf(t))).length, trips: c}; };
+  const lines = (PL.d[date] || []).map(p => { const k = plKey(p.source, p.destination), c = count(by[k] || []);
+    return {...p, key: k, sec: plSec(p), added: c.added, done: c.done, toGo: Math.max(0, p.trips - c.added), over: Math.max(0, c.added - p.trips)}; });
+  const inPlan = new Set(lines.map(l => l.key));
+  const extra = Object.keys(by).filter(k => !inPlan.has(k)).map(k => { const t = by[k][0], c = count(by[k]); return {source: t.customer, destination: t.destination, key: k, sec: plSec({source: t.customer, destination: t.destination}), added: c.added}; }).filter(x => x.added && (x.source || x.destination));
+  const tot = {planned: 0, added: 0, toGo: 0, done: 0};
+  lines.forEach(l => { tot.planned += l.trips; tot.added += Math.min(l.added, l.trips); tot.toGo += l.toGo; tot.done += l.done; });
+  return {lines, extra, tot, map: Object.fromEntries(lines.map(l => [l.key, l]))};
+}
+/** Plan words on a Truck Plan route title (one date shown). */
+function planTag(t0){
+  const c = PL.cur; if(!c || !c.lines.length) return '';
+  const l = c.map[plKey(t0.customer, t0.destination)];
+  if(!l) return ' <i class="pl-tag no">not in the plan</i>';
+  return ` <i class="pl-tag ${l.toGo ? 'due' : 'ok'}">plan ${l.trips} · ${l.toGo ? l.toGo + ' to go' : l.over ? l.over + ' over' : 'all added'}</i>`;
+}
+function renderPlanPanel(){
+  const box = $('xPlanPanel'); if(!box) return;
+  PL.cur = null;
+  if(!may('planView')){ box.hidden = true; return; }
+  box.hidden = false;
+  const [f, t] = xRange(), date = t, lines = PL.d[date], hide = lsGet('jmti_plan_hide') === 1, acc = $('xAcct').value;
+  $('xPlanTitle').textContent = '📋 Planned trips · ' + fmtDay(date);
+  $('xPlanEdit').hidden = !PL.canEdit; $('xPlanEdit').textContent = lines && lines.length ? 'Edit plan' : '+ Plan trips';
+  $('xPlanEdit').onclick = () => openPlanForm(date);
+  $('xPlanToggle').textContent = hide ? 'Show' : 'Hide';
+  $('xPlanToggle').onclick = () => { lsSet('jmti_plan_hide', hide ? 0 : 1); renderPlanPanel(); };
+  if(!lines){ $('xPlanNote').textContent = ''; $('xPlanBody').innerHTML = `<p class="hint-line" style="margin:0">${PL.err ? 'Could not load the plan: ' + esc(PL.err) : 'Loading the plan…'}</p>`; return; }
+  const pr = PL.cur = planRows(date, S.xCtx || S.xTrips);
+  const want = acc ? acctSec(acc) : null, mine = l => want === null || l.sec === want;
+  const ls = pr.lines.filter(mine), ex = pr.extra.filter(mine);
+  const sum = {planned: 0, added: 0, toGo: 0}; ls.forEach(l => { sum.planned += l.trips; sum.added += Math.min(l.added, l.trips); sum.toGo += l.toGo; });
+  $('xPlanNote').textContent = ls.length ? `${tripsTxt(sum.planned)} planned · ${fmtN(sum.added)} added · ${sum.toGo ? fmtN(sum.toGo) + ' to go' : 'all added ✓'}${f !== t ? ' · for the To date' : ''}` : '';
+  box.classList.toggle('pl-hide', hide);
+  if(hide){ $('xPlanBody').innerHTML = ''; return; }
+  if(!ls.length){
+    $('xPlanBody').innerHTML = `<p class="hint-line" style="margin:0">No trips planned for ${esc(fmtDay(date))}${acc ? ' in ' + esc(titleCase(acc)) : ''} yet.${PL.canEdit ? ' Tap <b>+ Plan trips</b> to set how many trips each route needs.' : ' The Supervisor or Team leader sets it.'}</p>`;
+    return;
+  }
+  const row = l => { const pct = l.trips ? Math.min(100, l.added / l.trips * 100) : 0, st = l.toGo ? 'due' : l.over ? 'over' : 'ok';
+    return `<div class="pl-row ${st}" data-dest="${esc(l.destination)}" title="Show these trips"><div class="pl-rt"><b>${esc(l.source)}</b> → <b>${esc(l.destination)}</b>${l.trucks || l.note ? `<small>${l.trucks ? 'Trucks ' + esc(l.trucks) : ''}${l.trucks && l.note ? ' · ' : ''}${esc(l.note || '')}</small>` : ''}</div>`
+      + `<div class="pl-num"><b>${fmtN(l.added)}</b> of ${fmtN(l.trips)} added${l.done ? `<small>${fmtN(l.done)} completed</small>` : ''}</div>`
+      + `<span class="pl-bar"><i style="width:${pct}%"></i></span><span class="pl-go">${l.toGo ? fmtN(l.toGo) + ' to go' : l.over ? '+' + fmtN(l.over) + ' over plan' : '✓ All added'}</span></div>`; };
+  let html = '';
+  [0, 1, 2, 3].forEach(s => { const g = ls.filter(l => l.sec === s).sort((a, b) => b.toGo - a.toGo || String(a.destination).localeCompare(String(b.destination))); if(g.length) html += (want === null ? `<div class="pl-sec">${esc(PL_SEC[s])}</div>` : '') + g.map(row).join(''); });
+  if(ex.length) html += `<div class="pl-sec">Trips on routes not in the plan</div><div class="pl-ex">${ex.map(x => `<span data-dest="${esc(x.destination)}">${esc(x.source)} → ${esc(x.destination)} · <b>${tripsTxt(x.added)}</b></span>`).join('')}</div>`;
+  const by = ls.map(l => l.by && l.at ? l : null).filter(Boolean).sort((a, b) => String(b.at).localeCompare(String(a.at)))[0];
+  if(by) html += `<p class="hint-line pl-by">Last changed by ${esc(by.by)} · ${esc(by.at)}. Tap a route to show its trips. A guide only: trips are still added the usual way.</p>`;
+  $('xPlanBody').innerHTML = html;
+  $('xPlanBody').onclick = e => { const r = e.target.closest('[data-dest]'); if(!r) return; const v = r.dataset.dest, q = $('xFind');
+    q.value = q.value === v ? '' : v; renderDispatcher(); if(q.value) setTimeout(() => { try{ $('xList').scrollIntoView({block:'start', behavior:'smooth'}); }catch(err){} }, 60); };
+}
+/** Supervisor / Team leader / Admin: the routes and trips of one date's plan. */
+function openPlanForm(date0){
+  if(!PL.canEdit) return toast('Only the Supervisor, Team leader or Admin sets the plan.', true);
+  const seen = {}, sources = (S.boot.customers || []).filter(c => c && !seen[nameKey(c)] && (seen[nameKey(c)] = 1)).sort((a, b) => String(a).localeCompare(String(b)));
+  let date = date0, lines = [];
+  const blank = () => ({source: '', destination: '', trips: '', trucks: '', note: ''});
+  const srcOpts = cur => `<option value="">Pick the source…</option>` + (cur && !sources.some(s => nameKey(s) === nameKey(cur)) ? `<option selected>${esc(cur)}</option>` : '')
+    + sources.map(s => `<option ${nameKey(s) === nameKey(cur) ? 'selected' : ''}>${esc(s)}</option>`).join('');
+  const dstOpts = (src, cur) => (cur && !destsOf(src).some(d => nameKey(d) === nameKey(cur)) ? `<option selected>${esc(cur)}</option>` : '') + destOptions(src, cur);
+  const lineHtml = (l, i) => `<div class="pl-ed" data-i="${i}"><b class="pl-n">${i + 1}</b>
+    <label class="f pl-src">Source<select data-k="source">${srcOpts(l.source)}</select></label>
+    <label class="f pl-dst">Destination<select data-k="destination">${dstOpts(l.source, l.destination)}</select></label>
+    <label class="f pl-trips">Trips<input data-k="trips" inputmode="numeric" autocomplete="off" value="${esc(l.trips || '')}" placeholder="0"></label>
+    <label class="f pl-tk">Trucks (optional)<input data-k="trucks" autocomplete="off" maxlength="200" value="${esc(l.trucks || '')}" placeholder="e.g. 12, 20, 31"></label>
+    <label class="f pl-note">Note (optional)<input data-k="note" autocomplete="off" maxlength="200" value="${esc(l.note || '')}"></label>
+    <button class="btn alt pl-x" type="button" data-rm="${i}" title="Take this route off">✕</button></div>`;
+  const sync = () => { document.querySelectorAll('#plLines .pl-ed').forEach(el => { const l = lines[+el.dataset.i]; if(!l) return; el.querySelectorAll('[data-k]').forEach(x => { l[x.dataset.k] = x.value; }); }); };
+  const total = () => { const n = lines.reduce((a, l) => a + (Number(String(l.trips).replace(/[,\s]/g, '')) || 0), 0); $('plTotal').textContent = `${lines.filter(l => l.source || l.destination).length} route${lines.length === 1 ? '' : 's'} · ${tripsTxt(n)}`; };
+  const draw = () => { $('plLines').innerHTML = lines.map(lineHtml).join('') || '<p class="hint">No routes yet. Tap + Add route.</p>'; total(); };
+  const fill = d => { lines = (PL.d[d] || []).map(x => ({source: x.source, destination: x.destination, trips: String(x.trips), trucks: x.trucks || '', note: x.note || ''})); if(!lines.length) lines = [blank()]; draw(); };
+  openPop('Planned trips', 'How many trips each route needs on the day. Truck Plan shows it next to the trips added, as a guide.', `
+    <div class="form pl-top">
+      <label class="f">Date<input type="date" id="plDate" value="${esc(date)}"></label>
+      <label class="f">Copy the plan of<input type="date" id="plFrom" value="${esc(addDays(date, -1))}"></label>
+      <div class="f"><span>&nbsp;</span><button class="btn alt" type="button" id="plCopy">Copy</button></div>
+    </div>
+    <div id="plLines" class="pl-lines"></div>
+    <div class="pl-addrow"><button class="btn alt" type="button" id="plAdd">+ Add route</button><span class="hint" id="plTotal"></span></div>
+    <p class="hint">Routes come from CLIENT LIST. Leave Trips empty or 0 to take a route off. Trucks and note are only for the team to read.</p>`,
+    `<button class="btn alt" type="button" onclick="closePop()">Cancel</button> <button class="btn road" type="button" id="plSave">Save plan</button>`);
+  fill(date);
+  if(!PL.d[date]) loadPlans(date, true).then(() => { if($('plLines')) fill(date); });
+  $('plDate').onchange = () => { const d = $('plDate').value; if(!d) return; date = d; $('plFrom').value = addDays(d, -1); $('plLines').innerHTML = '<p class="hint">Loading…</p>'; loadPlans(d, true).then(() => { if($('plLines') && date === d) fill(d); }); };
+  $('plCopy').onclick = async () => {
+    const from = $('plFrom').value; if(!from) return toast('Pick the date to copy from.', true);
+    const b = $('plCopy'); b.disabled = true; b.textContent = 'Copying…';
+    try{ const r = await call('getPlannedTrips', from, from), l = (r.plans || {})[from] || [];
+      if(!l.length){ toast('No planned trips on ' + fmtDay(from) + '.', true); return; }
+      sync(); const have = new Set(lines.filter(x => x.source || x.destination).map(x => plKey(x.source, x.destination)));
+      lines = lines.filter(x => x.source || x.destination).concat(l.filter(x => !have.has(plKey(x.source, x.destination))).map(x => ({source: x.source, destination: x.destination, trips: String(x.trips), trucks: x.trucks || '', note: x.note || ''})));
+      draw(); toast(`Copied ${l.length} route${l.length === 1 ? '' : 's'} from ${fmtDay(from)}. Check the numbers, then Save plan.`);
+    }catch(e){ toast(e.message, true); } finally { b.disabled = false; b.textContent = 'Copy'; }
+  };
+  $('plAdd').onclick = () => { sync(); lines.push(blank()); draw(); const el = document.querySelector('#plLines .pl-ed:last-child select'); if(el) el.focus(); };
+  $('popBody').onclick = e => { const x = e.target.closest('[data-rm]'); if(!x) return; sync(); lines.splice(+x.dataset.rm, 1); if(!lines.length) lines.push(blank()); draw(); };
+  $('popBody').onchange = e => { const el = e.target.closest('#plLines [data-k]'); if(!el) return;
+    if(el.dataset.k === 'source'){ const row = el.closest('.pl-ed'); row.querySelector('[data-k="destination"]').innerHTML = dstOpts(el.value, ''); }
+    sync(); total(); };
+  $('popBody').oninput = e => { if(e.target.closest('#plLines [data-k="trips"]')){ sync(); total(); } };
+  $('plSave').onclick = async () => {
+    sync();
+    const out = [], keys = {};
+    for(let i = 0; i < lines.length; i++){
+      const l = lines[i], raw = String(l.trips || '').replace(/[,\s]/g, ''), n = raw === '' ? 0 : Number(raw);
+      if(!l.source && !l.destination && !n) continue;
+      if(!l.source || !l.destination) return toast(`Route ${i + 1}: pick both the source and the destination.`, true);
+      if(!(n >= 0 && n <= 200) || Math.round(n) !== n) return toast(`Route ${i + 1}: type the trips as a whole number from 0 to 200.`, true);
+      const k = plKey(l.source, l.destination); if(keys[k]) return toast(`${l.source} → ${l.destination} is in the plan twice. Put the trips on one line.`, true); keys[k] = 1;
+      if(n) out.push({source: l.source, destination: l.destination, trips: n, trucks: String(l.trucks || '').trim(), note: String(l.note || '').trim()});
+    }
+    const b = $('plSave'); b.disabled = true; b.textContent = 'Saving…';
+    try{ const r = await call('savePlannedTrips', date, out); PL.d[date] = (r.plans || {})[date] || []; PL.at[date] = Date.now(); PL.canEdit = !!r.canEdit;
+      closePop(); toast(`Plan for ${fmtDay(date)} saved: ${tripsTxt(out.reduce((a, l) => a + l.trips, 0))} on ${out.length} route${out.length === 1 ? '' : 's'}.`);
+      if(S.tab === 'dispatcher') renderDispatcher(); if(S.tab === 'home') renderHome();
+    }catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Save plan'; }
+  };
+}
+function groupRoutes(list, byTrip, showHead, cols, rank, extra){
   const routeKey = t => nameKey(t.customer) + '|' + nameKey(t.destination);
   const groups = {};
   list.forEach(t => (groups[routeKey(t)] = groups[routeKey(t)] || []).push(t));
@@ -6533,7 +6741,7 @@ function groupRoutes(list, byTrip, showHead, cols, rank){
   glist.sort((a,b) => (rank ? rank(a[0]) - rank(b[0]) : 0) || byTrip(a[0], b[0]) || String(a[0].customer).localeCompare(String(b[0].customer)) || String(a[0].destination).localeCompare(String(b[0].destination)));
   list.length = 0; glist.forEach(g => list.push(...g));
   const head = {};
-  glist.forEach(g => { if((isTrip(g[0]) || stageOf(g[0])==='Cancelled') && showHead(g[0])) head[g[0].key] = `<tr class="routehd"><td colspan="${cols}"><div><b>${esc(g[0].customer || '(no source)')}</b> → <b>${esc(g[0].destination || '(no destination)')}</b> ${ttTag(g[0])} <span>· ${tripsTxt(xw(g))}</span></div></td></tr>`; });
+  glist.forEach(g => { if((isTrip(g[0]) || stageOf(g[0])==='Cancelled') && showHead(g[0])) head[g[0].key] = `<tr class="routehd"><td colspan="${cols}"><div><b>${esc(g[0].customer || '(no source)')}</b> → <b>${esc(g[0].destination || '(no destination)')}</b> ${ttTag(g[0])} <span>· ${tripsTxt(xw(g))}</span>${extra ? extra(g) : ''}</div></td></tr>`; });
   return head;
 }
 /* ====================================================================================================
@@ -6937,6 +7145,7 @@ function renderDispatcher(){
   const accTrucks = acc ? (S.assign[d] || []).filter(a => a.account===acc).map(a => String(a.truckNo)) : null;
   XW = roundTrips(S.xCtx || S.xTrips || []);   // a round trip's legs count 0.5 each in the counters (MANU 2026-10-13)
   renderAccountBoard(acc, d, accTrucks);
+  renderPlanPanel();   // planned trips guide (MANU 2026-11-11)
   const order = st => { const i = STAGES.indexOf(st); return i < 0 ? 99 : i; };
   const latestKey = {};
   // All lists every trip from the From to the To date (MANU 2026-10-08); "Latest status" shows each truck's latest trip only
@@ -6978,7 +7187,7 @@ function renderDispatcher(){
   const byTruck = (a,b) => String(a.truckNo).localeCompare(String(b.truckNo),undefined,{numeric:true}) || String(a.date).localeCompare(String(b.date));
   const garL = list.filter(t => !onRoute(t) && isGar(t)).sort((a,b) => statusText(a).localeCompare(statusText(b)) || byTruck(a,b));
   const notL = list.filter(t => !onRoute(t) && !isGar(t)).sort(byTruck), routeL = list.filter(onRoute);
-  const head = groupRoutes(routeL, byTrip, () => true, 17 + MS_KEYS.length, acc ? null : t => secRank(secOf(t)));   // blue route title on every route, all accounts (MANU)
+  const head = groupRoutes(routeL, byTrip, () => true, 17 + MS_KEYS.length, acc ? null : t => secRank(secOf(t)), g => planTag(g[0]));   // blue route title on every route, all accounts (MANU)
   const tm = v => v ? esc(toDate(v) ? toDate(v).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : v) : '';
   // every truck assigned to an account (or to the picked account) with no trip that day, grouped by account at the end
   const assignedNos = accTrucks || (S.assign[d] || []).filter(a => a.account).map(a => String(a.truckNo));
@@ -11994,6 +12203,7 @@ function initBook(){
   $('ndTbl').onkeydown = e => { const i = e.target.closest('input[data-nd]'); if(i && e.key==='Enter') saveNoDist(Number(i.dataset.nd)); };
   $('clTbl').onclick = e => { const sv = e.target.closest('[data-rksave]'); if(sv) return saveBookKm(Number(sv.dataset.rksave));
     const ad = e.target.closest('[data-addr]'); if(ad) return openAddr(Number(ad.dataset.addr));
+    const pl = e.target.closest('[data-pl]'); if(pl) return openPlace(Number(pl.dataset.pl.slice(1)), pl.dataset.pl[0]);
     const b = e.target.closest('[data-client]'); if(!b || !CL.data) return; const c = CL.data.clients.find(x => x.client===b.dataset.client); if(c) openClientCard(c); };
   $('clTbl').onkeydown = e => { const i = e.target.closest('input[data-rk]'); if(i && e.key==='Enter') saveBookKm(Number(i.dataset.rk)); };
   $('clPays').onclick = e => { const tr = e.target.closest('tr[data-prow]'); if(!tr || !CL.data) return; const p = CL.data.payments.find(x => String(x.row)===tr.dataset.prow); if(p) openPayment(p); };
@@ -12122,6 +12332,145 @@ function openAddr(i){
     catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Save'; }
   };
 }
+/* ---- Place details and possible errors (MANU 2026-11-11 "when the source and destination are clicked pop-up details and make it
+   editable, also show possible errors"). Tapping a source or a destination opens its card: name (and client for a destination),
+   address, and every route from or to it with its km. Admin and Billing rename (savePlaceDetails changes the name on the CLIENT LIST,
+   trips, rates, hardship and address, so nothing loses its route); Admin, Billing and Accounting change the address and km.
+   bookIssues() checks the list for things that look wrong; the "Possible errors" chip lists those rows and each shows why. */
+const PL_STOP = new Set(['INC','CORP','CORPORATION','CO','LTD','THE','OF','AND','PHILIPPINES','PH','STORE','STA','STO']);
+const plTokens = v => [...new Set(String(v || '').toUpperCase().replace(/[^A-Z0-9 ]+/g, ' ').split(/\s+/).filter(w => w && !PL_STOP.has(w)))].sort().join(' ');
+function plNear(a, b){   // two keys at most 2 letters apart (typos), only for names long enough to mean something
+  if(a===b || Math.min(a.length, b.length) < 8 || Math.abs(a.length - b.length) > 2) return false;
+  let prev = Array.from({length:b.length + 1}, (_, j) => j);
+  for(let i = 1; i <= a.length; i++){
+    const cur = [i]; let low = i;
+    for(let j = 1; j <= b.length; j++){ cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1]===b[j - 1] ? 0 : 1)); if(cur[j] < low) low = cur[j]; }
+    if(low > 2) return false; prev = cur;
+  }
+  return prev[b.length] <= 2;
+}
+function bookIssues(){
+  const d = CL.data; if(!d) return {row:new Map(), place:{}};
+  const rows = bookRoutes(), sig = rows.length + ':' + rows.reduce((a, x) => a + (Number(x.r.km) || 0), 0);   // a km saved in place starts it over
+  if(CL.iss && CL.iss.d===d && CL.iss.p===d.places && CL.iss.sig===sig) return CL.iss;
+  const row = new Map(), place = {}, add = (m, k, t) => { const l = m.get ? (m.get(k) || (m.set(k, []), m.get(k))) : (m[k] = m[k] || []); if(!l.includes(t)) l.push(t); };
+  const clients = [...new Set(d.clients.map(c => c.client))], srcKeys = new Set(rows.map(x => nameKey(x.r.source)));
+  // places: sources and destinations (destinations compared by their place part, across clients too)
+  const srcs = new Map(), dsts = new Map();
+  rows.forEach(x => { srcs.set(nameKey(x.r.source), x.r.source); dsts.set(nameKey(x.r.destination), x.r.destination); });
+  const look = (map, label, partOf) => {
+    const l = [...map.entries()].map(([k, v]) => ({k, v, t:plTokens(partOf(v)), n:nameKey(partOf(v))}));
+    for(let i = 0; i < l.length; i++) for(let j = i + 1; j < l.length; j++){
+      const a = l[i], b = l[j];
+      if(a.n===b.n || (a.t && a.t===b.t) || plNear(a.n, b.n)){
+        const same = a.n===b.n && label==='destination';
+        add(place, a.k, same ? `Same place also under ${b.v.split('|')[0].trim()}` : `Looks like the ${label} "${partOf(b.v)}"`);
+        add(place, b.k, same ? `Same place also under ${a.v.split('|')[0].trim()}` : `Looks like the ${label} "${partOf(a.v)}"`);
+      }
+    }
+  };
+  look(srcs, 'source', v => v); look(dsts, 'destination', v => plainDest(v));
+  // one street address for two different places
+  const byAd = {};
+  [...srcs.values(), ...dsts.values()].forEach(p => { const a = addrOf(p); if(a && a.split(',').length >= 4) (byAd[nameKey(a)] = byAd[nameKey(a)] || new Set()).add(p); });
+  Object.values(byAd).forEach(s => { if(s.size < 2) return; const l = [...s]; l.forEach(p => add(place, nameKey(p), `Same address as ${l.filter(q => q!==p).map(q => plainDest(q)).join(', ')}`)); });
+  [...srcs.values(), ...dsts.values()].forEach(p => { if(!addrOf(p)) add(place, nameKey(p), 'No address saved'); });
+  // routes
+  const seen = {}, kmOf = {};
+  rows.forEach(x => { const k = nameKey(x.r.source) + '|' + nameKey(x.r.destination); seen[k] = (seen[k] || 0) + 1; kmOf[nameKey(x.r.source) + '>' + nameKey(plainDest(x.r.destination))] = x.r.km; });
+  rows.forEach(x0 => {
+    const r = x0.r, x = rtKey(r), dst = String(r.destination), cl = dst.includes('|') ? dst.split('|')[0].trim() : '';
+    if(seen[nameKey(r.source) + '|' + nameKey(r.destination)] > 1) add(row, x, 'Same route twice in the CLIENT LIST');
+    if(!cl) add(row, x, 'Destination has no client (should be "CLIENT | place")');
+    if((dst.match(/\|/g) || []).length > 1) add(row, x, `Destination has two "|": ${dst}`);
+    if(String(r.source).includes('|')) add(row, x, 'Source has a "|" in its name');
+    if(cl && srcKeys.has(nameKey(cl))) add(row, x, `Client "${cl}" is a source name, not a client`);
+    if(nameKey(r.source)===nameKey(plainDest(r.destination))) add(row, x, 'Source and destination are the same place');
+    const km = Number(r.km);
+    if(km > 500) add(row, x, `${fmtN(km)} km one way looks too far`);
+    const back = kmOf[nameKey(plainDest(r.destination)) + '>' + nameKey(r.source)];
+    if(km > 0 && back > 0 && Math.abs(back - km) > Math.max(5, 0.3 * Math.min(back, km))) add(row, x, `The way back is ${fmtN(back)} km`);
+    const near = cl && clients.find(c => nameKey(c)!==nameKey(cl) && (nameKey(c).startsWith(nameKey(cl)) || nameKey(cl).startsWith(nameKey(c)) || plNear(nameKey(c), nameKey(cl))));
+    if(near) add(row, x, `Client "${cl}" looks like the client "${near}"`);
+    [r.source, r.destination].forEach(p => (place[nameKey(p)] || []).forEach(t => { if(t!=='No address saved') add(row, x, (p===r.source ? 'Source: ' : 'Destination: ') + t); }));
+  });
+  return CL.iss = {d, p:d.places, sig, row, place};
+}
+const rtKey = r => nameKey(r.source) + '|' + nameKey(r.destination);
+const issOf = x => bookIssues().row.get(rtKey(x.r)) || [];
+const issHtml = l => l.length ? `<small class="cl-err">⚠ ${l.map(esc).join(' · ')}</small>` : '';
+/** The card of one source or destination (x = a routes-list row, which 's' or 'd'). */
+function openPlace(i, which){
+  const x = CL.rows && CL.rows[i]; if(!x || !CL.data) return;
+  const d = CL.data, isD = which==='d', place = isD ? x.r.destination : x.r.source, k = nameKey(place);
+  const ed = !!d.canEdit, ren = ed && may('routes');
+  const uses = bookRoutes().filter(y => nameKey(isD ? y.r.destination : y.r.source)===k);
+  const cl = isD && place.includes('|') ? place.split('|')[0].trim() : '', pl = isD ? placeOf(place) : place;
+  const clients = [...new Set(d.clients.map(c => c.client))].sort();
+  // a destination saved as "CLIENT | Other client | place": suggest the right client and place
+  const parts = isD ? place.split('|').map(s => s.trim()) : [];
+  const fixCl = parts.length > 2 ? clients.find(c => nameKey(c)===nameKey(parts[1])) : '';
+  const pIss = (bookIssues().place[k] || []), rIss = uses.flatMap(y => issOf(y).filter(t => !/^(Source|Destination): /.test(t)).map(t => `${y.r.source} → ${plainDest(y.r.destination)}: ${t}`));
+  const errs = [...pIss, ...rIss];
+  const ad = addrOf(place), mapUrl = q => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+  const nameFld = !ren ? `<div class="f full">${isD ? 'Destination' : 'Source'}<b>${esc(isD ? pl : place)}</b>${isD ? `<small>Client ${esc(cl || '—')}</small>` : ''}</div>`
+    : isD ? `<label class="f">Client<select id="plCl">${cl && !clients.some(c => nameKey(c)===nameKey(cl)) ? `<option value="${esc(cl)}" selected>${esc(cl)}</option>` : ''}${cl ? '' : '<option value="" selected>Pick the client…</option>'}${clients.map(c => `<option value="${esc(c)}"${nameKey(c)===nameKey(cl) ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
+        <label class="f">Destination name<input id="plName" value="${esc(pl)}" autocomplete="off"></label>`
+      : `<label class="f full">Source name<input id="plName" value="${esc(place)}" autocomplete="off"></label>`;
+  const rows = uses.map((y, n) => { const other = isD ? y.r.source : plainDest(y.r.destination);
+    return `<tr><td>${isD ? 'From ' : 'To '}<b>${esc(other)}</b>${isD ? '' : `<small>${esc(y.c.client)}</small>`}</td><td class="n">${ed ? `<input class="pl-km" data-n="${n}" inputmode="decimal" value="${hasKm(y.r) ? esc(y.r.km) : ''}" placeholder="km" autocomplete="off" aria-label="KM" style="width:80px;text-align:right">` : hasKm(y.r) ? fmtN(y.r.km) + ' km' : '<span class="db-left">No distance</span>'}</td></tr>`; }).join('');
+  openPop(isD ? `Destination · ${pl}` : `Source · ${place}`, `${isD ? esc(cl || 'no client') + ' · ' : ''}${plural(uses.length, 'route')} ${isD ? 'to' : 'from'} here in the CLIENT LIST`, `
+    ${errs.length ? `<div class="pl-errs"><b>Possible errors (${errs.length})</b><ul>${errs.map(t => `<li>${esc(t)}</li>`).join('')}</ul>${fixCl && ren ? `<button class="btn alt" type="button" id="plFix">Use client ${esc(fixCl)} and place "${esc(parts.slice(2).join(' '))}"</button>` : ''}</div>` : '<p class="hint" style="margin:0 0 8px">No possible error found for this place.</p>'}
+    <div class="form">${nameFld}
+      ${ed ? `<label class="f full">Address<span style="display:flex;gap:6px"><input id="plAd" style="flex:1" value="${esc(ad)}" autocomplete="off" placeholder="Street, town, province"><button class="btn alt" type="button" id="plFind">Search</button></span></label>`
+        : `<div class="f full">Address<b>${esc(ad || '—')}</b></div>`}
+      <p class="hint full" style="margin:0">${ad ? `<a href="${esc(mapUrl(ad))}" target="_blank" rel="noopener">Open the address in Google Maps</a> · ` : ''}One address per place: every route from or to it shows it.${ren ? ' A new name is changed on every route, trip, rate, hardship rating and address of this place, so old trips keep their route and km.' : ''}</p>
+    </div>
+    <h4 style="margin:12px 0 6px">Routes and distance (one way)</h4>
+    <div class="tbl-wrap" style="max-height:40vh"><table class="poptbl"><tbody>${rows}</tbody></table></div>`,
+    `<button class="btn alt" type="button" onclick="closePop()">${ed ? 'Cancel' : 'Close'}</button>${ed ? ' <button class="btn road" type="button" id="plSave">Save</button>' : ''}`);
+  if(!ed) return;
+  if($('plFix')) $('plFix').onclick = () => { $('plCl').value = fixCl; $('plName').value = parts.slice(2).join(' '); toast('Check the client and name, then Save.'); };
+  $('plFind').onclick = async () => {
+    const b = $('plFind'); b.disabled = true; b.textContent = 'Searching…';
+    try{ const f = (await call('findPlaceAddresses', [place]))[0] || {};
+      if(f.address){ $('plAd').value = f.address; toast(f.partial ? 'Found a rough match. Please check it.' : 'Address found. Check it, then Save.'); }
+      else toast('Google Maps did not find this place. Please type it.', true); }
+    catch(e){ toast(e.message, true); }
+    b.disabled = false; b.textContent = 'Search';
+  };
+  $('plSave').onclick = async () => {
+    let name = place;
+    if(ren){
+      const nm = $('plName').value.replace(/\|/g, ' ').replace(/\s+/g, ' ').trim();
+      if(!nm) return toast(`Type the ${isD ? 'destination' : 'source'} name.`, true);
+      if(isD && !$('plCl').value) return toast('Pick the client of this destination.', true);
+      name = isD ? `${$('plCl').value} | ${nm}` : nm;
+      if(name===place || (isD ? nameKey($('plCl').value)===nameKey(cl) && properName(nm)===pl : properName(nm)===place)) name = place;
+    }
+    const adNew = $('plAd').value.trim(), kms = [];
+    for(const inp of document.querySelectorAll('#popBody .pl-km')){
+      const y = uses[inp.dataset.n], raw = inp.value.replace(/[,\s]/g, ''); if(String(raw)===String(hasKm(y.r) ? y.r.km : '')) continue;
+      const km = Number(raw); if(!(km > 0)) return toast(`Type the km for ${y.r.source} → ${plainDest(y.r.destination)}.`, true);
+      if(km!==Number(y.r.km)) kms.push({y, km});
+    }
+    if(name===place && adNew===ad && !kms.length) return toast('Nothing changed.');
+    const btn = $('plSave'); btn.disabled = true; btn.textContent = 'Saving…';
+    try{
+      let res = null;
+      if(name!==place){ res = await call('savePlaceDetails', {was:place, name}); name = res.name; }
+      const swap = v => nameKey(v)===k ? name : v;
+      if(adNew!==ad || (res && adNew && !addrOf(name))) d.places = await call('savePlaceAddress', [{place:name, address:adNew}]);
+      if(kms.length){ await call('saveRouteKm', kms.map(z => ({source:swap(z.y.r.source), destination:swap(z.y.r.destination), km:z.km})));
+        if(S.boot && S.boot.km) kms.forEach(z => { S.boot.km[nameKey(swap(z.y.r.source)) + '|' + nameKey(swap(z.y.r.destination))] = z.km; }); }
+      closePop();
+      toast([res ? `Renamed to ${isD ? plainDest(name) : name}${res.total ? ` · ${res.total} cell${res.total===1 ? '' : 's'} changed` : ''}` : '', adNew!==ad ? 'Address saved' : '', kms.length ? `${plural(kms.length, 'distance')} saved` : ''].filter(Boolean).join(' · '));
+      if(res && res.skipped) setTimeout(() => toast(res.skipped), 2500);
+      if(res || kms.length) refreshBoot();
+      CL.data = await call('clientBook'); afterBook(); if(kms.length || res) loadNoDist();
+    }catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Save'; }
+  };
+}
 /* Find addresses (MANU 2026-11-10 "add button in clients to search for the addresses of the source and destination and save them"):
    every source and destination in the routes list with no address yet is looked up on Google Maps (15 at a time), then a list shows
    what was found. Found ones come ticked; a rough match is marked; not-found ones stay unticked until something is typed. Each address
@@ -12232,7 +12581,7 @@ function afterBook(){
    and destination without distance"): every CLIENT LIST route with its km, the ones with no km marked and their own chip. The client
    billing table is gone; tapping a client still opens its card (contact, rates, payment). */
 const hasKm = r => Number(r.km) > 0;
-const BOOK_F = {all:['All routes', () => true], km:['With distance', x => hasKm(x.r)], nokm:['No distance yet', x => !hasKm(x.r)]};
+const BOOK_F = {all:['All routes', () => true], km:['With distance', x => hasKm(x.r)], nokm:['No distance yet', x => !hasKm(x.r)], err:['Possible errors', x => issOf(x).length > 0]};
 function bookRoutes(){
   const d = CL.data; if(!d) return [];
   return d.clients.flatMap(c => c.routes.map(r => ({r, c}))).sort((x, y) => x.r.source.localeCompare(y.r.source) || plainDest(x.r.destination).localeCompare(plainDest(y.r.destination)));
@@ -12253,10 +12602,11 @@ function renderBook(){
   counterChips($('clChips'), Object.keys(BOOK_F).map(k => [k, BOOK_F[k][0], found.filter(BOOK_F[k][1]).length]), CL.filter, f => { CL.filter = f; renderBook(); });
   const list = found.filter(BOOK_F[CL.filter][1]), ed = d.canEdit;
   $('clNote').textContent = (ed ? 'Type or change a km and press Save: it goes to the CLIENT LIST, and trips on that route with blank KMS use it.' : 'View only.')
-    + ' Tap a client for its contact details and rates.';
+    + ' Tap a source or destination for its details' + (ed ? ' (name, address, km)' : '') + ', a client for its contact details and rates. ⚠ marks a possible error.';
   body.innerHTML = list.length ? list.map((x, n) => { const r = x.r, i = all.indexOf(x), km = hasKm(r);
-    return `<tr${km ? '' : ' class="cl-nokm"'}><td class="c">${n + 1}</td><td><b>${esc(r.source)}</b>${addrHtml(r.source, i, ed)}</td><td>${esc(plainDest(r.destination))}${addrHtml(r.destination, i, ed)}</td>`
-      + `<td><button class="linkbtn" type="button" data-client="${esc(x.c.client)}">${esc(x.c.client)}</button></td>`
+    const iss = issOf(x);   // possible errors under the route (MANU 2026-11-11)
+    return `<tr${km ? (iss.length ? ' class="cl-iss"' : '') : ' class="cl-nokm"'}><td class="c">${n + 1}</td><td><button class="linkbtn cl-pl" type="button" data-pl="s${i}"><b>${esc(r.source)}</b></button>${addrHtml(r.source, i, ed)}</td><td><button class="linkbtn cl-pl" type="button" data-pl="d${i}">${esc(plainDest(r.destination))}</button>${addrHtml(r.destination, i, ed)}</td>`
+      + `<td><button class="linkbtn" type="button" data-client="${esc(x.c.client)}">${esc(x.c.client)}</button>${issHtml(iss)}</td>`
       + `<td>${ed ? `<div class="nd-km"><input data-rk="${i}" inputmode="decimal" value="${km ? esc(r.km) : ''}" placeholder="${km ? 'km' : 'No distance'}" autocomplete="off" aria-label="KM"><button class="btn alt" type="button" data-rksave="${i}">Save</button></div>`
         : km ? `${fmtN(r.km)} km` : '<span class="db-left">No distance yet</span>'}</td></tr>`; }).join('')
     : `<tr><td colspan="5" class="empty-cell">${CL.filter==='nokm' && !q ? 'Every route has its distance.' : 'No route here.'}</td></tr>`;
@@ -14271,6 +14621,7 @@ function loadHome(force){
     jobs.push(call('idleYesterday').then(r => { HM.idle = r; }).catch(() => {}));
     if(!S.assign[TODAY()]) jobs.push(call('getAssignments', TODAY()).then(l => { S.assign[TODAY()] = l; }).catch(() => {}));
   }
+  if(may('planView')) jobs.push(loadPlans(TODAY(), force).catch(() => {}));
   if(NOSHIP_ROLES.includes(S.me.role)) jobs.push(call('noShipmentTrips').then(l => { HM.ns = l || []; }).catch(() => {}));
   if(may('pod') || may('podStats')) jobs.push(call('podLate', lsGet('jmti_podlate_days') || 3).then(r => { HM.pl = r; }).catch(() => {}));
   if(may('irView') && !IR.v) jobs.push(Promise.resolve(loadIr && loadIr()).catch(() => {}));
@@ -14294,6 +14645,11 @@ function homeSecs(){
     const free = (S.assign[today] || []).filter(a => a.account && a.truckNo && !had.has(String(a.truckNo).trim()));
     secs.push({k: 'notrip', ic: '🚚', t: 'Assigned trucks without a trip today', hint: 'Assigned to an account in Truck assignment, but no trip or garage row today.', trucks: free, go: 'dispatcher'});
     if(HM.idle) secs.push({k: 'idle', ic: '❓', t: 'No trip yesterday: reason missing', hint: ['DISPATCHER', 'TEAM LEADER'].includes(S.me.role) ? 'Tap to set a reason for each truck.' : 'A dispatcher or team leader sets the reason.', trucks: HM.idle.trucks || [], act: 'idle'});
+  }
+  if(may('planView') && (PL.d[today] || []).length){   // planned trips guide (MANU 2026-11-11)
+    const pr = planRows(today, todays), due = pr.lines.filter(l => l.toGo > 0).sort((a, b) => a.sec - b.sec || b.toGo - a.toGo);
+    secs.push({k: 'plan', ic: '📋', t: 'Planned trips still to send today', hint: `${fmtN(pr.tot.added)} of ${tripsTxt(pr.tot.planned)} in today's plan added. Open Truck Plan to add the rest.`, n: pr.tot.toGo, go: 'dispatcher',
+      html: due.map(l => `<div class="hm-pl"><span><b>${esc(l.source)}</b> → ${esc(l.destination)}${l.trucks || l.note ? `<small>${esc([l.trucks ? 'Trucks ' + l.trucks : '', l.note].filter(Boolean).join(' · '))}</small>` : ''}</span><b class="pl-go">${fmtN(l.toGo)} of ${fmtN(l.trips)} to go</b></div>`).join('')});
   }
   if(NOSHIP_ROLES.includes(S.me.role)) secs.push({k: 'ns', ic: '#', t: 'Trips without a shipment number (past 7 days)', hint: 'Open each trip and type the shipment number.', list: (HM.ns || []).map(t => uxTrip(t.key) || t).filter(t => !String(t.shipmentNo || '').trim())});
   if(may('pod') || may('podStats')) secs.push({k: 'pl', ic: '📄', t: `Late documents (${(HM.pl && HM.pl.days) || 3}+ days)`, hint: 'Completed, not yet endorsed to Billing. Send the list to the crew.', list: ((HM.pl && HM.pl.trips) || []).map(t => uxTrip(null, t.tripId) || {...t, key: t.tripId}), why: t => { const x = ((HM.pl && HM.pl.trips) || []).find(y => y.tripId === t.tripId); return x ? `<b>${x.age} days</b> · ${esc(x.status)}` : ''; }, act: 'pl', story: true});
@@ -14319,7 +14675,7 @@ function renderHome(){
   const secHtml = s => {
     const items = s.list || [], trucks = s.trucks || [], open = HM.open === s.k;
     const rows = items.length ? (open ? items : items.slice(0, LIM)).map(t => uxRow(t, s.why ? s.why(t) : '')).join('')
-      : trucks.length ? `<div class="hm-trucks">${(open ? trucks : trucks.slice(0, 24)).map(a => `<span class="hm-tk" data-act="${s.act || ''}" data-go="${s.go || ''}"><b>${esc('Truck ' + a.truckNo)}</b><small>${esc(a.plateNo || '')}${a.account ? ' · ' + esc(titleCase(a.account)) : ''}${a.driver ? ' · ' + esc(a.driver) : ''}</small></span>`).join('')}</div>` : '';
+      : trucks.length ? `<div class="hm-trucks">${(open ? trucks : trucks.slice(0, 24)).map(a => `<span class="hm-tk" data-act="${s.act || ''}" data-go="${s.go || ''}"><b>${esc('Truck ' + a.truckNo)}</b><small>${esc(a.plateNo || '')}${a.account ? ' · ' + esc(titleCase(a.account)) : ''}${a.driver ? ' · ' + esc(a.driver) : ''}</small></span>`).join('')}</div>` : (s.html || '');
     const more = (items.length > LIM || trucks.length > 24) ? `<button type="button" class="hm-more" data-more="${s.k}">${open ? 'Show fewer' : 'Show all ' + (items.length || trucks.length)}</button>` : '';
     const btn = s.go && can(s.go) ? `<button type="button" class="btn alt hm-go" data-go="${s.go}">Open ${esc(TAB_NAME[s.go])} ›</button>` : s.act ? `<button type="button" class="btn alt hm-go" data-act="${s.act}">${s.act === 'idle' ? 'Set reasons ›' : s.act === 'pl' ? 'Copy the list ›' : 'Open ›'}</button>` : '';
     return `<section class="hm-sec" data-sec="${s.k}" ${s.story ? 'data-story="1"' : ''}><h3><span class="hm-ic">${s.ic}</span><span>${esc(s.t)}${s.hint ? `<small>${esc(s.hint)}</small>` : ''}</span><b class="hm-n">${n(s)}</b>${btn}</h3>${rows}${more}</section>`;
