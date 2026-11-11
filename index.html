@@ -494,6 +494,7 @@ button.hs-k[aria-pressed=true]::after{content:'⌄';top:38%}
 .repform .f{flex:1 1 160px;min-width:0}
 .repbox{overflow:auto;max-height:60vh;border:1px solid var(--line);border-radius:10px;background:#fff}
 .repbox img{display:block;width:100%;height:auto}
+.repbox.irpic{max-height:62vh;max-width:620px;margin:0 auto}
 .idf{display:flex;flex-wrap:wrap;gap:8px}
 .idf select,.idf input{flex:1 1 160px;min-width:0;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}
 .idf input[hidden]{display:none}
@@ -1310,6 +1311,15 @@ td.empty-cell{text-align:center;color:var(--muted);padding:20px}
 .ms-like{font-size:23px;line-height:1}
 .ch-reply{width:100%;display:flex;align-items:flex-start;gap:8px;padding:6px 2px 6px 8px;border-top:1px solid #E4E6EB;margin:0 0 4px}
 .ch-reply[hidden]{display:none}
+.ch-paste{width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 2px 6px 8px;border-top:1px solid #E4E6EB;margin:0 0 4px}
+.ch-paste[hidden]{display:none}
+.ch-pst{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;background:#F0F2F5;flex:none}
+.ch-pst img{width:100%;height:100%;object-fit:cover;display:block}
+.ch-pst-f{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:4px;color:#65676B;text-align:center}
+.ch-pst-f svg{width:22px;height:22px;flex:none}.ch-pst-f small{font-size:9px;line-height:1.1;word-break:break-all}
+.ch-pst button{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;padding:4px;cursor:pointer;display:flex}
+.ch-pst button svg{width:100%;height:100%}
+.ch-pst-t{color:#65676B;font-size:12px}
 .ch-rp-i{flex:none;color:#65676B;padding-top:2px}.ch-rp-i svg{width:16px;height:16px}
 .ch-rp-t{flex:1;min-width:0}
 .ch-rp-t b{display:block;font-size:13px;color:#050505;overflow-wrap:anywhere}
@@ -3888,7 +3898,7 @@ function offerNextTrip(prev, up){
 }
 function offerNextTripGo(up, no, d){
   // Coca Cola Canlubang / San Fernando (MANU 16:45): straight to Add trip at On the way source, same source as the trip just completed
-  if(isCokeTruck(d, no)) return openDispatchAdd(no, {status:'on the way source', source:up.customer || '', date:d});
+  if(isCokeTruck(d, no)) return openDispatchAdd(no, {status:'on the way source', date:d});   // Source starts blank, never copied from the last trip (MANU 2026-11-11)
   // other accounts: Clip Board / Garage (Add trip) or Waiting for shipment (MANU 16:46)
   openPop(`Trip completed · Truck ${no}`, `${esc(up.customer || '')} → ${esc(up.destination || '—')}`,
     `<p style="margin:0">What is next for <b>Truck ${esc(no)}</b>${up.plateNo ? ' · ' + esc(up.plateNo) : ''}? Add its next trip (${esc(S.boot.planned)} or Garage), or mark it waiting for shipment.</p>`,
@@ -3940,7 +3950,7 @@ function checkDone(){
     const a = e.target.closest('[data-dnadd]'), w = e.target.closest('[data-dnwait]'), t = l.find(x => x.key===(a || w || {}).dataset?.[a ? 'dnadd' : 'dnwait']);
     if(!t) return;
     dnMark([t.key]); closePop();
-    const no = String(t.truckNo).trim(), go = () => a ? (isCokeTruck(TODAY(), no) ? openDispatchAdd(no, {status:'on the way source', source:t.customer || '', date:TODAY()}) : openDispatchAdd(no, {date:TODAY()}))
+    const no = String(t.truckNo).trim(), go = () => a ? (isCokeTruck(TODAY(), no) ? openDispatchAdd(no, {status:'on the way source', date:TODAY()}) : openDispatchAdd(no, {date:TODAY()}))
       : addNoRouteRow(TODAY(), no, 'waiting for shipment');
     if(S.tab!=='dispatcher'){ $('xDate').value = $('xTo').value = TODAY(); showTab('dispatcher'); setTimeout(go, 600); } else go();
   };
@@ -4416,7 +4426,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.67, APP_VERSION_DATE = '2026-11-11';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.71, APP_VERSION_DATE = '2026-11-11';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4447,6 +4457,25 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-11 02:31 UTC "i cant submit my day"
+  {v:14.71, d:'2026-11-11', items:[
+    'My day: Share works again. It stopped with a red "columns do not match" error after reactions were added.'
+  ]},
+  // MANU 2026-11-11 02:29 UTC "ADD CAN PASTE PHOTO TO CHATBOX"
+  {v:14.7, d:'2026-11-11', items:[
+    'Chat: paste a photo straight into the message box. Copy a picture or take a screenshot, open a chat and press Ctrl+V (or Paste on a phone). It shows above the box; type a message if you like and press Send. The X takes it off.',
+    'Chat: you can also drag a picture or file from your computer onto the chat. Up to 5 at a time.'
+  ]},
+  // MANU 2026-11-11 "SOURCE AND DESTINATION ARE STILL SYNCING FROM PREVIOUS TRIPS"
+  {v:14.69, d:'2026-11-11', items:[
+    'Add trip after a Completed trip no longer fills the Source from that truck\'s previous trip. Source and Destination always start blank; pick them from the CLIENT LIST.'
+  ]},
+  // MANU 2026-11-11 02:07 UTC "in incident report, once submitted generate jpeg summary that can be copied"
+  {v:14.68, d:'2026-11-11', items:[
+    'Incident report: after Send to HR, a picture of the report shows right away (IR number, type, date and time, truck, plate, trip, crew, place, what happened, action taken, who sent it and the status).',
+    'Tap Copy picture, then paste it in Viber, Messenger or the team chat. Share sends it straight to an app on a phone, Save picture keeps a JPEG. If the phone does not allow copying, press and hold the picture.',
+    'The same picture is on every incident report: open it and tap 📷 Picture. It always shows the latest status, HR remarks and number of responses.'
+  ]},
   // MANU 2026-11-11 01:53 UTC "there are still capitalized", "also convert proper case on the database"
   {v:14.67, d:'2026-11-11', items:[
     'Every source and destination now shows in proper case on every tab (Truck Plan, POD, Billing, reports), even before the sheet itself is changed.',
@@ -8453,16 +8482,117 @@ function openIr(id, back){
       ${row('Status', irPill(x.status) + (x.statusBy ? `<small>by ${esc(x.statusBy)} · ${irAt(x.statusAt)}</small>` : '<small>not yet reviewed by HR</small>'))}
       ${!IR.canStatus ? row('HR remarks', x.remarks ? `<div class="ir-txt">${esc(x.remarks)}</div>` : '') : ''}
     </tbody></table></div>${edit}${irThreadBox(x)}`,
-    `<button class="btn alt" type="button" id="irBack">${back==='bell' ? 'Back to notifications' : 'All incident reports'}</button>${IR.canStatus ? ' <button class="btn road" type="button" id="irSave">Save status</button>' : ''} <button class="btn" type="button" onclick="closePop()">Close</button>`);
+    `<button class="btn alt" type="button" id="irBack">${back==='bell' ? 'Back to notifications' : 'All incident reports'}</button> <button class="btn alt" type="button" id="irPicBtn">📷 Picture</button>${IR.canStatus ? ' <button class="btn road" type="button" id="irSave">Save status</button>' : ''} <button class="btn" type="button" onclick="closePop()">Close</button>`);
   $('pop').dataset.kind = 'ir';
   bindIrThread(x);
   $('irBack').onclick = () => back==='bell' ? openLw() : openIrList();
+  $('irPicBtn').onclick = () => irPicShow(x, back);
   if(IR.canStatus) $('irSave').onclick = async () => {
     const b = $('irSave'); b.disabled = true; b.textContent = 'Saving…';
     try{ const r = await call('irStatus', x.id, $('irSt').value, $('irRem').value);
       const i = IR.list.findIndex(y => y.id===x.id); if(i >= 0) IR.list[i] = r; IR.unread = irNew().length; renderLw();
       toast(`${x.id} is now ${r.status}`); openIr(x.id, back); }
     catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Save status'; }
+  };
+}
+/* ===== Incident report picture (MANU 2026-11-11 "in incident report, once submitted generate jpeg summary that can be copied")
+ * A JPEG card of one IR, drawn on a canvas like the other reports (navy band with the logo, who made it, as of when). Shown right
+ * after Send to HR and from 📷 Picture on any IR. Copy picture puts it on the clipboard (as PNG: browsers only copy PNG pictures),
+ * Share hands the JPEG to Viber / Messenger on a phone, Save picture downloads the JPEG. Page only, no Code.gs change. */
+const irPlainAt = at => at ? fmtDay(String(at).slice(0, 10)) + ' ' + clock12(String(at).replace(' ', 'T')) : '';
+function irPicCanvas(x){
+  const SC = 2, W = 920, PAD = 22, LW = 190, VW = W - PAD * 2 - LW - 16, LH = 23;
+  const c = document.createElement('canvas'), g = c.getContext('2d');
+  const setF = (b, s) => { g.font = `${b ? '700 ' : ''}${s}px ${REP_FONT}`; };
+  const stc = IR_ST_COLOR[x.status] || '#64748B';
+  const crewTxt = [x.driver, x.helper1, x.helper2];
+  const rows = [
+    ['Incident date', [fmtDay(x.date), x.time ? clock12('0000-00-00T' + x.time) : ''].filter(Boolean).join(' · '), true],
+    ['Type', x.type, true],
+    ['Truck', [x.truckNo && 'Truck ' + x.truckNo, x.plateNo && 'Plate ' + x.plateNo].filter(Boolean).join(' · '), true],
+    ['Trip ID', x.tripId],
+    ['Driver', crewTxt[0]], ['Helper', crewTxt[1]], ['Helper 2', crewTxt[2]],
+    ['Place', x.place],
+    ['What happened', x.details],
+    ['Action taken', x.action],
+    ['Submitted by', [x.by, x.byRole && titleCase(x.byRole), irPlainAt(x.at)].filter(Boolean).join(' · ')],
+    ['Status', x.status + (x.statusBy ? ` · by ${x.statusBy}${x.statusAt ? ' · ' + irPlainAt(x.statusAt) : ''}` : ' · not yet reviewed by HR'), true, stc],
+    ['HR remarks', x.remarks],
+    ['Responses', x.replies ? `${x.replies} response${x.replies===1 ? '' : 's'}${x.replyBy ? ' · newest from ' + x.replyBy : ''}` : '']
+  ].filter(r => String(r[1] || '').trim());
+  const cell = rows.map(r => { setF(!!r[2], 16); return repWrap(g, String(r[1]), VW); });
+  const logo = $('logoMain'), LOGO_H = 60, LOGO_W = logo && logo.naturalHeight ? Math.round(logo.naturalWidth * LOGO_H / logo.naturalHeight) : 0;
+  const TX = PAD + (LOGO_W ? LOGO_W + 20 + 18 : 0);
+  setF(true, 26); const tl = repWrap(g, `${x.id} · ${titleCase(x.type || 'Incident')}`, W - TX - PAD - 150);
+  const band = Math.max(36 + tl.length * 32 + 24, LOGO_H + 36);
+  const hRow = i => cell[i].length * LH + 20;
+  const who = S.me ? `Prepared by ${S.me.name || S.me.username}${S.me.role ? ' (' + titleCase(S.me.role) + ')' : ''}` : '';
+  const asOf = 'As of ' + repStamp();
+  setF(false, 12); const foot = repWrap(g, `JMTI DASH · ${who ? who + ' · ' : ''}${asOf}`, W - PAD * 2);
+  const H = band + 6 + rows.reduce((a, r, i) => a + hRow(i), 0) + 18 + foot.length * 17 + 16;
+  c.width = W * SC; c.height = H * SC; g.scale(SC, SC);
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#0B2A5B'; g.fillRect(0, 0, W, band);
+  g.fillStyle = stc; g.fillRect(0, band, W, 6);
+  g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+  if(LOGO_W){
+    g.fillStyle = '#fff'; rrect(g, PAD, (band - LOGO_H - 12) / 2, LOGO_W + 20, LOGO_H + 12, 10); g.fill();
+    try{ g.drawImage(logo, PAD + 10, (band - LOGO_H) / 2, LOGO_W, LOGO_H); }catch(e){}
+  }
+  setF(true, 13); g.fillStyle = '#93C5FD'; g.fillText('INCIDENT REPORT · SENT TO HR', TX, 30);
+  setF(true, 26); g.fillStyle = '#fff'; tl.forEach((l, i) => g.fillText(l, TX, 62 + i * 32));
+  // status pill, top right
+  setF(true, 14); const pw = g.measureText(x.status).width + 28;
+  g.fillStyle = stc; rrect(g, W - PAD - pw, 18, pw, 30, 15); g.fill();
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(x.status, W - PAD - pw / 2, 38); g.textAlign = 'left';
+  let y = band + 6;
+  rows.forEach((r, i) => {
+    const h = hRow(i);
+    if(i % 2){ g.fillStyle = '#F8FAFC'; g.fillRect(0, y, W, h); }
+    setF(true, 12); g.fillStyle = '#64748B'; g.fillText(r[0].toUpperCase(), PAD, y + 25);
+    setF(!!r[2], 16); g.fillStyle = r[3] || '#0F172A';
+    cell[i].forEach((l, k) => g.fillText(l, PAD + LW + 16, y + 26 + k * LH));
+    g.fillStyle = '#E2E8F0'; g.fillRect(PAD, y + h - 1, W - PAD * 2, 1);
+    y += h;
+  });
+  setF(false, 12); g.fillStyle = '#94A3B8';
+  foot.forEach((l, k) => g.fillText(l, PAD, y + 28 + k * 17));
+  return c;
+}
+/** data: URL → Blob, made at once (no waiting) so Share still counts as the tap on a phone. */
+function dataBlob(url){
+  const i = url.indexOf(','), bin = atob(url.slice(i + 1)), a = new Uint8Array(bin.length);
+  for(let k = 0; k < bin.length; k++) a[k] = bin.charCodeAt(k);
+  return new Blob([a], {type: url.slice(5, url.indexOf(';'))});
+}
+/** Puts a canvas on the clipboard as a picture. Resolves true when it worked. */
+async function picCopy(canvas){
+  if(!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem)) return false;
+  const png = () => new Promise((ok, no) => canvas.toBlob(b => b ? ok(b) : no(new Error('no picture')), 'image/png'));
+  try{ await navigator.clipboard.write([new ClipboardItem({'image/png': png()})]); return true; }   // Safari wants the promise form
+  catch(e){ try{ await navigator.clipboard.write([new ClipboardItem({'image/png': await png()})]); return true; }catch(e2){ return false; } }
+}
+/** The IR picture pop-up. fresh = just sent (title says so). back = where Open report goes back to. */
+function irPicShow(x, back, fresh){
+  const c = irPicCanvas(x), url = c.toDataURL('image/jpeg', 0.92);
+  const name = `JMTI ${x.id} ${titleCase(x.type || 'Incident')} ${x.date || TODAY()}.jpg`.replace(/[\\/:*?"<>|]/g, '-');
+  let file = null;
+  try{ file = new File([dataBlob(url)], name, {type: 'image/jpeg'}); }catch(e){}
+  const canShare = !!(file && navigator.share && navigator.canShare && navigator.canShare({files: [file]}));
+  openPop(fresh ? `${x.id} sent to HR` : `${x.id} · picture`,
+    'Tap Copy picture, then paste it in Viber, Messenger or the team chat. On a phone you can also press and hold the picture.',
+    `<div class="repbox irpic"><img src="${url}" alt="${esc(x.id)} incident report picture"></div>`,
+    `<button class="btn alt" type="button" id="irpOpen">Open report</button>${canShare ? ' <button class="btn alt" type="button" id="irpShare">Share</button>' : ''} <button class="btn alt" type="button" id="irpSave">Save picture</button> <button class="btn road" type="button" id="irpCopy">Copy picture</button>`);
+  $('pop').dataset.kind = 'irpic';
+  $('irpOpen').onclick = () => openIr(x.id, back || 'list');
+  $('irpSave').onclick = () => { repSave(name, url) ? toast('Saved ' + name) : toast('Press and hold the picture to save it.', true); };
+  if(canShare) $('irpShare').onclick = () => navigator.share({files: [file], title: `${x.id} incident report`}).catch(e => { if(e && e.name !== 'AbortError') toast('Sharing did not work here. Tap Save picture instead.', true); });
+  $('irpCopy').onclick = async () => {
+    const b = $('irpCopy'); b.disabled = true; b.textContent = 'Copying…';
+    const ok = await picCopy(c);
+    b.disabled = false; b.textContent = ok ? '✓ Copied' : 'Copy picture';
+    ok ? toast('Picture copied. Paste it in Viber, Messenger or the chat.')
+       : toast(canShare ? 'This phone does not let the app copy pictures. Tap Share, or press and hold the picture.' : 'This browser does not let the app copy pictures. Right-click the picture and pick Copy image, or press and hold it on a phone.', true, 7000);
   };
 }
 /* ===== Incident report responses (MANU 2026-11-10 "on incident report, there should be a thread of responses, a supervisor, team
@@ -8736,7 +8866,7 @@ function openIrForm(opt){
     if(!d.details){ $('irDet').focus(); return toast('Type what happened.', true); }
     const b = $('irSend'); b.disabled = true; b.textContent = 'Sending…';
     try{ const r = await call('irSave', d); IR.list = [r].concat((IR.list || []).filter(x => x.id!==r.id)); IR.unread = irNew().length; renderLw();
-      toast(`${r.id} sent to HR`); openIr(r.id, 'list'); }
+      toast(`${r.id} sent to HR`); irPicShow(r, 'list', true); }
     catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Send to HR'; }
   };
 }
@@ -10238,6 +10368,7 @@ function chatBuild(){
     h.foot.innerHTML = `<div class="ch-typing" id="chTyping" aria-live="polite"></div>
       <div class="ch-reply" id="chReply" hidden></div>
       <div class="ch-emo" id="chEmo" hidden></div>
+      <div class="ch-paste" id="chPaste" hidden></div>
       <div class="ms-comp"><button type="button" class="ms-ib" id="chPhoto" title="Send a photo" aria-label="Send a photo">${MS_ICON.photo}</button><button type="button" class="ms-ib" id="chFile" title="Send a file" aria-label="Send a file">${MS_ICON.clip}</button>
         <textarea id="chText" rows="1" maxlength="1000" placeholder="Aa" aria-label="Message"></textarea>
         <button type="button" class="ms-ib" id="chEmoji" title="Emoji" aria-label="Emoji" aria-pressed="false">${MS_ICON.smile}</button>
@@ -10255,6 +10386,8 @@ function chatBuild(){
     $('chPhoto').onclick = () => $('chPhotoIn').click();
     $('chFile').onclick = () => $('chFileIn').click();
     $('chPhotoIn').onchange = $('chFileIn').onchange = e => { const fs = [...e.target.files].slice(0, 5); e.target.value = ''; fs.forEach(chatSendFile); };
+    $('chPaste').onclick = e => { const b = e.target.closest('[data-pstx]'); if(b) chatPasteDel(+b.dataset.pstx); };
+    chatDropOn($('chMsgs')); chatDropOn(h.foot); renderPasteBar(); chatSendIcon();
   }
   if($('chBadge')) $('chBadge').onclick = () => Notification.requestPermission().then(() => { updateAppBadge.last = null; updateAppBadge(); $('chBadge').parentNode.remove(); }).catch(() => {});
   h.body.onclick = chatClick;
@@ -10745,7 +10878,7 @@ function chatPress(box){
 /** The send button is a 👍 while the box is empty, like Messenger. */
 function chatSendIcon(){
   const b = $('chSendBtn'), ta = $('chText'); if(!b || !ta) return;
-  const like = !ta.value.trim();
+  const like = !ta.value.trim() && !chatPasted().length;
   if(b.dataset.like===String(like)) return;
   b.dataset.like = String(like);
   b.innerHTML = like ? `<span class="ms-like" aria-hidden="true">${CH_RX[0]}</span>` : MS_ICON.send;
@@ -10915,6 +11048,13 @@ function openProfileView(u){
 /** like = the send button was tapped: with an empty box it sends a 👍. */
 function chatSendNow(like){
   const ta = $('chText'); let text = ta.value.trim();
+  const ps = chatPasted();   // pasted or dropped photos go first; the text waits for them so it lands under the photo
+  if(ps.length){
+    CH.paste = CH.paste.filter(x => !ps.includes(x)); renderPasteBar();
+    const ups = Promise.allSettled(ps.map(x => { if(x.url) URL.revokeObjectURL(x.url); return chatSendFile(x.file); }));
+    CH.sendQ = (CH.sendQ || Promise.resolve()).then(() => ups);
+    if(!text){ chatSendIcon(); ta.focus(); return; }
+  }
   if(!text){ if(like!==true || ta.value) return; text = CH_RX[0]; }
   CH.typSent = 0;   // the server clears "typing" when the message is saved
   const re = CH.re && convOf(CH.re)===CH.conv && !CH.re.del ? CH.re.id : 0;
@@ -10981,6 +11121,64 @@ async function chatSendFile(file){
   }catch(e){ toast(e.message, true); }
   finally{ CH.up = CH.up.filter(x => x!==up); if(up.url) URL.revokeObjectURL(up.url); renderChat(true); renderChatBtn(); }
 }
+/* Paste a photo (MANU 2026-11-11 "ADD CAN PASTE PHOTO TO CHATBOX"): with a conversation open, Ctrl+V (or Paste on a phone) of a
+   copied picture or screenshot puts it in a strip above the message box; Send sends it, with any typed text under it. Dragging a
+   picture (or a file) onto the chat does the same. The X on a picture takes it off. At most 5 at a time. A paste into another box
+   of the page is left alone. Kept per conversation (CH.paste items carry conv). */
+function chatPasted(){ return (CH.paste || []).filter(x => x.conv===CH.conv); }
+function chatPasteFiles(dt){
+  if(!dt) return [];
+  let fs = [...(dt.files || [])];
+  if(!fs.length && dt.items) fs = [...dt.items].filter(i => i.kind==='file').map(i => i.getAsFile()).filter(Boolean);
+  return fs;
+}
+function chatPasteAdd(files){
+  if(CH.view!=='conv' || !$('chText') || !files.length) return;
+  CH.paste = CH.paste || [];
+  const room = 5 - chatPasted().length;
+  if(room <= 0) return toast('Up to 5 photos or files at a time. Send these first.', true);
+  if(files.length > room) toast(`Only ${room} more can go with this message.`, true);
+  const d = new Date(), pad = n => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+  files.slice(0, room).forEach((f, i) => {
+    if(f.type.startsWith('image/') && (!f.name || /^image\.\w+$/i.test(f.name))){   // a screenshot comes as "image.png"
+      const ext = (f.type.split('/')[1] || 'png').replace('jpeg', 'jpg').replace(/\W.*$/, '');
+      try{ f = new File([f], `Pasted photo ${stamp}${i ? ' ' + (i + 1) : ''}.${ext}`, {type: f.type}); }catch(e){}
+    }
+    CH.paste.push({conv: CH.conv, file: f, url: /^image\/(jpeg|png|webp|gif|bmp)$/.test(f.type) ? URL.createObjectURL(f) : ''});
+  });
+  renderPasteBar(); chatSendIcon();
+  const ta = $('chText'); if(ta) ta.focus();
+}
+function chatPasteDel(i){
+  const x = chatPasted()[i]; if(!x) return;
+  if(x.url) URL.revokeObjectURL(x.url);
+  CH.paste = CH.paste.filter(y => y!==x); renderPasteBar(); chatSendIcon();
+}
+function renderPasteBar(){
+  const el = $('chPaste'); if(!el) return;
+  const ps = chatPasted();
+  if(!ps.length){ el.hidden = true; el.innerHTML = ''; return; }
+  el.hidden = false;
+  el.innerHTML = ps.map((x, i) => `<div class="ch-pst">${x.url ? `<img src="${x.url}" alt="${esc(x.file.name)}">` : `<span class="ch-pst-f">${MS_ICON.doc}<small>${esc(x.file.name)}</small></span>`}<button type="button" data-pstx="${i}" title="Take this off" aria-label="Take this off">${MS_ICON.close}</button></div>`).join('')
+    + `<small class="ch-pst-t">${ps.length===1 ? 'Ready to send.' : ps.length + ' ready to send.'} Type a message if you like, then press Send.</small>`;
+}
+function chatDropOn(el){
+  if(!el) return;
+  el.ondragover = e => { if(CH.view==='conv' && [...((e.dataTransfer && e.dataTransfer.types) || [])].includes('Files')){ e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } };
+  el.ondrop = e => { if(CH.view!=='conv') return; const fs = chatPasteFiles(e.dataTransfer); if(fs.length){ e.preventDefault(); chatPasteAdd(fs); } };
+}
+document.addEventListener('paste', e => {
+  if(!chatOpen() || CH.view!=='conv') return;
+  const ta = $('chText'), t = e.target; if(!ta) return;
+  if(t!==ta){
+    if(t && t.closest && t.closest('input,textarea,select,[contenteditable]')) return;   // a paste into another box stays there
+    if(t && t.closest && !t.closest('#chatDock,#pop') && t!==document.body && t!==document.documentElement) return;
+  }
+  const fs = chatPasteFiles(e.clipboardData);
+  if(!fs.length) return;   // plain text pastes as usual
+  e.preventDefault(); chatPasteAdd(fs);
+});
 /* ================= MY DAY (MANU 2026-11-08 "add my day of users that other users can see, should be able to add photo, text and music") =================
    Like a Messenger / Facebook story: anyone posts a photo and/or text, with music if they like; everyone sees it for 24 hours.
    A blue ring on a picture (chat list, the My day row at the top of the chat, the top-bar picture) means there is a My day not
