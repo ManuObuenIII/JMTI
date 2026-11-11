@@ -2661,6 +2661,7 @@ table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
       <label class="f">To<input type="date" id="fmTo"></label>
       <label class="f grow">Find<input id="fmFind" placeholder="Truck, plate, driver"></label>
       <label class="f">Account<select id="fmAcct"><option value="">All accounts</option><option value="0">Coca Cola Canlubang</option><option value="1">Coca Cola San Fernando</option><option value="2">Other accounts</option><option value="3">Not counted in an account</option></select></label>
+      <button class="btn alt" type="button" id="fmPdf" title="Save what this tab shows now as a PDF">Generate PDF report</button>
       <div class="chips" id="fmView"></div>
       <div class="chips" id="fmChips"></div>
     </div>
@@ -4485,7 +4486,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.78, APP_VERSION_DATE = '2026-11-11';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.79, APP_VERSION_DATE = '2026-11-11';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4516,6 +4517,12 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-11 13:05 UTC "add generate pdf report on fuel monitoring"
+  {v:14.79, d:'2026-11-11', items:[
+    'Fuel monitoring has a Generate PDF report button. The PDF shows what the tab shows now: the dates, the account, the Find box, the chip picked and the view (Each refuel, Same trip average or Per destination).',
+    'Each PDF has the JMTI logo, the dates, "As of" and "Prepared by", the key numbers (km/L, refuels, liters, under 2 km/L, over trip average, no km) and the list by account and truck. Refuels under 2 km/L or more than 10% over the same trip average are red.',
+    'Works on phone and computer. A long list goes on as many A4 pages as it needs.',
+  ]},
   // MANU 2026-11-11 05:53 UTC "add new user billing head, can edit. the regular billing user is for viewing only"
   {v:14.78, d:'2026-11-11', items:[
     'New user role BILLING HEAD: does everything Billing did before (check trips from POD, Mark all checked, KMS, invoice no. and billed amount, source / destination / distance, clients, rates and payments in Clients).',
@@ -6851,7 +6858,7 @@ function rrect(x, X, Y, W, H, R){ x.beginPath(); x.moveTo(X + R, Y); x.arcTo(X +
  * cols: [{label, w (widest it may get), align, bold, pill (status chip in the row colour), wcolor (text in the row's _wcolor)}]
  * rows: arrays of cell text (with _color = row colour, _wcolor), or group titles {_head:true, level:0|1, text, sub}
  * (level 0 = account band, level 1 = light-blue title like Truck Plan's route rows).
- * opt.chips: [{label, n, color}]. Returns the canvas.
+ * opt.chips: [{label, n, color}]. opt.wRows: every row of a report drawn in pieces, so each piece gets the same column widths. Returns the canvas.
  */
 function repCanvas(title, subs, cols, rows, opt = {}){
   const SC = 2, F = 15, LH = 20, PAD = 12, HEAD = 34, GH = 34, STRIP = 5;
@@ -6863,7 +6870,7 @@ function repCanvas(title, subs, cols, rows, opt = {}){
   data.forEach(r => cells.set(r, cols.map((cl, i) => { setF(!!cl.bold || !!cl.pill, cl.pill ? 13 : F); return repWrap(x, r[i], cl.w); })));
   const w = cols.map((cl, i) => {
     setF(true, 13); let m = x.measureText(cl.label.toUpperCase()).width;
-    data.forEach(r => { setF(!!cl.bold || !!cl.pill, cl.pill ? 13 : F); cells.get(r)[i].forEach(l => { m = Math.max(m, x.measureText(l).width + (cl.pill ? 20 : 0)); }); });
+    (opt.wRows || data).forEach(r => { if(r._head) return; setF(!!cl.bold || !!cl.pill, cl.pill ? 13 : F); (cells.has(r) ? cells.get(r)[i] : repWrap(x, r[i], cl.w)).forEach(l => { m = Math.max(m, x.measureText(l).width + (cl.pill ? 20 : 0)); }); });
     return Math.min(cl.w + (cl.pill ? 20 : 0), Math.ceil(m)) + PAD * 2;
   });
   w[0] += STRIP;
@@ -12090,6 +12097,7 @@ function initFuelTab(){
   $('fmFrom').onchange = $('fmTo').onchange = dates;
   $('fmFind').oninput = $('fmAcct').onchange = renderFuel;
   filterChips($('fmView'), [['refuel', 'Each refuel'], ['route', 'Same trip average'], ['dest', 'Per destination']], 'refuel', v => { FM.view = v; renderFuel(); });
+  $('fmPdf').onclick = fuelPdf;
   $('fmBody').onclick = e => { const tr = e.target.closest('tr[data-fm]'); if(tr && !e.target.closest('a')) openFuelRefuel(tr.dataset.fm); };
 }
 function loadFuelTab(){
@@ -12118,7 +12126,7 @@ function fuelRows(d){
 function renderFuel(){
   if(!$('fmBody')) return;
   const d = FM.data, f = $('fmFrom').value, t = $('fmTo').value;
-  if(!d){ $('fmNote').textContent = 'Loading the refuels…'; $('fmKpis').innerHTML = ''; $('fmBody').innerHTML = '<tr><td colspan="5" class="empty-cell">Loading…</td></tr>'; return; }
+  if(!d){ FM.rep = null; $('fmNote').textContent = 'Loading the refuels…'; $('fmKpis').innerHTML = ''; $('fmBody').innerHTML = '<tr><td colspan="5" class="empty-cell">Loading…</td></tr>'; return; }
   const fa = $('fmAcct').value, rows0 = fuelRows(d);
   const all = rows0.all.filter(r => fa==='' || String(fmSec(r.acct))===fa);   // the Account box narrows everything below, the numbers too
   const withKm = all.filter(r => r.kmPerL !== null), km = withKm.reduce((a, r) => a + r.km, 0), L = withKm.reduce((a, r) => a + r.liters, 0), fleet = L ? km / L : null;
@@ -12150,6 +12158,10 @@ function renderFuel(){
   const truckHead = (k, list, a, what) => `<tr class="fm-hd"><td colspan="5">${tLink(k, 'Truck ' + k)} <span>· ${what} · ${a.kmpl===null ? 'no km yet' : `${n2(a.kmpl)} km/L (${fmtN(Math.round(a.km))} km ÷ ${lit(Math.round(a.L * 100) / 100)} L)`}</span></td></tr>`;
   let body = '';
   FM.rows = {};
+  // what the tab shows now, for the PDF report (fuelPdf)
+  FM.rep = {view: FM.view, f, t, fa, q: $('fmFind').value.trim(), filter: FM.filter, fleet, km, L, n: all.length, trucks: new Set(all.map(r => r.truck)).size,
+    liters: all.reduce((a, r) => a + r.liters, 0), nLow, nOver, nNo, dLow, secs: [], gl: null};
+  const fmRepSec = (i, sa, n, tks) => { FM.rep.secs.push({i, sa, n, tks}); return tks; };
   if(FM.view==='route'){
     $('fmNote').textContent = `${fmtDay(f)} to ${fmtDay(t)}: refuels grouped by the same trip (source → destination). Each trip is compared with the average liters of the other trips on the same route; more than ${Math.round(FUEL_OVER * 100)}% over it is red. A trip alone on its route has no basis.`;
     $('fmHead').innerHTML = '<tr><th>Trip date · truck</th><th>Driver</th><th class="n">Liters</th><th class="n">vs average</th><th class="n">km/L</th></tr>';
@@ -12158,6 +12170,7 @@ function renderFuel(){
     rq.forEach(r => { FM.rows[r.id] = r; });
     const groups = {}; rq.forEach(r => (groups[r.rKey] = groups[r.rKey] || []).push(r));
     const gl = Object.values(groups).map(l => ({l, r0: l[0], over: l.filter(r => r.over).length})).sort((a, b) => b.over - a.over || b.l.length - a.l.length || String(a.r0.source).localeCompare(String(b.r0.source)));
+    FM.rep.gl = gl;
     body = gl.map(g => { const r0 = g.r0, kml = avgOf(g.l);
       return `<tr class="fm-hd"><td colspan="5"><b>${esc(r0.source || '—')} → ${esc(plainDest(r0.destination) || '—')}</b> <span>· ${r0.rN} trip${r0.rN===1 ? '' : 's'} · average <b>${lit(Math.round(r0.gAvg * 100) / 100)} L</b>${kml.kmpl!==null ? ' · ' + n2(kml.kmpl) + ' km/L' : ''}${g.over ? ` · <span class="fm-low">${g.over} over</span>` : ''}</span></td></tr>`
         + g.l.sort((a, b) => a.date.localeCompare(b.date) || a.row - b.row).map(r => `<tr class="fm-r rowbtn${r.over ? ' fm-over' : ''}" data-fm="${esc(r.id)}" tabindex="0"><td>${esc(fmtDay(r.date))}<small>Truck ${esc(r.truck)}${r.plate ? ' · ' + esc(r.plate) : ''}</small></td><td>${pLink(r.driver) || '—'}</td><td class="n"><b>${lit(r.liters)}</b></td><td class="n">${r.rN < 2 ? '<small>no basis</small>' : `${r.rDiff >= 0 ? '+' : ''}${lit(Math.round(r.rDiff * 100) / 100)} L<small>${r.rDiff >= 0 ? '+' : ''}${Math.round(r.rDiff / r.rAvg * 100)}%</small>`}${r.over ? '<span class="fm-low">Over</span>' : ''}</td><td class="n">${r.kmPerL===null ? '—' : n2(r.kmPerL)}</td></tr>`).join(''); }).join('');
@@ -12169,7 +12182,7 @@ function renderFuel(){
     [0, 1, 2, 3].forEach(i => {
       const sl = dq.filter(g => g.sec===i); if(!sl.length) return;
       const sa = avgOf(withKm.filter(r => fmSec(r.acct)===i));
-      body += secHead(i, `${n2(sa.kmpl)} km/L · ${sl.length} truck-destination${sl.length===1 ? '' : 's'}`) + byTruckSorted(sl, k => avgOf(withKm.filter(r => r.truck===k && fmSec(r.acct)===i))).map(x =>
+      body += secHead(i, `${n2(sa.kmpl)} km/L · ${sl.length} truck-destination${sl.length===1 ? '' : 's'}`) + fmRepSec(i, sa, sl.length, byTruckSorted(sl, k => avgOf(withKm.filter(r => r.truck===k && fmSec(r.acct)===i)))).map(x =>
         truckHead(x.k, x.list, x.avg, `${x.list.length} destination${x.list.length===1 ? '' : 's'}`)
         + x.list.sort((a, b) => a.kmpl - b.kmpl).map(g => `<tr><td>${esc(plainDest(g.dest))}<small>${esc(g.dest)}</small></td><td class="n">${fmtN(g.n)}</td><td class="n">${lit(Math.round(g.L * 100) / 100)}</td><td class="n">${fmtN(Math.round(g.km))}</td><td class="n"><b>${n2(g.kmpl)}</b>${g.low ? `<span class="fm-low">Below ${FUEL_MIN} km/L</span>` : ''}</td></tr>`).join('')).join('');
     });
@@ -12182,7 +12195,7 @@ function renderFuel(){
   [0, 1, 2, 3].forEach(i => {
     const sl = show.filter(r => fmSec(r.acct)===i); if(!sl.length) return;
     const sa = avgOf(all.filter(r => fmSec(r.acct)===i));
-    body += secHead(i, `${n2(sa.kmpl)} km/L · ${sl.length} refuel${sl.length===1 ? '' : 's'}`) + byTruckSorted(sl, k => avgOf(all.filter(r => r.truck===k && fmSec(r.acct)===i))).map(tk => {
+    body += secHead(i, `${n2(sa.kmpl)} km/L · ${sl.length} refuel${sl.length===1 ? '' : 's'}`) + fmRepSec(i, sa, sl.length, byTruckSorted(sl, k => avgOf(all.filter(r => r.truck===k && fmSec(r.acct)===i)))).map(tk => {
       const first = tk.list[0];
       return truckHead(tk.k, tk.list, tk.avg, `${esc(first.truckPlate || first.plate || '')} · ${tk.list.length} refuel${tk.list.length===1 ? '' : 's'}`)
         + tk.list.sort((a, b) => a.date.localeCompare(b.date) || a.row - b.row).map(r => `<tr class="fm-r rowbtn" data-fm="${esc(r.id)}" tabindex="0"><td>${esc(fmtDay(r.date))}<small>${pLink(r.driver)}${r.plate && plateKey(r.plate) !== plateKey(r.truckPlate) ? ' · ' + esc(r.plate) : ''}</small></td><td>${esc(r.source || '—')}<small>→ ${esc(r.destination || '—')}${r.trip ? '' : ' · ' + esc(r.status || 'not a trip')}</small></td><td class="n">${lit(r.liters)}</td><td class="n">${r.km ? fmtN(Math.round(r.km)) : '—'}${r.times === 2 ? `<small>${fmtN(r.base)} × 2 round trip</small>` : ''}</td><td class="n"><b>${r.kmPerL===null ? '<span class="fm-open">no km</span>' : n2(r.kmPerL)}</b>${r.odoKmPerL ? `<small class="${r.odoKmPerL < FUEL_MIN ? 'fm-low' : ''}">odometer ${n2(r.odoKmPerL)}</small>` : ''}${r.cost ? `<small>₱${fmtN(Math.round(r.cost))}</small>` : ''}${r.low ? `<span class="fm-low">Below ${FUEL_MIN}</span>` : ''}${r.over ? `<span class="fm-low" title="Trip average ${lit(Math.round(r.rAvg * 100) / 100)} L">Over trip avg</span>` : ''}</td></tr>`).join('');
@@ -12212,6 +12225,110 @@ function openFuelRefuel(id){
     + `<tr><td>Odometer</td><td>${r.odo ? fmtN(r.odo) + ' km' : '<span class="dim">not typed</span>'}${r.odoKm ? `<small>${fmtN(Math.round(r.odoKm))} km since the last refuel · <b class="${r.odoKmPerL < FUEL_MIN ? 'fm-low' : ''}">${n2(r.odoKmPerL)} km/L</b></small>` : r.odo ? '<small>no earlier reading in these dates</small>' : ''}</td></tr>`
     + `<tr><td>Price</td><td>${r.price ? '₱' + Number(r.price).toFixed(2) + ' per liter · cost <b>₱' + fmtN(Math.round(r.cost)) + '</b>' : '<span class="dim">not typed</span>'}</td></tr></tbody></table><p class="hint">${why}</p>${fuelBasisHtml(r)}`,
     '', true);
+}
+/* ---- Fuel monitoring PDF report (MANU 2026-11-11 "add generate pdf report on fuel monitoring") ----
+ * What the tab shows now (dates, account, Find, chip and view: Each refuel, Same trip average or Per destination) as a PDF in the look of
+ * the other reports (navy band with the logo, As of, Prepared by, summary chips). Drawn one A4 page at a time so a phone does not run
+ * out of picture size; every page has the same column widths and the group titles carry on ("continued"). */
+async function fuelPdf(){
+  const R = FM.rep, btn = $('fmPdf');
+  if(!FM.data || !R) return toast('Wait for the refuels to load first.', true);
+  const n2 = v => v===null || v===undefined || !isFinite(v) ? '—' : Number(v).toFixed(2), lit = v => Number(v).toLocaleString('en-PH', {maximumFractionDigits:2}), r2 = v => Math.round(v * 100) / 100;
+  const RED = '#B91C1C', OK = '#15803D', GREY = '#94A3B8';
+  const mark = (row, red, nokm) => { row._color = red ? RED : nokm ? GREY : OK; if(red) row._wcolor = RED; return row; };
+  const kml = a => a.kmpl===null ? 'no km yet' : `${n2(a.kmpl)} km/L (${fmtN(Math.round(a.km))} km ÷ ${lit(r2(a.L))} L)`;
+  let cols, rows = [];
+  if(R.view==='route'){
+    cols = [{label:'Trip date', w:120}, {label:'Truck', w:60, bold:true}, {label:'Plate', w:100}, {label:'Driver', w:200}, {label:'Liters', w:80, align:'right', bold:true},
+      {label:'vs average', w:150, align:'right', wcolor:true}, {label:'km/L', w:70, align:'right'}, {label:'Warning', w:110, wcolor:true}];
+    (R.gl || []).forEach(g => { const r0 = g.r0;
+      rows.push({_head:true, level:1, text:`${r0.source || '—'} → ${plainDest(r0.destination) || '—'}`, sub:`${r0.rN} trip${r0.rN===1 ? '' : 's'} · average ${lit(r2(r0.gAvg))} L${g.over ? ` · ${g.over} over` : ''}`});
+      g.l.forEach(r => rows.push(mark([fmtDay(r.date), r.truck, r.plate || r.truckPlate || '', r.driver || '—', lit(r.liters),
+        r.rN < 2 ? 'no basis' : `${r.rDiff >= 0 ? '+' : ''}${lit(r2(r.rDiff))} L (${r.rDiff >= 0 ? '+' : ''}${Math.round(r.rDiff / r.rAvg * 100)}%)`,
+        n2(r.kmPerL), r.over ? 'Over' : ''], r.over, r.kmPerL===null)));
+    });
+  } else if(R.view==='dest'){
+    cols = [{label:'Destination', w:340}, {label:'Refuels', w:70, align:'right'}, {label:'Liters', w:90, align:'right'}, {label:'Km', w:80, align:'right'},
+      {label:'Avg km/L', w:90, align:'right', bold:true}, {label:'Warning', w:140, wcolor:true}];
+    R.secs.forEach(sc => {
+      rows.push({_head:true, level:0, text:FM_SECS[sc.i], sub:`${n2(sc.sa.kmpl)} km/L · ${sc.n} truck-destination${sc.n===1 ? '' : 's'}`});
+      sc.tks.forEach(x => {
+        rows.push({_head:true, level:1, text:'Truck ' + x.k, sub:`${x.list.length} destination${x.list.length===1 ? '' : 's'} · ${kml(x.avg)}`});
+        x.list.forEach(g => rows.push(mark([plainDest(g.dest) || g.dest, fmtN(g.n), lit(r2(g.L)), fmtN(Math.round(g.km)), n2(g.kmpl), g.low ? `Below ${FUEL_MIN} km/L` : ''], g.low, false)));
+      });
+    });
+  } else {
+    cols = [{label:'Date', w:120}, {label:'Driver', w:190}, {label:'Trip', w:440}, {label:'Liters', w:80, align:'right'}, {label:'Km', w:130, align:'right'},
+      {label:'km/L', w:70, align:'right', bold:true}, {label:'Warning', w:150, wcolor:true}];
+    R.secs.forEach(sc => {
+      rows.push({_head:true, level:0, text:FM_SECS[sc.i], sub:`${n2(sc.sa.kmpl)} km/L · ${sc.n} refuel${sc.n===1 ? '' : 's'}`});
+      sc.tks.forEach(tk => { const first = tk.list[0];
+        rows.push({_head:true, level:1, text:'Truck ' + tk.k, sub:`${first.truckPlate || first.plate || ''}${first.truckPlate || first.plate ? ' · ' : ''}${tk.list.length} refuel${tk.list.length===1 ? '' : 's'} · ${kml(tk.avg)}`});
+        tk.list.forEach(r => rows.push(mark([fmtDay(r.date), (r.driver || '—') + (r.plate && plateKey(r.plate) !== plateKey(r.truckPlate) ? '\n' + r.plate : ''),
+          `${r.source || '—'} → ${r.destination || '—'}${r.trip ? '' : ' (' + (r.status || 'not a trip') + ')'}`, lit(r.liters),
+          r.km ? fmtN(Math.round(r.km)) + (r.times===2 ? ` (${fmtN(r.base)} × 2)` : '') : '—',
+          r.kmPerL===null ? 'no km' : n2(r.kmPerL), [r.low ? `Below ${FUEL_MIN} km/L` : '', r.over ? 'Over trip avg' : ''].filter(Boolean).join('\n')], r.low || r.over, r.kmPerL===null)));
+      });
+    });
+  }
+  const nData = rows.filter(r => !r._head).length;
+  if(!nData) return toast('Nothing to put in the report: no refuel matches what the tab shows.', true);
+  const VIEW = {refuel:'Each refuel', route:'Same trip average', dest:'Per destination'}, acct = R.fa==='' ? 'All accounts' : FM_SECS[R.fa];
+  const FIL = {low:`Under ${FUEL_MIN} km/L`, over:'Over trip average', nokm:'No km'};
+  const showing = [R.filter!=='all' && FIL[R.filter] && (R.view!=='dest' || R.filter==='low') ? FIL[R.filter] : '', R.q ? `Find "${R.q}"` : ''].filter(Boolean);
+  const subs = [`${R.f===R.t ? fmtDay(R.f) : fmtDay(R.f) + ' to ' + fmtDay(R.t)} · ${acct} · ${VIEW[R.view] || ''}`,
+    R.view==='route' ? `Each trip vs the average liters of the other trips on the same route; more than ${Math.round(FUEL_OVER * 100)}% over is red.`
+      : `km/L = the trip's km (Coca Cola: × 2, a round trip) ÷ the liters. Under ${FUEL_MIN} km/L is red.`];
+  if(showing.length) subs.push('Showing only: ' + showing.join(' · '));
+  const chips = [{label:(R.fa==='' ? 'Fleet' : acct) + ' km/L', n:n2(R.fleet), color:'#0A27B5'}, {label:'Refuels', n:R.n ? fmtN(R.n) : 0, color:'#334155'},
+    {label:'Trucks', n:R.trucks, color:'#334155'}, {label:'Liters', n:R.liters ? lit(Math.round(R.liters)) : 0, color:'#0369A1'},
+    {label:`Under ${FUEL_MIN} km/L`, n:R.nLow, color:RED}, {label:'Over trip average', n:R.nOver, color:'#C2410C'}, {label:'No km', n:R.nNo, color:'#64748B'}];
+  const was = btn.textContent; btn.disabled = true; btn.textContent = 'Making PDF…';
+  try{
+    await new Promise(ok => setTimeout(ok, 30));   // let the button show "Making PDF…"
+    const title = 'Fuel monitoring report', foot = `${nData} ${R.view==='dest' ? 'truck-destination' : 'refuel'}${nData===1 ? '' : 's'}`;
+    // one piece = one A4 page: the report's width and its top part (with and without the summary chips) measured first, then rows
+    // packed by their real height (wrapped lines as repCanvas draws them)
+    const probe = ch => { const c = repCanvas(title, subs.concat(['Page 99 of 99']), cols, [], {chips: ch, wRows: rows}); const o = {w: c.width / 2, h: c.height / 2}; c.width = c.height = 0; return o; };
+    const p1 = probe(chips), pN = probe([]), pageH = Math.floor(p1.w * (841.89 - 48) / (595.28 - 48));
+    const mx = document.createElement('canvas').getContext('2d');
+    const rowH = r => r._head ? 34 : Math.max(...cols.map((cl, i) => { mx.font = `${cl.bold || cl.pill ? '700 ' : ''}${cl.pill ? 13 : 15}px ${REP_FONT}`; return repWrap(mx, r[i], cl.w).length; })) * 20 + 16;
+    // a title left alone at the foot of a page moves to the next one, and the titles above it carry on there ("continued")
+    const pieces = []; let cur = [], used = 0, room = pageH - p1.h - 6, h0 = null, h1 = null;
+    const cont = h => ({...h, sub:(h.sub ? h.sub + ' · ' : '') + 'continued'});
+    rows.forEach(r => {
+      const h = rowH(r), need = r._head ? h + 52 : h;
+      if(used + need > room && cur.some(x => !x._head)){
+        const carry = []; while(cur.length && cur[cur.length - 1]._head) carry.unshift(cur.pop());
+        pieces.push(cur); cur = []; room = pageH - pN.h - 6;
+        if(h0 && !carry.includes(h0) && !(r._head && r.level===0)) cur.push(cont(h0));
+        if(h1 && !carry.includes(h1) && !r._head) cur.push(cont(h1));
+        cur.push(...carry); used = cur.length * 34;
+      }
+      if(r._head){ if(r.level===0){ h0 = r; h1 = null; } else h1 = r; }
+      cur.push(r); used += h;
+    });
+    if(cur.length) pieces.push(cur);
+    const out = [], n = pieces.length;
+    for(let i = 0; i < n; i++){
+      const c = repCanvas(title, n > 1 ? subs.concat([`Page ${i + 1} of ${n}`]) : subs, cols, pieces[i], {chips: i ? [] : chips, wRows: rows, foot: foot + (n > 1 ? ` · page ${i + 1} of ${n}` : '')});
+      if(c.height > c.width * (841.89 - 48) / (595.28 - 48) + 8) out.push(...canvasPages(c));   // a page too tall (one huge row): cut it
+      else {   // one page, made a little smaller so a long report stays a small file
+        const k = Math.min(1, 1240 / c.width), p = document.createElement('canvas'); p.width = Math.round(c.width * k); p.height = Math.round(c.height * k);
+        const px = p.getContext('2d'); px.imageSmoothingQuality = 'high'; px.drawImage(c, 0, 0, p.width, p.height);
+        const b64 = p.toDataURL('image/jpeg', 0.78).split(',')[1];
+        out.push({data: Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)), w: p.width, h: p.height});
+        p.width = p.height = 0;
+      }
+      c.width = c.height = 0;   // free the picture memory on phones
+      if(i % 4 === 3) await new Promise(ok => setTimeout(ok, 0));
+    }
+    const name = `JMTI Fuel monitoring ${VIEW[R.view] || ''} ${acct} ${R.f} to ${R.t}.pdf`.replace(/[\\/:*?"<>|]/g, '-');
+    const url = URL.createObjectURL(pdfFromJpegs(out));
+    if(repSave(name, url)) toast('Saved ' + name); else { window.open(url, '_blank'); toast('The PDF opened in a new tab. Save it from there.'); }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }catch(e){ toast('PDF not made: ' + (e && e.message || e), true); }
+  btn.disabled = false; btn.textContent = was;
 }
 /** Trip hardship tab (MANU 2026-10-20): every CLIENT LIST route with its rating; Admin, Supervisor and Team leader tap one to set it, Boss views. */
 const HT = {data:null, rows:[], canEdit:false, trips:[]};
