@@ -178,6 +178,10 @@ main{max-width:1680px;margin:0 auto;padding:14px 20px}
 #v-dispatcher > .bar > .x-find input{width:100%}
 .bar > .find-row{flex:1 1 100%;order:99;min-width:0}   /* MANU 2026-11-10: POD + Billing Find on its own 2nd row, full width */
 .bar > .find-row input{width:100%}
+label.f .find-in{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;width:100%;min-width:0}   /* MANU 2026-11-11: Search in picker before the Find box */
+label.f .find-in select.find-by{width:auto;flex:0 0 auto;max-width:100%}
+label.f .find-in select.find-by.on{border-color:var(--accent,#2E5BFF);box-shadow:0 0 0 2px rgba(46,91,255,.25);font-weight:700}
+label.f .find-in input{flex:1 1 150px;width:auto;min-width:0}
 label.f{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;color:var(--muted)}
 input,select,textarea{border:1px solid var(--line);background:#fff;border-radius:var(--radius-s);padding:8px 10px;min-height:38px;width:100%}
 textarea{min-height:64px;resize:vertical}
@@ -2345,7 +2349,7 @@ table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
      connection was still bringing in the rest of the page, so the red bar showed even though the app then started fine. */
   document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { window.__jmtiShow(window.__jmtiErr || 'the page code did not load'); }, 3000); });
 </script>
-<div id="demoBanner" class="demo" hidden>Preview with sample data. Sign in as admin, boss, supervisor, teamleader, dispatcher, pod, podhead, billing or hr — any password.</div>
+<div id="demoBanner" class="demo" hidden>Preview with sample data. Sign in as admin, boss, supervisor, teamleader, dispatcher, pod, podhead, billing, billinghead or hr — any password.</div>
 
 <!-- ================= SIGN IN ================= -->
 <section class="login" id="loginScreen">
@@ -3216,6 +3220,10 @@ const podPickSt = () => may('podEndorse') ? POD_ST : POD_ST.filter(st => st!==PO
 const POD_BLANK = 'WAITING DOCS';
 const podSt = t => { const v = String(t.finalStatus || '').trim().toUpperCase().replace(/\s+/g, ' '); return /^(COMPLETED?|ENDORSED TO BILLING)$/.test(v) ? POD_DONE : v || POD_BLANK; };
 const podSent = t => !!t.podAt || podSt(t)===POD_DONE;
+/** POD, Billing, POD analytics and the POD report take Completed AND TUKOD trips (MANU 2026-11-11 "tukod trips should be included in pod and billing").
+ *  The On Site Destination trip added after TUKOD is its own row and shows once it is Completed. */
+const podBillTrip = t => ['Completed','Tukod'].includes(stageOf(t));
+const tkTag = t => stageOf(t)==='Tukod' ? ' <span class="docstate" style="background:#EDE9FE;color:#6D28D9">TUKOD</span>' : /^TUKOD FROM\b/i.test(String(t.remarks||'')) ? ' <span class="docstate" style="background:#F3E8FF;color:#7C3AED">after TUKOD</span>' : '';
 const podChip = st => `<span class="pstat s-${st ? st.toLowerCase().replace(/[^a-z]+/g,'-') : 'none'}">${esc(st || 'No status')}</span>`;
 /** Fuel log (GENERAL column W, header MANO): liters as a number; older rows hold typed text like "47.6 LTRS", shown as is. */
 /** MANU 2026-11-04 "FOR THE FUEL, COMPUTATION IS 2 KM/L BASE ON ROUNDTRIP DISTANCE, IF LESS THAN, HIGHLIGHT IT RED":
@@ -4477,7 +4485,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.75, APP_VERSION_DATE = '2026-11-11';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.78, APP_VERSION_DATE = '2026-11-11';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4508,6 +4516,22 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-11 05:53 UTC "add new user billing head, can edit. the regular billing user is for viewing only"
+  {v:14.78, d:'2026-11-11', items:[
+    'New user role BILLING HEAD: does everything Billing did before (check trips from POD, Mark all checked, KMS, invoice no. and billed amount, source / destination / distance, clients, rates and payments in Clients).',
+    'The regular BILLING role is now view only: it still opens Billing and Clients and sees everything there, but cannot save or change anything. The server refuses its saves too.',
+    'Existing Billing users became view only. An Admin (or HR) opens Users and changes the role to Billing Head for whoever should edit.',
+  ]},
+  // MANU 2026-11-11 05:37 UTC "on search bars add filter on truck number, plate number, and other possible filters" + "put it before the search bar"
+  {v:14.77, d:'2026-11-11', items:[
+    'Every Find box now has a "Search in" picker right before it. Leave it on Everything to search like before, or pick one field: Truck no., Plate no., Driver or helper, Customer, Source, Destination, Shipment no., Status and more (each tab lists only what it has). The picker turns blue when it is not on Everything.',
+    'Truck no. finds that truck only: 15 finds truck 15, not 115, plates or shipments with 15. Type several with commas, e.g. 12, 15. Plate no., Shipment no., Invoice no. and Trip ID ignore spaces and dashes.',
+    'On: Truck Plan, POD, Billing, Truck assignment, Fleet, Fleet units, Fuel monitoring, Disbursement, Profit, Clients, Routes, Manpower, Users.'
+  ]},
+  // MANU 2026-11-11 05:36 UTC "tukod trips should be included in pod and billing"
+  {v:14.76, d:'2026-11-11', items:[
+    'POD and Billing now include TUKOD trips (before, only Completed trips showed). A TUKOD trip has a purple TUKOD tag by its date, and the On Site Destination trip added after it shows "after TUKOD" once it is Completed. Both go through POD (documents, status, Endorsed to Billing) and Billing (check) like any trip. POD analytics, the POD report and the late documents list count them too. Trip counts are unchanged (TUKOD 0.5, the trip after it 1).'
+  ]},
   // MANU 2026-11-11 03:47 UTC "nothing happens when i click the planned trips"
   {v:14.75, d:'2026-11-11', items:[
     'Planned trips: tapping a planned route now opens its card: the plan, the trucks and note, and the trips already added (tap one to open it). "+ Add trip for this route" opens Add trip with the date, source and destination filled in (and the next planned truck that has no trip yet). "Show in Truck Plan" finds the route in the list.'
@@ -5898,7 +5922,7 @@ function renderAssign(){
   const inAcc = trucks.filter(t => aAcctOk(acc, crewOf(t)));
   $('aChips').querySelectorAll('.chip').forEach(b => { const c = A_CHIPS.find(x => x[0]===b.dataset.f); b.textContent = `${c[1]} ${inAcc.filter(t => aChipOk(c[0], t, crewOf(t))).length}`; });
   renderAssignCounts(trucks, crewOf, acc);
-  const rows = trucks.filter(t => aChipOk(S.aFilter, t, crewOf(t))).filter(t => aAcctOk(acc, crewOf(t))).filter(t => { const c = crewOf(t); return !q || [t.truckNo,t.plateNo,c.driver,c.helper1,c.helper2].join(' ').toLowerCase().includes(q); });
+  const rows = trucks.filter(t => aChipOk(S.aFilter, t, crewOf(t))).filter(t => aAcctOk(acc, crewOf(t))).filter(t => { const c = crewOf(t); return findHit('aFind', q, {truck:t.truckNo, plate:t.plateNo, crew:[c.driver,c.helper1,c.helper2]}, [t.truckNo,t.plateNo,c.driver,c.helper1,c.helper2]); });
   $('aTbl').tBodies[0].innerHTML = rows.map(t => {
     const base = crewFor(d, t.truckNo) || {}; const c = S.aEdits[t.truckNo] || base; const rp = repairOf(t.plateNo);
     // plain wrapped text; the row turns into inputs only when someone who may assign taps it (MANU)
@@ -6036,7 +6060,7 @@ function loadPlanner(){
 function renderPlanner(){
   if(S.tab!=='planner') return;
   const q = $('pFind').value.toLowerCase().trim();
-  const list = S.pTrips.filter(t => !q || [t.truckNo,t.plateNo,t.customer,t.destination,t.driver,t.helper1,t.helper2].join(' ').toLowerCase().includes(q));
+  const list = S.pTrips.filter(t => findHit('pFind', q, {truck:t.truckNo, plate:t.plateNo, crew:[t.driver,t.helper1,t.helper2], customer:t.customer, destination:t.destination}, [t.truckNo,t.plateNo,t.customer,t.destination,t.driver,t.helper1,t.helper2]));
   const planned = list.filter(t => stageOf(t)==='Planned').length;
   $('pCount').textContent = `${list.length} rows · ${planned} on clip board`;
   $('pList').innerHTML = list.length ? list.map(t => tripCard(t)).join('') : `<div class="empty">No trips for ${esc(fmtDay($('pDate').value))} yet. Add the first one with the form.</div>`;
@@ -6689,7 +6713,7 @@ function openPlanRoute(date, key){
   const foot = `<button class="btn alt" type="button" id="plrShow">Show in Truck Plan</button>${canAdd ? ` <button class="btn" type="button" id="plrAdd">+ Add trip for this route${nextTruck ? ' (truck ' + esc(nextTruck) + ')' : ''}</button>` : ''}`;
   popTrips(`${l.source} → ${l.destination}`, sub, trips, foot);
   if(!trips.length) $('popBody').innerHTML = `<div class="empty">No trip added on this route for ${esc(fmtDay(date))} yet.${canAdd ? ' Tap <b>+ Add trip for this route</b>.' : ''}</div>`;
-  $('plrShow').onclick = () => { closePop(); $('xFind').value = l.destination; renderDispatcher(); setTimeout(() => { try{ $('xList').scrollIntoView({block:'start', behavior:'smooth'}); }catch(err){} }, 60); };
+  $('plrShow').onclick = () => { closePop(); $('xFind').value = l.destination; findSetBy('xFind', 'destination'); renderDispatcher(); setTimeout(() => { try{ $('xList').scrollIntoView({block:'start', behavior:'smooth'}); }catch(err){} }, 60); };
   if(canAdd) $('plrAdd').onclick = () => {
     closePop(); openDispatchAdd(nextTruck, {date, source: l.source});
     setTimeout(() => { const q = $('naDstQ'), sel = $('naDst'); if(!q || !sel) return;
@@ -7103,7 +7127,7 @@ function openPodReport(){
     fetchTrips(f, t).then(list => {
       $('repGo').disabled = false;
       const order = POD_REP_ST.map(x => x[0]);
-      const rows = list.filter(x => stageOf(x) === 'Completed' && tripInAcct(x, acc) && sts.includes(podRepSt(x)))
+      const rows = list.filter(x => podBillTrip(x) && tripInAcct(x, acc) && sts.includes(podRepSt(x)))
         .sort((a, b) => order.indexOf(podRepSt(a)) - order.indexOf(podRepSt(b)) || a.date.localeCompare(b.date)
           || String(a.truckNo).localeCompare(String(b.truckNo), undefined, {numeric:true}))
         .map(x => {
@@ -7198,7 +7222,8 @@ function renderDispatcher(){
     if(f==='moving' && !MOVING.includes(st)) return false;
     if((f==='Planned'||f==='Completed') && st!==f) return false;
     if(f==='other' && st!=='Not on trip' && st!=='No trip') return false;
-    return !q || [t.truckNo,t.plateNo,t.customer,t.destination,t.driver,t.helper1,t.helper2,t.shipmentNo].join(' ').toLowerCase().includes(q);
+    return findHit('xFind', q, {truck:t.truckNo, plate:t.plateNo, crew:[t.driver,t.helper1,t.helper2], customer:t.customer, source:t.source, destination:t.destination, shipment:t.shipmentNo, status:[stageOf(t), t.status]},
+      [t.truckNo,t.plateNo,t.customer,t.destination,t.driver,t.helper1,t.helper2,t.shipmentNo]);
   };
   const list = S.xTrips.filter(t => (!latestOnly || latestKey[t.key]) && keepRow(t));
   // Preloaded / dated ahead (MANU 2026-11-07): when the To date is today or later, each truck's trip dated in the next days
@@ -7555,15 +7580,70 @@ function loadPod(){
   const f = $('podFrom').value, t = $('podTo').value; $('podRange')._mark(f,t);
   return withTrips(f, t, list => { if($('podFrom').value!==f || $('podTo').value!==t) return; S.podTrips = list; renderPod(); }, $('podList'));
 }
-function renderPod(){ return keepPlace('podList', () => [S.podFilter, $('podFind').value, $('podAcct').value, $('podCust').value, $('podFrom').value, $('podTo').value].join('|'), renderPodNow); }
+// Find "Search in" picker before each Find box (MANU 2026-11-11): Everything (as before) or one field, e.g. Truck no. 15 finds truck 15 only
+const FIND_BY_NAMES = {all:'Everything', truck:'Truck no.', plate:'Plate no.', crew:'Driver or helper', driver:'Driver', customer:'Customer', client:'Client',
+  source:'Source', destination:'Destination', shipment:'Shipment no.', status:'Status', invoice:'Invoice no.', trip:'Trip ID', entry:'Entry, paid to, txn no.',
+  remarks:'Remarks', make:'Make or model', address:'Address', name:'Name', id:'ID', username:'Username', role:'Role'};
+const FIND_BY_TIPS = {truck:'Truck no., e.g. 15 or 12, 15', plate:'Plate no., e.g. ABC 1234', shipment:'Shipment no.', trip:'Trip ID', invoice:'Invoice no.'};
+const FIND_BY = {
+  xFind:['truck','plate','crew','customer','source','destination','shipment','status'],
+  podFind:['truck','plate','driver','customer','source','destination','shipment'],
+  billFind:['truck','plate','customer','source','destination','shipment','invoice'],
+  pFind:['truck','plate','crew','customer','destination'],
+  aFind:['truck','plate','crew'],
+  fFind:['truck','plate','crew','remarks'],
+  fuFind:['truck','plate','make'],
+  fmFind:['truck','plate','driver','source','destination'],
+  dbFind:['truck','plate','crew','customer','destination','trip','entry'],
+  prFind:['truck','plate'],
+  clFind:['source','destination','client','address'],
+  rFind:['source','destination'],
+  mpFind:['name','id'],
+  uFind:['username','name','role']
+};
+function findBy(id){ const s = $(id + 'By'); return s ? s.value : 'all'; }
+const findNormT = v => String(v==null ? '' : v).toLowerCase().replace(/[^a-z0-9]/g, '').replace(/^0+(?=\d)/, '');
+// q: lower-cased text; f: {field: value or list}; all: the words "Everything" searched before (kept the same)
+function findHit(id, q, f, all){
+  if(!q) return true;
+  const by = findBy(id);
+  if(by==='all' || !(by in f)) return (all || Object.values(f).flat()).join(' ').toLowerCase().includes(q);
+  const vals = [].concat(f[by]).map(v => String(v==null ? '' : v));
+  if(by==='truck'){   // whole truck number, several allowed: "12, 15"
+    const qs = q.split(/[\s,;\/]+/).map(findNormT).filter(Boolean);
+    return vals.some(v => qs.includes(findNormT(v)));
+  }
+  if(by==='plate' || by==='shipment' || by==='invoice' || by==='trip'){ const n = x => x.toLowerCase().replace(/[^a-z0-9]/g, ''); const nq = n(q); return vals.some(v => n(v).includes(nq)); }
+  return vals.join(' ').toLowerCase().includes(q);
+}
+function findSetup(){
+  Object.keys(FIND_BY).forEach(id => {
+    const inp = $(id); if(!inp || $(id + 'By')) return;
+    const lab = inp.closest('label'); if(lab) lab.htmlFor = id;
+    const sel = document.createElement('select');
+    sel.id = id + 'By'; sel.className = 'find-by'; sel.title = 'Search in'; sel.setAttribute('aria-label', 'Search in');
+    sel.innerHTML = ['all'].concat(FIND_BY[id]).map(k => `<option value="${k}">${k==='all' ? 'Everything' : FIND_BY_NAMES[k]}</option>`).join('');
+    const wrap = document.createElement('span'); wrap.className = 'find-in';
+    inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(sel); wrap.appendChild(inp);
+    const ph0 = inp.placeholder;
+    sel.onchange = () => {
+      const k = sel.value; sel.classList.toggle('on', k!=='all');
+      inp.placeholder = k==='all' ? ph0 : (FIND_BY_TIPS[k] || FIND_BY_NAMES[k]);
+      inp.dispatchEvent(new Event('input'));
+    };
+  });
+}
+function findSetBy(id, k){ const s = $(id + 'By'); if(s && s.value!==k){ s.value = k; s.classList.toggle('on', k!=='all'); const i = $(id); if(i) i.placeholder = k==='all' ? i.placeholder : (FIND_BY_TIPS[k] || FIND_BY_NAMES[k]); } }
+findSetup();
+function renderPod(){ return keepPlace('podList', () => [S.podFilter, $('podFind').value, findBy('podFind'), $('podAcct').value, $('podCust').value, $('podFrom').value, $('podTo').value].join('|'), renderPodNow); }
 function renderPodNow(){
   if(S.tab!=='pod') return;
   const q = $('podFind').value.toLowerCase().trim();
-  const done = S.podTrips.filter(t => stageOf(t)==='Completed');
+  const done = S.podTrips.filter(podBillTrip);
   const acc = fillAcctSelect($('podAcct'));
   const inAcc = done.filter(t => tripInAcct(t, acc));
   const cust = fillCustFilter($('podCust'), inAcc);
-  const shown = inAcc.filter(t => (!cust || t.customer===cust) && (!q || [t.truckNo,t.plateNo,t.customer,t.destination,t.shipmentNo,t.driver].join(' ').toLowerCase().includes(q)));
+  const shown = inAcc.filter(t => (!cust || t.customer===cust) && findHit('podFind', q, {truck:t.truckNo, plate:t.plateNo, driver:t.driver, customer:t.customer, source:t.source, destination:t.destination, shipment:t.shipmentNo}, [t.truckNo,t.plateNo,t.customer,t.destination,t.shipmentNo,t.driver]));
   const base = shown.filter(t => !podSent(t));   // ENDORSED TO BILLING trips have moved to Billing and leave POD (MANU)
   const POD_F = {tocheck: () => true, pending: t => podSt(t)==='PENDING', waitdocs: t => podSt(t)==='WAITING DOCS', recvdocs: t => podSt(t)==='RECEIVED DOCUMENTS', tukod: t => podSt(t)==='TUKOD'};
   const sent = shown.filter(podSent);   // Endorsed to Billing chip: trips already sent to billing stay viewable in POD (MANU 2026-10-08)
@@ -7591,7 +7671,7 @@ function renderPodNow(){
   const docCell = t => t.podAt ? `<span class="docstate ok">Sent ${esc(t.podAt.slice(0,10))}</span>` : `<span class="docstate wait">${files(t).length ? files(t).length+' file(s) · to check' : 'No documents'}</span>`;
   $('podList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Document date</th><th>SHIPMENT NO.</th><th>DTTR</th><th>Driver</th><th>Helpers</th>${BOSL_TH}${PC_TH}<th>POD remarks</th><th>Documents</th><th>Status</th></tr></thead><tbody>` +
     list.map((t,i) => {
-      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td>${docDateTd(t, may('pod'))}<td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('pod'))}${pcTds(t, may('pod'))}<td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="${may('pod') || (may('docs') && files(t).length) ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : may('docs') && files(t).length ? 'data-pdoc="1" title="Open the scans"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
+      return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${podSt(t)==='PENDING' ? '#B91C1C' : podSt(t)==='TUKOD' ? '#7C3AED' : podSt(t)==='WAITING DOCS' ? '#5B9BB0' : podSt(t)==='RECEIVED DOCUMENTS' ? '#16A34A' : files(t).length ? 'var(--road)' : files(t).length ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}${tkTag(t)}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td>${esc(t.destination || '—')}</td>${docDateTd(t, may('pod'))}<td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('pod'))}${pcTds(t, may('pod'))}<td class="${may('pod') ? 'ed' : ''}" ${may('pod') ? 'data-prem="1" title="Type POD remarks"' : ''} style="white-space:pre-wrap">${esc(t.pod || '')}</td><td class="${may('pod') || (may('docs') && files(t).length) ? 'ed' : ''}" ${may('pod') ? 'data-pdoc="1" title="Attach a file"' : may('docs') && files(t).length ? 'data-pdoc="1" title="Open the scans"' : ''}>${docCell(t)}</td><td class="pst${may('pod') ? ' ed' : ''}" ${may('pod') ? 'data-pst="1" title="Change status"' : ''}>${podChip(podSt(t))}${t.podUpdAt ? `<small class="pst-at">${esc(podWhen(t.podUpdAt))}${t.podUpdBy ? '<br>by ' + esc(t.podUpdBy) : ''}</small>` : ''}</td></tr>`; }).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.podFilter==='completed' ? 'No trip endorsed to billing in these dates.' : 'Nothing left to check here.'}</div>`;
   freezeCols($('podList'));
 }
@@ -7854,7 +7934,7 @@ function loadPodStats(){
 function renderPodStats(){
   if(S.tab!=='podstats') return;
   const acc = fillAcctSelect($('psAcct'));
-  const done = (S.psTrips || []).filter(t => stageOf(t)==='Completed' && tripInAcct(t, acc));
+  const done = (S.psTrips || []).filter(t => podBillTrip(t) && tripInAcct(t, acc));
   const DAY = 864e5, now = Date.now();
   const doneAt = t => doneTime(t) || new Date(t.date + 'T23:59');
   const sentAt = t => stampDate(t.podAt);
@@ -8158,31 +8238,33 @@ function initBilling(){
   $('billTabs').onclick = e => { const b = e.target.closest('.chip'); if(!b) return;
     $('billTabs').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c===b));
     $('billTrips').hidden = b.dataset.sub!=='trips'; $('billRoutes').hidden = b.dataset.sub!=='routes';
-    if(b.dataset.sub==='routes'){ loadRoutes(); loadClients(); } };
+    if(b.dataset.sub==='routes'){ billRoutesUi(); loadRoutes(); loadClients(); } };
   $('rFind').oninput = renderRoutes;
   $('rNoKm').onclick = () => { $('rNoKm').setAttribute('aria-pressed', $('rNoKm').getAttribute('aria-pressed')!=='true'); renderRoutes(); };
-  $('rTbl').onclick = e => { const tr = e.target.closest('tr[data-row]'); if(tr) editRoute(S.routes.find(r => String(r.row)===tr.dataset.row)); };
+  $('rTbl').onclick = e => { const tr = e.target.closest('tr[data-row]'); if(tr && may('routes')) editRoute(S.routes.find(r => String(r.row)===tr.dataset.row)); };
   $('routeForm').onsubmit = saveRoute;
   $('rReset').onclick = resetRoute;
   $('rClient').onchange = () => { clientHint(); clientDests(); };
   $('clientForm').onsubmit = saveClientForm;
   $('cReset').onclick = resetClient;
-  $('cTbl').onclick = e => { const tr = e.target.closest('tr[data-row]'); if(tr) editClient((S.clients || []).find(c => String(c.row)===tr.dataset.row)); };
+  $('cTbl').onclick = e => { const tr = e.target.closest('tr[data-row]'); if(tr && may('routes')) editClient((S.clients || []).find(c => String(c.row)===tr.dataset.row)); };
   resetClient(); fillClientSelect('');
 }
+/** Source, destination & distance sub-tab: the add / edit forms only for Billing Head and Admin (Billing is view only, MANU 2026-11-11). */
+function billRoutesUi(){ const ok = may('routes'); $('routeForm').closest('.panel').hidden = !ok; $('clientForm').hidden = $('cTitle').hidden = !ok; }
 function loadBilling(){
   const f = $('billFrom').value, t = $('billTo').value; $('billRange')._mark(f,t);
   return withTrips(f, t, list => { if($('billFrom').value!==f || $('billTo').value!==t) return; S.billTrips = list; renderBilling(); }, $('billList'));
 }
-function renderBilling(){ return keepPlace('billList', () => [S.billFilter, $('billFind').value, $('billAcct').value, $('billCust').value, $('billFrom').value, $('billTo').value].join('|'), renderBillingNow); }
+function renderBilling(){ return keepPlace('billList', () => [S.billFilter, $('billFind').value, findBy('billFind'), $('billAcct').value, $('billCust').value, $('billFrom').value, $('billTo').value].join('|'), renderBillingNow); }
 function renderBillingNow(){
   if(S.tab!=='billing') return;
   const q = $('billFind').value.toLowerCase().trim();
-  const done = S.billTrips.filter(t => stageOf(t)==='Completed');
+  const done = S.billTrips.filter(podBillTrip);
   const acc = fillAcctSelect($('billAcct'));
   const inAcc = done.filter(t => tripInAcct(t, acc));
   const cust = fillCustFilter($('billCust'), inAcc);
-  const base = inAcc.filter(t => (!cust || t.customer===cust) && (!q || [t.truckNo,t.plateNo,t.customer,t.destination,t.shipmentNo,t.invNo].join(' ').toLowerCase().includes(q)));
+  const base = inAcc.filter(t => (!cust || t.customer===cust) && findHit('billFind', q, {truck:t.truckNo, plate:t.plateNo, customer:t.customer, source:t.source, destination:t.destination, shipment:t.shipmentNo, invoice:t.invNo}, [t.truckNo,t.plateNo,t.customer,t.destination,t.shipmentNo,t.invNo]));
   const BILL_F = {tocheck: t => t.podAt && !t.billAt, waiting: t => !podSent(t), checked: t => !!t.billAt || (!t.podAt && podSt(t)===POD_DONE), noinv: t => !!t.billAt && !t.invNo, all: () => true};   // noinv: review 2026-11-04b #6   // AA ENDORSED TO BILLING (or the older COMPLETED) with no POD stamp = older trip already done
   if(!BILL_F[S.billFilter]) S.billFilter = 'tocheck';
   const billPending = base.filter(BILL_F.tocheck), fromPod = base.filter(t => !!t.podAt);
@@ -8190,7 +8272,7 @@ function renderBillingNow(){
     pending: billPending, pendingLabel: 'Billing pending', pendingNote: `from POD, not checked yet · ${base.filter(BILL_F.waiting).length} still waiting for POD`,
     turnLabel: 'Average time to check', turnNote: 'sent by POD → checked by billing', from: t => stampDate(t.podAt), to: t => stampDate(t.billAt),
     since: t => stampDate(t.podAt)});
-  counterChips($('billChips'), [['tocheck','To check'],['waiting','Waiting for POD'],['checked','Checked'],['noinv','Checked, no invoice'],['all','All completed']].map(([k,l]) => [k, l, base.filter(BILL_F[k]).length]),
+  counterChips($('billChips'), [['tocheck','To check'],['waiting','Waiting for POD'],['checked','Checked'],['noinv','Checked, no invoice'],['all','All (completed + TUKOD)']].map(([k,l]) => [k, l, base.filter(BILL_F[k]).length]),
     S.billFilter, f => { S.billFilter = f; renderBilling(); });
   const list = base.filter(BILL_F[S.billFilter]);
   // same order as Truck Plan: by route; inside a route from POD and not checked first, then waiting for POD, then checked;
@@ -8200,12 +8282,12 @@ function renderBillingNow(){
   const byTrip = (a,b) => billOrder(a) - billOrder(b) || since(a).localeCompare(since(b)) || String(a.truckNo).localeCompare(String(b.truckNo),undefined,{numeric:true});
   const head = groupRoutes(list, byTrip, () => false, 15 + BOSL_N + PC_N);   // no route header rows on Billing (MANU)
   S.billReportRows = list.map(t => [fmtDay(t.date), String(t.truckNo || ''), t.plateNo || '', t.customer || '', plainDest(t.destination) || '', docDayOf(t), shipNoOf(t), dttrOf(t), ...boslCsv(t), ...pcCsv(t)]);   // Generate report (CSV)
-  const ready = S.billFilter==='tocheck' ? list.filter(t => !t._pending) : [];
+  const ready = S.billFilter==='tocheck' && may('billing') ? list.filter(t => !t._pending) : [];   // Billing (view only) gets no bulk button (MANU 2026-11-11)
   S.billReady = ready;
   const bar = ready.length > 1 ? `<div class="bulkbar"><span><b>${ready.length}</b> trips from POD are waiting for your check.</span><button class="btn road" type="button" id="billBulk">Mark all ${ready.length} checked</button></div>` : '';
   const stCell = t => t.billAt ? `<span class="docstate ok">Checked ${esc(t.billAt.slice(0,10))}</span>${t.invNo ? `<small>Invoice ${esc(t.invNo)}${t.invAmt ? ' · ₱' + Number(t.invAmt).toLocaleString('en-PH') : ''}</small>` : '<small class="dim">no invoice no.</small>'}` : t.podAt ? `<span class="docstate wait">From POD · ${files(t).length} file(s)</span>` : `<span class="docstate">Waiting for POD</span>`;
   $('billList').innerHTML = list.length ? bar + `<div class="xl-wrap"><table class="xl"><thead><tr><th class="c">#</th><th>Trip date</th><th>Truck</th><th>Plate</th><th>Customer</th><th>Destination</th><th>Document date</th><th>SHIPMENT NO.</th><th>DTTR</th><th class="n">KMS</th><th>Driver</th><th>Helpers</th>${BOSL_TH}${PC_TH}<th>POD</th><th>Billing</th><th>Final status</th></tr></thead><tbody>` +
-    list.map((t,i) => (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${t.billAt ? 'var(--done)' : t.podAt ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td title="${esc(t.destination || '')}">${esc(plainDest(t.destination) || '—')}</td>${docDateTd(t, may('billing'))}<td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td class="n">${esc(tripKm(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('billing'))}${pcTds(t, may('billing'))}<td>${esc(t.podAt && t.podAt!=='saving' ? t.podAt.slice(0,10) : t.podAt ? 'Saving…' : '')}${t.pod ? `<small>${esc(t.pod)}</small>` : ''}</td><td>${stCell(t)}</td><td>${esc(podSt(t))}</td></tr>`).join('') + `</tbody></table></div>`
+    list.map((t,i) => (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${t.billAt ? 'var(--done)' : t.podAt ? 'var(--road)' : '#94A3B8'}"><td class="c rn">${i+1}</td><td>${esc(fmtDay(t.date))}${tkTag(t)}</td><td class="tk"><b>${t.truckNo ? tLink(t.truckNo) : '—'}</b></td><td>${plLink(t.plateNo)}</td><td>${esc(t.customer)}</td><td title="${esc(t.destination || '')}">${esc(plainDest(t.destination) || '—')}</td>${docDateTd(t, may('billing'))}<td>${esc(shipNoOf(t))}</td><td>${esc(dttrOf(t))}</td><td class="n">${esc(tripKm(t))}</td><td>${pLink(t.driver)}</td><td>${crewLinks([t.helper1, t.helper2], ', ')}</td>${boslTds(t, may('billing'))}${pcTds(t, may('billing'))}<td>${esc(t.podAt && t.podAt!=='saving' ? t.podAt.slice(0,10) : t.podAt ? 'Saving…' : '')}${t.pod ? `<small>${esc(t.pod)}</small>` : ''}</td><td>${stCell(t)}</td><td>${esc(podSt(t))}</td></tr>`).join('') + `</tbody></table></div>`
     : `<div class="empty">${S.billFilter==='tocheck' ? 'Nothing from POD to check in these dates.' : 'Nothing here for these dates.'}</div>`;
   freezeCols($('billList'));
 }
@@ -8231,6 +8313,11 @@ function openBill(t){
     ${t.billAt ? `<p class="hint">Checked by ${esc(t.billBy)} on ${esc(t.billAt)}</p>` : ''}`,
     t.billAt ? `<button class="btn alt" id="billUndo" type="button" style="margin-right:auto">Undo check</button><button class="btn" id="billSaveBtn" type="button">Save</button>`
              : `<button class="btn alt" id="billSaveBtn" type="button" style="margin-right:auto">Save</button><button class="btn road" id="billCheck" type="button" ${podSent(t) ? '' : 'disabled title="POD has not sent this trip to billing yet"'}>Checked</button>`);
+  if(!may('billing')){   // Billing role is view only (MANU 2026-11-11): only Billing Head and Admin save here
+    ['billKms','billInv','billAmt'].forEach(id => { if($(id)) $(id).readOnly = true; });
+    $('drFoot').innerHTML = '<span class="hint" style="margin-right:auto">View only. Only Billing Head or Admin can change billing.</span>';
+    return;
+  }
   const send = checked => {
     const data = fedKey(t, 'kms') ? {} : {kms:$('billKms').value.trim()};   // POD status (AA) belongs to POD now; KMS of a trip from 2.0 is changed in 2.0
     const inv = $('billInv').value.trim().toUpperCase(), amt = $('billAmt').value.replace(/[₱,\s]/g, '');   // invoice (review 2026-11-04b #6)
@@ -8255,7 +8342,7 @@ function loadRoutes(){
 }
 function renderRoutes(){
   const q = $('rFind').value.toLowerCase().trim(), noKm = $('rNoKm').getAttribute('aria-pressed')==='true';
-  const list = (S.routes||[]).filter(r => (!noKm || !r.km) && (!q || (r.origin+' '+r.destination).toLowerCase().includes(q)));
+  const list = (S.routes||[]).filter(r => (!noKm || !r.km) && findHit('rFind', q, {source:r.origin, destination:r.destination}, [r.origin, r.destination]));
   $('rTbl').tBodies[0].innerHTML = list.length ? list.map(r => `<tr class="rowbtn" data-row="${r.row}"><td>${esc(r.origin)}</td><td>${esc(r.destination)}</td><td class="num">${r.km ? esc(r.km) : '<span class="tag-repair">add</span>'}</td></tr>`).join('')
     : `<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">Nothing matches.</td></tr>`;
 }
@@ -8404,7 +8491,7 @@ function renderFleet(){
   const pass = {all: () => true, ACTIVE: x => x.i.active, INACTIVE: x => !x.i.active, ontrip: x => x.i.onTrip, idle: x => x.i.active && !x.i.onTrip, repair: x => holdOfR(x.i.rp), rwjo: x => !!x.i.rp && !holdOfR(x.i.rp)};
   $('fChips').querySelectorAll('.chip').forEach(b => { const c = F_CHIPS.find(x => x[0]===b.dataset.f); b.textContent = `${c[1]} ${list.filter(pass[c[0]]).length}`; });
   const q = $('fFind').value.toLowerCase().trim();
-  const rows = list.filter(pass[fFilter]).filter(({t,i}) => !q || [t.truckNo, t.plateNo, t.remarks, i.crew && i.crew.driver, i.crew && i.crew.helper1].join(' ').toLowerCase().includes(q));
+  const rows = list.filter(pass[fFilter]).filter(({t,i}) => findHit('fFind', q, {truck:t.truckNo, plate:t.plateNo, crew:[i.crew && i.crew.driver, i.crew && i.crew.helper1, i.crew && i.crew.helper2], remarks:t.remarks}, [t.truckNo, t.plateNo, t.remarks, i.crew && i.crew.driver, i.crew && i.crew.helper1]));
   list.forEach(x => { x.dn = downOf(x.t); });
   if($('fdSort').value==='down') rows.sort((a,b) => (b.i.active - a.i.active) || ((b.dn ? b.dn.down : -1) - (a.dn ? a.dn.down : -1)) || String(a.t.truckNo).localeCompare(String(b.t.truckNo), undefined, {numeric:true}));
   const fd = S.fleetDown;
@@ -8537,7 +8624,7 @@ function renderManpower(){
   const act = all.filter(mpPass.ACTIVE), noTruck = all.filter(mpPass.noTruck), noTrip = all.filter(mpPass.noTrip);
   $('mpNote').innerHTML = `${act.length} active · <b>${noTruck.length}</b> not assigned to a truck today · <b>${noTrip.length}</b> with no trip for ${MP_IDLE_DAYS}+ days`;
   const sorter = mpFilter==='noTrip' || mpFilter==='idle' ? (a,b) => (idleDays(b) ?? 1e9) - (idleDays(a) ?? 1e9) : (a,b) => a.full.localeCompare(b.full);
-  const list = all.filter(mpPass[mpFilter] || mpPass.all).filter(p => !q || (p.full+' '+p.id).toLowerCase().includes(q)).sort(sorter);
+  const list = all.filter(mpPass[mpFilter] || mpPass.all).filter(p => findHit('mpFind', q, {name:p.full, id:p.id}, [p.full, p.id])).sort(sorter);
   const lastCell = p => { if(p.status!=='ACTIVE' && !p.lastTrip) return '<span class="dim">—</span>'; const n = idleDays(p); if(n===null) return '<span class="mp-idle">No trip on record</span>';
     return `${esc(fmtDay(p.lastTrip))}<small class="${n >= MP_IDLE_DAYS && p.status==='ACTIVE' ? 'mp-idle' : ''}">${n<=0 ? 'today' : `no trip for ${n} day${n===1?'':'s'}`}</small>`; };
   $('mpTbl').tBodies[0].innerHTML = list.length ? list.map(p => `<tr class="rowbtn" data-row="${p.row}"><td>${esc(p.id)}</td><td><b>${esc(p.full)}</b>${mpExtra(p)}</td><td>${esc(p.position)}</td><td>${esc(p.hired ? fmtDay(p.hired) || p.hired : '')}</td><td>${esc(tenure(p.hired))}</td><td>${p.truck ? tLink(p.truck, 'Truck ' + p.truck) : (p.status==='ACTIVE' ? '<span class="mp-idle">Not assigned</span>' : '<span class="dim">—</span>')}</td><td>${lastCell(p)}</td><td>${licCell(p)}</td><td><span class="docstate ${p.status==='ACTIVE'?'ok':''}">${esc(p.status)}</span></td></tr>`).join('')
@@ -9547,10 +9634,10 @@ document.addEventListener('click', e => {
 }, true);
 document.addEventListener('keydown', e => { if(e.key==='Enter' && e.target.matches && e.target.matches('[data-person],[data-truckpop],[data-platepop]')) e.target.click(); });
 
-const ALL_ROLES = ['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','POD HEAD','BILLING','ACCOUNTING','PAYROLL','HR','MAINTENANCE'];
+const ALL_ROLES = ['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','POD HEAD','BILLING','BILLING HEAD','ACCOUNTING','PAYROLL','HR','MAINTENANCE'];
 const ROLE_NOTE = {'ADMIN':'Everything, including users.','BOSS':'Sees everything Admin sees, changes nothing (view only).',
   'SUPERVISOR':'Dashboard, Truck assignment and Truck Plan; in Truck Plan changes only source and destination, and adds trips.','TEAM LEADER':'Dashboard, Fleet (view only), Truck assignment and Truck Plan.',
-  'DISPATCHER':'Truck Plan only.','POD':'Checks completed trips, uploads scanned documents, endorses to billing.','POD HEAD':'Everything POD does, plus the POD analytics tab.','BILLING':'Checks trips POD sent; source, destination, distance and clients.',
+  'DISPATCHER':'Truck Plan only.','POD':'Checks completed trips, uploads scanned documents, endorses to billing.','POD HEAD':'Everything POD does, plus the POD analytics tab.','BILLING HEAD':'Checks trips POD sent, invoice numbers; source, destination, distance and clients.','BILLING':'View only: sees Billing and Clients, changes nothing.',
   'HR':'Drivers and helpers (Manpower) and users, except Admin and Boss accounts; Truck Plan view only.','MAINTENANCE':'Maintenance dashboard only.',
   'ACCOUNTING':'Disbursement (trip budgets sent) and Accounting (inventory purchases with receipts, money summary).','PAYROLL':'Payroll and Disbursement (trip budgets sent); Truck Plan and POD view only.'};
 const ADMIN_ONLY_ROLES = ['ADMIN','BOSS'];   // only an admin creates, changes or gives these (HR manages the rest; same check on the server)
@@ -9600,7 +9687,7 @@ function loadSysHealth(){
 }
 function renderUsers(){
   const q = $('uFind').value.toLowerCase().trim();
-  const list = (S.users||[]).filter(u => !q || [u.username,u.name,u.role].join(' ').toLowerCase().includes(q));
+  const list = (S.users||[]).filter(u => findHit('uFind', q, {username:u.username, name:u.name, role:u.role}, [u.username,u.name,u.role]));
   $('uTbl').tBodies[0].innerHTML = list.map(u => `<tr class="rowbtn" data-u="${esc(u.username)}"><td><b>${esc(u.username)}</b></td><td>${esc(u.name)}</td><td>${esc(u.role)}</td><td><span class="docstate ${u.status==='ACTIVE'?'ok':''}">${esc(u.status)}</span>${u.mustChange?' <span class="hint">new password pending</span>':''}</td><td>${esc(u.lastLogin||'—')}</td></tr>`).join('');
 }
 function editUser(u){
@@ -11865,7 +11952,7 @@ function renderUnits(){
   const q = $('fuFind').value.toLowerCase().trim(), f = FU.filter;
   const pmsDue = u => u.PmsState==='overdue' || u.PmsState==='soon', papers = u => fuSoon(u, 'OrExp') || fuSoon(u, 'FrExp');
   const rows = all.filter(u => (f==='all' || (f==='mnt' && fuOff(u)) || (f==='papers' && papers(u)) || (f==='pms' && pmsDue(u)))
-    && (!q || [u.UnitID, u.PlateNo, u.Make, u.Model].join(' ').toLowerCase().includes(q)));
+    && findHit('fuFind', q, {truck:u.UnitID, plate:u.PlateNo, make:[u.Make, u.Model]}, [u.UnitID, u.PlateNo, u.Make, u.Model]));
   $('fuPms').hidden = !(d.canEdit && d.pmsRule);
   if(d.pmsRule && document.activeElement!==$('fuPmsKm') && document.activeElement!==$('fuPmsDays')){ $('fuPmsKm').value = d.pmsRule.km; $('fuPmsDays').value = d.pmsRule.days; }
   const noRec = all.filter(u => !u.InRecord).length;
@@ -12067,7 +12154,7 @@ function renderFuel(){
     $('fmNote').textContent = `${fmtDay(f)} to ${fmtDay(t)}: refuels grouped by the same trip (source → destination). Each trip is compared with the average liters of the other trips on the same route; more than ${Math.round(FUEL_OVER * 100)}% over it is red. A trip alone on its route has no basis.`;
     $('fmHead').innerHTML = '<tr><th>Trip date · truck</th><th>Driver</th><th class="n">Liters</th><th class="n">vs average</th><th class="n">km/L</th></tr>';
     const rq = all.filter(r => r.rKey && (FM.filter!=='low' || r.low) && (FM.filter!=='over' || r.over) && (FM.filter!=='nokm' || r.kmPerL === null)
-      && (!q || [r.truck, r.plate, r.truckPlate, r.driver, r.source, r.destination].join(' ').toLowerCase().includes(q)));
+      && findHit('fmFind', q, {truck:r.truck, plate:r.plate, driver:r.driver, source:r.source, destination:r.destination}, [r.truck, r.plate, r.truckPlate, r.driver, r.source, r.destination]));
     rq.forEach(r => { FM.rows[r.id] = r; });
     const groups = {}; rq.forEach(r => (groups[r.rKey] = groups[r.rKey] || []).push(r));
     const gl = Object.values(groups).map(l => ({l, r0: l[0], over: l.filter(r => r.over).length})).sort((a, b) => b.over - a.over || b.l.length - a.l.length || String(a.r0.source).localeCompare(String(b.r0.source)));
@@ -12078,7 +12165,7 @@ function renderFuel(){
     return;
   }
   if(FM.view==='dest'){
-    const dq = dl.filter(g => (FM.filter!=='low' || g.low) && (!q || [g.truck, g.dest].join(' ').toLowerCase().includes(q)));
+    const dq = dl.filter(g => (FM.filter!=='low' || g.low) && findHit('fmFind', q, {truck:g.truck, destination:g.dest}, [g.truck, g.dest]));
     [0, 1, 2, 3].forEach(i => {
       const sl = dq.filter(g => g.sec===i); if(!sl.length) return;
       const sa = avgOf(withKm.filter(r => fmSec(r.acct)===i));
@@ -12090,7 +12177,7 @@ function renderFuel(){
     return;
   }
   const show = all.filter(r => (FM.filter!=='low' || r.low) && (FM.filter!=='over' || r.over) && (FM.filter!=='nokm' || r.kmPerL === null)
-    && (!q || [r.truck, r.plate, r.truckPlate, r.driver, r.source, r.destination].join(' ').toLowerCase().includes(q)));
+    && findHit('fmFind', q, {truck:r.truck, plate:r.plate, driver:r.driver, source:r.source, destination:r.destination}, [r.truck, r.plate, r.truckPlate, r.driver, r.source, r.destination]));
   show.forEach(r => { FM.rows[r.id] = r; });
   [0, 1, 2, 3].forEach(i => {
     const sl = show.filter(r => fmSec(r.acct)===i); if(!sl.length) return;
@@ -12629,7 +12716,7 @@ function renderBook(){
   const d = CL.data, q = $('clFind').value.toLowerCase().trim(), body = $('clTbl').tBodies[0];
   if(!d){ body.innerHTML = '<tr><td colspan="5" class="empty-cell">Loading the routes…</td></tr>'; $('clPays').tBodies[0].innerHTML = ''; $('clKpi').innerHTML = ''; return; }
   const all = CL.rows = bookRoutes();
-  const found = all.filter(x => !q || [x.r.source, x.r.destination, x.c.client, addrOf(x.r.source), addrOf(x.r.destination)].join(' ').toLowerCase().includes(q));
+  const found = all.filter(x => findHit('clFind', q, {source:x.r.source, destination:x.r.destination, client:x.c.client, address:[addrOf(x.r.source), addrOf(x.r.destination)]}, [x.r.source, x.r.destination, x.c.client, addrOf(x.r.source), addrOf(x.r.destination)]));
   if(!BOOK_F[CL.filter]) CL.filter = 'all';
   const nk = found.filter(x => !hasKm(x.r)).length, ndTrips = ND.data ? ND.data.routes.reduce((a, r) => a + r.trips, 0) : null;
   $('clKpi').innerHTML = kpiHtml([
@@ -12882,7 +12969,7 @@ function renderProfit(){
   const d = CL.profit, body = $('prTbl').tBodies[0];
   if(!d){ $('prKpi').innerHTML = ''; $('prNote').textContent = 'Working out the profit…'; body.innerHTML = '<tr><td colspan="7" class="empty-cell">Loading…</td></tr>'; return; }
   const q = $('prFind').value.toLowerCase().trim(), T = d.totals;
-  const list = d.trucks.filter(x => !q || [x.truckNo, x.plateNo].join(' ').toLowerCase().includes(q));
+  const list = d.trucks.filter(x => findHit('prFind', q, {truck:x.truckNo, plate:x.plateNo}, [x.truckNo, x.plateNo]));
   $('prKpi').innerHTML = kpiHtml([
     [pesoTxt(T.revenue), 'Revenue', `${T.trips} trips at their route rate`],
     [pesoTxt(T.budget), 'Trip budgets', 'BUDGET of each trip'],
@@ -12978,8 +13065,9 @@ function renderDisb(){
   const data = DB.data, q = $('dbFind').value.toLowerCase().trim();
   const acc = fillAcctSelect($('dbAcct'));
   const all = (S.dbTrips || []).map(t => dbRow(t))   /* not .map(dbRow): map's index went in as the entries list and broke the whole tab (14.5.4) */.filter(r => (isTrip(r.t) && r.budget > 0) || r.es.length);
-  const rows = all.filter(r => tripInAcct(r.t, acc) && (!q || [r.t.truckNo, r.t.plateNo, r.t.customer, r.t.destination, crewText(r.t), r.t.tripId,
-    ...r.es.map(e => [e.entryNo, e.paidTo, e.txnNo].join(' '))].join(' ').toLowerCase().includes(q)));
+  const rows = all.filter(r => tripInAcct(r.t, acc) && findHit('dbFind', q, {truck:r.t.truckNo, plate:r.t.plateNo, crew:crewText(r.t), customer:r.t.customer, destination:r.t.destination, trip:r.t.tripId,
+    entry:r.es.map(e => [e.entryNo, e.paidTo, e.txnNo].join(' '))}, [r.t.truckNo, r.t.plateNo, r.t.customer, r.t.destination, crewText(r.t), r.t.tripId,
+    ...r.es.map(e => [e.entryNo, e.paidTo, e.txnNo].join(' '))]));
   const F = {tosend: r => r.left > 0, sent: r => r.sent > 0 && r.left===0, all: () => true};
   if(!F[DB.filter]) DB.filter = 'tosend';
   const sum = (xs, f) => xs.reduce((x, r) => x + f(r), 0), byType = {};
@@ -14646,7 +14734,7 @@ async function alertsBack(k){
 // ---------- 1 Today: what needs this person now ----------
 const HM = {at: 0};
 const HOME_STUCK_H = 4;
-function homeRange(){ const today = TODAY(), wide = may('billing') || may('payroll') || may('pod') || may('podStats') || may('viewAll'); return [addDays(today, wide ? -14 : -2), today]; }
+function homeRange(){ const today = TODAY(), wide = may('billing') || may('billView') || may('payroll') || may('pod') || may('podStats') || may('viewAll'); return [addDays(today, wide ? -14 : -2), today]; }
 function loadHome(force){
   const body = $('homeBody'); if(!body || !S.me) return;
   $('homeHi').textContent = 'Needs you now';
@@ -14691,7 +14779,7 @@ function homeSecs(){
   }
   if(NOSHIP_ROLES.includes(S.me.role)) secs.push({k: 'ns', ic: '#', t: 'Trips without a shipment number (past 7 days)', hint: 'Open each trip and type the shipment number.', list: (HM.ns || []).map(t => uxTrip(t.key) || t).filter(t => !String(t.shipmentNo || '').trim())});
   if(may('pod') || may('podStats')) secs.push({k: 'pl', ic: '📄', t: `Late documents (${(HM.pl && HM.pl.days) || 3}+ days)`, hint: 'Completed, not yet endorsed to Billing. Send the list to the crew.', list: ((HM.pl && HM.pl.trips) || []).map(t => uxTrip(null, t.tripId) || {...t, key: t.tripId}), why: t => { const x = ((HM.pl && HM.pl.trips) || []).find(y => y.tripId === t.tripId); return x ? `<b>${x.age} days</b> · ${esc(x.status)}` : ''; }, act: 'pl', story: true});
-  if(may('billing')) secs.push({k: 'bill', ic: '🧾', t: 'Endorsed by POD, not checked by Billing', hint: 'From the last 14 days. Open Billing to check them.', list: trips.filter(t => t.podAt && !t.billAt), why: t => 'Endorsed ' + esc(podWhen(whoSplit(t.podAt).at || t.podAt)), go: 'billing', story: true});
+  if(may('billing') || may('billView')) secs.push({k: 'bill', ic: '🧾', t: 'Endorsed by POD, not checked by Billing', hint: 'From the last 14 days. Open Billing to check them.', list: trips.filter(t => t.podAt && !t.billAt), why: t => 'Endorsed ' + esc(podWhen(whoSplit(t.podAt).at || t.podAt)), go: 'billing', story: true});
   if(may('payroll')){
     const counted = trips.filter(t => isTrip(t) && t.date < today);
     secs.push({k: 'crew', ic: '👷', t: 'Trips with no driver or helper (last 14 days)', hint: 'These would be paid to nobody. Ask dispatch to fill in the crew.', list: counted.filter(t => !String(t.driver || '').trim() || !String(t.helper1 || '').trim()), why: t => !String(t.driver || '').trim() ? '<b style="color:#B91C1C">No driver</b>' : 'No helper', story: true});
