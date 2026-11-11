@@ -3303,7 +3303,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
+const WRITES = ['deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 /* Save buttons (MANU 2026-11-06 pick 13): the button pressed just before a save gets a spinner, then a green check,
@@ -4047,6 +4047,7 @@ function loadBoot(){
     S.nsPre = r.ns ? {at: Date.now(), v: r.ns} : null;   // trips of past days without a shipment number (TL / Supervisor)
     if(r.lw){ S.lw = r.lw; S.lwAt = Date.now(); renderLw(); }
     IR.v = ''; IR.list = []; IR.unread = 0; if(may('irView')) setTimeout(loadIr, 1200); else renderLw();   // incident reports on the bell
+    if(r.boot.nameCaseDue && may('routes')) setTimeout(autoNameCase, 4000);   // one-time proper-case names (MANU 2026-11-11)
     signinFlow();   // sign-in video, first-time tour, then ONE Today's alerts box (MANU 2026-11-07; the overdue lock still comes first when it applies)
     setTimeout(prefetchTabs, 2500);
   }).catch(e => {
@@ -4391,7 +4392,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.65, APP_VERSION_DATE = '2026-11-10';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.66, APP_VERSION_DATE = '2026-11-11';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4422,6 +4423,13 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-11 01:31 UTC "convert all text formats of source and destination … Coca Cola Canlubang not COCA COLA CANLUBANG",
+  // "auto change format of source and destinations in the database", "also in clients, user should be able to edit client details"
+  {v:14.66, d:'2026-11-11', items:[
+    'Source and destination names are now written in proper case, for example Coca Cola Canlubang Plant instead of COCA COLA CANLUBANG PLANT. Short codes stay in capitals: the client before the bar (CCBPI | …), DC, SM, BPSI, PTC.',
+    'The names already saved change by themselves: trips, CLIENT LIST, rates, trip hardship and addresses. A copy of GENERAL DATABASE is kept in the backup folder first. New routes and trips are saved the same way.',
+    'Clients: tap a client to change its name and account (Admin and Billing), besides its contact details, rates and km. A new name is changed on all its routes, trips, rates and payments.'
+  ]},
   // MANU 2026-11-10 18:02 UTC "on incident report, there should be a thread of responses, a supervisor, team leader and dispatch should be able to respond and attach files"
   {v:14.65, d:'2026-11-10', items:[
     'Incident reports: each report now has a Responses thread under it. Supervisor, Team leader, Dispatcher, HR, Admin and the person who sent the report can respond.',
@@ -6188,6 +6196,40 @@ const NA_ESC_ISSUES = ['No crew assigned', 'No shipment yet', 'Truck problem', '
 /** Fresh lists from the server (CLIENT LIST routes, customers, trucks, crew): MANU 2026-11-04 "when source and destination is added,
  *  even if you refresh it doesn't show at truckplan add trip unless you sign out and sign in". Truck Plan ↻ Refresh, Add trip
  *  (at most every 2 minutes) and a route saved in Clients call it; returns a promise. */
+/* Proper-case names (MANU 2026-11-11 "format should be for example Coca Cola Canlubang not COCA COLA CANLUBANG"): the same rule as
+   properName_ in Code.gs. The first Admin or Billing user to open this version starts the one-time change of every saved source and
+   destination (the server keeps a copy of GENERAL DATABASE first); the nightly job keeps it so after. */
+const PN_UPPER = new Set('CCBPI BPSI PTC DC SM SMC URC CDC RDC NCR AUX CLR JMTI FTI LTI CPIP LISP FCIE CEPZ PEZA EPZA SLEX NLEX SCTEX TPLEX CALAX CAVITEX MCX NAIA MOA BGC QC UP PUP USA PH HQ WH DTI NFA BIR LGU PSI CPI IPI MWSS NSC SRS PMC DMCI CIIP LIIP ABS CBN GMA PLDT MRT LRT SPC OPC SMDC IDTS POD JTI CDO ICTSI UTI NCCC TPI RFM SPI CCPI ATI PCPPI ECQ OK'.split(' '));
+const PN_TITLE = new Set('ST STS BLVD BRGY BLDG HWY MT DR JR SR MR MRS CTR PKWY RD PL NG SN'.split(' ')), PN_SMALL = new Set(['AND','OF','THE','NG']);
+function properWord(w, first){
+  if(!/[A-Za-zÀ-ɏ]/.test(w)) return w;
+  const up = w.toUpperCase(), low = w.toLowerCase(), base = up.replace(/'.*$/, '');
+  if(w!==up && w!==low) return w;
+  if(w===low && w!==up) return !first && PN_SMALL.has(up) ? low : w.charAt(0).toUpperCase() + w.slice(1);
+  if(/\d/.test(w)) return /^\d+(ST|ND|RD|TH)$/.test(w) ? w.toLowerCase() : w;
+  if(PN_UPPER.has(base) || base.length===1) return w;
+  if(/^(II|III|IV|VI|VII|VIII|IX|XI|XII|XIII|XIV|XV)$/.test(base)) return w;
+  const plain = base.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  if(!PN_TITLE.has(base) && base.length <= 5 && !/[AEIOUY]/.test(plain)) return w;
+  if(!first && PN_SMALL.has(base)) return low;
+  if(/^MC[A-Z]{3,}$/.test(base)) return 'Mc' + base.charAt(2) + low.slice(3);
+  return up.charAt(0) + low.slice(1);
+}
+function properName(v){
+  if(typeof v!=='string') return v;
+  const s = v.replace(/\s+/g, ' ').trim(); if(!s) return v;
+  const pl = t => { let n = 0; return t.replace(/[A-Za-zÀ-ɏ0-9]+(?:['’][A-Za-z]+)?/g, w => properWord(w, n++===0)); };
+  const i = s.indexOf('|'); if(i < 0) return pl(s);
+  const c = s.slice(0, i).trim(); return (c ? c + ' | ' : '| ') + pl(s.slice(i + 1).trim());
+}
+function autoNameCase(){
+  if(autoNameCase.on) return; autoNameCase.on = true;
+  call('fixNameCase').then(r => {
+    if(!r || !r.total) return;
+    toast(`${fmtN(r.total)} saved source and destination names changed to proper case, e.g. Coca Cola Canlubang`, false, 6000);
+    refreshBoot(); if(S.tab==='clients') call('clientBook').then(d => { CL.data = d; afterBook(); }).catch(() => {});
+  }).catch(e => console.warn('fixNameCase: ' + e.message));
+}
 function refreshBoot(minAge){
   if(!S.boot || !TOKEN) return Promise.resolve();
   if(minAge && Date.now() - (S.bootAt || 0) < minAge) return Promise.resolve();
@@ -12034,6 +12076,9 @@ function openClientCard(c){
     + (ed ? `<td class="cl-new"><input class="cl-rate" data-k="${k}" inputmode="decimal" placeholder="₱ new rate" autocomplete="off" aria-label="New rate"><span>starts on</span><input class="cl-from" data-k="${k}" type="date" value="${m0}" aria-label="Starts on"></td>` : '') + '</tr>').join('');
   openPop(`Client · ${c.client}`, `${esc(acctTxt(c.account))} · ${c.routes.length} route${c.routes.length===1 ? '' : 's'} in the CLIENT LIST`, `
     <div class="ds-sum"><span>Billed <b>${pesoTxt(c.bal.billed)}</b></span><span>Paid <b>${pesoTxt(c.bal.paid)}</b></span><span>Balance owed <b>${pesoTxt(c.bal.owed)}</b></span><span>To bill <b>${pesoTxt(c.bal.toBill)}</b></span></div>
+    ${ed && may('routes') ? `<h4 style="margin:12px 0 6px">Client</h4>
+    <div class="form"><label class="f">Client name<input id="ciName" value="${esc(c.client)}" autocomplete="off"></label><label class="f">Account<select id="ciAcct"><option value="">By trip rule</option>${CLIENT_ACCTS.map(a => `<option value="${esc(a)}"${a===(c.account || '') ? ' selected' : ''}>${esc(acctTxt(a))}</option>`).join('')}</select></label>
+      <p class="hint full" style="margin:0">A new name is changed on every route, trip, rate and payment of this client. The account decides where its trips count.</p></div>` : ''}
     <h4 style="margin:12px 0 6px">Contact details</h4>
     <div class="form">${fld('ciContact', 'Contact person', i.contact)}${fld('ciPhone', 'Phone', i.phone, {mode:'tel'})}${fld('ciEmail', 'Email', i.email, {mode:'email'})}${fld('ciTin', 'TIN', i.tin)}${fld('ciTerms', 'Terms (days to pay)', i.terms, {mode:'numeric'})}${fld('ciAddress', 'Billing address', i.address, {full:1})}</div>
     <h4 style="margin:14px 0 6px">Rate per trip</h4>
@@ -12049,30 +12094,37 @@ function openClientCard(c){
     const info = {client:c.client, contact:v('ciContact'), phone:v('ciPhone'), email:v('ciEmail'), tin:v('ciTin'), terms:v('ciTerms'), address:v('ciAddress')};
     const was = {contact:i.contact || '', phone:i.phone || '', email:i.email || '', tin:i.tin || '', terms:String(i.terms ?? ''), address:i.address || ''};
     const infoChanged = ['contact','phone','email','tin','terms','address'].some(k => info[k]!==was[k]);
+    // client name and account (MANU 2026-11-11 "in clients, user should be able to edit client details")
+    const nm = $('ciName') ? $('ciName').value.replace(/\|/g, ' ').replace(/\s+/g, ' ').trim().toUpperCase() : c.client, ac = $('ciAcct') ? $('ciAcct').value : (c.account || '');
+    if($('ciName') && !nm) return toast('Type the client name.', true);
+    const detChanged = !!$('ciName') && (nm!==c.client || ac!==(c.account || ''));
+    const ren = v => nm!==c.client && v.includes('|') && nameKey(v.slice(0, v.indexOf('|')))===nameKey(c.client) ? nm + ' | ' + v.slice(v.indexOf('|') + 1).trim() : v;
     const rates = [];
     for(const inp of document.querySelectorAll('#popBody .cl-rate')){
       const raw = inp.value.replace(/[₱,\s]/g, ''); if(!raw) continue;
       const r = c.routes[inp.dataset.k], rate = Number(raw), from = document.querySelector(`#popBody .cl-from[data-k="${inp.dataset.k}"]`).value;
       if(!(rate > 0)) return toast(`Check the rate for ${r.source} → ${plainDest(r.destination)}.`, true);
       if(!from) return toast(`Pick the date the rate starts for ${r.source} → ${plainDest(r.destination)}.`, true);
-      rates.push({source:r.source, destination:r.destination, rate, from});
+      rates.push({source:ren(r.source), destination:ren(r.destination), rate, from});
     }
     const kms = [];
     for(const inp of document.querySelectorAll('#popBody .cl-km')){
       const r = c.routes[inp.dataset.k], raw = inp.value.replace(/[,\s]/g, ''); if(String(raw)===String(r.km || '')) continue;
       const km = Number(raw); if(!(km > 0)) return toast(`Type the km for ${r.source} → ${plainDest(r.destination)}.`, true);
-      if(km!==Number(r.km)) kms.push({source:r.source, destination:r.destination, km});
+      if(km!==Number(r.km)) kms.push({source:ren(r.source), destination:ren(r.destination), km});
     }
-    if(!infoChanged && !rates.length && !kms.length) return toast('Nothing changed.');
+    if(!detChanged && !infoChanged && !rates.length && !kms.length) return toast('Nothing changed.');
     const btn = $('ciSave'); btn.disabled = true; btn.textContent = 'Saving…';
     try{
+      if(detChanged){ CL.data = await call('saveClientDetails', {client:c.client, name:nm, account:ac}); info.client = nm; }
       if(infoChanged) CL.data = await call('saveClientInfo', info);
-      if(rates.length) CL.data = await call('saveRates', c.client, rates);
+      if(rates.length) CL.data = await call('saveRates', nm, rates);
       if(kms.length){ await call('saveRouteKm', kms); CL.data = await call('clientBook'); loadNoDist();
         if(S.boot && S.boot.km) kms.forEach(r => { S.boot.km[nameKey(r.source) + '|' + nameKey(r.destination)] = r.km; }); }
       CL.soaKey = ''; CL.prKey = '';
       closePop(); afterBook();
-      toast([infoChanged ? 'Contact details saved' : '', rates.length ? `${rates.length} rate${rates.length===1 ? '' : 's'} saved` : '', kms.length ? `${kms.length} distance${kms.length===1 ? '' : 's'} saved` : ''].filter(Boolean).join(' · '));
+      if(detChanged) refreshBoot();   // Add trip lists and trip counts use the new name / account
+      toast([detChanged ? (nm!==c.client ? `Renamed to ${nm}` : 'Account saved') : '', infoChanged ? 'Contact details saved' : '', rates.length ? `${rates.length} rate${rates.length===1 ? '' : 's'} saved` : '', kms.length ? `${kms.length} distance${kms.length===1 ? '' : 's'} saved` : ''].filter(Boolean).join(' · '));
     }catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Save'; }
   };
 }
@@ -12097,7 +12149,7 @@ function openAddRoute(){
   const isNew = () => $('arCl').value==='__new';
   const client = () => (isNew() ? $('arNew').value : $('arCl').value).replace(/\|/g, ' ').replace(/\s+/g, ' ').trim().toUpperCase();
   const prev = () => { const c = client(), pl = placeOf($('arDst').value), src = $('arSrc').value.trim();
-    $('arPrev').textContent = src && c && pl ? `Saves: ${src} → ${c} | ${pl}${Number($('arKm').value) > 0 ? ' · ' + $('arKm').value.trim() + ' km' : ''}` : ''; };
+    $('arPrev').textContent = src && c && pl ? `Saves: ${properName(src)} → ${c} | ${properName(pl)}${Number($('arKm').value) > 0 ? ' · ' + $('arKm').value.trim() + ' km' : ''}` : ''; };
   $('arCl').onchange = () => { $('arNewW').hidden = $('arAcctW').hidden = !isNew(); prev(); };
   ['arSrc', 'arNew', 'arDst', 'arKm'].forEach(id => { $(id).oninput = prev; });
   // a place that already has an address fills it in (MANU 2026-11-04 addresses)
@@ -12107,7 +12159,7 @@ function openAddRoute(){
   ['arSrc', 'arDst', 'arNew'].forEach(id => $(id).addEventListener('change', fillAd)); $('arCl').addEventListener('change', fillAd);
   ['arSrcAd', 'arDstAd'].forEach(id => { $(id).oninput = () => { $(id).dataset.typed = '1'; }; });
   $('arSave').onclick = async () => {
-    const src = $('arSrc').value.trim(), c = client(), pl = placeOf($('arDst').value), km = Number($('arKm').value.replace(/[^0-9.]/g, ''));
+    const src = properName($('arSrc').value.trim()), c = client(), pl = properName(placeOf($('arDst').value)), km = Number($('arKm').value.replace(/[^0-9.]/g, ''));
     if(!src) return toast('Type the source.', true);
     if(!c) return toast(isNew() ? 'Type the new client name.' : 'Pick the client.', true);
     if(isNew() && !$('arAcct').value) return toast('Pick the account for the new client.', true);
