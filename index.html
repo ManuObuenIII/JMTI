@@ -794,6 +794,38 @@ table.xl tr.routehd.mnthd span{color:#B91C1C}
 .fm-over td{background:#FEF2F2}
 .fm-low{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#FEE2E2;color:#B91C1C;font-size:11px;font-weight:700}
 .fm-open{color:#64748B;font-weight:500}
+/* Charges and IR tab + Charges Transmittal Form (MANU 2026-11-13) */
+.chg-tbl td,.chg-tbl th{white-space:normal;vertical-align:top}
+.chg-tbl td{min-width:70px}
+.chg-tbl th,.chg-tbl td{word-break:normal;overflow-wrap:break-word;hyphens:none}
+.chg-tbl th{min-width:92px}
+.chg-tbl tr.chg-first td{border-top:2px solid #C7D2FE}
+.chg-tbl td.chg-txt{min-width:200px}
+.chg-tbl td.chg-ok{color:#15803D;font-weight:700}
+.chg-tbl td.chg-old,.chg-oldtxt{color:#B91C1C;font-weight:700}
+.chg-ty{color:#7C2D12}
+#chPanel.chg-wide .chg-tbl{min-width:1700px}
+.chg-form .chg-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;align-items:baseline;border-bottom:2px solid #0A1F8F;padding-bottom:6px;margin-bottom:8px}
+.chg-form .chg-top b{font-size:16px;color:#0A1F8F;letter-spacing:.5px}
+.chg-form .chg-top span{font-size:11px;color:#64748B}
+.chg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 10px}
+.chg-grid .f.full{grid-column:1/-1}
+.chg-grid .f{display:flex;flex-direction:column;gap:3px;font-size:12px;min-width:0}
+.chg-grid input,.chg-grid select{width:100%;min-width:0}
+.chg-sub{margin:14px 0 6px;color:#0A1F8F;font-size:13.5px}
+.chg-item,.chg-rel{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px;background:rgba(232,238,255,.45)}
+.chg-item-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.chg-rel b{display:block;margin-bottom:6px;white-space:normal}
+.chg-total{margin:10px 0;font-size:14px;text-align:right}
+.chg-total b{font-size:17px;color:#0A1F8F}
+.chg-age{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:4px 0 8px}
+.chg-age span{border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:var(--card);font-size:11.5px;color:#475569;white-space:normal}
+.chg-age span b{display:block;font-size:18px;color:#0A1F8F}
+.chg-age span small{display:block;color:#0A1F8F;font-weight:600}
+.chg-age span.old{border-color:#FCA5A5;background:#FEF2F2}
+.chg-age span.old b{color:#B91C1C}
+.chg-age-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+@media (max-width:700px){.chg-age{grid-template-columns:repeat(2,minmax(0,1fr))} #v-charges .bar .f.grow{flex:1 1 100%}}
 table.xl tbody tr.acchd.garhd td{background:#E2E8F0;color:#1E293B;border-color:#CBD5E1}
 table.xl tbody tr.acchd.nothd td{background:#FEF3C7;color:#78350F;border-color:#FCD34D}
 table.xl tbody tr.acchd.aheadhd td{background:#EDE9FE;color:#4C1D95;border-color:#C4B5FD}
@@ -2433,6 +2465,7 @@ table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
     </div>
     <div class="secrow"><button class="secsave" type="button" data-sec="kpis" data-title="Key numbers">Save key numbers</button></div>
     <div class="kstrip" id="kstrip"><div class="kpis" id="kpis"></div><div class="alerts" id="alerts"></div></div>
+    <div class="panel gar" id="chgAgePanel" hidden><h3>Charges and incident reports aging <span class="sub" id="chgAgeSub"></span></h3><div id="chgAgeBody"></div></div>
     <div class="panel gar" id="garPanel"><h3>Trucks in garage <span class="sub" id="garSub"></span></h3><div class="gar-row" id="garRow"></div></div>
     <div class="panel gar" id="noTripPanel"><h3>Trucks without a trip <span class="sub" id="noTripSub"></span><button class="secsave" type="button" id="noTripJpg" data-ready="1" title="Download this list as a JPEG picture">JPEG report</button></h3><div class="gar-row" id="noTripRow"></div></div>
     <div class="panel gar" id="noDrvPanel"><h3>Trucks without a driver <span class="sub" id="noDrvSub"></span><button class="secsave" type="button" id="noDrvJpg" data-ready="1" title="Download this list as a JPEG picture">JPEG report</button></h3><div class="gar-row" id="noDrvRow"></div></div>
@@ -2670,6 +2703,24 @@ table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
     <div class="panel" style="padding:0" id="fmPanel"><div class="tbl-wrap"><table class="poptbl fm-tbl"><thead id="fmHead"><tr><th>Refuel</th><th>Trip</th><th class="n">Liters</th><th class="n">Km</th><th class="n">km/L</th></tr></thead><tbody id="fmBody"></tbody></table></div></div>
   </section>
 
+  <!-- ================= CHARGES AND INCIDENT REPORTS (MANU 2026-11-13) ================= -->
+  <section class="view" id="v-charges">
+    <div class="bar">
+      <div class="chips" id="chRange"></div>
+      <label class="f">From<input type="date" id="chFrom"></label>
+      <label class="f">To<input type="date" id="chTo"></label>
+      <label class="f">Type<select id="chType"><option value="">All types</option><option value="CHARGE">Charges</option><option value="DAMAGE">Damages</option><option value="PENALTY">Penalties</option></select></label>
+      <label class="f grow">Find<input id="chFind" placeholder="Name, truck, invoice, item, IR no."></label>
+      <button class="btn" type="button" id="chAdd" hidden>+ Add damage or penalty</button>
+      <button class="btn alt" type="button" id="chCsv">Download CSV</button>
+      <button class="btn alt" type="button" id="chRefresh" title="Load the newest from the sheet">↻ Refresh</button>
+    </div>
+    <div class="chips" id="chView" style="margin:0 0 10px"></div>
+    <p class="hint" id="chNote" style="margin:0 0 10px"></p>
+    <div class="kpis" id="chKpis"></div>
+    <div class="panel" style="padding:0" id="chPanel"><div class="tbl-wrap"><table class="poptbl fm-tbl chg-tbl"><thead id="chHead"></thead><tbody id="chBody"></tbody></table></div></div>
+  </section>
+
   <!-- ================= POD ================= -->
   <section class="view" id="v-pod">
     <div class="bar">
@@ -2776,15 +2827,7 @@ table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
   <section class="view" id="v-manpower">
     <div class="cols2">
       <div>
-        <div class="panel" id="irSumBox" hidden style="margin-bottom:14px">
-          <div class="bar" style="flex-wrap:wrap;align-items:flex-end">
-            <h3 style="margin:0;flex:1 1 200px">Incident reports summary</h3>
-            <label class="f">Dates<select id="irsSpan"><option value="all">All</option><option value="month">This month</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="year">This year</option></select></label>
-            <button class="btn alt" type="button" id="irsAll">All incident reports</button>
-            <button class="btn alt" type="button" id="irsRef" title="Get the newest incident reports">↻ Refresh</button>
-          </div>
-          <div id="irsBody"><p class="hint">Loading…</p></div>
-        </div>
+        <!-- incident reports summary removed from Manpower (MANU 2026-11-13 "remove incident report summary from manpower"): it is on the Charges and IR tab -->
         <div class="bar"><label class="f grow">Find<input id="mpFind" placeholder="Name or ID"></label><button class="btn alt" type="button" id="mpRefresh" style="align-self:flex-end" hidden title="Set drivers and helpers with no trip for 30 days to INACTIVE">↻ Refresh status</button></div>
         <div class="chips" id="mpChips" style="margin-bottom:10px"></div>
         <div class="hint-line" id="mpNote" style="margin:0 0 10px"></div>
@@ -3106,7 +3149,7 @@ const MS_KEYS = ['srcArrive','loadStart','loadEnd','srcDepart','destArrive','unl
 const MS_COL = {srcArrive:12,loadStart:13,loadEnd:14,srcDepart:15,destArrive:16,unloadStart:17,unloadEnd:18,destDepart:19};
 const MS_LABEL = {srcArrive:'Source time in',loadStart:'Loading start',loadEnd:'Loading end',srcDepart:'Source time out',
   destArrive:'Destination time in',unloadStart:'Unloading start',unloadEnd:'Unloading end',destDepart:'Destination time out'};
-const TAB_NAME = {home:'Today',dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users',analytics:'System analytics'};
+const TAB_NAME = {home:'Today',dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',charges:'Charges and IR',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users',analytics:'System analytics'};
 const NO_AUTH = ['login','getAppUrl','appVersion'];
 
 const S = { sum:null, sumAt:0, sumView:'week', sumMeasure:'trips', topView:'p7', me:null, boot:null, trips:[], range:{}, tab:'', stageFilter:'', shown:150,
@@ -3374,7 +3417,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['savePlannedTrips','deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
+const WRITES = ['chargeSave','chargeDelete','savePlannedTrips','deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 /* Save buttons (MANU 2026-11-06 pick 13): the button pressed just before a save gets a spinner, then a green check,
@@ -4154,7 +4197,7 @@ function loadBoot(){
 function initOnce(){
   if(started) return;
   started = true;
-  initDashboard(); initFleet(); initAssign(); initPlanner(); initDispatcher(); initHardTab(); initFuelTab(); initUnits(); initPod(); initPodStats(); initBilling(); initBook(); initDisb(); initAcct(); initPayroll(); initManpower(); initUsers(); initAnalytics();
+  initDashboard(); initFleet(); initAssign(); initPlanner(); initDispatcher(); initHardTab(); initFuelTab(); initCharges(); initUnits(); initPod(); initPodStats(); initBilling(); initBook(); initDisb(); initAcct(); initPayroll(); initManpower(); initUsers(); initAnalytics();
   initDrawer();
   $('loadRetry').onclick = loadBoot;
   // Fewer Google calls (MANU 2026-11-03 "make it fast and doesnt consume the google calls"): once the server sends the trips
@@ -4304,8 +4347,8 @@ function showTab(t){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id==='v-'+view));
   { const v = $('v-'+view); if(v){ v.classList.remove('anim-in'); void v.offsetWidth; v.classList.add('anim-in'); clearTimeout(showTab._a); showTab._a = setTimeout(() => v.classList.remove('anim-in'), 1500); } }   // animations on tab open only (MANU 2026-11-06)
   if(t==='maintenance') return loadMaintenance();
-  if(!S.boot && !['home','manpower','users','analytics'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
-  ({home:loadHome, dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, analytics:loadAnalytics, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
+  if(!S.boot && !['home','manpower','users','analytics','charges'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
+  ({home:loadHome, dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, charges:loadCharges, analytics:loadAnalytics, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
   if(['dashboard','manpower'].includes(t) || (t==='fleet' && may('fleet'))) loadReminders();
 }
 
@@ -4486,7 +4529,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.79, APP_VERSION_DATE = '2026-11-11';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.8, APP_VERSION_DATE = '2026-11-13';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4517,6 +4560,15 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-13 "generate new tab for Charges and Incident Reports summary, charges are based on POD column charge invoice" + the form, Book1.xlsx, aging, damages and penalties
+  {v:14.8, d:'2026-11-13', items:[
+    'New tab: Charges and IR. Everyone can see it. It shows all charges by month in the CHARGES 2026 layout (RDD date, truck, DTTR, invoice, items, pieces, unit price, total charge, expiry, crew, remarks, released date, items released, endorsed date), plus Per person, Per account, Per truck, Aging and Incident reports.',
+    'In POD, tap a CHARGE INVOICE cell to open the Charges Transmittal Form for that trip. The trip details are filled in; add the items and save. It is saved to the CHARGES sheet, and its invoice no. shows in the cell. Billing can open it to view.',
+    'Damages and penalties: on the Charges and IR tab, tap + Add damage or penalty to add one for a driver or helper, not tied to a trip.',
+    'Only POD, POD Head, HR and Admin can add or change charges. Everyone else can only view them.',
+    'Aging of charges not cleared yet and of incident reports waiting on HR shows on Today and on the Dashboard.',
+    'The incident reports summary is no longer in Manpower. It is on the Charges and IR tab (Incident reports, Per person, Aging).'
+  ]},
   // MANU 2026-11-11 13:05 UTC "add generate pdf report on fuel monitoring"
   {v:14.79, d:'2026-11-11', items:[
     'Fuel monitoring has a Generate PDF report button. The PDF shows what the tab shows now: the dates, the account, the Find box, the chip picked and the view (Each refuel, Same trip average or Per destination).',
@@ -5113,6 +5165,7 @@ function loadDashboard(silent){
   if(DRK.period==='dash'){ $('drkFrom').value = from; $('drkTo').value = to; }
   loadDriverRank();
   loadGarLast(to);
+  loadChgAge();   // charges and IR aging (MANU 2026-11-13)
   const cf = addDays(from, -3), ct = addDays(to, 3);
   document.querySelectorAll('.cmpf').forEach(e => e.hidden = !S.cmp);
   if(S.cmp) loadLastYear(from, to);
@@ -7579,6 +7632,7 @@ function initPod(){
     if(e.target.closest('td[data-pst]')) return openPodStatus(t, e.target.closest('td'));
     if(e.target.closest('td[data-pdoc]')) return openPodDocs(t, e.target.closest('td'));
     if(e.target.closest('td[data-prem]')) return openPodRemarks(t, e.target.closest('td'));
+    if(e.target.closest('td[data-chg]')) return openCharge(t);   // Charges Transmittal Form (MANU 2026-11-13)
     if(e.target.closest('td[data-pc]') && may('pod')) return openPc(t, e.target.closest('td'), 'podSave');
     openPod(t); };
   bindViews($('drBody'));
@@ -8025,7 +8079,8 @@ const docDateTd = (t, ed) => { const d = docDayOf(t), by = whoSplit(t.pcAt).by;
   return `<td class="${ed ? 'ed' : ''}" ${ed ? 'data-pc="docDate" title="Tap to pick the document date"' : ''}>${d ? esc(fmtDay(d)) : ''}${d && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`; };
 const PC_TH = PC_LABELS.map(l => `<th>${l}</th>`).join('') + '<th>Status changes</th>', PC_N = PC_KEYS.length + 1;
 const pcTds = (t, ed) => { const by = whoSplit(t.pcAt).by;
-  return PC_KEYS.map(k => `<td class="${ed ? 'ed' : ''}" ${ed ? `data-pc="${k}" title="Tap to type"` : ''} style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`).join('') + stampTd(t); };
+  return PC_KEYS.map(k => k==='chargeInv' ? `<td class="ed" data-chg="1" title="Tap to open the Charges Transmittal Form" style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}${t[k] ? '' : '<small>+ charges form</small>'}</td>`   // MANU 2026-11-13: the cell opens the Charges Transmittal Form
+    : `<td class="${ed ? 'ed' : ''}" ${ed ? `data-pc="${k}" title="Tap to type"` : ''} style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`).join('') + stampTd(t); };
 const pcCsv = t => PC_KEYS.map(k => t[k] || '').concat([whoText(t.pcAt), stampCsv(t)]);
 const PC_CSV_HEAD = PC_LABELS.concat(['Encoded', 'Status changes']);
 /** POD or Billing table: tap a Document date or IDTS … CHARGE INVOICE cell to type them all (fn = podSave or billingSave). */
@@ -8035,20 +8090,393 @@ function openPc(t, td, fn){
   const w = whoSplit(t.pcAt);
   podPop(td, `<div class="ce-h"><b>Documents info</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div>
     <label class="f">Document date<input id="pc_docDate" type="date" value="${esc(docDayOf(t))}"></label>
-    ${PC_KEYS.map((k, i) => `<label class="f">${PC_LABELS[i]}<input id="pc_${k}" value="${esc(t[k] || '')}" autocomplete="off"></label>`).join('')}
+    ${PC_KEYS.map((k, i) => k==='chargeInv' ? '' : `<label class="f">${PC_LABELS[i]}<input id="pc_${k}" value="${esc(t[k] || '')}" autocomplete="off"></label>`).join('')}
     ${w.at ? `<div class="hint">Last encoded ${esc(podWhen(w.at))}${w.by ? ' by ' + esc(w.by) : ''}</div>` : ''}
     <div class="ce-f"><span style="flex:1"></span><button class="btn alt" type="button" id="pcCancel">Cancel</button> <button class="btn" type="button" id="pcSave">Save</button></div>`, true);
   const first = $('pc_' + (td.dataset.pc || 'idts')); if(first) first.focus();
   $('pcCancel').onclick = closeCellEditor;
   $('pcSave').onclick = () => {
     const data = {};
-    PC_KEYS.forEach(k => { const v = $('pc_' + k).value.trim().toUpperCase().replace(/\s+/g, ' '); if(v !== String(t[k] || '')) data[k] = v; });
+    PC_KEYS.filter(k => k!=='chargeInv').forEach(k => { const v = $('pc_' + k).value.trim().toUpperCase().replace(/\s+/g, ' '); if(v !== String(t[k] || '')) data[k] = v; });
     const dd = $('pc_docDate').value || ''; if(dd !== docDayOf(t)) data.docDate = dd;
     closeCellEditor();
     if(!Object.keys(data).length) return toast('Nothing changed');
     saveOptimistic({...t, ...data, pcAt: nowStamp() + ' · ' + S.me.name}, t, () => callQ(fn, refOf(t), data), () => 'Saved');
   };
 }
+/* ===== Charges (MANU 2026-11-13 "generate new tab for Charges and Incident Reports summary, charges are based on POD column charge invoice",
+   "when charge invoice cell is clicked in POD, pop-up this form, this will be recorded to charges sheet", "and shown on charges tab",
+   "charges and IR should be viewed by everyone", "summary should include these details" + Book1.xlsx CHARGES 2026).
+   Code.gs chargeGet / chargeSave / chargeDelete / chargeList, sheet CHARGES (one row per item). Tapping CHARGE INVOICE in POD or Billing
+   opens the Charges Transmittal Form for that trip (filled in from the trip); POD, POD HEAD and Admin save it (CAN.chargeEdit), everyone
+   else sees it read only. The form's invoice no. (else its CT no.) goes into the trip's CHARGE INVOICE cell. ===== */
+const CHG = {data:null, view:'sheet', filter:'all', k:''};
+const CHG_CREW = [['driver', 'Driver'], ['helper1', 'Helper 1'], ['helper2', 'Helper 2']];
+const chgMoney = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const chgPrice = n => n ? Number(n).toLocaleString('en-PH', {maximumFractionDigits: 4}) : '';
+const chgDay = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? fmtDay(v) : String(v || '');
+const CHG_AGE = [[0, 30, '0 to 30 days'], [31, 60, '31 to 60 days'], [61, 90, '61 to 90 days'], [91, 1e9, 'Over 90 days']];   // same as Code.gs CHG_AGE
+const chgBucket = n => CHG_AGE.findIndex(b => n >= b[0] && n <= b[1]);
+const chgDaysOf = d => d ? Math.max(0, Math.round((new Date(TODAY() + 'T00:00:00') - new Date(String(d).slice(0, 10) + 'T00:00:00')) / 864e5)) : 0;
+const CHG_TYPE_LBL = {CHARGE: 'Charge', DAMAGE: 'Damage', PENALTY: 'Penalty'};
+const chgOpenIr = x => x.status==='NEW' || x.status==='UNDER REVIEW';
+/** crew of a form: [{k, label, name, rel}] for the names that are filled in */
+const chgCrew = f => CHG_CREW.filter(c => f[c[0]]).map(c => ({k: c[0], label: c[1], name: f[c[0]], rel: (f.rel || {})[c[0]] || {}}));
+/** the trip a form belongs to, if this phone has it (POD / Billing lists, kept dates) */
+function chgTripOf(f){
+  const l = [].concat(S.podTrips || [], S.billTrips || []);
+  return l.find(t => t.key===f.key) || null;
+}
+const chgRefOfForm = f => { const m = /^ROW-(\d+)$/.exec(f.key || ''); return {tripId: f.tripId || '', row: m ? Number(m[1]) : undefined, date: f.tripDate, truckNo: f.truckNo, plateNo: f.plateNo, customer: f.origin, shipmentNo: f.shipmentNo}; };
+/** POD / Billing CHARGE INVOICE cell: the trip's form (asks the server for it) */
+function openCharge(t){
+  if(!t) return;
+  if(t._pending) return toast('Still saving — try again in a moment.');
+  closeCellEditor();
+  openPop('Charges Transmittal Form', 'Loading…', '<p class="hint">Loading…</p>');
+  call('chargeGet', refOf(t)).then(r => chgForm(refOf(t), t, r.form, r.canEdit, r.me))
+    .catch(e => { $('popBody').innerHTML = `<p class="hint">${esc(e.message)}</p>`; });
+}
+/** The form pop-up. ref = the trip on the server, t = the trip on this phone (or null), f = the saved form (or null) */
+function chgForm(ref, t, f, canEdit, me){
+  const ro = !canEdit, dis = ro ? ' disabled' : '';
+  const v0 = f || {rddId: t ? t.tripId || '' : '', rddDate: t ? t.date : '', truckNo: t ? t.truckNo || '' : '', plateNo: t ? t.plateNo || '' : '', shipmentNo: t ? t.shipmentNo || '' : '',
+    invoiceNo: t && t.chargeInv && !/^CT-\d+$/.test(t.chargeInv) ? t.chargeInv : '', origin: t ? t.customer || '' : '', destination: t ? t.destination || '' : '',
+    driver: t ? t.driver || '' : '', helper1: t ? t.helper1 || '' : '', helper2: t ? t.helper2 || '' : '', pod: me || (S.me && S.me.name) || '', bo: '', rel: {}, items: []};
+  const items = (f && f.items.length ? f.items : [{}]).map(x => ({...x}));
+  const inp = (id, label, val, extra, cls) => `<label class="f${cls ? ' ' + cls : ''}">${label}<input id="${id}" value="${esc(val || '')}" autocomplete="off"${extra || ''}${dis}></label>`;
+  const itemHtml = (x, i) => `<div class="chg-item" data-i="${i}"><div class="chg-item-h"><b>Item ${i + 1}</b>${ro ? '' : `<button class="btn alt sm" type="button" data-rm="${i}" title="Remove this item">Remove</button>`}</div><div class="chg-grid">
+      ${inp('ci_desc_' + i, 'Item description', x.desc, ' placeholder="e.g. ANGEL EVAP. FILLED MILK 370ml"', 'full')}
+      ${inp('ci_case_' + i, 'Qty in case', x.qtyCase, ' inputmode="decimal"')}
+      ${inp('ci_pcs_' + i, 'Qty in pieces', x.qtyPcs, ' inputmode="decimal"')}
+      ${inp('ci_price_' + i, 'Unit price (₱ per piece)', x.price ? String(x.price) : '', ' inputmode="decimal"')}
+      ${inp('ci_total_' + i, 'Total charge (₱)', x.total ? String(x.total) : '', ' inputmode="decimal" placeholder="pieces × unit price"')}
+      ${inp('ci_exp_' + i, 'Expiry date', x.exp, ' type="date"')}
+      ${inp('ci_loc_' + i, 'Item location', x.loc)}
+      ${inp('ci_iid_' + i, 'Item ID', x.itemId)}
+      ${inp('ci_inv_' + i, 'Inventory ID', x.invId)}
+      ${inp('ci_rem_' + i, 'Remarks', x.remarks, ' placeholder="e.g. DAMAGE CARTON, DENTED TINS"', 'full')}
+    </div></div>`;
+  const readItems = () => items.map((x, i) => $('ci_desc_' + i) ? {qtyCase: $('ci_case_' + i).value.trim(), qtyPcs: $('ci_pcs_' + i).value.trim(), desc: $('ci_desc_' + i).value.trim(),
+    price: $('ci_price_' + i).value.replace(/[₱,\s]/g, ''), total: $('ci_total_' + i).value.replace(/[₱,\s]/g, ''), exp: $('ci_exp_' + i).value, loc: $('ci_loc_' + i).value.trim(),
+    itemId: $('ci_iid_' + i).value.trim(), invId: $('ci_inv_' + i).value.trim(), remarks: $('ci_rem_' + i).value.trim()} : x);
+  const totalOf = l => l.reduce((a, x) => a + (x.total !== '' && x.total !== undefined && x.total !== null ? Number(x.total) || 0 : (parseFloat(x.qtyPcs) || 0) * (Number(x.price) || 0)), 0);
+  const crewNow = () => CHG_CREW.map(c => ({k: c[0], label: c[1], name: $('cf_' + c[0]) ? $('cf_' + c[0]).value.trim() : v0[c[0]], rel: (v0.rel || {})[c[0]] || {}}));
+  const relHtml = () => crewNow().filter(c => c.name).map(c => `<div class="chg-rel"><b>${esc(c.label)}: ${esc(c.name)}</b><div class="chg-grid">
+      ${inp('cr_d_' + c.k, 'Released date', c.rel.date, ' placeholder="e.g. 2026-07-04"')}
+      ${inp('cr_n_' + c.k, 'No. of items released', c.rel.items, ' placeholder="e.g. 24"')}
+      ${inp('cr_e_' + c.k, 'Endorsed date', c.rel.endorsed, ' placeholder="e.g. 2026-07-10"')}
+    </div></div>`).join('') || '<p class="hint">Type the driver or helpers above first.</p>';
+  const draw = () => {
+    $('popBody').innerHTML = `<div class="chg-form">
+      <div class="chg-top"><b>CHARGES TRANSMITTAL FORM</b><span>Rev.01 NSG · Effectivity 7/28/26</span></div>
+      ${f ? `<p class="hint" style="margin:6px 0">${esc(f.no)} · saved by ${esc(f.by || '—')}${f.at ? ' · ' + esc(f.at) : ''}</p>` : ''}
+      <div class="chg-grid">
+        ${inp('cf_rddId', 'RDD ID', v0.rddId)}
+        ${inp('cf_rddDate', 'RDD date', v0.rddDate, ' type="date"')}
+        ${inp('cf_truckNo', 'Truck no.', v0.truckNo)}
+        ${inp('cf_plateNo', 'Plate no.', v0.plateNo)}
+        ${inp('cf_shipmentNo', 'Shipment no. / DTTR', v0.shipmentNo)}
+        ${inp('cf_invoiceNo', 'Invoice no.', v0.invoiceNo, ' placeholder="Charge invoice no."')}
+        ${inp('cf_origin', 'Origin', v0.origin, '', 'full')}
+        ${inp('cf_destination', 'Destination', v0.destination, '', 'full')}
+        ${inp('cf_driver', 'Driver', v0.driver)}
+        ${inp('cf_helper1', 'Helper 1', v0.helper1)}
+        ${inp('cf_helper2', 'Helper 2', v0.helper2)}
+      </div>
+      <h4 class="chg-sub">Items</h4>
+      <div id="cfItems">${items.map(itemHtml).join('')}</div>
+      ${ro ? '' : '<button class="btn alt" type="button" id="cfAdd">+ Add item</button>'}
+      <div class="chg-total">Total charge: <b id="cfTotal">${chgMoney(totalOf(items))}</b></div>
+      <div class="chg-grid">
+        ${inp('cf_pod', 'POD in charge', v0.pod)}
+        ${inp('cf_bo', 'BO records controller', v0.bo)}
+      </div>
+      <h4 class="chg-sub">Released to the crew</h4>
+      <div id="cfRel">${relHtml()}</div>
+    </div>`;
+    if(ro) return;
+    $('cfAdd').onclick = () => { keep(); items.push({}); draw(); const i = items.length - 1; if($('ci_desc_' + i)) $('ci_desc_' + i).focus(); };
+    $('cfItems').oninput = () => { $('cfTotal').textContent = chgMoney(totalOf(readItems())); };
+    $('cfItems').onclick = e => { const b = e.target.closest('[data-rm]'); if(!b) return; keep(); items.splice(Number(b.dataset.rm), 1); if(!items.length) items.push({}); draw(); };
+    CHG_CREW.forEach(c => { $('cf_' + c[0]).onchange = () => { keepRel(); $('cfRel').innerHTML = relHtml(); }; });
+  };
+  const keepRel = () => { v0.rel = v0.rel || {}; CHG_CREW.forEach(c => { if($('cr_d_' + c[0])) v0.rel[c[0]] = {date: $('cr_d_' + c[0]).value.trim(), items: $('cr_n_' + c[0]).value.trim(), endorsed: $('cr_e_' + c[0]).value.trim()}; }); };
+  const keep = () => { readItems().forEach((x, i) => { items[i] = x; }); ['rddId','rddDate','truckNo','plateNo','shipmentNo','invoiceNo','origin','destination','driver','helper1','helper2','pod','bo'].forEach(k => { if($('cf_' + k)) v0[k] = $('cf_' + k).value; }); keepRel(); };
+  const sub = [t ? 'Truck ' + (t.truckNo || '—') : f ? 'Truck ' + (f.truckNo || '—') : '', t ? plainDest(t.destination) || t.customer : f ? plainDest(f.destination) : ''].filter(Boolean).map(esc).join(' · ') + (ro ? ' · view only' : '');
+  openPop(f ? `Charges ${f.no}` : 'Charges Transmittal Form', sub, '', `${f && canEdit ? '<button class="btn alt danger" type="button" id="cfDel">Delete form</button> ' : ''}<span style="flex:1"></span><button class="btn alt" type="button" id="cfClose">${ro ? 'Close' : 'Cancel'}</button>${ro ? '' : ' <button class="btn" type="button" id="cfSave">Save</button>'}`);
+  $('pop').dataset.kind = 'chg';
+  draw();
+  $('cfClose').onclick = () => closePop();
+  const after = (r, msg) => { if(r && r.trip){ try{ const old = t || chgTripOf(f || {}); applyLocal(r.trip, old ? old.key : r.trip.key); }catch(e){} }
+    toast(msg); closePop(); if(S.tab==='pod' && typeof renderPod==='function') renderPod(); if(S.tab==='billing' && typeof renderBilling==='function') renderBilling(); if(S.tab==='charges' || CHG.data){ CHG.data = null; CHG.k = ''; if(S.tab==='charges') loadCharges(); } };
+  if($('cfDel')) $('cfDel').onclick = async () => {
+    if(!confirm(`Delete charges form ${f.no}? Its items are removed from the CHARGES sheet.`)) return;
+    const b = $('cfDel'); b.disabled = true; b.textContent = 'Deleting…';
+    try{ const r = await call('chargeDelete', ref, t ? t.chargeInv || '' : f.invoiceNo || f.no); after(r, `${f.no} deleted`); }
+    catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Delete form'; }
+  };
+  if(!ro) $('cfSave').onclick = async () => {
+    keep();
+    const d = {rddId: v0.rddId, rddDate: v0.rddDate, truckNo: v0.truckNo, plateNo: v0.plateNo, shipmentNo: v0.shipmentNo, invoiceNo: v0.invoiceNo, origin: v0.origin, destination: v0.destination,
+      driver: v0.driver, helper1: v0.helper1, helper2: v0.helper2, pod: v0.pod, bo: v0.bo, rel: v0.rel || {}, items: items.filter(x => Object.keys(x).some(k => String(x[k] || '').trim())),
+      cur: t ? t.chargeInv || '' : (f ? f.invoiceNo || f.no : '')};
+    if(!d.items.length) return toast('Add at least one item.', true);
+    const b = $('cfSave'); b.disabled = true; b.textContent = 'Saving…';
+    try{ const r = await call('chargeSave', ref, d); after(r, `Saved ${r.form ? r.form.no + ' · ' + chgMoney(r.form.total) : ''}`); }
+    catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Save'; }
+  };
+}
+/* ---- Charges tab ---- */
+const chgKey = () => $('chFrom').value + '|' + $('chTo').value;
+function initCharges(){
+  if(!$('chFrom')) return;
+  const Rs = () => { const T = TODAY(), som = T.slice(0, 8) + '01', lm = addDays(som, -1);
+    return [['month', 'This month', som, T], ['last', 'Last month', lm.slice(0, 8) + '01', lm], ['90', 'Last 90 days', addDays(T, -89), T], ['year', 'This year', T.slice(0, 5) + '01-01', T]]; };
+  const T = TODAY(); $('chFrom').value = T.slice(0, 8) + '01'; $('chTo').value = T;
+  const pick = k => { const r = Rs().find(x => x[0]===k); if(!r) return; $('chFrom').value = r[2]; $('chTo').value = r[3]; loadCharges(); };
+  filterChips($('chRange'), Rs().map(r => [r[0], r[1]]), 'month', pick);
+  const dates = () => { let f = $('chFrom').value, t = $('chTo').value; if(!f || !t) return; if(f > t){ [f, t] = [t, f]; $('chFrom').value = f; $('chTo').value = t; }
+    $('chRange').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', 'false')); loadCharges(); };
+  $('chFrom').onchange = $('chTo').onchange = dates;
+  $('chFind').oninput = $('chType').onchange = renderCharges;
+  $('chAdd').onclick = () => chgManual(null);
+  filterChips($('chView'), [['sheet', 'All charges'], ['crew', 'Per person'], ['account', 'Per account'], ['truck', 'Per truck'], ['aging', 'Aging'], ['ir', 'Incident reports']], 'sheet', v => { CHG.view = v; renderCharges(); });
+  $('chCsv').onclick = chargesCsv;
+  $('chRefresh').onclick = () => { CHG.data = null; CHG.k = ''; loadCharges(); };
+  $('chBody').onclick = e => {
+    if(e.target.closest('.plink')) return;
+    const r = e.target.closest('[data-cf]'); if(r){ const f = (CHG.data.forms || []).find(x => x.no===r.dataset.cf); if(f) chgOpenForm(f); return; }
+    const ir = e.target.closest('[data-cir]'); if(ir) return chgIrPop(ir.dataset.cir);
+    const g = e.target.closest('[data-cg]'); if(g) return chgGroupPop(g.dataset.cg);
+  };
+}
+function loadCharges(){
+  if(!$('chBody')) return;
+  const f = $('chFrom').value, t = $('chTo').value, k = chgKey();
+  if(CHG.k !== k){ CHG.data = null; renderCharges(); }
+  return call('chargeList', f, t).then(d => { if(chgKey() !== k) return; CHG.data = d; CHG.k = k; renderCharges(); })
+    .catch(e => { if(chgKey()===k && !CHG.data){ $('chNote').textContent = e.message; $('chBody').innerHTML = ''; } });
+}
+/** the forms and IRs the Find box keeps */
+function chgShown(){
+  const d = CHG.data || {forms: [], irs: []}, q = $('chFind').value.toLowerCase().trim();
+  const hit = parts => !q || q.split(/\s+/).every(w => parts.join(' ').toLowerCase().includes(w));
+  const ty = $('chType') ? $('chType').value : '';
+  const forms = (d.forms || []).filter(f => (!ty || (f.type || 'CHARGE')===ty) && hit([f.type || 'CHARGE', f.no, f.tripId, f.rddId, f.truckNo, f.plateNo, f.shipmentNo, f.invoiceNo, f.origin, f.destination, f.driver, f.helper1, f.helper2, f.account, f.pod, f.bo].concat(f.items.map(x => x.desc + ' ' + x.remarks + ' ' + x.itemId + ' ' + x.invId))));
+  const irs = (d.irs || []).filter(x => hit([x.id, x.type, x.truckNo, x.plateNo, x.tripId, x.driver, x.helper1, x.helper2, x.place, x.details, x.status, x.by]));
+  return {forms, irs};
+}
+/** people: { key: {name, roles, forms: [f], amount, share, notRel, irs: [x]} } from the forms and IRs */
+function chgPeople(forms, irs){
+  const by = {}, get = n => { const k = nameKey(n); return by[k] || (by[k] = {k, name: n, roles: new Set(), forms: [], amount: 0, share: 0, notRel: 0, irs: []}); };
+  forms.forEach(f => { const cr = chgCrew(f); cr.forEach(c => { const p = get(c.name); p.roles.add(c.k==='driver' ? 'Driver' : 'Helper'); p.forms.push(f); p.amount += f.total; p.share += f.total / cr.length; if(!c.rel.date) p.notRel++; }); });
+  irs.forEach(x => { [['driver', 'Driver'], ['helper1', 'Helper'], ['helper2', 'Helper']].forEach(([k, r]) => { if(!x[k]) return; const p = get(x[k]); p.roles.add(r); if(!p.irs.includes(x)) p.irs.push(x); }); });
+  return by;
+}
+function chgTrucks(forms, irs){
+  const by = {}, get = n => { const k = nameKey(n) || '—'; return by[k] || (by[k] = {k, name: n || '—', plate: '', forms: [], amount: 0, irs: []}); };
+  forms.forEach(f => { const g = get(f.truckNo); g.plate = g.plate || f.plateNo; g.forms.push(f); g.amount += f.total; });
+  irs.forEach(x => { const g = get(x.truckNo); g.plate = g.plate || x.plateNo; g.irs.push(x); });
+  return by;
+}
+const CHG_SHEET_HEAD = ['RDD DATE', 'TRUCK NO.', 'DTTR NO.', 'INVOICE NO.', 'ORIGIN', 'DESTINATION', 'ITEM DESCRIPTION', 'QUANTITY IN CASE', 'QUANTITY IN PIECES', 'UNIT PRICE', 'TOTAL CHARGE', 'EXPIRY DATE', 'DRIVER', 'HELPER 1', 'HELPER 2', 'REMARKS', 'NAME', 'RELEASED DATE', 'NO. OF ITEMS RELEASED', 'ENDORSED DATE', 'AGING'];
+const chgMonthName = ym => { const [y, m] = ym.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString('en-US', {month: 'long'}).toUpperCase() + ' ' + y; };
+const chgDateOf = f => f.rddDate || f.tripDate || '';
+/** cleared = every crew member on the charge has a released date or an endorsed date (Code.gs chgCleared_) */
+const chgCleared = f => chgCrew(f).every(c => c.rel.date || c.rel.endorsed);
+const chgAgeTxt = f => chgCleared(f) ? 'Cleared' : chgDaysOf(chgDateOf(f)) + ' days';
+function renderCharges(){
+  if(!$('chBody')) return;
+  const d = CHG.data, f0 = $('chFrom').value, t0 = $('chTo').value;
+  $('chAdd').hidden = !(d && d.canEdit);
+  if(!d){ $('chNote').textContent = 'Loading charges and incident reports…'; $('chKpis').innerHTML = ''; $('chHead').innerHTML = ''; $('chBody').innerHTML = '<tr><td class="empty-cell">Loading…</td></tr>'; return; }
+  const {forms, irs} = chgShown();
+  const total = forms.reduce((a, f) => a + f.total, 0), nItems = forms.reduce((a, f) => a + f.items.length, 0), pcs = forms.reduce((a, f) => a + f.items.reduce((b, x) => b + (parseFloat(x.qtyPcs) || 0), 0), 0);
+  const people = chgPeople(forms, irs), both = Object.values(people).filter(p => p.forms.length && p.irs.length).length;
+  const notRel = forms.reduce((a, f) => a + chgCrew(f).filter(c => !c.rel.date).length, 0), openIr = irs.filter(chgOpenIr).length;
+  $('chKpis').innerHTML = `<div class="kpi"><div class="v">${chgMoney(total)}</div><div class="l">Total charges</div><div class="s">${forms.length} entr${forms.length===1 ? 'y' : 'ies'} · ${fmtN(pcs)} pcs${(() => { const by = {}; forms.forEach(f => { const k = f.type || 'CHARGE'; by[k] = (by[k] || 0) + f.total; }); return Object.keys(by).length > 1 ? '<br>' + Object.keys(by).map(k => `${esc(CHG_TYPE_LBL[k] || k)} ${chgMoney(by[k])}`).join(' · ') : ''; })()}</div></div>`
+    + `<div class="kpi"><div class="v">${fmtN(notRel)}</div><div class="l">Not yet released</div><div class="s">crew on a charge with no released date</div></div>`
+    + `<div class="kpi"><div class="v">${fmtN(irs.length)}</div><div class="l">Incident reports</div><div class="s">${openIr} waiting on HR (new or under review)</div></div>`
+    + `<div class="kpi"><div class="v">${fmtN(both)}</div><div class="l">Crew with both</div><div class="s">drivers and helpers with a charge and an incident report</div></div>`;
+  const span = `${fmtDay(f0)} to ${fmtDay(t0)}`;
+  let head = '', body = '';
+  if(CHG.view==='sheet'){
+    $('chNote').textContent = `Charges from ${span} (RDD date), by month, in the CHARGES 2026 layout. They come from the Charges Transmittal Form: tap CHARGE INVOICE in POD to fill one in. Tap a charge to open its form.`;
+    head = '<tr>' + CHG_SHEET_HEAD.map((h, i) => `<th${[7, 8, 9, 10, 18, 20].includes(i) ? ' class="n"' : ''}>${h}</th>`).join('') + '</tr>';
+    const months = {}; forms.slice().sort((a, b) => chgDateOf(a).localeCompare(chgDateOf(b)) || a.no.localeCompare(b.no)).forEach(f => (months[chgDateOf(f).slice(0, 7)] = months[chgDateOf(f).slice(0, 7)] || []).push(f));
+    body = Object.keys(months).sort().map(ym => { const l = months[ym], sum = l.reduce((a, f) => a + f.total, 0);
+      return `<tr class="fm-sec"><td colspan="21"><b>${esc(chgMonthName(ym))} CHARGES</b> <span>· ${l.length} form${l.length===1 ? '' : 's'} · ${chgMoney(sum)}</span></td></tr>`
+        + l.map(f => { const cr = chgCrew(f), n = Math.max(1, f.items.length, cr.length), rs = n > 1 ? ` rowspan="${n}"` : '';
+          let h = '';
+          for(let i = 0; i < n; i++){
+            const x = f.items[i], c = cr[i];
+            h += `<tr class="fm-r chg-r${i===0 ? ' chg-first' : ''}" data-cf="${esc(f.no)}" tabindex="0">`
+              + (i===0 ? `<td${rs}>${esc(chgDay(chgDateOf(f)))}<small>${esc(f.no)}${f.manual ? ` · <b class="chg-ty">${esc(CHG_TYPE_LBL[f.type] || f.type)}</b>` : ''}</small></td><td${rs}><b>${f.truckNo ? tLink(f.truckNo) : '—'}</b>${f.plateNo ? `<small>${esc(f.plateNo)}</small>` : ''}</td><td${rs}>${esc(f.shipmentNo)}</td><td${rs}>${esc(f.invoiceNo)}</td><td${rs}>${esc(f.origin)}</td><td${rs}>${esc(f.destination)}</td>` : '')
+              + (x ? `<td>${esc(x.desc)}</td><td class="n">${esc(x.qtyCase)}</td><td class="n">${esc(x.qtyPcs)}</td><td class="n">${esc(chgPrice(x.price))}</td><td class="n"><b>${esc(chgMoney(x.total))}</b></td><td>${esc(chgDay(x.exp))}</td>` : '<td></td><td></td><td></td><td></td><td></td><td></td>')
+              + (i===0 ? `<td${rs}>${f.driver ? pLink(f.driver) : ''}</td><td${rs}>${f.helper1 ? pLink(f.helper1) : ''}</td><td${rs}>${f.helper2 ? pLink(f.helper2) : ''}</td>` : '')
+              + `<td>${x ? esc(x.remarks) : ''}</td>`
+              + (c ? `<td>${esc(c.name)}</td><td>${esc(chgDay(c.rel.date))}</td><td class="n">${esc(c.rel.items)}</td><td>${esc(chgDay(c.rel.endorsed))}</td>` : '<td></td><td></td><td></td><td></td>')
+              + (i===0 ? `<td${rs} class="${chgCleared(f) ? 'chg-ok' : chgBucket(chgDaysOf(chgDateOf(f))) >= 2 ? 'chg-old' : ''}">${esc(chgAgeTxt(f))}</td>` : '')
+              + '</tr>';
+          }
+          return h; }).join('')
+        + `<tr class="fm-hd"><td colspan="10" style="text-align:right">${esc(chgMonthName(ym))} total</td><td class="n"><b>${chgMoney(sum)}</b></td><td colspan="10"></td></tr>`; }).join('');
+    if(!body) body = `<tr><td colspan="21" class="empty-cell">${(d.forms || []).length ? 'Nothing matches.' : 'No charges in these dates. Tap CHARGE INVOICE in POD to fill in a Charges Transmittal Form.'}</td></tr>`;
+  } else if(CHG.view==='crew'){
+    $('chNote').textContent = `Drivers and helpers with a charge or an incident report from ${span}. Charged = the whole form's total on every crew member's line; Share = the total split between the crew of each form. Tap a name's row for the details.`;
+    head = '<tr><th>Name</th><th class="n">Charges</th><th class="n">Charged</th><th class="n">Share</th><th class="n">Not released</th><th class="n">Incident reports</th><th>Incident types</th></tr>';
+    const l = Object.values(people).sort((a, b) => b.share - a.share || b.irs.length - a.irs.length || a.name.localeCompare(b.name));
+    CHG.groups = {}; l.forEach(p => { CHG.groups['p:' + p.k] = p; });
+    body = l.map(p => { const ty = {}; p.irs.forEach(x => { ty[x.type] = (ty[x.type] || 0) + 1; }); const oi = p.irs.filter(chgOpenIr).length;
+      return `<tr class="fm-r" data-cg="p:${esc(p.k)}" tabindex="0"><td><b>${pLink(p.name)}</b><small>${esc([...p.roles].join(', '))}</small></td><td class="n">${p.forms.length || ''}</td><td class="n">${p.amount ? chgMoney(p.amount) : ''}</td><td class="n"><b>${p.share ? chgMoney(p.share) : ''}</b></td><td class="n">${p.notRel ? `<span class="fm-low">${p.notRel}</span>` : ''}</td><td class="n">${p.irs.length || ''}${oi ? `<small>${oi} open</small>` : ''}</td><td>${esc(Object.keys(ty).map(k => k + (ty[k] > 1 ? ' × ' + ty[k] : '')).join(', '))}</td></tr>`; }).join('')
+      || '<tr><td colspan="7" class="empty-cell">No charges or incident reports in these dates.</td></tr>';
+  } else if(CHG.view==='account'){
+    $('chNote').textContent = `Total charges per account from ${span} (the account of the trip's truck and route, as on the Dashboard). Tap an account's row for its charges.`;
+    head = '<tr><th>Account</th><th class="n">Charges</th><th class="n">Items</th><th class="n">Pieces</th><th class="n">Total charges</th><th class="n">Not cleared</th></tr>';
+    const by = {}; forms.forEach(f => { const k = f.account || 'Not counted in an account'; const g = by[k] || (by[k] = {k, name: k, forms: [], amount: 0, irs: []}); g.forms.push(f); g.amount += f.total; });
+    const l = Object.values(by).sort((a, b) => b.amount - a.amount);
+    CHG.groups = {}; l.forEach(g => { CHG.groups['a:' + g.k] = g; });
+    body = l.map(g => { const nc = g.forms.filter(f => !chgCleared(f)), pc = g.forms.reduce((a, f) => a + f.items.reduce((b, x) => b + (parseFloat(x.qtyPcs) || 0), 0), 0);
+      return `<tr class="fm-r" data-cg="a:${esc(g.k)}" tabindex="0"><td><b>${esc(titleCase(g.name))}</b></td><td class="n">${g.forms.length}</td><td class="n">${g.forms.reduce((a, f) => a + f.items.length, 0)}</td><td class="n">${fmtN(pc)}</td><td class="n"><b>${chgMoney(g.amount)}</b></td><td class="n">${nc.length ? `${nc.length}<small>${chgMoney(nc.reduce((a, f) => a + f.total, 0))}</small>` : ''}</td></tr>`; }).join('')
+      + (l.length > 1 ? `<tr class="fm-hd"><td>All accounts</td><td class="n">${forms.length}</td><td class="n">${nItems}</td><td class="n">${fmtN(pcs)}</td><td class="n"><b>${chgMoney(total)}</b></td><td></td></tr>` : '')
+      || '<tr><td colspan="6" class="empty-cell">No charges in these dates.</td></tr>';
+  } else if(CHG.view==='aging'){
+    $('chNote').textContent = `Aging of the charges from ${span} that are not cleared yet (days since the RDD date) and the incident reports still waiting on HR (days since the incident). A charge is cleared when every crew member on it has a released date or an endorsed date.`;
+    head = '<tr><th>Age</th><th class="n">Charges not cleared</th><th class="n">Amount</th><th class="n">Incident reports waiting on HR</th></tr>';
+    const open = forms.filter(f => !chgCleared(f)).map(f => ({f, days: chgDaysOf(chgDateOf(f))})).sort((a, b) => b.days - a.days);
+    const oi = irs.filter(chgOpenIr).map(x => ({x, days: chgDaysOf(x.date)})).sort((a, b) => b.days - a.days);
+    body = CHG_AGE.map((b, i) => { const c = open.filter(o => chgBucket(o.days)===i), r = oi.filter(o => chgBucket(o.days)===i);
+      return `<tr class="${i >= 2 && (c.length || r.length) ? 'fm-over' : ''}"><td><b>${b[2]}</b></td><td class="n">${c.length || ''}</td><td class="n"><b>${c.length ? chgMoney(c.reduce((a, o) => a + o.f.total, 0)) : ''}</b></td><td class="n">${r.length || ''}</td></tr>`; }).join('')
+      + `<tr class="fm-hd"><td>Total</td><td class="n">${open.length}</td><td class="n"><b>${chgMoney(open.reduce((a, o) => a + o.f.total, 0))}</b></td><td class="n">${oi.length}</td></tr>`
+      + (open.length ? `<tr class="fm-sec"><td colspan="4"><b>Charges not cleared</b> <span>· oldest first</span></td></tr>` + open.map(o => { const f = o.f;
+          return `<tr class="fm-r" data-cf="${esc(f.no)}" tabindex="0"><td>${esc(chgDay(chgDateOf(f)))}<small>${esc(f.no)}${f.truckNo ? ' · Truck ' + esc(f.truckNo) : ''}${f.invoiceNo ? ' · Inv ' + esc(f.invoiceNo) : ''}</small></td><td>${esc(chgCrew(f).filter(c => !(c.rel.date || c.rel.endorsed)).map(c => c.name).join(', '))}<small>not released yet</small></td><td class="n"><b>${chgMoney(f.total)}</b></td><td class="n"><b class="${chgBucket(o.days) >= 2 ? 'chg-oldtxt' : ''}">${o.days} days</b></td></tr>`; }).join('') : '')
+      + (oi.length ? `<tr class="fm-sec"><td colspan="4"><b>Incident reports waiting on HR</b> <span>· oldest first</span></td></tr>` + oi.map(o => { const x = o.x;
+          return `<tr class="fm-r" data-cir="${esc(x.id)}" tabindex="0"><td>${irWhen(x)}<small>${esc(x.id)}${x.truckNo ? ' · Truck ' + esc(x.truckNo) : ''}</small></td><td><b>${esc(x.type)}</b><small>${esc(x.driver || '')}</small></td><td class="n">${irPill(x.status)}</td><td class="n"><b class="${chgBucket(o.days) >= 2 ? 'chg-oldtxt' : ''}">${o.days} days</b></td></tr>`; }).join('') : '');
+  } else if(CHG.view==='truck'){
+    $('chNote').textContent = `Trucks with a charge or an incident report from ${span}. Tap a truck's row for the details.`;
+    head = '<tr><th>Truck</th><th class="n">Charges</th><th class="n">Charged</th><th class="n">Incident reports</th><th>Incident types</th></tr>';
+    const l = Object.values(chgTrucks(forms, irs)).sort((a, b) => b.amount - a.amount || b.irs.length - a.irs.length || String(a.name).localeCompare(String(b.name), undefined, {numeric: true}));
+    CHG.groups = {}; l.forEach(g => { CHG.groups['t:' + g.k] = g; });
+    body = l.map(g => { const ty = {}; g.irs.forEach(x => { ty[x.type] = (ty[x.type] || 0) + 1; }); const oi = g.irs.filter(chgOpenIr).length;
+      return `<tr class="fm-r" data-cg="t:${esc(g.k)}" tabindex="0"><td><b>${g.name!=='—' ? tLink(g.name, 'Truck ' + g.name) : 'No truck'}</b>${g.plate ? `<small>${esc(g.plate)}</small>` : ''}</td><td class="n">${g.forms.length || ''}</td><td class="n"><b>${g.amount ? chgMoney(g.amount) : ''}</b></td><td class="n">${g.irs.length || ''}${oi ? `<small>${oi} open</small>` : ''}</td><td>${esc(Object.keys(ty).map(k => k + (ty[k] > 1 ? ' × ' + ty[k] : '')).join(', '))}</td></tr>`; }).join('')
+      || '<tr><td colspan="5" class="empty-cell">No charges or incident reports in these dates.</td></tr>';
+  } else {
+    const st = {}; irs.forEach(x => { st[x.status] = (st[x.status] || 0) + 1; });
+    const ty = {}; irs.forEach(x => { ty[x.type] = (ty[x.type] || 0) + 1; });
+    $('chNote').innerHTML = `Incident reports from ${esc(span)} (incident date), newest first. ${(d.irStatuses || []).map(s => `${irPill(s)} ${st[s] || 0}`).join(' ')}${Object.keys(ty).length ? '<br>By type: ' + esc(Object.keys(ty).sort((a, b) => ty[b] - ty[a]).map(k => k + ' ' + ty[k]).join(', ')) : ''}`;
+    head = '<tr><th>Date · IR no.</th><th>Type</th><th>Truck</th><th>Crew</th><th>Place</th><th>What happened</th><th>Status</th><th>Submitted by</th></tr>';
+    body = irs.map(x => `<tr class="fm-r" data-cir="${esc(x.id)}" tabindex="0"><td>${irWhen(x)}<small>${esc(x.id)}</small></td><td><b>${esc(x.type)}</b></td><td>${x.truckNo ? tLink(x.truckNo, 'Truck ' + x.truckNo) : '—'}${x.plateNo ? `<small>${esc(x.plateNo)}</small>` : ''}</td><td>${[x.driver, x.helper1, x.helper2].filter(Boolean).map(n => pLink(n)).join('<br>')}</td><td>${esc(x.place)}</td><td class="chg-txt">${esc(x.details)}</td><td>${irPill(x.status)}${x.replies ? `<small>💬 ${x.replies}</small>` : ''}</td><td>${esc(x.by)}<small>${esc(x.byRole || '')}</small></td></tr>`).join('')
+      || `<tr><td colspan="8" class="empty-cell">${(d.irs || []).length ? 'Nothing matches.' : 'No incident reports in these dates.'}</td></tr>`;
+  }
+  $('chHead').innerHTML = head; $('chBody').innerHTML = body;
+  $('chPanel').classList.toggle('chg-wide', CHG.view==='sheet');
+}
+function chgIrPop(id){
+  const x = ((CHG.data || {}).irs || []).find(y => y.id===id); if(!x) return;
+  const row = (k, v) => v ? `<tr><td>${k}</td><td>${v}</td></tr>` : '';
+  openPop(`${x.id} · ${x.type}`, `${irPill(x.status)} Submitted by ${irBy(x)}`, `<div class="tbl-wrap" style="max-height:none"><table class="poptbl ir-tbl"><tbody>
+    ${row('Incident date', irWhen(x))}${row('Type', esc(x.type))}${row('Truck', [x.truckNo && tLink(x.truckNo, 'Truck ' + x.truckNo), x.plateNo && esc(x.plateNo)].filter(Boolean).join(' · '))}
+    ${row('Trip', esc(x.tripId))}${row('Crew', [x.driver && 'Driver: ' + pLink(x.driver), x.helper1 && 'Helper: ' + pLink(x.helper1), x.helper2 && 'Helper 2: ' + pLink(x.helper2)].filter(Boolean).join('<br>'))}
+    ${row('Place', esc(x.place))}${row('What happened', `<div class="ir-txt">${esc(x.details)}</div>`)}${row('Action taken', x.action ? `<div class="ir-txt">${esc(x.action)}</div>` : '')}
+    ${row('Status', irPill(x.status) + (x.statusBy ? `<small>by ${esc(x.statusBy)} · ${irAt(x.statusAt)}</small>` : '<small>not yet reviewed by HR</small>'))}
+    ${row('HR remarks', x.remarks ? `<div class="ir-txt">${esc(x.remarks)}</div>` : '')}${row('Responses', x.replies ? '💬 ' + x.replies : '')}
+  </tbody></table></div>`, may('irView') ? '<button class="btn alt" type="button" id="chIrOpen">Open the full report</button>' : '');
+  if($('chIrOpen')) $('chIrOpen').onclick = () => { const go = () => openIr(x.id); if((IR.list || []).some(y => y.id===x.id)) return go();
+    call('irList').then(r => { Object.assign(IR, r); IR.v = String(r.v || ''); go(); }).catch(e => toast(e.message, true)); };
+}
+/** a person's or truck's charges and incident reports */
+function chgGroupPop(k){
+  const g = (CHG.groups || {})[k]; if(!g) return;
+  const fl = g.forms.map(f => `<tr class="fm-r" data-cf="${esc(f.no)}" tabindex="0"><td>${esc(chgDay(chgDateOf(f)))}<small>${esc(f.no)}${f.invoiceNo ? ' · Inv ' + esc(f.invoiceNo) : ''}</small></td><td>${esc(f.items.map(x => x.desc + (x.qtyPcs ? ' (' + x.qtyPcs + ' pcs)' : '')).join('; '))}<small>${esc(f.items.map(x => x.remarks).filter(Boolean).join('; '))}</small></td><td class="n"><b>${chgMoney(f.total)}</b></td></tr>`).join('');
+  const il = g.irs.map(x => `<tr class="fm-r" data-cir="${esc(x.id)}" tabindex="0"><td>${irWhen(x)}<small>${esc(x.id)}</small></td><td><b>${esc(x.type)}</b><small>${esc(String(x.details || '').slice(0, 140))}</small></td><td>${irPill(x.status)}</td></tr>`).join('');
+  const title = k.slice(0, 2)==='t:' ? (g.name!=='—' ? 'Truck ' + g.name : 'No truck') : k.slice(0, 2)==='a:' ? titleCase(g.name) : g.name;
+  openPop(title, `${g.forms.length} charge${g.forms.length===1 ? '' : 's'} · ${chgMoney(g.amount)} · ${g.irs.length} incident report${g.irs.length===1 ? '' : 's'}`,
+    `${fl ? `<h4 class="chg-sub">Charges</h4><div class="tbl-wrap" style="max-height:none"><table class="poptbl fm-tbl"><tbody>${fl}</tbody></table></div>` : ''}${il ? `<h4 class="chg-sub">Incident reports</h4><div class="tbl-wrap" style="max-height:none"><table class="poptbl fm-tbl"><tbody>${il}</tbody></table></div>` : ''}`);
+  $('popBody').onclick = e => { const r = e.target.closest('[data-cf]'); if(r){ const f = g.forms.find(x => x.no===r.dataset.cf); if(f) chgOpenForm(f); return; }
+    const ir = e.target.closest('[data-cir]'); if(ir) chgIrPop(ir.dataset.cir); };
+}
+function chargesCsv(){
+  if(!CHG.data) return toast('Still loading.', true);
+  const {forms, irs} = chgShown(), f0 = $('chFrom').value, t0 = $('chTo').value;
+  if(CHG.view==='ir'){
+    if(!irs.length) return toast('No incident reports to download.', true);
+    return saveCsvFile(`Incident reports ${f0} to ${t0}.csv`, ['IR NO', 'INCIDENT DATE', 'TIME', 'TYPE', 'TRUCK NO', 'PLATE NO', 'TRIP ID', 'DRIVER', 'HELPER', 'HELPER 2', 'PLACE', 'WHAT HAPPENED', 'ACTION TAKEN', 'STATUS', 'HR REMARKS', 'SUBMITTED BY', 'SUBMITTED AT'],
+      irs.map(x => [x.id, x.date, x.time, x.type, x.truckNo, x.plateNo, x.tripId, x.driver, x.helper1, x.helper2, x.place, x.details, x.action, x.status, x.remarks, x.by, x.at]));
+  }
+  if(!forms.length) return toast('No charges to download.', true);
+  const rows = [];
+  forms.slice().sort((a, b) => chgDateOf(a).localeCompare(chgDateOf(b)) || a.no.localeCompare(b.no)).forEach(f => { const cr = chgCrew(f), n = Math.max(1, f.items.length, cr.length);
+    for(let i = 0; i < n; i++){ const x = f.items[i], c = cr[i];
+      rows.push([i===0 ? chgDateOf(f) : '', i===0 ? f.truckNo : '', i===0 ? f.shipmentNo : '', i===0 ? f.invoiceNo : '', i===0 ? f.origin : '', i===0 ? f.destination : '',
+        x ? x.desc : '', x ? x.qtyCase : '', x ? x.qtyPcs : '', x ? x.price : '', x ? x.total : '', x ? x.exp : '',
+        i===0 ? f.driver : '', i===0 ? f.helper1 : '', i===0 ? f.helper2 : '', x ? x.remarks : '', c ? c.name : '', c ? c.rel.date : '', c ? c.rel.items : '', c ? c.rel.endorsed : '', i===0 ? chgAgeTxt(f) : '']); } });
+  saveCsvFile(`Charges ${f0} to ${t0}.csv`, CHG_SHEET_HEAD, rows);
+}
+
+/* ---- Aging on Today and the Dashboard (MANU 2026-11-13 "show aging in Today and Dashboard"): Code.gs chargeAging, every role ---- */
+function chgAgeBox(a, what){
+  if(!a) return '';
+  const rows = what==='ir' ? a.ir : a.chg;
+  return `<div class="chg-age">${rows.map((b, i) => `<span class="${i >= 2 && b.n ? 'old' : ''}"><b>${b.n}</b>${esc(b.label)}${what!=='ir' && b.amount ? `<small>${chgMoney(b.amount)}</small>` : ''}</span>`).join('')}</div>`
+    + (what==='ir' ? (a.irOld || []).slice(0, 4).map(x => `<div class="hm-pl"><span><b>${esc(x.id)}</b> ${esc(x.type)}<small>${esc([fmtDay(x.date), x.truckNo ? 'Truck ' + x.truckNo : '', x.driver].filter(Boolean).join(' · '))}</small></span><b class="pl-go">${x.days} days</b></div>`).join('')
+      : (a.chgOld || []).slice(0, 4).map(x => `<div class="hm-pl"><span><b>${esc(x.no)}</b> ${chgMoney(x.total)}<small>${esc([fmtDay(x.date), x.truckNo ? 'Truck ' + x.truckNo : '', x.crew.join(', ')].filter(Boolean).join(' · '))}</small></span><b class="pl-go">${x.days} days</b></div>`).join(''));
+}
+function loadChgAge(){
+  const p = $('chgAgePanel'); if(!p || !can('charges')) return;
+  call('chargeAging').then(a => {
+    p.hidden = false;
+    $('chgAgeSub').textContent = `${a.chgN} charge${a.chgN===1 ? '' : 's'} not cleared · ${chgMoney(a.chgAmt)} · ${a.irN} incident report${a.irN===1 ? '' : 's'} waiting on HR`;
+    $('chgAgeBody').innerHTML = `<div class="chg-age-2"><div><h4 class="chg-sub">Charges not cleared</h4>${chgAgeBox(a, 'chg')}</div><div><h4 class="chg-sub">Incident reports waiting on HR</h4>${chgAgeBox(a, 'ir')}</div></div>`;
+  }).catch(() => {});
+}
+
+/* ---- Damages and penalties (MANU 2026-11-13 "add on charges, damages and penalties, can be added manually and not connected to a trip but
+   to a driver/helper"): typed on the Charges tab, saved by Code.gs chargeSave with type DAMAGE or PENALTY (no trip), one person. ---- */
+function chgOpenForm(f){
+  if(f.manual) return chgManual(f);
+  chgForm(chgRefOfForm(f), chgTripOf(f), f, CHG.data.canEdit, S.me.name);
+}
+function chgManual(f){
+  const canEdit = !!(CHG.data && CHG.data.canEdit), ro = !canEdit, dis = ro ? ' disabled' : '';
+  const x = f ? f.items[0] || {} : {}, who = f ? (f.driver ? {name: f.driver, pos: 'driver'} : {name: f.helper1, pos: 'helper1'}) : {name: '', pos: 'driver'};
+  const rel = f ? (f.rel || {})[who.pos] || {} : {};
+  const people = [...new Set([...document.querySelectorAll('#dlDrivers option, #dlHelpers option')].map(o => o.value).filter(Boolean))];
+  openPop(f ? `${CHG_TYPE_LBL[f.type] || f.type} ${f.no}` : 'Add damage or penalty', f ? `Saved by ${esc(f.by || '—')}${f.at ? ' · ' + esc(f.at) : ''}${ro ? ' · view only' : ''}` : 'Not connected to a trip: for one driver or helper',
+    `<div class="chg-grid">
+      <label class="f">Type<select id="cmType"${dis}>${['DAMAGE', 'PENALTY'].map(t => `<option value="${t}" ${f && f.type===t ? 'selected' : ''}>${CHG_TYPE_LBL[t]}</option>`).join('')}</select></label>
+      <label class="f">Date<input id="cmDate" type="date" value="${esc(f ? chgDateOf(f) : TODAY())}"${dis}></label>
+      <label class="f full">Driver or helper<input id="cmWho" list="cmPeople" autocomplete="off" value="${esc(who.name || '')}" placeholder="Type the name"${dis}></label>
+      <datalist id="cmPeople">${people.map(v => `<option value="${esc(v)}">`).join('')}</datalist>
+      <label class="f">Position<select id="cmPos"${dis}><option value="driver" ${who.pos==='driver' ? 'selected' : ''}>Driver</option><option value="helper1" ${who.pos==='helper1' ? 'selected' : ''}>Helper</option></select></label>
+      <label class="f">Truck no. (optional)<input id="cmTruck" autocomplete="off" value="${esc(f ? f.truckNo : '')}"${dis}></label>
+      <label class="f">Amount (₱)<input id="cmAmt" inputmode="decimal" value="${esc(x.total ? String(x.total) : '')}" placeholder="e.g. 1500"${dis}></label>
+      <label class="f full">What it is for<input id="cmDesc" autocomplete="off" value="${esc(x.desc || '')}" placeholder="e.g. Broken side mirror, late arrival penalty"${dis}></label>
+      <label class="f full">Remarks<input id="cmRem" autocomplete="off" value="${esc(x.remarks || '')}"${dis}></label>
+      <label class="f">Released / deducted date<input id="cmRel" autocomplete="off" value="${esc(rel.date || '')}" placeholder="e.g. 2026-11-20"${dis}></label>
+      <label class="f">Endorsed date<input id="cmEnd" autocomplete="off" value="${esc(rel.endorsed || '')}" placeholder="e.g. 2026-11-20"${dis}></label>
+    </div>${f ? `<p class="hint">Aging: ${esc(chgAgeTxt(f))}</p>` : ''}`,
+    `${f && canEdit ? '<button class="btn alt danger" type="button" id="cmDel">Delete</button> ' : ''}<span style="flex:1"></span><button class="btn alt" type="button" id="cmClose">${ro ? 'Close' : 'Cancel'}</button>${ro ? '' : ' <button class="btn" type="button" id="cmSave">Save</button>'}`);
+  $('pop').dataset.kind = 'chg';
+  $('cmClose').onclick = () => closePop();
+  const done = msg => { toast(msg); closePop(); CHG.data = null; CHG.k = ''; loadCharges(); };
+  if($('cmDel')) $('cmDel').onclick = async () => {
+    if(!confirm(`Delete ${CHG_TYPE_LBL[f.type] || f.type} ${f.no}?`)) return;
+    const b = $('cmDel'); b.disabled = true; b.textContent = 'Deleting…';
+    try{ await call('chargeDelete', null, '', f.no); done(`${f.no} deleted`); }catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Delete'; }
+  };
+  if(!ro) $('cmSave').onclick = async () => {
+    const name = $('cmWho').value.trim(), pos = $('cmPos').value, amt = $('cmAmt').value.replace(/[₱,\s]/g, ''), desc = $('cmDesc').value.trim();
+    if(!name) return toast('Type the driver or helper.', true);
+    if(!(Number(amt) > 0)) return toast('Type the amount.', true);
+    if(!desc) return toast('Type what it is for.', true);
+    const d = {type: $('cmType').value, no: f ? f.no : '', rddDate: $('cmDate').value, truckNo: $('cmTruck').value.trim(), driver: pos==='driver' ? name : '', helper1: pos==='helper1' ? name : '',
+      rel: {[pos]: {date: $('cmRel').value.trim(), items: '', endorsed: $('cmEnd').value.trim()}}, items: [{desc, total: amt, remarks: $('cmRem').value.trim()}]};
+    const b = $('cmSave'); b.disabled = true; b.textContent = 'Saving…';
+    try{ const r = await call('chargeSave', null, d); done(`Saved ${r.form ? r.form.no + ' · ' + chgMoney(r.form.total) : ''}`); }catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Save'; }
+  };
+}
+
 /** POD "Download CSV": the trips the POD list shows now (dates, account, customer, find and chip as picked), oldest first. */
 // Late documents (review 2026-11-04 #10): completed trips still not endorsed to Billing after N days, grouped by driver.
 // POD and POD HEAD see it once a day after signing in; the "Late documents" button in the POD tab opens it any time.
@@ -8240,6 +8668,7 @@ function initBilling(){
   $('billList').onclick = e => {
     if(e.target.closest('#billBulk')) return bulkCheck('bill');
     const c=e.target.closest('[data-key]'); if(!c) return; const bt = S.billTrips.find(t=>t.key===c.dataset.key);
+    if(e.target.closest('td[data-chg]')) return openCharge(bt);   // Charges Transmittal Form, view only for Billing (MANU 2026-11-13)
     if(e.target.closest('td[data-pc]') && may('billing')) return openPc(bt, e.target.closest('td'), 'billingSave');
     openBill(bt); };
   $('billTabs').onclick = e => { const b = e.target.closest('.chip'); if(!b) return;
@@ -14868,6 +15297,7 @@ function loadHome(force){
   if(NOSHIP_ROLES.includes(S.me.role)) jobs.push(call('noShipmentTrips').then(l => { HM.ns = l || []; }).catch(() => {}));
   if(may('pod') || may('podStats')) jobs.push(call('podLate', lsGet('jmti_podlate_days') || 3).then(r => { HM.pl = r; }).catch(() => {}));
   if(may('irView') && !IR.v) jobs.push(Promise.resolve(loadIr && loadIr()).catch(() => {}));
+  if(can('charges')) jobs.push(call('chargeAging').then(r => { HM.chg = r; }).catch(() => {}));   // aging (MANU 2026-11-13)
   if(!HM.at) body.classList.add('loading');
   Promise.all(jobs).finally(() => { HM.at = Date.now(); body.classList.remove('loading'); if(S.tab === 'home') renderHome(); });
 }
@@ -14901,6 +15331,10 @@ function homeSecs(){
     const counted = trips.filter(t => isTrip(t) && t.date < today);
     secs.push({k: 'crew', ic: '👷', t: 'Trips with no driver or helper (last 14 days)', hint: 'These would be paid to nobody. Ask dispatch to fill in the crew.', list: counted.filter(t => !String(t.driver || '').trim() || !String(t.helper1 || '').trim()), why: t => !String(t.driver || '').trim() ? '<b style="color:#B91C1C">No driver</b>' : 'No helper', story: true});
     secs.push({k: 'open', ic: '🕓', t: 'Trips still not Completed after 2 days', hint: 'Their trip count and pay can still change.', list: counted.filter(t => t.date <= addDays(today, -2) && !['Completed', 'Tukod'].includes(stageOf(t)) && !isGarageLoaded(t)), story: true});
+  }
+  if(can('charges') && HM.chg){   // aging (MANU 2026-11-13 "show aging in Today and Dashboard")
+    secs.push({k: 'chg', ic: '💸', t: 'Charges not cleared yet', hint: `${chgMoney(HM.chg.chgAmt)} by age (days since the RDD date). Cleared when every crew member has a released or endorsed date.`, n: HM.chg.chgN, go: 'charges', html: chgAgeBox(HM.chg, 'chg')});
+    secs.push({k: 'irage', ic: '🚨', t: 'Incident reports waiting on HR', hint: 'New or under review, by age (days since the incident).', n: HM.chg.irN, go: 'charges', html: chgAgeBox(HM.chg, 'ir')});
   }
   if(may('irView') && may('irStatus')) secs.push({k: 'ir', ic: '🚨', t: 'Incident reports not opened yet', hint: 'Tap to open the reports.', n: IR.unread || 0, act: 'ir'});
   return {secs, todays};
