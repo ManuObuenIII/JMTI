@@ -817,6 +817,13 @@ table.xl tr.routehd.mnthd span{color:#B91C1C}
 .chg-item-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .chg-rel b{display:block;margin-bottom:6px;white-space:normal}
 .chg-total{margin:10px 0;font-size:14px;text-align:right}
+.chg-skus{margin-top:8px;border-top:1px dashed #C7D2FE;padding-top:6px}
+.chg-sku-h{font-size:12px;font-weight:700;color:#0A1F8F;margin-bottom:4px}
+.chg-skus .chg-sku{display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center;font-size:12.5px;margin-bottom:4px}
+.chg-skus .chg-sku span{white-space:normal;min-width:0}
+.chg-skus .chg-sku small{display:block;color:#64748B;font-size:11px}
+.chg-sku-t{text-align:right;font-size:12.5px;margin-top:4px}
+.chg-sku-t b{color:#0A1F8F;font-size:15px}
 .chg-total b{font-size:17px;color:#0A1F8F}
 .chg-age{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:4px 0 8px}
 .chg-age span{border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:var(--card);font-size:11.5px;color:#475569;white-space:normal}
@@ -2345,6 +2352,21 @@ table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
   .pl-ed .pl-x::after{content:' Remove'}
   .pl-ed .pl-n,.pl-ed .pl-src,.pl-ed .pl-dst,.pl-ed .pl-tk,.pl-ed .pl-note{grid-column:1 / -1}
 }
+/* Salary rates (MANU 2026-11-16 "salary rate matrix"): the Admin's rate table in Settings */
+.pr-tbl td{vertical-align:middle}
+.pr-tbl input{width:100%;min-width:0;min-height:40px;font-size:16px;padding:6px 8px;box-sizing:border-box}
+.pr-tbl th:last-child,.pr-tbl td:last-child{width:1%;white-space:nowrap}
+.pr-fix th:last-child,.pr-fix td:last-child{width:28%}
+.pr-fix td:first-child{width:44%}
+.pr-tbl .pr-x{padding:8px 10px;min-height:40px}
+.pr-add{margin:8px 0 0}
+.pr-sel{margin:10px 0 0;max-width:340px}
+.pr-sel select{min-height:44px;font-size:16px}
+.pr-route{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;align-items:end;padding:10px;margin:0 0 10px;border:1px solid var(--line);border-radius:10px}
+.pr-route .pr-wide{grid-column:1 / -1}
+.pr-route input,.pr-route textarea{width:100%;min-width:0;min-height:40px;font-size:16px;box-sizing:border-box}
+.pr-route textarea{font-family:inherit;resize:vertical;overflow-wrap:anywhere}
+@media (max-width:560px){ .pr-route .pr-w{grid-column:1 / -1} }
 </style>
 </head>
 <body>
@@ -3417,7 +3439,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['chargeSave','chargeDelete','savePlannedTrips','deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
+const WRITES = ['chargeSave','chargeDelete','savePlannedTrips','deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','savePayRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 /* Save buttons (MANU 2026-11-06 pick 13): the button pressed just before a save gets a spinner, then a green check,
@@ -3521,7 +3543,7 @@ function errWorthLog(fn, msg, e){
   return true;
 }
 /* Small reads that are safe to ask again (not in READ_FNS so they are not kept in the browser copy) */
-const SAFE_REPEAT = /^(appVersion|appRules|shiftNotes|podLate|myProfile|garageLatest)$/;
+const SAFE_REPEAT = /^(appVersion|appRules|payRates|shiftNotes|podLate|myProfile|garageLatest)$/;
 function mayRetry(fn, e){
   const msg = String((e && e.message) || e);
   if(BUSY_RE.test(msg)) return true;
@@ -3630,7 +3652,7 @@ function lsSet(k, v){
     }
   }
 }
-function lsClearData(){ try{ Object.keys(localStorage).filter(k => /^jmti_(t_|tkeys|d_|dkeys|dh|boot|fleet|people|sum|rem)/.test(k)).forEach(k => localStorage.removeItem(k)); }catch(e){} }
+function lsClearData(){ try{ Object.keys(localStorage).filter(k => /^jmti_(t_|tkeys|d_|dkeys|dh|boot|fleet|people|sum|rem|pay)/.test(k)).forEach(k => localStorage.removeItem(k)); }catch(e){} }
 
 let pendingPw = '';
 function showLogin(msg){
@@ -3726,7 +3748,8 @@ function openSettings(){
       row('reload', '⟳', 'Update system', `Gets the newest version on this phone or PC. Now: version ${vName(APP_VERSION)}`),
     ])}
     ${g('People', [ row('online', '🟢', 'Who is signed in', '') ])}
-    ${may('restoreTrip') || may('targets') ? g('Admin', [ may('restoreTrip') ? row('deleted', '🗑', 'Deleted trips', 'Put back a trip deleted from Truck Plan') : '', may('targets') ? row('video', '🎬', 'Sign-in video', 'The video Supervisors, Team leaders and Dispatchers watch at sign-in, and who finished it') : '' ]) : ''}
+    ${g('Admin', [ may('restoreTrip') ? row('deleted', '🗑', 'Deleted trips', 'Put back a trip deleted from Truck Plan') : '', may('targets') ? row('video', '🎬', 'Sign-in video', 'The video Supervisors, Team leaders and Dispatchers watch at sign-in, and who finished it') : '',
+      S.me && S.me.role==='ADMIN' ? row('pay', '💵', 'Salary rates', 'Pay per trip of drivers and helpers, by distance') : '' ])}
     ${g('', [ row('out', '⎋', 'Sign out', esc(S.me ? S.me.name + ' · ' + (S.me.role || '') : '')) ])}
   </div>`;
   openPop('Settings', '', body);
@@ -3747,7 +3770,7 @@ function openSettings(){
     if(k === 'reload'){ closePop(); updSystem(); return; }
     closePop();
     ({prof: () => openProfile(), pw: () => showPwForm(false), ver: vchgShow, tab: () => { showTab(S.tab); toast('Refreshing ' + (TAB_NAME[S.tab] || 'this tab') + '…'); },
-      online: openOnline, deleted: openDeletedTrips, tour: () => tourStart(), video: openVideoAdmin, out: () => $('logoutBtn').click()})[k]?.();
+      online: openOnline, deleted: openDeletedTrips, tour: () => tourStart(), video: openVideoAdmin, pay: openPayRates, out: () => $('logoutBtn').click()})[k]?.();
   };
 }
 $('setBtn').onclick = openSettings;
@@ -4110,6 +4133,7 @@ function enterApp(me){
   onlineStart(); profileStart(); setTimeout(() => bdayCheck(0), 2500); shiftStart();
   // POD late documents (review 2026-11-04 #10) now come in Today's alerts at sign-in (signinFlow, MANU 2026-11-07)
   S.rules = lsGet('jmti_rules') || null; call('appRules').then(r => { S.rules = r; lsSet('jmti_rules', r); }).catch(() => {});   // odometer / driver rest rules (review 2026-11-04b)
+  S.pay = may('payView') ? lsGet('jmti_pay') || null : null; PAYR.at = 0; PAYR.off = false; payRatesLoad();   // salary rates for the estimated income (MANU 2026-11-16)
   $('askBtn').hidden = !ASK_ON;
   const tabs = me.tabs;
   $('tabs').innerHTML = tabs.filter(t => TAB_NAME[t]).map(t => `<button class="tab" role="tab" data-tab="${t}" type="button">${TAB_NAME[t]}</button>`).join('');   // a tab this page doesn't know is never shown as "undefined"
@@ -4529,7 +4553,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.8, APP_VERSION_DATE = '2026-11-13';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.83, APP_VERSION_DATE = '2026-11-16';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4560,6 +4584,20 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-16 "salary rate matrix" (the Drive file KM DISTANCE MATRIX.xlsx), "ok"
+  {v:14.83, d:'2026-11-16', items:[
+    'Estimated income of drivers and helpers now follows the salary rate matrix: pay per trip by distance, from 1 to 15 km up to 501 to 550 km. Helper pay is now ₱800 for 1 to 15 km and ₱950 for 51 to 100 km.',
+    'Also in the estimate now: a NO TRIP day pays ₱550 for the driver and ₱500 for the helper; a CPFI (Century) TUKOD trip pays ₱550 and ₱500; the Unlisolar trips to Laoag, Naga or Legaspi, Cauayan and Dagupan have their own pay.',
+    'Admin: Settings (the gear) > Salary rates changes any of these rates. "Back to the matrix" puts the matrix rates back.'
+  ]},
+  // MANU 2026-11-16 "items are multiple SKUs" (Released to the crew in the Charges Transmittal Form)
+  {v:14.82, d:'2026-11-16', items:[
+    'Charges Transmittal Form: Released to the crew now lists every item (SKU) on the form for each driver and helper. Type the pieces released of each item; No. of items released adds them up. The Charges and IR tab shows the pieces per item under each name.'
+  ]},
+  // MANU 2026-11-16 "when using truckplan, at auto refresh, the screen goes back to the top, it should not move"
+  {v:14.81, d:'2026-11-16', items:[
+    'Truck Plan stays where you are when it refreshes by itself. It no longer jumps back to the top or the first column, on phone and PC. Changing the dates, account, chip or Find box still starts at the top.'
+  ]},
   // MANU 2026-11-13 "generate new tab for Charges and Incident Reports summary, charges are based on POD column charge invoice" + the form, Book1.xlsx, aging, damages and penalties
   {v:14.8, d:'2026-11-13', items:[
     'New tab: Charges and IR. Everyone can see it. It shows all charges by month in the CHARGES 2026 layout (RDD date, truck, DTTR, invoice, items, pieces, unit price, total charge, expiry, crew, remarks, released date, items released, endorsed date), plus Per person, Per account, Per truck, Aging and Incident reports.',
@@ -5197,10 +5235,12 @@ function renderLowPay(){
   box.hidden = !may('payView'); if(box.hidden) return;
   if(!S.people) S.people = lsGet('jmti_people');
   if(!S.people && !LOW.peopleAsked){ LOW.peopleAsked = true; call('listManpower').then(p => { S.people = p; lsSet('jmti_people', p); renderLowPay(); }).catch(() => {}); }
-  const by = {driver:{}, helper:{}}, add = (role, n, t, w, km) => { const k = nameKey(n); if(!k) return; const p = by[role][k] || (by[role][k] = {pay:0, n:0, none:0, over:0, trips:0});
-    p.trips += w; const fx = routePay(role, t); if(fx){ p.pay += fx; p.n += w; return; } if(!km){ p.none += w; return; } p.pay += payRate(role, km) * w; p.n += w; if(km > 200) p.over += w; };
-  const ctx = {}; (S.tripsCtx || S.trips).forEach(t => { ctx[t.key] = t; });
-  S.trips.filter(isTrip).forEach(t => { const w = legW(t), km = pairKm(t, TRIP_W[t.key] && ctx[TRIP_W[t.key].other]); add('driver', t.driver, t, w, km); [t.helper1, t.helper2].forEach(h => add('helper', h, t, w, km)); });
+  const by = {driver:{}, helper:{}}, ent = (role, n) => { const k = nameKey(n); return k ? by[role][k] || (by[role][k] = {...payNew(), trips:0}) : null; };
+  const add = (role, n, t, w, km) => { const p = ent(role, n); if(!p) return; p.trips += w; payAdd(p, role, t, w, km); };
+  const ctx = {}, seen = {}; (S.tripsCtx || S.trips).forEach(t => { ctx[t.key] = t; });
+  S.trips.filter(isTrip).forEach(t => { const w = legW(t), km = pairKm(t, TRIP_W[t.key] && ctx[TRIP_W[t.key].other]); add('driver', t.driver, t, w, km); [t.helper1, t.helper2].forEach(h => add('helper', h, t, w, km));
+    [t.driver, t.helper1, t.helper2].forEach(n => { n = nameKey(n); if(n) seen[n + '|' + t.date] = 1; }); });
+  payNoTrip(S.trips, seen, ent);   // NO TRIP days (salary rate matrix)
   const pos = {driver:'Driver', helper:'Helper'};
   const list = role => (S.people || []).filter(p => p.status==='ACTIVE' && p.position===pos[role]).map(p => { const x = by[role][nameKey(p.full)];
     return {p, trips: x ? x.trips : 0, ...payEst(x, role)}; }).sort((a, b) => a.est - b.est || a.trips - b.trips || a.p.full.localeCompare(b.p.full));
@@ -5210,7 +5250,7 @@ function renderLowPay(){
   $('lowNote').textContent = `estimated trip income ${from===to ? 'on ' + fmtDay(from) : `from ${fmtDay(from)} to ${fmtDay(to)}`}, all accounts, active ${LOW.role}s, lowest first`;
   $('lowTbl').tBodies[0].innerHTML = !S.people ? '<tr><td colspan="4" class="empty-cell">Loading the drivers and helpers…</td></tr>'
     : rows.length ? rows.map((x, i) => `<tr><td>${i + 1}</td><td><b>${pLink(x.p.full)}</b>${x.p.truck ? `<small>Truck ${esc(x.p.truck)} today</small>` : ''}</td><td>${x.trips ? fmtN(x.trips) : '<span class="mp-idle">0</span>'}</td>`
-      + `<td class="n">${x.est ? pesoTxt(Math.round(x.est)) : '<span class="mp-idle">₱0</span>'}${x.none ? `<small>${fmtN(x.none)} at average rate</small>` : ''}</td></tr>`).join('')
+      + `<td class="n">${x.est ? pesoTxt(Math.round(x.est)) : '<span class="mp-idle">₱0</span>'}${x.none ? `<small>${fmtN(x.none)} at average rate</small>` : ''}${payNtTxt(x.nt)}</td></tr>`).join('')
     : '<tr><td colspan="4" class="empty-cell">No active people in this list.</td></tr>';
 }
 /**
@@ -6649,7 +6689,7 @@ window.addEventListener('resize', () => ['xList','podList','billList'].forEach(i
  *  chip, find, account, customer and dates are shown (changing one of those still starts at the top). The last cell tapped
  *  gets a green outline for 4 s, and if its row moved out of sight the table scrolls just enough to show it. */
 const PLACE = {};
-function keepPlace(id, sigOf, draw){
+function keepPlace(id, sigOf, draw, noCell){   // noCell: keep the scroll only, no green last-cell outline (Truck Plan, 14.8.1)
   const box = $(id); if(!box || !box.getClientRects().length) return draw();   // tab not on screen: nothing to keep
   const p = PLACE[id] = PLACE[id] || {};
   if(!box._kpOn){ box._kpOn = 1;
@@ -6667,7 +6707,7 @@ function keepPlace(id, sigOf, draw){
   if(w){ w.scrollLeft = p.l || 0; w.scrollTop = p.t || 0; }
   if(pgY() !== y){ window.scrollTo(window.scrollX, y); if(document.body && document.documentElement.classList.contains('inframe')) document.body.scrollTop = y; }
   const c = p.cell;
-  if(w && c && Date.now() - c.at < 60000){   // only right after a tap/save, so the 10 s refresh doesn't flash it again
+  if(w && c && !noCell && Date.now() - c.at < 60000){   // only right after a tap/save, so the 10 s refresh doesn't flash it again
     const tr = [...w.querySelectorAll('tr[data-key]')].find(r => r.dataset.key === c.key), td = tr && tr.cells[c.col];
     if(td){
       td.classList.add('cell-last'); clearTimeout(p.tm); p.tm = setTimeout(() => td.classList.remove('cell-last'), 4000);
@@ -7254,8 +7294,15 @@ function billingCsv(){
   else toast('The file could not be saved on this device.', true);
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
+/* Truck Plan keeps its place (MANU 2026-11-16 "when using truckplan, at auto refresh, the screen goes back to the top, it should
+   not move"): every refresh (trips changed by others, the safety refresh, a save) redraws the table, and the new table started at
+   the top and first column. keepPlace (from POD/Billing) puts the table's and the page's scroll back, while the same dates,
+   account, chip and Find are shown. */
 function renderDispatcher(){
   if(S.tab!=='dispatcher') return;
+  return keepPlace('xList', () => [S.xFilter, $('xFind').value, findBy('xFind'), $('xAcct').value, $('xDate').value, $('xTo').value].join('|'), renderDispatcherNow, true);
+}
+function renderDispatcherNow(){
   const RF = restFlags(S.xCtx || S.xTrips);   // driver rest warnings (review 2026-11-04b #7)
   $('xAddBtn').hidden = !may('dispatchAdd');
   $('xDelBtn').hidden = !may('restoreTrip');
@@ -8143,7 +8190,8 @@ function chgForm(ref, t, f, canEdit, me){
   const v0 = f || {rddId: t ? t.tripId || '' : '', rddDate: t ? t.date : '', truckNo: t ? t.truckNo || '' : '', plateNo: t ? t.plateNo || '' : '', shipmentNo: t ? t.shipmentNo || '' : '',
     invoiceNo: t && t.chargeInv && !/^CT-\d+$/.test(t.chargeInv) ? t.chargeInv : '', origin: t ? t.customer || '' : '', destination: t ? t.destination || '' : '',
     driver: t ? t.driver || '' : '', helper1: t ? t.helper1 || '' : '', helper2: t ? t.helper2 || '' : '', pod: me || (S.me && S.me.name) || '', bo: '', rel: {}, items: []};
-  const items = (f && f.items.length ? f.items : [{}]).map(x => ({...x}));
+  const items = (f && f.items.length ? f.items : [{}]).map(x => ({...x, relQ: {...(x.relQ || {})}}));
+  if(f && items.length===1) CHG_CREW.forEach(c => { const r = (f.rel || {})[c[0]] || {}; if(!items[0].relQ[c[0]] && r.items) items[0].relQ[c[0]] = r.items; });   // saved before 14.8.2: one number per person
   const inp = (id, label, val, extra, cls) => `<label class="f${cls ? ' ' + cls : ''}">${label}<input id="${id}" value="${esc(val || '')}" autocomplete="off"${extra || ''}${dis}></label>`;
   const itemHtml = (x, i) => `<div class="chg-item" data-i="${i}"><div class="chg-item-h"><b>Item ${i + 1}</b>${ro ? '' : `<button class="btn alt sm" type="button" data-rm="${i}" title="Remove this item">Remove</button>`}</div><div class="chg-grid">
       ${inp('ci_desc_' + i, 'Item description', x.desc, ' placeholder="e.g. ANGEL EVAP. FILLED MILK 370ml"', 'full')}
@@ -8159,13 +8207,19 @@ function chgForm(ref, t, f, canEdit, me){
     </div></div>`;
   const readItems = () => items.map((x, i) => $('ci_desc_' + i) ? {qtyCase: $('ci_case_' + i).value.trim(), qtyPcs: $('ci_pcs_' + i).value.trim(), desc: $('ci_desc_' + i).value.trim(),
     price: $('ci_price_' + i).value.replace(/[₱,\s]/g, ''), total: $('ci_total_' + i).value.replace(/[₱,\s]/g, ''), exp: $('ci_exp_' + i).value, loc: $('ci_loc_' + i).value.trim(),
-    itemId: $('ci_iid_' + i).value.trim(), invId: $('ci_inv_' + i).value.trim(), remarks: $('ci_rem_' + i).value.trim()} : x);
+    itemId: $('ci_iid_' + i).value.trim(), invId: $('ci_inv_' + i).value.trim(), remarks: $('ci_rem_' + i).value.trim(),
+    relQ: CHG_CREW.reduce((o, c) => { const e = $('cr_q_' + c[0] + '_' + i); o[c[0]] = e ? e.value.trim() : ((x.relQ || {})[c[0]] || ''); return o; }, {})} : x);
   const totalOf = l => l.reduce((a, x) => a + (x.total !== '' && x.total !== undefined && x.total !== null ? Number(x.total) || 0 : (parseFloat(x.qtyPcs) || 0) * (Number(x.price) || 0)), 0);
   const crewNow = () => CHG_CREW.map(c => ({k: c[0], label: c[1], name: $('cf_' + c[0]) ? $('cf_' + c[0]).value.trim() : v0[c[0]], rel: (v0.rel || {})[c[0]] || {}}));
+  // items are several SKUs (MANU 2026-11-16): pieces released per item for each crew member; NO. OF ITEMS RELEASED = their sum
+  const skuLbl = (x, i) => esc(x.desc || 'Item ' + (i + 1)) + (x.qtyPcs ? `<small>charged ${esc(x.qtyPcs)} pcs</small>` : '');
+  const relSum = k => { const l = items.map(x => (x.relQ || {})[k]).filter(v => String(v || '').trim() !== ''); return l.length ? fmtN(Math.round(l.reduce((a, v) => a + (parseFloat(v) || 0), 0) * 100) / 100) : ''; };
   const relHtml = () => crewNow().filter(c => c.name).map(c => `<div class="chg-rel"><b>${esc(c.label)}: ${esc(c.name)}</b><div class="chg-grid">
       ${inp('cr_d_' + c.k, 'Released date', c.rel.date, ' placeholder="e.g. 2026-07-04"')}
-      ${inp('cr_n_' + c.k, 'No. of items released', c.rel.items, ' placeholder="e.g. 24"')}
       ${inp('cr_e_' + c.k, 'Endorsed date', c.rel.endorsed, ' placeholder="e.g. 2026-07-10"')}
+    </div><div class="chg-skus"><div class="chg-sku-h">Items released (pieces per item)</div>
+      ${items.map((x, i) => `<label class="f chg-sku"><span data-skul="${i}">${skuLbl(x, i)}</span><input id="cr_q_${c.k}_${i}" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc((x.relQ || {})[c.k] || '')}"${dis}></label>`).join('')}
+      <div class="chg-sku-t">No. of items released: <b id="cr_t_${c.k}">${esc(relSum(c.k) || c.rel.items || '0')}</b></div>
     </div></div>`).join('') || '<p class="hint">Type the driver or helpers above first.</p>';
   const draw = () => {
     $('popBody').innerHTML = `<div class="chg-form">
@@ -8198,10 +8252,13 @@ function chgForm(ref, t, f, canEdit, me){
     if(ro) return;
     $('cfAdd').onclick = () => { keep(); items.push({}); draw(); const i = items.length - 1; if($('ci_desc_' + i)) $('ci_desc_' + i).focus(); };
     $('cfItems').oninput = () => { $('cfTotal').textContent = chgMoney(totalOf(readItems())); };
+    $('cfItems').onchange = () => { readItems().forEach((x, i) => { items[i] = x; }); document.querySelectorAll('#cfRel [data-skul]').forEach(e => { const i = Number(e.dataset.skul); if(items[i]) e.innerHTML = skuLbl(items[i], i); }); };   // item names / pieces in the released lists (no redraw: the box being typed in keeps its focus)
+    $('cfRel').oninput = () => { readItems().forEach((x, i) => { items[i] = x; }); CHG_CREW.forEach(c => { if($('cr_t_' + c[0])) $('cr_t_' + c[0]).textContent = relSum(c[0]) || '0'; }); };
     $('cfItems').onclick = e => { const b = e.target.closest('[data-rm]'); if(!b) return; keep(); items.splice(Number(b.dataset.rm), 1); if(!items.length) items.push({}); draw(); };
     CHG_CREW.forEach(c => { $('cf_' + c[0]).onchange = () => { keepRel(); $('cfRel').innerHTML = relHtml(); }; });
   };
-  const keepRel = () => { v0.rel = v0.rel || {}; CHG_CREW.forEach(c => { if($('cr_d_' + c[0])) v0.rel[c[0]] = {date: $('cr_d_' + c[0]).value.trim(), items: $('cr_n_' + c[0]).value.trim(), endorsed: $('cr_e_' + c[0]).value.trim()}; }); };
+  const keepRel = () => { v0.rel = v0.rel || {}; readItems().forEach((x, i) => { items[i] = x; });
+    CHG_CREW.forEach(c => { if($('cr_d_' + c[0])) v0.rel[c[0]] = {date: $('cr_d_' + c[0]).value.trim(), items: relSum(c[0]) || ((v0.rel[c[0]] || {}).items || ''), endorsed: $('cr_e_' + c[0]).value.trim()}; }); };
   const keep = () => { readItems().forEach((x, i) => { items[i] = x; }); ['rddId','rddDate','truckNo','plateNo','shipmentNo','invoiceNo','origin','destination','driver','helper1','helper2','pod','bo'].forEach(k => { if($('cf_' + k)) v0[k] = $('cf_' + k).value; }); keepRel(); };
   const sub = [t ? 'Truck ' + (t.truckNo || '—') : f ? 'Truck ' + (f.truckNo || '—') : '', t ? plainDest(t.destination) || t.customer : f ? plainDest(f.destination) : ''].filter(Boolean).map(esc).join(' · ') + (ro ? ' · view only' : '');
   openPop(f ? `Charges ${f.no}` : 'Charges Transmittal Form', sub, '', `${f && canEdit ? '<button class="btn alt danger" type="button" id="cfDel">Delete form</button> ' : ''}<span style="flex:1"></span><button class="btn alt" type="button" id="cfClose">${ro ? 'Close' : 'Cancel'}</button>${ro ? '' : ' <button class="btn" type="button" id="cfSave">Save</button>'}`);
@@ -8316,7 +8373,7 @@ function renderCharges(){
               + (x ? `<td>${esc(x.desc)}</td><td class="n">${esc(x.qtyCase)}</td><td class="n">${esc(x.qtyPcs)}</td><td class="n">${esc(chgPrice(x.price))}</td><td class="n"><b>${esc(chgMoney(x.total))}</b></td><td>${esc(chgDay(x.exp))}</td>` : '<td></td><td></td><td></td><td></td><td></td><td></td>')
               + (i===0 ? `<td${rs}>${f.driver ? pLink(f.driver) : ''}</td><td${rs}>${f.helper1 ? pLink(f.helper1) : ''}</td><td${rs}>${f.helper2 ? pLink(f.helper2) : ''}</td>` : '')
               + `<td>${x ? esc(x.remarks) : ''}</td>`
-              + (c ? `<td>${esc(c.name)}</td><td>${esc(chgDay(c.rel.date))}</td><td class="n">${esc(c.rel.items)}</td><td>${esc(chgDay(c.rel.endorsed))}</td>` : '<td></td><td></td><td></td><td></td>')
+              + (c ? `<td>${esc(c.name)}</td><td>${esc(chgDay(c.rel.date))}</td><td class="n">${esc(c.rel.items)}${f.items.length > 1 ? f.items.filter(y => String((y.relQ || {})[c.k] || '').trim()!=='').map(y => `<small>${esc(y.desc)}: ${esc(y.relQ[c.k])}</small>`).join('') : ''}</td><td>${esc(chgDay(c.rel.endorsed))}</td>` : '<td></td><td></td><td></td><td></td>')
               + (i===0 ? `<td${rs} class="${chgCleared(f) ? 'chg-ok' : chgBucket(chgDaysOf(chgDateOf(f))) >= 2 ? 'chg-old' : ''}">${esc(chgAgeTxt(f))}</td>` : '')
               + '</tr>';
           }
@@ -8410,7 +8467,7 @@ function chargesCsv(){
     for(let i = 0; i < n; i++){ const x = f.items[i], c = cr[i];
       rows.push([i===0 ? chgDateOf(f) : '', i===0 ? f.truckNo : '', i===0 ? f.shipmentNo : '', i===0 ? f.invoiceNo : '', i===0 ? f.origin : '', i===0 ? f.destination : '',
         x ? x.desc : '', x ? x.qtyCase : '', x ? x.qtyPcs : '', x ? x.price : '', x ? x.total : '', x ? x.exp : '',
-        i===0 ? f.driver : '', i===0 ? f.helper1 : '', i===0 ? f.helper2 : '', x ? x.remarks : '', c ? c.name : '', c ? c.rel.date : '', c ? c.rel.items : '', c ? c.rel.endorsed : '', i===0 ? chgAgeTxt(f) : '']); } });
+        i===0 ? f.driver : '', i===0 ? f.helper1 : '', i===0 ? f.helper2 : '', x ? x.remarks : '', c ? c.name : '', c ? c.rel.date : '', c ? c.rel.items + (f.items.length > 1 ? ' (' + f.items.filter(y => String((y.relQ || {})[c.k] || '').trim()!=='').map(y => y.desc + ': ' + y.relQ[c.k]).join('; ') + ')' : '').replace(' ()', '') : '', c ? c.rel.endorsed : '', i===0 ? chgAgeTxt(f) : '']); } });
   saveCsvFile(`Charges ${f0} to ${t0}.csv`, CHG_SHEET_HEAD, rows);
 }
 
@@ -9020,7 +9077,7 @@ function loadMpRange(){
   const f = $('mrFrom').value, t = $('mrTo').value;
   if(!f || !t || f > t){ $('mrNote').textContent = 'Pick a From date on or before the To date.'; return; }
   $('mrTbl').classList.add('loading');
-  call('manpowerTripCounts', f, t).then(r => { if($('mrFrom').value!==f || $('mrTo').value!==t) return; S.mpRange = r; renderMpRange(); })
+  call('manpowerTripCounts', f, t).then(r => { if($('mrFrom').value!==f || $('mrTo').value!==t) return; S.mpRange = r; if(r && r.rates && r.rates.bands){ S.pay = r.rates; lsSet('jmti_pay', r.rates); } renderMpRange(); })
     .catch(e => toast(e.message, true)).finally(() => $('mrTbl').classList.remove('loading'));
 }
 function renderMpRange(){
@@ -9033,8 +9090,8 @@ function renderMpRange(){
   const none = people.filter(x => !x.n).length;
   const list = people.filter(x => !$('mrNone').checked || !x.n).sort((a,b) => a.n - b.n || b.off - a.off || a.p.full.localeCompare(b.p.full));
   $('mrNote').innerHTML = `${people.length} active ${role.toLowerCase()}s · <b>${none}</b> with no trip as ${role.toLowerCase()} from ${esc(fmtDay($('mrFrom').value))} to ${esc(fmtDay($('mrTo').value))} · lowest count first · tap a name for their record`
-    + (payBy ? ` · estimated income <b>${pesoTxt(Math.round(people.reduce((a, x) => a + x.pay.est, 0)))}</b> in all (rate per trip by distance)` : '');
-  $('mrTbl').tBodies[0].innerHTML = list.length ? list.map((x,i) => `<tr class="rowbtn" data-row="${x.p.row}"><td>${i+1}</td><td><b>${esc(x.p.full)}</b></td><td>${x.n ? `<b>${fmtN(x.n)}</b>` : '<span class="mp-idle">0</span>'}</td>${payBy ? `<td class="n">${x.pay.est ? pesoTxt(Math.round(x.pay.est)) : '—'}${x.pay.none ? `<small>${fmtN(x.pay.none)} at average rate</small>` : ''}</td>` : ''}<td>${x.off===span ? `<span class="mp-idle">${x.off} of ${span} (all)</span>` : `${x.off} of ${span}`}</td><td>${x.p.truck ? tLink(x.p.truck) : '—'}</td><td>${x.p.lastTrip ? esc(fmtDay(x.p.lastTrip)) : '<span class="dim">—</span>'}</td></tr>`).join('')
+    + (payBy ? ` · estimated income <b>${pesoTxt(Math.round(people.reduce((a, x) => a + x.pay.est, 0)))}</b> in all (salary rates: pay per trip by distance)` : '');
+  $('mrTbl').tBodies[0].innerHTML = list.length ? list.map((x,i) => `<tr class="rowbtn" data-row="${x.p.row}"><td>${i+1}</td><td><b>${esc(x.p.full)}</b></td><td>${x.n ? `<b>${fmtN(x.n)}</b>` : '<span class="mp-idle">0</span>'}</td>${payBy ? `<td class="n">${x.pay.est ? pesoTxt(Math.round(x.pay.est)) : '—'}${x.pay.none ? `<small>${fmtN(x.pay.none)} at average rate</small>` : ''}${payNtTxt(x.pay.nt)}</td>` : ''}<td>${x.off===span ? `<span class="mp-idle">${x.off} of ${span} (all)</span>` : `${x.off} of ${span}`}</td><td>${x.p.truck ? tLink(x.p.truck) : '—'}</td><td>${x.p.lastTrip ? esc(fmtDay(x.p.lastTrip)) : '<span class="dim">—</span>'}</td></tr>`).join('')
     : `<tr><td colspan="${payBy ? 7 : 6}" style="text-align:center;color:var(--muted);padding:20px">${$('mrNone').checked ? 'Everyone had at least one trip in these dates.' : 'Nobody to show.'}</td></tr>`;
 }
 /** Refresh button: lists who has had no trip for 30 days, then sets them INACTIVE after confirming (MANU). */
@@ -9695,24 +9752,139 @@ function renderRem(){
 }
 
 /* ---- Estimated income (MANU 2026-10-21 "based on the rate matrix of the drivers and helpers, generate the estimated income of the drivers
-   and add to analytics", "shown in jmti app"): pay per trip by one-way distance, same table as Code.gs PAY_BANDS. Over 200 km has no rate
-   yet (paid at 151-200, counted apart); a round trip's legs are 0.5 each; trips with no distance take the person's average rate for that
-   role (or the 0-15 km rate). Admin, Boss, HR, Accounting and Payroll see it (may('payView')). */
-const PAY_BANDS = {driver:[[15,1000],[50,1050],[100,1250],[150,1450],[200,1650]], helper:[[15,825],[50,850],[100,900],[150,1050],[200,1150]]};
-const payRate = (role, km) => { const b = PAY_BANDS[role]; return (b.find(x => km <= x[0]) || b[b.length - 1])[1]; };
-/** Routes with their own pay, whatever the km (MANU 2026-10-21 "COCA COLA SAN FERNANDO TO COCA COLA SAN FERNANDO CENTRAL IS ONLY 800 PER
-    ROUNDTRIP FOR DRIVER AND 600 PER ROUNDTRIP FOR HELPER"): either way; each leg pays half the round trip. Same table as Code.gs ROUTE_PAY. */
-const ROUTE_PAY = [{name:'Coca Cola San Fernando Pampanga and Central San Fernando', a: k => /SANFERNANDO/.test(k) && !/CENTRAL|CLRAUX/.test(k),
-  b: k => /CENTRALSANFERNANDO/.test(k), driver:800, helper:600}];
-const routePay = (role, t) => { const key = v => String(v || '').split('|').pop().toUpperCase().replace(/[^A-Z0-9]/g, ''), s = key(t.customer), d = key(t.destination);
-  const r = ROUTE_PAY.find(r => (r.a(s) && r.b(d)) || (r.b(s) && r.a(d))); return r ? r[role] / 2 : 0; };
-const payKm = t => { const k = numOf(t.kms); return k > 0 && k <= 400 ? k : numOf(kmFor(t.customer, t.destination)); };
+   and add to analytics", "shown in jmti app"; MANU 2026-11-16 "salary rate matrix" = the Drive file KM DISTANCE MATRIX.xlsx, "ok"): pay per
+   trip by one-way distance, 1-15 km up to 501-550 km (a longer trip is paid at the last band and counted apart); a round trip's legs are 0.5
+   each; a CPFI (Century) TUKOD trip pays the flat TUKOD rate, any other TUKOD half the distance rate; a NO TRIP row pays its crew the NO TRIP
+   rate once a day, only on a day they have no counted trip; some routes have their own rate; trips with no distance take the person's
+   average rate for that role (or the first band). Same table and rules as Code.gs (PAY_DEFAULT, payAdd_). Admin changes the rates in
+   Settings > Salary rates; the page reads them at sign-in (S.pay). Admin, Boss, HR, Accounting and Payroll see it (may('payView')). */
+const PAY_DEFAULT = {
+  bands: {driver:[[15,1000],[50,1050],[100,1250],[150,1450],[200,1650],[250,1850],[300,2050],[350,2250],[400,2450],[450,2650],[500,2850],[550,3050]],
+          helper:[[15,800],[50,850],[100,950],[150,1050],[200,1150],[250,1250],[300,1350],[350,1450],[400,1550],[450,1650],[500,1750],[550,1850]]},
+  tukod: {driver:550, helper:500}, tukodAll: false,   // tukodAll: the flat TUKOD rate for every account, not only CPFI
+  noTrip: {driver:550, helper:500},
+  sf: {driver:800, helper:600},   // Coca Cola San Fernando <-> Central San Fernando, per round trip (matrix T1 SANFERNANDO: 400 / 300 a leg)
+  // source and destination words as the places are spelled in the app (same as Code.gs PAY_DEFAULT)
+  routes: [{name:'Unlisolar Quezon City to Laoag, Ilocos Norte', from:'UNLISOLAR / UNLI SOLAR / SOLAR PANEL / SANTA MESA / STA MESA', to:'LAOAG', driver:2850, helper:1750},
+           {name:'Unlisolar Quezon City to Naga or Legaspi', from:'UNLISOLAR / UNLI SOLAR / SOLAR PANEL / SANTA MESA / STA MESA', to:'NAGA / LEGASPI / LEGAZPI', driver:2350, helper:1150},
+           {name:'Unlisolar Quezon City to Cauayan, Isabela', from:'UNLISOLAR / UNLI SOLAR / SOLAR PANEL / SANTA MESA / STA MESA', to:'CAUAYAN / CAUYAN', driver:2450, helper:1550},
+           {name:'Unlisolar Quezon City to Dagupan, Pangasinan', from:'UNLISOLAR / UNLI SOLAR / SOLAR PANEL / SANTA MESA / STA MESA', to:'DAGUPAN', driver:1650, helper:1150}]
+};
+const PAY_KM_MAX = 600;   // a trip's own KMS above this (and above the last band) is taken as a typing mistake: the CLIENT LIST km is used
+let _payR = null, _payRSrc;
+/** The salary rates in use: what the server sent (S.pay), else the matrix. */
+const payR = () => { if(!_payR || _payRSrc !== S.pay){ const r = _payRSrc = S.pay, b = r && r.bands;
+    _payR = b && Array.isArray(b.driver) && b.driver.length && Array.isArray(b.helper) && b.helper.length===b.driver.length ? {...PAY_DEFAULT, ...r} : PAY_DEFAULT; } return _payR; };
+/** Loads the salary rates (the roles that see pay): at sign-in, and when the page comes back on screen after 2 minutes, because the
+    Admin may have changed them on another phone or PC. The Dashboard list is drawn again when the rates are different. */
+const PAYR = {at:0, off:false};
+function payRatesLoad(){
+  if(PAYR.off || !TOKEN || !S.me || !may('payView')) return;
+  PAYR.at = Date.now();
+  call('payRates').then(r => { if(!r || !r.bands) return; const was = JSON.stringify(payR()); S.pay = r; lsSet('jmti_pay', r);
+    if(JSON.stringify(payR()) !== was && S.tab==='dashboard' && S.trips) renderLowPay(); })
+    .catch(e => { if(!(e && e.net)) PAYR.off = true; });   // a server without payRates (older Code.gs): the matrix is used, and it is not asked again
+}
+document.addEventListener('visibilitychange', () => { if(!document.hidden && Date.now() - PAYR.at > 120000) payRatesLoad(); });
+const payRate = (role, km) => { const b = payR().bands[role]; return (b.find(x => km <= x[0]) || b[b.length - 1])[1]; };
+const payTop = () => { const b = payR().bands.driver; return b[b.length - 1][0]; };
+/** true when the place name has one of the words ("/" = or), as whole words: CAUAYAN is not in MEYCAUAYAN. */
+const payWords = (txt, words) => { const k = ' ' + String(txt || '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim() + ' ';
+  return String(words || '').toUpperCase().split('/').map(w => w.replace(/[^A-Z0-9]+/g, ' ').trim()).filter(Boolean).some(w => k.includes(' ' + w + ' ')); };
+/** A CPFI (Century Pacific) trip, by its source or destination name. */
+const payCpfi = t => /\bCPFI\b|CENTURY/i.test(String(t.customer || '') + ' ' + String(t.destination || ''));
+/** Coca Cola San Fernando <-> Central San Fernando, either way (MANU 2026-10-21 "COCA COLA SAN FERNANDO TO COCA COLA SAN FERNANDO CENTRAL IS
+    ONLY 800 PER ROUNDTRIP FOR DRIVER AND 600 PER ROUNDTRIP FOR HELPER"): each leg pays half the round trip, whatever the km. */
+const paySf = t => { const key = v => String(v || '').split('|').pop().toUpperCase().replace(/[^A-Z0-9]/g, ''), s = key(t.customer), d = key(t.destination),
+  sf = k => /SANFERNANDO/.test(k) && !/CENTRAL|CLRAUX/.test(k), ce = k => /CENTRALSANFERNANDO/.test(k); return (sf(s) && ce(d)) || (ce(s) && sf(d)); };
+/** A route rate for this trip (weight w: 1, or 0.5 for a round trip leg or a TUKOD), else 0. Same as Code.gs routePay_. */
+const routePay = (role, t, w) => { const R = payR(); if(paySf(t)) return R.sf[role] / 2;
+  const r = (R.routes || []).find(r => payWords(t.customer, r.from) && payWords(t.destination, r.to)); return r ? r[role] * (w || 1) : 0; };
+const payKm = t => { const k = numOf(t.kms); return k > 0 && k <= Math.max(PAY_KM_MAX, payTop()) ? k : numOf(kmFor(t.customer, t.destination)); };
 /** A Coca Cola round trip is paid as 1 trip (MANU 2026-10-21 "SALARY RATE FOR COCA COLA ROUNDTRIP IS CONSIDERED 1 TRIP"): each leg is half,
     both at the round trip's distance (the longer leg), so the pair pays one band rate. mate = the other leg, if any. */
 const pairKm = (t, mate) => Math.max(payKm(t), mate ? payKm(mate) : 0);
-/** {est, pay, n, none, over, avg} for a pay entry {pay, n, none, over} of one role. */
-const payEst = (p, role) => { if(!p) return {est:0, pay:0, n:0, none:0, over:0, avg:0}; const avg = p.n ? p.pay / p.n : PAY_BANDS[role][0][1]; return {...p, avg, est: p.pay + p.none * avg}; };
-const payBandsHtml = () => `<table class="hs-tbl"><thead><tr><th>Distance (one way)</th><th class="n">Driver</th><th class="n">Helper</th></tr></thead><tbody>${PAY_BANDS.driver.map((b, i) => `<tr><td>${i ? PAY_BANDS.driver[i - 1][0] + 1 : 0} to ${b[0]} km${i===PAY_BANDS.driver.length - 1 ? ' (also over 200 km for now)' : ''}</td><td class="n">${pesoTxt(b[1])}</td><td class="n">${pesoTxt(PAY_BANDS.helper[i][1])}</td></tr>`).join('')}${ROUTE_PAY.map(r => `<tr><td>${esc(r.name)}, any km, per round trip (half per leg)</td><td class="n">${pesoTxt(r.driver)}</td><td class="n">${pesoTxt(r.helper)}</td></tr>`).join('')}</tbody></table>`;
+/** The pay of one trip (weight w, distance km): {amt, kind} with kind 'sf' | 'route' | 'tukod' | 'km' | 'none' (no distance); over = longer than the last band. */
+const payOf = (role, t, w, km) => { const R = payR(), fx = routePay(role, t, w);
+  if(fx) return {amt: fx, kind: paySf(t) ? 'sf' : 'route'};
+  if(String(t.status || '').trim().toLowerCase()==='tukod' && (R.tukodAll || payCpfi(t))) return {amt: R.tukod[role], kind:'tukod'};
+  if(!km) return {amt: 0, kind:'none'};
+  return {amt: payRate(role, km) * w, kind:'km', over: km > payTop()}; };
+const payNew = () => ({pay:0, n:0, none:0, over:0, tukod:0, nt:0, ntPay:0});
+/** Adds one trip to a pay entry p = {pay, n, none, over, tukod, nt, ntPay} (same as Code.gs payAdd_). */
+const payAdd = (p, role, t, w, km) => { const x = payOf(role, t, w, km); if(x.kind==='none'){ p.none += w; return; } p.pay += x.amt; p.n += w; if(x.kind==='tukod') p.tukod = (p.tukod || 0) + 1; if(x.over) p.over += w; };
+const isNoTripRow = t => String(t.status || '').trim().toLowerCase()==='no trip';
+/** NO TRIP days: each NO TRIP row pays its crew the NO TRIP rate, once a day, only on a day they have no counted trip.
+    seen = {nameKey|date: 1} of the counted trips; entry(role, name) gives that person's pay entry. */
+function payNoTrip(rows, seen, entry){ const R = payR();
+  rows.filter(isNoTripRow).forEach(t => [['driver', t.driver], ['helper', t.helper1], ['helper', t.helper2]].forEach(([role, nm]) => { const k = nameKey(nm); if(!k || seen[k + '|' + t.date]) return;
+    seen[k + '|' + t.date] = 1; const p = entry(role, nm); if(p){ p.nt = (p.nt || 0) + 1; p.ntPay = (p.ntPay || 0) + R.noTrip[role]; } })); }
+/** {est, pay, n, none, over, avg, nt, ntPay} for a pay entry of one role: est = trips paid + trips with no distance at the average + NO TRIP days. */
+const payEst = (p, role) => { if(!p) return {est:0, pay:0, n:0, none:0, over:0, avg:0, nt:0, ntPay:0}; const avg = p.n ? p.pay / p.n : payR().bands[role][0][1]; return {...p, avg, est: p.pay + p.none * avg + (p.ntPay || 0)}; };
+const payNtTxt = n => n ? `<small>${fmtN(n)} NO TRIP day${n===1 ? '' : 's'}</small>` : '';
+const payBandsHtml = () => { const R = payR(), d = R.bands.driver, h = R.bands.helper, row = (a, x, y) => `<tr><td>${a}</td><td class="n">${pesoTxt(x)}</td><td class="n">${pesoTxt(y)}</td></tr>`;
+  return `<table class="hs-tbl"><thead><tr><th>Distance (one way)</th><th class="n">Driver</th><th class="n">Helper</th></tr></thead><tbody>`
+    + d.map((b, i) => row(`${i ? d[i - 1][0] + 1 : 1} to ${b[0]} km${i===d.length - 1 ? ' (and longer trips)' : ''}`, b[1], h[i][1])).join('')
+    + row('NO TRIP day<small>the crew of a NO TRIP row, on a day with no trip</small>', R.noTrip.driver, R.noTrip.helper)
+    + row(R.tukodAll ? 'TUKOD trip' : 'TUKOD trip, CPFI (Century)<small>other TUKOD trips: half the distance pay</small>', R.tukod.driver, R.tukod.helper)
+    + row('Coca Cola San Fernando and Central San Fernando<small>any km, per round trip (half per leg)</small>', R.sf.driver, R.sf.helper)
+    + (R.routes || []).map(r => row(`${esc(r.name)}<small>route pay, any km</small>`, r.driver, r.helper)).join('') + `</tbody></table>`
+    + (S.me && S.me.role==='ADMIN' ? `<p class="pr-add"><button class="btn alt" type="button" data-payedit>Change the rates</button></p>` : ''); };
+/* ===== Salary rates (MANU 2026-11-16 "salary rate matrix"): Admin changes the pay per trip used for the estimated income, in
+   Settings (gear) > Salary rates, or with "Change the rates" under the rate table of a person's estimated income. ===== */
+function openPayRates(){
+  if(!S.me || S.me.role !== 'ADMIN') return;
+  const R = payR(), box = (cls, v, lab, ph) => `<input class="${cls}" inputmode="decimal" autocomplete="off" value="${esc(v ?? '')}" placeholder="${ph || '₱'}" aria-label="${esc(lab)}">`;
+  const band = (km, d, h) => `<tr><td>${box('pr-km', km, 'Up to km', 'km')}</td><td>${box('pr-d', d, 'Driver pay')}</td><td>${box('pr-h', h, 'Helper pay')}</td><td><button class="btn alt pr-x" type="button" data-prx="band" title="Remove this row" aria-label="Remove this row">✕</button></td></tr>`;
+  const fix = (k, label, sub, x) => `<tr data-fix="${k}"><td>${label}${sub ? `<small>${sub}</small>` : ''}</td><td>${box('pr-d', x.driver, label + ', driver pay')}</td><td>${box('pr-h', x.helper, label + ', helper pay')}</td></tr>`;
+  const route = r => `<div class="pr-route">
+      <label class="f pr-wide">Route name<textarea class="pr-name" rows="2" autocomplete="off" maxlength="80" placeholder="For example: Unlisolar Quezon City to Laoag">${esc(r.name || '')}</textarea></label>
+      <label class="f pr-w">A word in the source name<textarea class="pr-from" rows="2" autocomplete="off" maxlength="150" placeholder="For example: SOLAR PANEL">${esc(r.from || '')}</textarea></label>
+      <label class="f pr-w">A word in the destination name<textarea class="pr-to" rows="2" autocomplete="off" maxlength="150" placeholder="For example: LAOAG">${esc(r.to || '')}</textarea></label>
+      <label class="f">Driver pay${box('pr-d', r.driver, 'Driver pay')}</label>
+      <label class="f">Helper pay${box('pr-h', r.helper, 'Helper pay')}</label>
+      <button class="btn alt pr-wide" type="button" data-prx="route">Remove this route</button></div>`;
+  openPop('Salary rates', 'Pay per trip of drivers and helpers. The app uses it for the estimated income.', `<div class="pr">
+    <div class="hs-sec">Pay per trip by distance (one way)</div>
+    <table class="hs-tbl pr-tbl"><thead><tr><th>Up to km</th><th>Driver</th><th>Helper</th><th></th></tr></thead><tbody id="prBands">${R.bands.driver.map((b, i) => band(b[0], b[1], R.bands.helper[i][1])).join('')}</tbody></table>
+    <p class="pr-add"><button class="btn alt" type="button" id="prAddBand">+ Add a distance</button></p>
+    <p class="hint">Each row is the pay for one trip up to that many km, one way. A trip longer than the last row gets the last row's pay. A round trip counts as one trip (half for each leg).</p>
+    <div class="hs-sec">Other rates</div>
+    <table class="hs-tbl pr-tbl pr-fix"><thead><tr><th></th><th>Driver</th><th>Helper</th></tr></thead><tbody>
+      ${fix('noTrip', 'NO TRIP day', 'the crew of a NO TRIP row, on a day they have no trip', R.noTrip)}
+      ${fix('tukod', 'TUKOD trip', '', R.tukod)}
+      ${fix('sf', 'Coca Cola San Fernando and Central San Fernando', 'per round trip, any km (half for each leg)', R.sf)}</tbody></table>
+    <label class="f pr-sel">The TUKOD rate is for<select id="prTukodAll"><option value="">CPFI (Century) trips only</option><option value="1"${R.tukodAll ? ' selected' : ''}>Every TUKOD trip</option></select></label>
+    <p class="hint">A TUKOD trip without the TUKOD rate gets half the pay of its distance.</p>
+    <div class="hs-sec">Routes with their own pay</div>
+    <p class="hint">A trip gets this pay, whatever its km, when its source name and its destination name have these words. When either of two words is fine, put / between them, like NAGA / LEGASPI.</p>
+    <div id="prRoutes">${(R.routes || []).map(route).join('')}</div>
+    <p class="pr-add"><button class="btn alt" type="button" id="prAddRoute">+ Add a route</button></p></div>`,
+    `<button class="btn alt" type="button" id="prReset">Back to the matrix</button> <button class="btn alt" type="button" onclick="closePop()">Cancel</button> <button class="btn road" type="button" id="prSave">Save rates</button>`);
+  $('popBody').scrollTop = 0;   // opened from the end of Settings: start at the first rate
+  $('popBody').onclick = e => {
+    const x = e.target.closest('[data-prx]');
+    if(x){ if(x.dataset.prx==='band'){ if($('prBands').rows.length < 2) return toast('Keep at least one distance.', true); x.closest('tr').remove(); } else x.closest('.pr-route').remove(); return; }
+    if(e.target.closest('#prAddBand')){ const kms = [...$('prBands').querySelectorAll('.pr-km')].map(i => numOf(i.value)).filter(n => n > 0);
+      $('prBands').insertAdjacentHTML('beforeend', band(kms.length ? Math.max(...kms) + 50 : '', '', '')); $('prBands').rows[$('prBands').rows.length - 1].querySelector('.pr-d').focus(); return; }
+    if(e.target.closest('#prAddRoute')){ $('prRoutes').insertAdjacentHTML('beforeend', route({})); $('prRoutes').lastElementChild.querySelector('.pr-name').focus(); }
+  };
+  const val = (el, c) => el.querySelector(c).value.trim(), two = el => ({driver: val(el, '.pr-d'), helper: val(el, '.pr-h')});
+  const read = () => ({
+    bands: [...$('prBands').rows].map(tr => ({km: val(tr, '.pr-km'), ...two(tr)})),
+    noTrip: two(document.querySelector('#popBody [data-fix="noTrip"]')), tukod: two(document.querySelector('#popBody [data-fix="tukod"]')), sf: two(document.querySelector('#popBody [data-fix="sf"]')),
+    tukodAll: $('prTukodAll').value==='1',
+    routes: [...$('prRoutes').querySelectorAll('.pr-route')].map(el => ({name: val(el, '.pr-name'), from: val(el, '.pr-from'), to: val(el, '.pr-to'), ...two(el)}))
+  });
+  const done = (r, msg) => { S.pay = r; lsSet('jmti_pay', r); closePop(); toast(msg); if(S.tab==='dashboard') renderLowPay(); if(S.tab==='manpower') loadMpRange(); };
+  $('prSave').onclick = async () => { $('prSave').disabled = true;
+    try{ done(await call('savePayRates', read()), 'Salary rates saved'); }catch(err){ toast(err.message, true); if($('prSave')) $('prSave').disabled = false; } };
+  $('prReset').onclick = async () => {
+    if(!confirm('Put back the rates of the salary rate matrix? The changes made here are removed.')) return;
+    $('prReset').disabled = true;
+    try{ done(await call('savePayRates', {reset:true}), 'The rates of the matrix are back'); }catch(err){ toast(err.message, true); if($('prReset')) $('prReset').disabled = false; } };
+}
+document.addEventListener('click', e => { if(e.target.closest && e.target.closest('[data-payedit]')) openPayRates(); });
 
 /* ===== Manpower / Fleet pop-ups: trip record, statistics and analysis (view only) ===== */
 const numOf = v => { const n = parseFloat(String(v ?? '').replace(/,/g,'').replace(/[^0-9.\-]/g,'')); return isFinite(n) ? n : 0; };
@@ -9913,20 +10085,28 @@ function hsScoreFill(p, f, to, details){
   }).catch(() => { set0(); });
   const set0 = () => { const b = document.querySelector('[data-hk="score"] b'); if(b) b.textContent = '—'; };
 }
-/** Estimated income from the trips in the chosen dates (round trip legs 0.5): totals, per week / month, and each trip's rate. */
-function personPay(ok, span){
-  const rows = ok.map(t => { const role = t._role==='Driver' ? 'driver' : 'helper', km = pairKm(t, t._mate), w = t._w ?? 1, fx = routePay(role, t);
-    return {t, role, km, w, fx, rate: fx ? fx / w : km ? payRate(role, km) : 0}; });
-  const by = {}; rows.forEach(r => { const p = by[r.role] || (by[r.role] = {pay:0, n:0, none:0, over:0}); if(r.fx){ p.pay += r.fx; p.n += r.w; return; } if(!r.km){ p.none += r.w; return; } p.pay += r.rate * r.w; p.n += r.w; if(r.km > 200) p.over += r.w; });
+/** Estimated income from the trips in the chosen dates (round trip legs 0.5): totals, per week / month, and each trip's pay.
+    all = every row of the person in those dates (for the NO TRIP days). */
+function personPay(ok, span, all){
+  const roleOf = t => t._role==='Driver' ? 'driver' : 'helper';
+  const rows = ok.map(t => { const role = roleOf(t), km = pairKm(t, t._mate), w = t._w ?? 1; return {t, role, km, w, ...payOf(role, t, w, km)}; });
+  const by = {}, ent = role => by[role] || (by[role] = payNew());
+  rows.forEach(r => { const p = ent(r.role); if(r.kind==='none'){ p.none += r.w; return; } p.pay += r.amt; p.n += r.w; if(r.kind==='tukod') p.tukod++; if(r.over) p.over += r.w; });
+  // NO TRIP days: a NO TRIP row on a day with no counted trip, once a day
+  const days = new Set(ok.map(t => t.date)), nt = [];
+  (all || []).filter(isNoTripRow).forEach(t => { if(days.has(t.date)) return; days.add(t.date); const role = roleOf(t), amt = payR().noTrip[role], p = ent(role); p.nt++; p.ntPay += amt; nt.push({t, role, km:0, w:1, amt, kind:'nt'}); });
   const e = {driver: payEst(by.driver, 'driver'), helper: payEst(by.helper, 'helper')};
-  rows.forEach(r => { if(!r.km && !r.fx){ r.rate = e[r.role].avg; r.guess = true; } });
-  const est = e.driver.est + e.helper.est, none = e.driver.none + e.helper.none, over = e.driver.over + e.helper.over;
-  const line = (lbl, x) => x.n || x.none ? `<li><span>As ${lbl}: ${fmtN(x.n + x.none)} trip${x.n + x.none===1 ? '' : 's'}${x.none ? ` (${fmtN(x.none)} with no distance, at ${pesoTxt(Math.round(x.avg))} each)` : ''}</span><b>${pesoTxt(Math.round(x.est))}</b></li>` : '';
+  rows.forEach(r => { if(r.kind==='none'){ r.amt = e[r.role].avg * r.w; r.guess = true; } });
+  const est = e.driver.est + e.helper.est, none = e.driver.none + e.helper.none, over = e.driver.over + e.helper.over, has = k => rows.some(r => r.kind===k);
+  const line = (lbl, x) => x.n || x.none || x.nt ? `<li><span>As ${lbl}: ${fmtN(x.n + x.none)} trip${x.n + x.none===1 ? '' : 's'}${x.none ? ` (${fmtN(x.none)} with no distance, at ${pesoTxt(Math.round(x.avg))} each)` : ''}${x.nt ? `, ${fmtN(x.nt)} NO TRIP day${x.nt===1 ? '' : 's'}` : ''}</span><b>${pesoTxt(Math.round(x.est))}</b></li>` : '';
+  const tag = r => r.kind==='nt' ? 'NO TRIP day' : r.kind==='sf' ? 'route pay, half a round trip' : r.kind==='route' ? (r.w < 1 ? 'route pay, half' : 'route pay') : r.kind==='tukod' ? 'TUKOD rate'
+    : r.guess ? 'average rate' : String(r.t.status || '').trim().toLowerCase()==='tukod' ? 'half, TUKOD' : r.w < 1 ? 'half, round trip' : '';
+  const list = rows.concat(nt).sort((a, b) => b.t.date.localeCompare(a.t.date));
   const html = `<ul class="hs-top">${line('driver', e.driver)}${line('helper', e.helper)}<li><span>Total in these dates</span><b>${pesoTxt(Math.round(est))}</b></li>`
     + (span >= 7 ? `<li><span>About per week</span><b>${pesoTxt(Math.round(est / span * 7))}</b></li><li><span>About per month</span><b>${pesoTxt(Math.round(est / span * 30.4))}</b></li>` : '') + `</ul>`
-    + `<p class="hint">Estimate from the rate per trip by one-way distance (KMS, else CLIENT LIST). A round trip counts as one trip at its distance (each leg half).${over ? ` ${fmtN(over)} trip${over===1 ? '' : 's'} over 200 km use the 151 to 200 km rate (no rate yet).` : ''}${none ? ' Trips with no distance use the average rate.' : ''}${rows.some(r => r.fx) ? ' San Fernando and Central San Fernando trips use their route rate.' : ''} Not the payroll: no deductions, allowances or guarantees.</p>`
-    + (rows.length ? `<table class="hs-tbl"><thead><tr><th>Date</th><th>Route</th><th>Role · km</th><th class="n">Pay</th></tr></thead><tbody>${rows.slice(0, 150).map(r => `<tr><td>${esc(fmtDay(r.t.date))}</td><td>${esc(r.t.customer || '—')}<small>→ ${esc(r.t.destination || '—')}</small></td><td>${r.role==='driver' ? 'Driver' : 'Helper'}<small>${r.km ? fmtN(r.km) + ' km' : 'no distance'}</small></td><td class="n">${pesoTxt(Math.round(r.rate * r.w))}${r.fx ? '<small>route rate, half a round trip</small>' : r.w < 1 ? '<small>half, round trip</small>' : ''}${r.guess ? '<small>average rate</small>' : ''}${r.km > 200 && !r.fx ? '<small>over 200 km</small>' : ''}</td></tr>`).join('')}</tbody></table>${rows.length > 150 ? `<p class="hint">Showing the latest 150 of ${rows.length} trips.</p>` : ''}` : '<p class="hint">No trips in these dates.</p>')
-    + `<div class="hs-sec">Rate per trip</div>${payBandsHtml()}`;
+    + `<p class="hint">Estimate from the salary rates: pay per trip by one-way distance (KMS, else CLIENT LIST). Each rate already has the basic pay, incentive and allowances. A round trip counts as one trip at its distance (each leg half).${over ? ` ${fmtN(over)} trip${over===1 ? '' : 's'} longer than ${fmtN(payTop())} km ${over===1 ? 'gets' : 'get'} the last rate.` : ''}${none ? ' Trips with no distance use the average rate.' : ''}${has('sf') ? ' San Fernando and Central San Fernando trips use their route pay.' : ''}${has('route') ? ' Trips on a route with its own pay use that pay.' : ''}${has('tukod') ? ' TUKOD trips use the TUKOD rate.' : ''}${nt.length ? ' A NO TRIP day pays the NO TRIP rate.' : ''} Not the payroll: no deductions or guarantees.</p>`
+    + (list.length ? `<table class="hs-tbl"><thead><tr><th>Date</th><th>Route</th><th>Role · km</th><th class="n">Pay</th></tr></thead><tbody>${list.slice(0, 150).map(r => `<tr><td>${esc(fmtDay(r.t.date))}</td><td>${r.kind==='nt' ? 'NO TRIP' : esc(r.t.customer || '—')}<small>${r.kind==='nt' ? esc(r.t.truckNo ? 'Truck ' + r.t.truckNo : '') : '→ ' + esc(r.t.destination || '—')}</small></td><td>${r.role==='driver' ? 'Driver' : 'Helper'}<small>${r.kind==='nt' ? 'no trip that day' : r.km ? fmtN(r.km) + ' km' : 'no distance'}</small></td><td class="n">${pesoTxt(Math.round(r.amt))}${tag(r) ? `<small>${tag(r)}</small>` : ''}${r.over ? `<small>longer than ${fmtN(payTop())} km</small>` : ''}</td></tr>`).join('')}</tbody></table>${list.length > 150 ? `<p class="hint">Showing the latest 150 of ${list.length} rows.</p>` : ''}` : '<p class="hint">No trips in these dates.</p>')
+    + `<div class="hs-sec">Salary rates</div>${payBandsHtml()}`;
   return {est, html};
 }
 /** The top of a person's pop-up: contact number (tap to call) and birthday with age. */
@@ -9958,7 +10138,7 @@ async function showPersonHistory(p){
     const asDriver = wsum(st.ok.filter(t => t._role==='Driver')), asHelper = st.n - asDriver, off = Math.max(0, span - st.days);
     const partners = tallyTop(st.ok, t => [t.driver, t.helper1, t.helper2].filter(n => n && nameKey(n)!==k).join(' · '), 3);
     const ds = daysSince(lastAll);
-    const pay = may('payView') ? personPay(st.ok, span) : null;
+    const pay = may('payView') ? personPay(st.ok, span, inR) : null;
     const note = `${hsWhen(f, to)}: ${fmtN(st.n)} trip${st.n===1 ? '' : 's'}${st.ok.length ? ` (${fmtN(asDriver)} as driver, ${fmtN(asHelper)} as helper)` : ''}, worked ${st.days} of ${span} day${span===1 ? '' : 's'}, ${off} day${off===1 ? '' : 's'} without a trip.`
       + (st.cancelled ? ` ${st.cancelled} cancelled or NO TRIP.` : '') + ' ' + (lastAll ? (ds <= 0 ? 'Had a trip today.' : `Last trip ${fmtDay(lastAll)} (${ds} day${ds===1 ? '' : 's'} ago).`) : 'No trips on record.');
     $('hsOut').innerHTML = `<div class="hs-note">${esc(note)}</div>
