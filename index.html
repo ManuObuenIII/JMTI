@@ -4553,7 +4553,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.85, APP_VERSION_DATE = '2026-11-18';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.86, APP_VERSION_DATE = '2026-11-18';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4584,6 +4584,11 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-18 "in these data from POD, information on the cells must be individual entry not as a group"
+  {v:14.86, d:'2026-11-18', items:[
+    'POD and Billing: Document date, IDTS, RR IDTS, RR PALLET, IWTS and CHARGE INVOICE are now each their own entry. Tapping a cell opens only that cell, and the name under it is the person who typed that cell.',
+    'Before, one tap opened all of them together and every cell showed the name of whoever saved last. Cells typed before this version keep the name they showed.'
+  ]},
   // MANU 2026-11-18 "in shift endorsements, mark as read should be when a user opens the endorsement side panel"
   {v:14.85, d:'2026-11-18', items:[
     'Shift endorsements: opening the endorsement panel now marks the endorsements you see there as read by you. No more Mark as read button.',
@@ -8146,33 +8151,42 @@ const PC_LABELS = ['IDTS', 'RR IDTS', 'RR PALLET', 'IWTS', 'CHARGE INVOICE'];   
 // Document date (MANU 2026-11-10 "add document date column between destination and shipment number"): key docDate (sheet DOCUMENT DATE),
 // its own column after Destination, typed in the same pop-up as IDTS … CHARGE INVOICE (pcAt = who + when).
 const docDayOf = t => String(t.docDate || '').slice(0, 10);
-const docDateTd = (t, ed) => { const d = docDayOf(t), by = whoSplit(t.pcAt).by;
+// Each cell is its own entry (MANU 2026-11-18 "information on the cells must be individual entry not as a group"): t.pcBy (sheet
+// DOC CELLS ENCODED) is JSON {key: "when · NAME"} per cell; a cell without its own stamp falls back to the old shared pcAt.
+const pcByMap = t => { if(t._pcByS === t.pcBy && t._pcByM) return t._pcByM; let m = {}; try{ m = JSON.parse(t.pcBy || '{}') || {}; }catch(e){ m = {}; }
+  try{ Object.defineProperty(t, '_pcByM', {value: m, configurable: true, writable: true}); Object.defineProperty(t, '_pcByS', {value: t.pcBy, configurable: true, writable: true}); }catch(e){}
+  return m; };
+const pcWho = (t, k) => whoSplit(pcByMap(t)[k] || t.pcAt);
+const docDateTd = (t, ed) => { const d = docDayOf(t), by = pcWho(t, 'docDate').by;
   return `<td class="${ed ? 'ed' : ''}" ${ed ? 'data-pc="docDate" title="Tap to pick the document date"' : ''}>${d ? esc(fmtDay(d)) : ''}${d && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`; };
 const PC_TH = PC_LABELS.map(l => `<th>${l}</th>`).join('') + '<th>Status changes</th>', PC_N = PC_KEYS.length + 1;
-const pcTds = (t, ed) => { const by = whoSplit(t.pcAt).by;
-  return PC_KEYS.map(k => k==='chargeInv' ? `<td class="ed" data-chg="1" title="Tap to open the Charges Transmittal Form" style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}${t[k] ? '' : '<small>+ charges form</small>'}</td>`   // MANU 2026-11-13: the cell opens the Charges Transmittal Form
-    : `<td class="${ed ? 'ed' : ''}" ${ed ? `data-pc="${k}" title="Tap to type"` : ''} style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`).join('') + stampTd(t); };
-const pcCsv = t => PC_KEYS.map(k => t[k] || '').concat([whoText(t.pcAt), stampCsv(t)]);
+const pcTds = (t, ed) => {
+  return PC_KEYS.map(k => { const by = pcWho(t, k).by; return k==='chargeInv' ? `<td class="ed" data-chg="1" title="Tap to open the Charges Transmittal Form" style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}${t[k] ? '' : '<small>+ charges form</small>'}</td>`   // MANU 2026-11-13: the cell opens the Charges Transmittal Form
+    : `<td class="${ed ? 'ed' : ''}" ${ed ? `data-pc="${k}" title="Tap to type"` : ''} style="white-space:pre-wrap">${esc(t[k] || '')}${t[k] && by ? `<br><small>by ${esc(by)}</small>` : ''}</td>`; }).join('') + stampTd(t); };
+const pcCsv = t => PC_KEYS.map(k => t[k] || '').concat([['docDate'].concat(PC_KEYS).filter(k => t[k]).map(k => { const w = pcWho(t, k);
+  return (k==='docDate' ? 'DOCUMENT DATE' : PC_LABELS[PC_KEYS.indexOf(k)]) + (w.at ? ': ' + podWhen(w.at) + (w.by ? ' by ' + w.by : '') : ''); }).join('\n'), stampCsv(t)]);
 const PC_CSV_HEAD = PC_LABELS.concat(['Encoded', 'Status changes']);
 /** POD or Billing table: tap a Document date or IDTS … CHARGE INVOICE cell to type them all (fn = podSave or billingSave). */
 function openPc(t, td, fn){
   if(!t) return;
   if(t._pending) return toast('Still saving — try again in a moment.');
-  const w = whoSplit(t.pcAt);
-  podPop(td, `<div class="ce-h"><b>Documents info</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div>
-    <label class="f">Document date<input id="pc_docDate" type="date" value="${esc(docDayOf(t))}"></label>
-    ${PC_KEYS.map((k, i) => k==='chargeInv' ? '' : `<label class="f">${PC_LABELS[i]}<input id="pc_${k}" value="${esc(t[k] || '')}" autocomplete="off"></label>`).join('')}
-    ${w.at ? `<div class="hint">Last encoded ${esc(podWhen(w.at))}${w.by ? ' by ' + esc(w.by) : ''}</div>` : ''}
+  // one cell = one entry (MANU 2026-11-18): only the tapped cell is typed and saved, with its own who + when
+  const k = td.dataset.pc || 'idts', isDay = k==='docDate', lbl = isDay ? 'Document date' : PC_LABELS[PC_KEYS.indexOf(k)] || k;
+  const cur = isDay ? docDayOf(t) : String(t[k] || ''), w = pcWho(t, k);
+  podPop(td, `<div class="ce-h"><b>${esc(lbl)}</b><span>Truck ${esc(t.truckNo || '—')} · ${esc(t.destination || t.customer)}</span></div>
+    <label class="f">${esc(lbl)}<input id="pc_val" ${isDay ? 'type="date"' : 'autocomplete="off"'} value="${esc(cur)}"></label>
+    ${cur && w.at ? `<div class="hint">Encoded ${esc(podWhen(w.at))}${w.by ? ' by ' + esc(w.by) : ''}</div>` : ''}
     <div class="ce-f"><span style="flex:1"></span><button class="btn alt" type="button" id="pcCancel">Cancel</button> <button class="btn" type="button" id="pcSave">Save</button></div>`, true);
-  const first = $('pc_' + (td.dataset.pc || 'idts')); if(first) first.focus();
+  const inp = $('pc_val'); if(inp){ inp.focus(); if(!isDay) inp.onkeydown = e => { if(e.key==='Enter'){ e.preventDefault(); $('pcSave').click(); } }; }
   $('pcCancel').onclick = closeCellEditor;
   $('pcSave').onclick = () => {
-    const data = {};
-    PC_KEYS.filter(k => k!=='chargeInv').forEach(k => { const v = $('pc_' + k).value.trim().toUpperCase().replace(/\s+/g, ' '); if(v !== String(t[k] || '')) data[k] = v; });
-    const dd = $('pc_docDate').value || ''; if(dd !== docDayOf(t)) data.docDate = dd;
+    const v = isDay ? (inp.value || '') : inp.value.trim().toUpperCase().replace(/\s+/g, ' ');
     closeCellEditor();
-    if(!Object.keys(data).length) return toast('Nothing changed');
-    saveOptimistic({...t, ...data, pcAt: nowStamp() + ' · ' + S.me.name}, t, () => callQ(fn, refOf(t), data), () => 'Saved');
+    if(v === cur) return toast('Nothing changed');
+    const st = nowStamp() + ' · ' + S.me.name, m = {...pcByMap(t)};
+    if(!Object.keys(m).length && t.pcAt) ['docDate'].concat(PC_KEYS).forEach(x => { if(t[x]) m[x] = t.pcAt; });
+    if(v) m[k] = st; else delete m[k];
+    saveOptimistic({...t, [k]: v, pcAt: st, pcBy: JSON.stringify(m)}, t, () => callQ(fn, refOf(t), {[k]: v}), () => 'Saved');
   };
 }
 /* ===== Charges (MANU 2026-11-13 "generate new tab for Charges and Incident Reports summary, charges are based on POD column charge invoice",
