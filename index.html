@@ -17,6 +17,16 @@ function pgTop(){ window.scrollTo(0, 0); if(document.body) document.body.scrollT
 <style>
 html.inframe{height:100%;overflow:hidden}
 :where(html.inframe) body{height:100%;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+/* charge change requests (MANU 2026-11-18) */
+.crq-note{margin:8px 0;padding:9px 12px;border-radius:12px;background:rgba(217,119,6,.12);border:1px solid rgba(217,119,6,.45);font-size:13px;line-height:1.45}
+.crq-note .btn{margin-left:6px}
+.crq-warn{margin:8px 0;padding:9px 12px;border-radius:12px;background:rgba(217,45,32,.10);border:1px solid rgba(217,45,32,.45);font-size:13px;font-weight:600}
+.crq-why{margin-top:12px}
+.crq-flag{color:#B45309}
+.crq-tbl td{vertical-align:top;white-space:normal;word-break:break-word}
+.crq-tbl td:first-child{font-weight:700;white-space:normal}
+.crq-tbl .crq-old{color:#991B1B;text-decoration:line-through;text-decoration-color:rgba(153,27,27,.45)}
+.crq-tbl .crq-new{color:#166534;font-weight:700}
 </style>
 <title>JMTI Operations</title>
 <link rel="manifest" href="manifest.json">
@@ -1914,6 +1924,16 @@ html.th-color .setl .setr[aria-checked="true"] .sw{background:var(--tc)}
 html.th-color .panel h3,html.th-color table.xl th,html.th-color .vchg-box h3{color:var(--tc3)}
 html.th-color a{color:var(--tc)}
 html.th-color .stop:not([aria-pressed=true]) .n{background:radial-gradient(circle at 35% 30%,var(--tc),var(--tc3) 70%)}
+/* ===== HR ANALYTICS tab (HR HEAD, MANU 2026-11-18): same cards and bars as System analytics ===== */
+#v-hrstats .an-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:14px}
+#v-hrstats .panel{margin-bottom:14px;min-width:0}
+#v-hrstats .an-grid .panel{margin-bottom:0}
+#v-hrstats .an-bar{background:var(--line);border-radius:6px;height:10px;min-width:50px;overflow:hidden}
+#v-hrstats .an-bar i{display:block;height:10px;border-radius:6px}
+#v-hrstats .an-t td,#v-hrstats .an-t th{white-space:normal;word-break:break-word}
+#v-hrstats .an-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#v-hrstats .an-scroll table{min-width:560px}
+#v-hrstats .hs-red{color:#B91C1C;font-weight:700}
 /* ===== SYSTEM ANALYTICS tab (MANU 2026-11-06): cards, small bars, busiest-hours chart; tables scroll sideways on phones ===== */
 #v-analytics .an-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:14px}
 #v-analytics .panel{margin-bottom:14px;min-width:0}
@@ -2403,7 +2423,7 @@ table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
      connection was still bringing in the rest of the page, so the red bar showed even though the app then started fine. */
   document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { window.__jmtiShow(window.__jmtiErr || 'the page code did not load'); }, 3000); });
 </script>
-<div id="demoBanner" class="demo" hidden>Preview with sample data. Sign in as admin, boss, supervisor, teamleader, dispatcher, pod, podhead, billing, billinghead or hr — any password.</div>
+<div id="demoBanner" class="demo" hidden>Preview with sample data. Sign in as admin, boss, supervisor, teamleader, dispatcher, pod, podhead, billing, billinghead, hr, hrhead, hrassistant1 or hrassistant2 — any password.</div>
 
 <!-- ================= SIGN IN ================= -->
 <section class="login" id="loginScreen">
@@ -2774,6 +2794,18 @@ table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
     <div id="psBody"><div class="empty">Loading…</div></div>
   </section>
 
+  <!-- ================= HR ANALYTICS (HR HEAD, Admin, Boss view only; MANU 2026-11-18 "add new analytics dashboard tab for HR head") ================= -->
+  <section class="view" id="v-hrstats">
+    <div class="bar">
+      <div class="chips" id="hsRange"></div>
+      <label class="f">From<input type="date" id="hsFrom"></label>
+      <label class="f">To<input type="date" id="hsTo"></label>
+      <button class="btn alt" type="button" id="hsRefresh" title="Ask the server again">↻ Refresh</button>
+      <button class="btn alt" type="button" id="hsJpg">JPEG report</button>
+    </div>
+    <div id="hsBody"><div class="empty">Loading…</div></div>
+  </section>
+
   <!-- ================= SYSTEM ANALYTICS (Admin, Boss view only; MANU 2026-11-06) ================= -->
   <section class="view" id="v-analytics">
     <div class="bar">
@@ -2898,6 +2930,17 @@ table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
         </form>
       </div>
     </div>
+  </section>
+
+  <!-- ================= MANPOWER CONTACTS (MANU 2026-11-18) ================= -->
+  <section class="view" id="v-contacts">
+    <div class="bar">
+      <label class="f grow">Find<input id="ctFind" placeholder="Name, truck or number"></label>
+      <button class="btn alt" type="button" id="ctRefresh" style="align-self:flex-end">↻ Refresh</button>
+    </div>
+    <div class="chips" id="ctChips" style="margin-bottom:10px"></div>
+    <p class="hint" id="ctNote" style="margin:0 0 10px"></p>
+    <div class="panel" style="padding:0" id="ctPanel"><div class="tbl-wrap" style="max-height:680px"><table class="poptbl ct-tbl"><thead><tr><th>Name</th><th>Position</th><th>Truck today</th><th>Contact number</th></tr></thead><tbody id="ctBody"></tbody></table></div></div>
   </section>
 
   <!-- ================= USERS ================= -->
@@ -3171,7 +3214,7 @@ const MS_KEYS = ['srcArrive','loadStart','loadEnd','srcDepart','destArrive','unl
 const MS_COL = {srcArrive:12,loadStart:13,loadEnd:14,srcDepart:15,destArrive:16,unloadStart:17,unloadEnd:18,destDepart:19};
 const MS_LABEL = {srcArrive:'Source time in',loadStart:'Loading start',loadEnd:'Loading end',srcDepart:'Source time out',
   destArrive:'Destination time in',unloadStart:'Unloading start',unloadEnd:'Unloading end',destDepart:'Destination time out'};
-const TAB_NAME = {home:'Today',dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',charges:'Charges and IR',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',maintenance:'Maintenance',users:'Users',analytics:'System analytics'};
+const TAB_NAME = {home:'Today',dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',hrstats:'HR analytics',charges:'Charges and IR',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',contacts:'Manpower contacts',maintenance:'Maintenance',users:'Users',analytics:'System analytics'};
 const NO_AUTH = ['login','getAppUrl','appVersion'];
 
 const S = { sum:null, sumAt:0, sumView:'week', sumMeasure:'trips', topView:'p7', me:null, boot:null, trips:[], range:{}, tab:'', stageFilter:'', shown:150,
@@ -3439,7 +3482,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['chargeSave','chargeDelete','savePlannedTrips','deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','savePayRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
+const WRITES = ['mpContactSave','chargeSave','chargeDelete','chargeRequest','chargeReqDecide','chargeReqCancel','savePlannedTrips','deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','savePayRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 /* Save buttons (MANU 2026-11-06 pick 13): the button pressed just before a save gets a spinner, then a green check,
@@ -3830,7 +3873,7 @@ $('askQ').onkeydown = e => { if(e.key==='Enter' && !e.shiftKey && !e.isComposing
 $('askBody').onclick = e => { const b = e.target.closest('[data-q]'); if(b) sendAsk(b.dataset.q); };
 
 function signOut(msg){
-  TOKEN = ''; S.lwN = 0; IR.list = []; IR.unread = 0; IR.v = ''; try{ if('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {}); }catch(e){} document.title = TITLE0; updateAppBadge.last = 0;
+  TOKEN = ''; S.lwN = 0; IR.list = []; IR.unread = 0; IR.v = ''; CRQ.list = []; CRQ.v = ''; CRQ.at = 0; try{ if('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {}); }catch(e){} document.title = TITLE0; updateAppBadge.last = 0;
   store('jmti_token', null); store('jmti_me', null); store('jmti_mnt', null); lsClearData(); rcClear();
   resetMaintenance();
   Object.keys(TC).forEach(k => delete TC[k]); S.overdueSeen = null; S.odLocked = false; S.assign = {}; S.routes = S.people = S.users = null; S.aEdits = {}; HT.data = null; HT.canEdit = false; FU.data = null;
@@ -4221,7 +4264,7 @@ function loadBoot(){
 function initOnce(){
   if(started) return;
   started = true;
-  initDashboard(); initFleet(); initAssign(); initPlanner(); initDispatcher(); initHardTab(); initFuelTab(); initCharges(); initUnits(); initPod(); initPodStats(); initBilling(); initBook(); initDisb(); initAcct(); initPayroll(); initManpower(); initUsers(); initAnalytics();
+  initDashboard(); initFleet(); initAssign(); initPlanner(); initDispatcher(); initHardTab(); initFuelTab(); initCharges(); initUnits(); initPod(); initPodStats(); initHrStats(); initBilling(); initBook(); initDisb(); initAcct(); initPayroll(); initManpower(); initContacts(); initUsers(); initAnalytics();
   initDrawer();
   $('loadRetry').onclick = loadBoot;
   // Fewer Google calls (MANU 2026-11-03 "make it fast and doesnt consume the google calls"): once the server sends the trips
@@ -4371,8 +4414,8 @@ function showTab(t){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id==='v-'+view));
   { const v = $('v-'+view); if(v){ v.classList.remove('anim-in'); void v.offsetWidth; v.classList.add('anim-in'); clearTimeout(showTab._a); showTab._a = setTimeout(() => v.classList.remove('anim-in'), 1500); } }   // animations on tab open only (MANU 2026-11-06)
   if(t==='maintenance') return loadMaintenance();
-  if(!S.boot && !['home','manpower','users','analytics','charges'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
-  ({home:loadHome, dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, charges:loadCharges, analytics:loadAnalytics, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, users:loadUsers})[t]();
+  if(!S.boot && !['home','manpower','contacts','users','analytics','charges','hrstats'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
+  ({home:loadHome, dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, hrstats:loadHrStats, charges:loadCharges, analytics:loadAnalytics, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, contacts:loadContacts, users:loadUsers})[t]();
   if(['dashboard','manpower'].includes(t) || (t==='fleet' && may('fleet'))) loadReminders();
 }
 
@@ -4553,7 +4596,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.87, APP_VERSION_DATE = '2026-11-18';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.91, APP_VERSION_DATE = '2026-11-18';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4584,6 +4627,26 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-18 11:56 UTC "for the charges, POD only encodes the initial charges but all changes afterwards will be requested by POD from HR head for authorization"
+  {v:14.91, d:'2026-11-18', items:[
+    'Charges: POD and POD HEAD encode a charge, damage or penalty the first time only. After that, any change (amount, items, released or endorsed dates, crew, deletion, anything) is a change request to HR HEAD with a reason; the charge stays as it is until HR HEAD approves.',
+    'HR HEAD sees waiting requests on the bell and in Charges and IR > Change requests, with what changes (now and requested side by side), who asked and why. Approve saves the change; Reject keeps the charge as it is. Both can carry a note.',
+    'Every request keeps who asked and when, and who approved or rejected it and when (new CHARGE REQUESTS sheet). POD sees the answer on the bell and can cancel a request while it waits. HR, HR HEAD, HR ASSISTANT 2 and Admin still change charges directly.'
+  ]},
+  // MANU 2026-11-18 11:44-11:46 UTC "make new users HR Head, HR assistant 1, HR assistant 2" + "add new analytics dashboard tab for HR head"
+  {v:14.9, d:'2026-11-18', items:[
+    'New positions in Users: HR HEAD, HR ASSISTANT 1 and HR ASSISTANT 2.',
+    'HR HEAD: everything HR does, plus a new HR analytics tab (headcount, new hires, crew with no trip lately, licenses to renew, birthdays, incident reports, charges per crew member, top drivers and drivers to coach). Admin and Boss see it too.',
+    'HR ASSISTANT 1: everything HR does except Charges. HR ASSISTANT 2: the same as HR.'
+  ]},
+  // MANU 2026-11-18 11:41 UTC "add new tab for supervisors, team leaders and dispatchers, manpower list to add the contact number of manpower"
+  {v:14.89, d:'2026-11-18', items:[
+    'New Manpower contacts tab for Supervisor, Team leader and Dispatcher (Admin too; Boss views): every driver and helper with position, truck today and contact number. Tap a person to add or change the number; tap the number to call. Chips: Active, No number yet, Drivers, Helpers, All. The number is the same one HR sees in Manpower and the escalation text uses.'
+  ]},
+  // MANU 2026-11-18 11:35 UTC "in escalation, add the shipment number"
+  {v:14.88, d:'2026-11-18', items:[
+    'Escalation now shows the trip\'s shipment number (DTTR for Other accounts trips): in the copied escalation text from the Truck Plan ⚠ Escalation button and from the bell\'s Waiting too long list, and on each trip in that list.'
+  ]},
   // MANU 2026-11-18 06:30 UTC "group this in 1 form pop-up" (IDTS, RR IDTS, RR PALLET, IWTS)
   {v:14.87, d:'2026-11-18', items:[
     'POD and Billing: tapping IDTS, RR IDTS, RR PALLET or IWTS opens one form with all four boxes again.',
@@ -6292,7 +6355,7 @@ function initDispatcher(){
       if(r.dataset.idle){ const no = r.dataset.idle, d = xRange()[1], a = (S.assign[d] || []).find(x => String(x.truckNo)===no) || crewFor(d, no) || {};
         return openEscPop({truckNo:no, plateNo:a.plateNo || plateFor(no), date:d, status:'Waiting for shipment', driver:a.driver, helper1:a.helper1, helper2:a.helper2}); }
       const t = S.xTrips.find(x => x.key===r.dataset.key) || (S.xCtx || []).find(x => x.key===r.dataset.key); if(!t) return;
-      return openEscPop({truckNo:t.truckNo, plateNo:t.plateNo, date:t.date, status:statusText(t), source:t.customer, destination:t.destination, driver:t.driver, helper1:t.helper1, helper2:t.helper2});
+      return openEscPop({truckNo:t.truckNo, plateNo:t.plateNo, date:t.date, status:statusText(t), source:t.customer, destination:t.destination, shipmentNo:t.shipmentNo || '', shipLbl:shipLbl(t), driver:t.driver, helper1:t.helper1, helper2:t.helper2});
     }
     const idle = e.target.closest('[data-idle]');
     if(idle){ if(may('dispatchAdd')) openDispatchAdd(idle.dataset.idle); return; }
@@ -6436,13 +6499,14 @@ function openDispatchAdd(truckNo, opt){
 function escInfoText(i, issue){
   const dst = String(i.destination || ''), pipe = dst.indexOf('|'), place = (pipe >= 0 ? dst.slice(pipe + 1) : dst).trim();
   return ['ESCALATION', 'TRUCK: ' + (i.truckNo || '—'), 'PLATE: ' + (i.plateNo || '—'), 'TRIP DATE: ' + (i.date ? fmtDay(i.date) : '—'),
+    ...('shipmentNo' in i ? [(i.shipLbl || 'Shipment no.') + ': ' + (i.shipmentNo || '—')] : []),   // MANU 2026-11-18 "in escalation, add the shipment number"
     'STATUS: ' + (i.status || '—'), 'SOURCE: ' + (i.source || '—'), 'DESTINATION: ' + (place || '—'), ...escCrew(i),
     'ISSUE: ' + String(issue).replace(/\s+/g, ' ').trim(), '', 'THANK YOU', (S.me && S.me.name) || ''].map(l => String(l).toUpperCase()).join('\n').trim();
 }
 /** Truck Plan first column ESCALATION (MANU 2026-11-08 "at the bottom of the first column together in one cell with the next step
  *  button"): a pop-up with the issue chips, the issue box and Copy escalation; copy only, the trip is not changed. */
 function openEscPop(i){
-  openPop('Escalation', esc(['Truck ' + (i.truckNo || '—'), i.plateNo, i.date ? fmtDay(i.date) : '', i.status].filter(Boolean).join(' · ')),
+  openPop('Escalation', esc(['Truck ' + (i.truckNo || '—'), i.plateNo, i.date ? fmtDay(i.date) : '', i.shipmentNo ? (i.shipLbl || 'Shipment no.') + ' ' + i.shipmentNo : '', i.status].filter(Boolean).join(' · ')),
     `<div class="lw-esc" id="tpEscBox"><div class="esc-ask"><div class="esc-chips">${NA_ESC_ISSUES.map(t => `<button type="button" data-tpiss="${esc(t)}">${esc(t)}</button>`).join('')}</div>
       <label class="f full">What is the issue?<textarea id="tpEscIssue" rows="2" maxlength="400" placeholder="Type the issue (e.g. waiting for unloading, no forklift)"></textarea></label></div>
       <span class="dim" id="tpEscNote"></span></div>`,
@@ -7735,6 +7799,7 @@ const FIND_BY = {
   clFind:['source','destination','client','address'],
   rFind:['source','destination'],
   mpFind:['name','id'],
+  ctFind:['name','truck','number'],
   uFind:['username','name','role']
 };
 function findBy(id){ const s = $(id + 'By'); return s ? s.value : 'all'; }
@@ -8124,6 +8189,107 @@ function renderPodStats(){
       ${custRows.map(([k,c]) => `<tr><td>${esc(k)}</td><td class="c">${c.n}</td><td class="c">${c.s}</td><td class="c"><b>${c.n - c.s}</b></td><td class="c">${c.docs}</td><td class="c">${pct(c.s, c.n)}</td><td class="c">${d1(avg(c.turns))}</td></tr>`).join('')}
       </tbody></table></div></div>`;
 }
+/** HR analytics tab (HR HEAD; Admin and Boss too; MANU 2026-11-18 "add new analytics dashboard tab for HR head"). Page only: it reads what
+ *  HR already sees (listManpower, chargeList = charges + incident reports, driverScores = trips per driver, score, INCIDENTS) for the
+ *  dates picked and shows headcount, new hires, crew with no trip lately, licenses to renew, birthdays, incident reports, charges per
+ *  person and driver performance. No new server function. */
+const HS = {data: null, k: '', busy: 0};
+function initHrStats(){
+  if(!$('hsBody')) return;
+  const today = TODAY();
+  rangeChips($('hsRange'), (f,t) => { $('hsFrom').value=f; $('hsTo').value=t; loadHrStats(); });
+  $('hsFrom').value = addDays(today,-29); $('hsTo').value = today;
+  $('hsFrom').onchange = $('hsTo').onchange = () => loadHrStats();
+  $('hsRefresh').onclick = () => loadHrStats(true);
+  $('hsJpg').onclick = () => { const b = $('hsJpg'), was = b.innerHTML; b.disabled = true; b.textContent = 'Making picture…';
+    const f = $('hsFrom').value, t = $('hsTo').value;
+    Promise.resolve(secShot($('hsBody'), 'HR analytics', {line: f===t ? fmtDay(f) : fmtDay(f) + ' to ' + fmtDay(t), name: `${f} to ${t}`}, 'jpg')).finally(() => { b.disabled = false; b.innerHTML = was; }); };
+  $('hsBody').onclick = e => { const k = e.target.closest('[data-hsgo]'); if(k && !e.target.closest('.plink')) showTab(k.dataset.hsgo); };
+}
+function loadHrStats(fresh){
+  if(!$('hsBody')) return;
+  const f = $('hsFrom').value, t = $('hsTo').value; $('hsRange')._mark(f,t);
+  if(!f || !t || f > t){ $('hsBody').innerHTML = '<div class="empty">Pick a From date on or before the To date.</div>'; return; }
+  const k = f + '|' + t;
+  if(!fresh && HS.data && HS.k===k && Date.now() - HS.data.at < 120000) return renderHrStats();
+  if(HS.k !== k || !HS.data) $('hsBody').innerHTML = '<div class="empty">Loading…</div>';
+  const my = ++HS.busy;
+  const opt = p => p.then(v => v, e => ({_err: e.message}));
+  Promise.all([opt(call('listManpower')), can('charges') || may('viewAll') ? opt(call('chargeList', f, t)) : Promise.resolve(null), opt(call('driverScores', f, t))]).then(([mp, ch, sc]) => {
+    if(my !== HS.busy) return;
+    if(Array.isArray(mp)){ S.people = mp; lsSet('jmti_people', mp); }
+    HS.data = {mp, ch, sc, at: Date.now(), f, t}; HS.k = k; renderHrStats();
+  });
+}
+function renderHrStats(){
+  if(S.tab!=='hrstats' || !HS.data) return;
+  const {mp, ch, sc, f, t} = HS.data, today = TODAY(), DAY = 864e5;
+  const people = Array.isArray(mp) ? mp : [], probs = [mp, ch, sc].filter(x => x && x._err).map(x => x._err);
+  const key = v => String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const bar = (v, max, c) => `<div class="an-bar"><i style="width:${Math.round(Math.min(1, v / Math.max(1, max)) * 100)}%;background:${c}"></i></div>`;
+  const panel = (title, small, body) => `<div class="panel"><h3>${title}${small ? ` <small>${small}</small>` : ''}</h3>${body}</div>`;
+  const none = txt => `<p class="hint">${txt || 'None.'}</p>`;
+  const days = d => d ? Math.round((new Date(today) - new Date(d)) / DAY) : null;
+  const pos = p => /driver/i.test(p.position) ? 'Driver' : /helper/i.test(p.position) ? 'Helper' : (p.position || 'Other');
+  // headcount
+  const active = people.filter(p => p.status !== 'INACTIVE'), inactive = people.filter(p => p.status === 'INACTIVE');
+  const POS = {}; people.forEach(p => { const k = pos(p), x = POS[k] || (POS[k] = {a:0, i:0}); p.status === 'INACTIVE' ? x.i++ : x.a++; });
+  const posRows = Object.entries(POS).sort((a,b) => (b[1].a + b[1].i) - (a[1].a + a[1].i)), maxPos = Math.max(1, ...posRows.map(r => r[1].a));
+  const hires = people.filter(p => /^\d{4}-\d{2}-\d{2}$/.test(p.hired) && p.hired >= f && p.hired <= t).sort((a,b) => b.hired < a.hired ? -1 : 1);
+  // worked in the dates (driverScores counts drivers; helpers from lastTrip)
+  const drv = (sc && sc.drivers) || [], drvKey = {}; drv.forEach(d => { drvKey[key(d.name)] = d; });
+  const idle = active.filter(p => /driver|helper/i.test(p.position)).map(p => ({p, d: days(p.lastTrip)})).filter(x => x.d === null || x.d >= 7).sort((a,b) => (b.d === null ? 1e9 : b.d) - (a.d === null ? 1e9 : a.d));
+  const worked = active.filter(p => p.lastTrip && p.lastTrip >= f).length;
+  // licenses, birthdays, missing contact numbers
+  const lic = active.filter(p => /driver/i.test(p.position) && p.licExp).map(p => ({p, d: -days(p.licExp)})).filter(x => x.d <= 60).sort((a,b) => a.d - b.d);
+  const noLic = active.filter(p => /driver/i.test(p.position) && !p.licExp).length, noTel = active.filter(p => !p.contact).length;
+  const mm = today.slice(5,7), bdays = active.filter(p => String(p.birthday || '').slice(5,7) === mm).sort((a,b) => String(a.birthday).slice(8) < String(b.birthday).slice(8) ? -1 : 1);
+  // incident reports (Charges and IR) + scorecard incidents (INCIDENTS)
+  const irs = (ch && ch.irs) || [], irOpen = irs.filter(x => x.status === 'NEW' || x.status === 'UNDER REVIEW');
+  const cnt = (xs, fn) => { const o = {}; xs.forEach(x => { const k = fn(x); if(k) o[k] = (o[k] || 0) + 1; }); return Object.entries(o).sort((a,b) => b[1] - a[1]); };
+  const irSt = cnt(irs, x => x.status), irTy = cnt(irs, x => x.type);
+  const irPpl = cnt([].concat(...irs.map(x => [x.driver, x.helper1, x.helper2].filter(Boolean).map(n => ({n})))), x => x.n).slice(0, 10);
+  const inc = ((sc && sc.incidents) || []).filter(x => x.status !== 'VOID' && x.date >= f && x.date <= t), incTy = cnt(inc, x => x.type);
+  // charges per person (a charge on several crew members counts for each of them)
+  const forms = (ch && ch.forms) || [], chgP = {};
+  forms.forEach(fm => { const crew = [fm.driver, fm.helper1, fm.helper2].filter(Boolean), cleared = typeof chgCleared === 'function' ? chgCleared(fm) : false;
+    crew.forEach(n => { const x = chgP[key(n)] || (chgP[key(n)] = {n, forms: 0, amt: 0, open: 0}); x.forms++; x.amt += (Number(fm.total) || 0) / crew.length; if(!cleared) x.open++; }); });
+  const chgRows = Object.values(chgP).sort((a,b) => b.amt - a.amt).slice(0, 15), chgTot = forms.reduce((a,x) => a + (Number(x.total) || 0), 0);
+  const chgOpen = forms.filter(x => typeof chgCleared === 'function' && !chgCleared(x)).length;
+  const chgTy = cnt(forms, x => x.type || 'CHARGE');
+  // driver performance
+  const ranked = drv.filter(d => d.ranked), top = ranked.slice(0, 10), low = ranked.slice(-5).reverse();
+  const tripsTot = Math.round(drv.reduce((a,d) => a + (Number(d.trips) || 0), 0) * 10) / 10;
+  const kv = (rows, c, link) => rows.length ? `<table class="xl an-t"><tbody>${rows.map(([k,n]) => `<tr><td>${link ? pLink(k) : esc(titleCase(k))}</td><td class="c"><b>${n}</b></td><td style="width:45%">${bar(n, rows[0][1], c)}</td></tr>`).join('')}</tbody></table>` : none();
+  const drvT = rows => rows.length ? `<table class="xl an-t"><thead><tr><th>#</th><th>Driver</th><th class="c">Score</th><th class="c">Trips</th><th class="c">On time</th><th class="c">Incidents</th></tr></thead><tbody>${rows.map(d => `<tr><td>${d.rank || ''}</td><td>${pLink(d.name)}</td><td class="c"><b>${d.score === null ? '—' : d.score}</b></td><td class="c">${d.trips}</td><td class="c">${d.onTimePct === null ? '—' : d.onTimePct + '%'}</td><td class="c${d.incidents ? ' hs-red' : ''}">${d.incidents}</td></tr>`).join('')}</tbody></table>` : none(`No driver has ${(sc && sc.minTrips) || 5} or more trips in these dates.`);
+  const span = f===t ? fmtDay(f) : fmtDay(f) + ' to ' + fmtDay(t);
+  $('hsBody').innerHTML = `
+    <div class="kpis kpis4">
+      <div class="kpi" data-hsgo="manpower" role="button"><div class="v">${active.length}<small style="font-size:.5em;opacity:.7"> / ${people.length}</small></div><div class="l">Active manpower</div><div class="s">${(POS.Driver || {a:0}).a} drivers · ${(POS.Helper || {a:0}).a} helpers · ${inactive.length} inactive</div></div>
+      <div class="kpi"><div class="v">${worked}</div><div class="l">Crew who worked</div><div class="s">trip from ${esc(fmtDay(f))} on · ${idle.length} active with no trip in 7+ days</div></div>
+      <div class="kpi"><div class="v"${irOpen.length ? ' style="color:#B91C1C"' : ''}>${ch ? irs.length : '—'}</div><div class="l">Incident reports</div><div class="s">${ch ? irOpen.length + ' waiting on HR' : 'not in your access'}</div></div>
+      <div class="kpi"><div class="v">${ch ? chgMoney(chgTot) : '—'}</div><div class="l">Crew charges</div><div class="s">${ch ? forms.length + ' charge' + (forms.length===1 ? '' : 's') + ' · ' + chgOpen + ' not cleared' : 'not in your access'}</div></div>
+    </div>
+    ${probs.length ? `<p class="hint hs-red">Could not read: ${esc(probs.join('; '))}</p>` : ''}
+    <div class="an-grid">
+      ${panel('Headcount by position', 'active · inactive', posRows.length ? `<table class="xl an-t"><thead><tr><th>Position</th><th class="c">Active</th><th class="c">Inactive</th><th></th></tr></thead><tbody>${posRows.map(([k,x]) => `<tr><td>${esc(k)}</td><td class="c"><b>${x.a}</b></td><td class="c">${x.i}</td><td style="width:40%">${bar(x.a, maxPos, '#0A27B5')}</td></tr>`).join('')}</tbody></table>` : none('No one in MANPOWER yet.'))}
+      ${panel('New hires', esc(span) + ' · from the hired date', hires.length ? `<table class="xl an-t"><tbody>${hires.map(p => `<tr><td>${pLink(p.full)}<div class="hint">${esc(pos(p))}</div></td><td class="c">${esc(fmtDay(p.hired))}</td></tr>`).join('')}</tbody></table>` : none('No one hired in these dates.'))}
+      ${panel('Licenses to renew', 'active drivers · expired or within 60 days', (lic.length ? `<table class="xl an-t"><tbody>${lic.map(x => `<tr><td>${pLink(x.p.full)}</td><td class="c">${esc(fmtDay(x.p.licExp))}</td><td class="c${x.d < 0 ? ' hs-red' : ''}">${x.d < 0 ? 'expired ' + (-x.d) + ' d ago' : x.d === 0 ? 'today' : 'in ' + x.d + ' d'}</td></tr>`).join('')}</tbody></table>` : none('None in the next 60 days.')) + (noLic ? `<p class="hint">${noLic} active driver${noLic===1 ? ' has' : 's have'} no license expiry typed in Manpower.</p>` : ''))}
+      ${panel('Birthdays this month', '', (bdays.length ? `<table class="xl an-t"><tbody>${bdays.map(p => `<tr><td>${pLink(p.full)}<div class="hint">${esc(pos(p))}</div></td><td class="c">${esc(new Date(p.birthday + 'T00:00').toLocaleDateString('en-PH', {month:'short', day:'numeric'}))}${String(p.birthday).slice(5) === today.slice(5) ? ' 🎂' : ''}</td></tr>`).join('')}</tbody></table>` : none('No birthday typed for this month.')) + (noTel ? `<p class="hint">${noTel} active ${noTel===1 ? 'person has' : 'people have'} no contact number.</p>` : ''))}
+      ${panel('No trip lately', 'active drivers and helpers · 7 days or more since their last trip', idle.length ? `<div class="an-scroll" style="max-height:340px;overflow-y:auto"><table class="xl an-t" style="min-width:0"><tbody>${idle.slice(0, 60).map(x => `<tr><td>${pLink(x.p.full)}<div class="hint">${esc(pos(x.p))}${x.p.truck ? ' · truck ' + esc(x.p.truck) : ''}</div></td><td class="c${x.d === null || x.d >= 30 ? ' hs-red' : ''}">${x.d === null ? 'no trip yet' : x.d + ' days'}</td></tr>`).join('')}</tbody></table></div><p class="hint">After 30 idle days a person turns INACTIVE by itself.</p>` : none('Every active driver and helper had a trip in the last 7 days.'))}
+      ${ch ? panel('Incident reports by status', esc(span), kv(irSt, '#B91C1C')) : ''}
+      ${ch ? panel('Incident reports by type', esc(span), kv(irTy, '#D97706')) : ''}
+      ${ch ? panel('Crew named most in incident reports', esc(span), kv(irPpl, '#7C3AED', true)) : ''}
+      ${panel('Scorecard incidents', 'accidents, violations, complaints recorded in Manpower', kv(incTy, '#B45309'))}
+      ${ch ? panel('Charges by type', esc(span) + ' · count', kv(chgTy, '#0EA5E9')) : ''}
+    </div>
+    ${ch ? panel('Charges per crew member', 'highest first · a charge on 2 or 3 crew is split equally', chgRows.length ? `<div class="an-scroll"><table class="xl an-t"><thead><tr><th>Name</th><th class="c">Charges</th><th class="c">Not cleared</th><th class="c">Amount</th><th></th></tr></thead><tbody>${chgRows.map(x => `<tr><td>${pLink(x.n)}</td><td class="c">${x.forms}</td><td class="c${x.open ? ' hs-red' : ''}">${x.open}</td><td class="c"><b>${esc(chgMoney(x.amt))}</b></td><td style="width:30%">${bar(x.amt, chgRows[0].amt, '#0EA5E9')}</td></tr>`).join('')}</tbody></table></div>` : none('No charges in these dates.')) : ''}
+    <div class="an-grid">
+      ${panel('Top drivers', `score 0–100 · ${tripsTot} trips by ${drv.length} drivers`, drvT(top))}
+      ${panel('Drivers to coach', 'lowest scores', ranked.length > 10 ? drvT(low) : none('Shown when more than 10 drivers have enough trips to be ranked.'))}
+    </div>
+    <p class="hint">Made ${esc(new Date(HS.data.at).toLocaleTimeString('en-PH', {hour:'numeric', minute:'2-digit'}))}. Score: on time 50%, waiting 20%, fuel 30%, minus incidents (same as the Manpower scorecard). Tap a name for their trips.</p>`;
+}
 /** "2026-11-04 15:10" → "Nov 4, 2026 3:10 PM": when the POD status last changed or a document was uploaded (MANU 2026-11-04). */
 const podWhen = v => { const m = String(v || '').match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})/); if(!m) return String(v || ''); const h = +m[2]; return `${fmtDay(m[1])} ${(h % 12) || 12}:${m[3]} ${h < 12 ? 'AM' : 'PM'}`; };
 const nowStamp = () => { const d = new Date(Date.now() + (S.clockOff || 0)), p = n => String(n).padStart(2, '0'); return `${TODAY()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
@@ -8234,7 +8400,9 @@ function openCharge(t){
 }
 /** The form pop-up. ref = the trip on the server, t = the trip on this phone (or null), f = the saved form (or null) */
 function chgForm(ref, t, f, canEdit, me){
-  const ro = !canEdit, dis = ro ? ' disabled' : '';
+  // POD / POD HEAD on a saved form: the change goes to HR Head as a request (MANU 2026-11-18); nothing to change while one waits
+  const rq = !!(f && canEdit && may('chgRequest')), pend = f ? crqPending(f.no) : null;
+  const ro = !canEdit || !!(rq && pend), dis = ro ? ' disabled' : '';
   const v0 = f || {rddId: t ? t.tripId || '' : '', rddDate: t ? t.date : '', truckNo: t ? t.truckNo || '' : '', plateNo: t ? t.plateNo || '' : '', shipmentNo: t ? t.shipmentNo || '' : '',
     invoiceNo: t && t.chargeInv && !/^CT-\d+$/.test(t.chargeInv) ? t.chargeInv : '', origin: t ? t.customer || '' : '', destination: t ? t.destination || '' : '',
     driver: t ? t.driver || '' : '', helper1: t ? t.helper1 || '' : '', helper2: t ? t.helper2 || '' : '', pod: me || (S.me && S.me.name) || '', bo: '', rel: {}, items: []};
@@ -8273,6 +8441,7 @@ function chgForm(ref, t, f, canEdit, me){
     $('popBody').innerHTML = `<div class="chg-form">
       <div class="chg-top"><b>CHARGES TRANSMITTAL FORM</b><span>Rev.01 NSG · Effectivity 7/28/26</span></div>
       ${f ? `<p class="hint" style="margin:6px 0">${esc(f.no)} · saved by ${esc(f.by || '—')}${f.at ? ' · ' + esc(f.at) : ''}</p>` : ''}
+      ${crqBanner(f, rq, pend)}
       <div class="chg-grid">
         ${inp('cf_rddId', 'RDD ID', v0.rddId)}
         ${inp('cf_rddDate', 'RDD date', v0.rddDate, ' type="date"')}
@@ -8296,6 +8465,7 @@ function chgForm(ref, t, f, canEdit, me){
       </div>
       <h4 class="chg-sub">Released to the crew</h4>
       <div id="cfRel">${relHtml()}</div>
+      ${rq && !pend ? `<label class="f full crq-why">Reason for the change (HR Head reads this)<textarea id="cfWhy" rows="2" maxlength="1000" placeholder="e.g. wrong pieces typed, invoice no. corrected, charge already deducted">${esc(v0._why || '')}</textarea></label>` : ''}
     </div>`;
     if(ro) return;
     $('cfAdd').onclick = () => { keep(); items.push({}); draw(); const i = items.length - 1; if($('ci_desc_' + i)) $('ci_desc_' + i).focus(); };
@@ -8307,15 +8477,22 @@ function chgForm(ref, t, f, canEdit, me){
   };
   const keepRel = () => { v0.rel = v0.rel || {}; readItems().forEach((x, i) => { items[i] = x; });
     CHG_CREW.forEach(c => { if($('cr_d_' + c[0])) v0.rel[c[0]] = {date: $('cr_d_' + c[0]).value.trim(), items: relSum(c[0]) || ((v0.rel[c[0]] || {}).items || ''), endorsed: $('cr_e_' + c[0]).value.trim()}; }); };
-  const keep = () => { readItems().forEach((x, i) => { items[i] = x; }); ['rddId','rddDate','truckNo','plateNo','shipmentNo','invoiceNo','origin','destination','driver','helper1','helper2','pod','bo'].forEach(k => { if($('cf_' + k)) v0[k] = $('cf_' + k).value; }); keepRel(); };
+  const keep = () => { if($('cfWhy')) v0._why = $('cfWhy').value; readItems().forEach((x, i) => { items[i] = x; }); ['rddId','rddDate','truckNo','plateNo','shipmentNo','invoiceNo','origin','destination','driver','helper1','helper2','pod','bo'].forEach(k => { if($('cf_' + k)) v0[k] = $('cf_' + k).value; }); keepRel(); };
   const sub = [t ? 'Truck ' + (t.truckNo || '—') : f ? 'Truck ' + (f.truckNo || '—') : '', t ? plainDest(t.destination) || t.customer : f ? plainDest(f.destination) : ''].filter(Boolean).map(esc).join(' · ') + (ro ? ' · view only' : '');
-  openPop(f ? `Charges ${f.no}` : 'Charges Transmittal Form', sub, '', `${f && canEdit ? '<button class="btn alt danger" type="button" id="cfDel">Delete form</button> ' : ''}<span style="flex:1"></span><button class="btn alt" type="button" id="cfClose">${ro ? 'Close' : 'Cancel'}</button>${ro ? '' : ' <button class="btn" type="button" id="cfSave">Save</button>'}`);
+  openPop(f ? `Charges ${f.no}` : 'Charges Transmittal Form', sub, '', `${f && canEdit && !(rq && pend) ? `<button class="btn alt danger" type="button" id="cfDel">${rq ? 'Request deletion' : 'Delete form'}</button> ` : ''}<span style="flex:1"></span><button class="btn alt" type="button" id="cfClose">${ro ? 'Close' : 'Cancel'}</button>${ro ? '' : ` <button class="btn" type="button" id="cfSave">${rq ? 'Send change request' : 'Save'}</button>`}`);
   $('pop').dataset.kind = 'chg';
   draw();
   $('cfClose').onclick = () => closePop();
   const after = (r, msg) => { if(r && r.trip){ try{ const old = t || chgTripOf(f || {}); applyLocal(r.trip, old ? old.key : r.trip.key); }catch(e){} }
     toast(msg); closePop(); if(S.tab==='pod' && typeof renderPod==='function') renderPod(); if(S.tab==='billing' && typeof renderBilling==='function') renderBilling(); if(S.tab==='charges' || CHG.data){ CHG.data = null; CHG.k = ''; if(S.tab==='charges') loadCharges(); } };
   if($('cfDel')) $('cfDel').onclick = async () => {
+    if(rq){ keep(); const why = String(v0._why || '').trim();
+      if(!why){ toast('Type the reason at the bottom of the form first.', true); if($('cfWhy')) $('cfWhy').focus(); return; }
+      if(!confirm(`Ask HR Head to delete ${f.no}? It stays until HR Head approves.`)) return;
+      const b = $('cfDel'); b.disabled = true; b.textContent = 'Sending…';
+      try{ const r = await call('chargeRequest', ref, 'DELETE', {no: f.no, cur: t ? t.chargeInv || '' : f.invoiceNo || f.no}, why); crqGot(r); toast(`Sent to HR Head as ${r.id}. ${f.no} is deleted only when HR Head approves.`); closePop(); }
+      catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Request deletion'; }
+      return; }
     if(!confirm(`Delete charges form ${f.no}? Its items are removed from the CHARGES sheet.`)) return;
     const b = $('cfDel'); b.disabled = true; b.textContent = 'Deleting…';
     try{ const r = await call('chargeDelete', ref, t ? t.chargeInv || '' : f.invoiceNo || f.no); after(r, `${f.no} deleted`); }
@@ -8327,6 +8504,12 @@ function chgForm(ref, t, f, canEdit, me){
       driver: v0.driver, helper1: v0.helper1, helper2: v0.helper2, pod: v0.pod, bo: v0.bo, rel: v0.rel || {}, items: items.filter(x => Object.keys(x).some(k => String(x[k] || '').trim())),
       cur: t ? t.chargeInv || '' : (f ? f.invoiceNo || f.no : '')};
     if(!d.items.length) return toast('Add at least one item.', true);
+    if(rq){ const why = String(v0._why || '').trim();
+      if(!why){ toast('Type the reason for the change at the bottom of the form.', true); if($('cfWhy')) $('cfWhy').focus(); return; }
+      const b = $('cfSave'); b.disabled = true; b.textContent = 'Sending…';
+      try{ const r = await call('chargeRequest', ref, 'EDIT', {...d, no: f.no}, why); crqGot(r); toast(`Sent to HR Head as ${r.id}. ${f.no} changes when HR Head approves.`); closePop(); }
+      catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Send change request'; }
+      return; }
     const b = $('cfSave'); b.disabled = true; b.textContent = 'Saving…';
     try{ const r = await call('chargeSave', ref, d); after(r, `Saved ${r.form ? r.form.no + ' · ' + chgMoney(r.form.total) : ''}`); }
     catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Save'; }
@@ -8346,18 +8529,20 @@ function initCharges(){
   $('chFrom').onchange = $('chTo').onchange = dates;
   $('chFind').oninput = $('chType').onchange = renderCharges;
   $('chAdd').onclick = () => chgManual(null);
-  filterChips($('chView'), [['sheet', 'All charges'], ['crew', 'Per person'], ['account', 'Per account'], ['truck', 'Per truck'], ['aging', 'Aging'], ['ir', 'Incident reports']], 'sheet', v => { CHG.view = v; renderCharges(); });
+  filterChips($('chView'), [['sheet', 'All charges'], ['crew', 'Per person'], ['account', 'Per account'], ['truck', 'Per truck'], ['aging', 'Aging'], ['ir', 'Incident reports'], ['req', 'Change requests']], 'sheet', v => { CHG.view = v; renderCharges(); });
   $('chCsv').onclick = chargesCsv;
-  $('chRefresh').onclick = () => { CHG.data = null; CHG.k = ''; loadCharges(); };
+  $('chRefresh').onclick = () => { CHG.data = null; CHG.k = ''; loadCharges(); if(mayCrqList()){ CRQ.v = ''; loadCrq(); } };
   $('chBody').onclick = e => {
     if(e.target.closest('.plink')) return;
     const r = e.target.closest('[data-cf]'); if(r){ const f = (CHG.data.forms || []).find(x => x.no===r.dataset.cf); if(f) chgOpenForm(f); return; }
     const ir = e.target.closest('[data-cir]'); if(ir) return chgIrPop(ir.dataset.cir);
     const g = e.target.closest('[data-cg]'); if(g) return chgGroupPop(g.dataset.cg);
+    const cq = e.target.closest('[data-crq]'); if(cq) return crqOpen(cq.dataset.crq);
   };
 }
 function loadCharges(){
   if(!$('chBody')) return;
+  if(mayCrqList() && !CRQ.at) loadCrq();   // the "change requested" marks and the Change requests view
   const f = $('chFrom').value, t = $('chTo').value, k = chgKey();
   if(CHG.k !== k){ CHG.data = null; renderCharges(); }
   return call('chargeList', f, t).then(d => { if(chgKey() !== k) return; CHG.data = d; CHG.k = k; renderCharges(); })
@@ -8395,6 +8580,7 @@ function renderCharges(){
   if(!$('chBody')) return;
   const d = CHG.data, f0 = $('chFrom').value, t0 = $('chTo').value;
   $('chAdd').hidden = !(d && d.canEdit);
+  const rqc = $('chView').querySelector('[data-f="req"]'); if(rqc){ rqc.hidden = !mayCrqList(); const w = (CRQ.list || []).filter(x => x.status==='PENDING').length; rqc.textContent = 'Change requests' + (w ? ` (${w} waiting)` : ''); }
   if(!d){ $('chNote').textContent = 'Loading charges and incident reports…'; $('chKpis').innerHTML = ''; $('chHead').innerHTML = ''; $('chBody').innerHTML = '<tr><td class="empty-cell">Loading…</td></tr>'; return; }
   const {forms, irs} = chgShown();
   const total = forms.reduce((a, f) => a + f.total, 0), nItems = forms.reduce((a, f) => a + f.items.length, 0), pcs = forms.reduce((a, f) => a + f.items.reduce((b, x) => b + (parseFloat(x.qtyPcs) || 0), 0), 0);
@@ -8417,7 +8603,7 @@ function renderCharges(){
           for(let i = 0; i < n; i++){
             const x = f.items[i], c = cr[i];
             h += `<tr class="fm-r chg-r${i===0 ? ' chg-first' : ''}" data-cf="${esc(f.no)}" tabindex="0">`
-              + (i===0 ? `<td${rs}>${esc(chgDay(chgDateOf(f)))}<small>${esc(f.no)}${f.manual ? ` · <b class="chg-ty">${esc(CHG_TYPE_LBL[f.type] || f.type)}</b>` : ''}</small></td><td${rs}><b>${f.truckNo ? tLink(f.truckNo) : '—'}</b>${f.plateNo ? `<small>${esc(f.plateNo)}</small>` : ''}</td><td${rs}>${esc(f.shipmentNo)}</td><td${rs}>${esc(f.invoiceNo)}</td><td${rs}>${esc(f.origin)}</td><td${rs}>${esc(f.destination)}</td>` : '')
+              + (i===0 ? `<td${rs}>${esc(chgDay(chgDateOf(f)))}<small>${esc(f.no)}${f.manual ? ` · <b class="chg-ty">${esc(CHG_TYPE_LBL[f.type] || f.type)}</b>` : ''}${crqPending(f.no) ? ' · <b class="crq-flag">change requested</b>' : ''}</small></td><td${rs}><b>${f.truckNo ? tLink(f.truckNo) : '—'}</b>${f.plateNo ? `<small>${esc(f.plateNo)}</small>` : ''}</td><td${rs}>${esc(f.shipmentNo)}</td><td${rs}>${esc(f.invoiceNo)}</td><td${rs}>${esc(f.origin)}</td><td${rs}>${esc(f.destination)}</td>` : '')
               + (x ? `<td>${esc(x.desc)}</td><td class="n">${esc(x.qtyCase)}</td><td class="n">${esc(x.qtyPcs)}</td><td class="n">${esc(chgPrice(x.price))}</td><td class="n"><b>${esc(chgMoney(x.total))}</b></td><td>${esc(chgDay(x.exp))}</td>` : '<td></td><td></td><td></td><td></td><td></td><td></td>')
               + (i===0 ? `<td${rs}>${f.driver ? pLink(f.driver) : ''}</td><td${rs}>${f.helper1 ? pLink(f.helper1) : ''}</td><td${rs}>${f.helper2 ? pLink(f.helper2) : ''}</td>` : '')
               + `<td>${x ? esc(x.remarks) : ''}</td>`
@@ -8458,6 +8644,15 @@ function renderCharges(){
           return `<tr class="fm-r" data-cf="${esc(f.no)}" tabindex="0"><td>${esc(chgDay(chgDateOf(f)))}<small>${esc(f.no)}${f.truckNo ? ' · Truck ' + esc(f.truckNo) : ''}${f.invoiceNo ? ' · Inv ' + esc(f.invoiceNo) : ''}</small></td><td>${esc(chgCrew(f).filter(c => !(c.rel.date || c.rel.endorsed)).map(c => c.name).join(', '))}<small>not released yet</small></td><td class="n"><b>${chgMoney(f.total)}</b></td><td class="n"><b class="${chgBucket(o.days) >= 2 ? 'chg-oldtxt' : ''}">${o.days} days</b></td></tr>`; }).join('') : '')
       + (oi.length ? `<tr class="fm-sec"><td colspan="4"><b>Incident reports waiting on HR</b> <span>· oldest first</span></td></tr>` + oi.map(o => { const x = o.x;
           return `<tr class="fm-r" data-cir="${esc(x.id)}" tabindex="0"><td>${irWhen(x)}<small>${esc(x.id)}${x.truckNo ? ' · Truck ' + esc(x.truckNo) : ''}</small></td><td><b>${esc(x.type)}</b><small>${esc(x.driver || '')}</small></td><td class="n">${irPill(x.status)}</td><td class="n"><b class="${chgBucket(o.days) >= 2 ? 'chg-oldtxt' : ''}">${o.days} days</b></td></tr>`; }).join('') : '');
+  } else if(CHG.view==='req'){
+    if(!CRQ.at) loadCrq();
+    const q = $('chFind').value.toLowerCase().trim(), hitq = x => { const b = x.before || {}; return !q || q.split(/\s+/).every(w => [x.id, x.no, x.kind, x.status, x.reason, x.by, x.decBy, x.note, b.truckNo, b.invoiceNo, b.driver, b.helper1, b.helper2].join(' ').toLowerCase().includes(w)); };
+    const l = (CRQ.list || []).filter(hitq), w = (CRQ.list || []).filter(x => x.status==='PENDING').length;
+    $('chNote').textContent = `Change requests for saved charges, damages and penalties (all dates): POD sends them, HR Head approves or rejects. ${w} waiting for HR Head. Tap a request to see what changes${may('chgApprove') ? ' and to approve or reject it' : ''}.`;
+    head = '<tr><th>Request</th><th>Charge</th><th>Requested by</th><th>Reason</th><th>Status</th><th>Answered by</th></tr>';
+    body = l.map(x => { const b = x.before || {}, a = x.after;
+      return `<tr class="fm-r" data-crq="${esc(x.id)}" tabindex="0"><td><b>${esc(x.id)}</b><small>${crqKind(x)}</small></td><td>${esc(x.no)}<small>${esc([CHG_TYPE_LBL[b.type] || '', b.truckNo ? 'Truck ' + b.truckNo : '', [b.driver, b.helper1].filter(Boolean).join(', '), chgMoney(b.total) + (a && a.total!==b.total ? ' to ' + chgMoney(a.total) : '')].filter(Boolean).join(' · '))}</small></td><td>${esc(x.by)}<small>${irAt(x.at)}</small></td><td class="chg-txt">${esc(x.reason)}</td><td>${crqPill(x.status)}${x.stale ? '<small>charge saved again since</small>' : ''}</td><td>${x.decBy ? esc(x.decBy) + `<small>${irAt(x.decAt)}</small>` : ''}${x.note ? `<small>${esc(x.note)}</small>` : ''}</td></tr>`; }).join('')
+      || `<tr><td colspan="6" class="empty-cell">${CRQ.at ? ((CRQ.list || []).length ? 'Nothing matches.' : 'No change requests yet.') : 'Loading…'}</td></tr>`;
   } else if(CHG.view==='truck'){
     $('chNote').textContent = `Trucks with a charge or an incident report from ${span}. Tap a truck's row for the details.`;
     head = '<tr><th>Truck</th><th class="n">Charges</th><th class="n">Charged</th><th class="n">Incident reports</th><th>Incident types</th></tr>';
@@ -8543,12 +8738,13 @@ function chgOpenForm(f){
   chgForm(chgRefOfForm(f), chgTripOf(f), f, CHG.data.canEdit, S.me.name);
 }
 function chgManual(f){
-  const canEdit = !!(CHG.data && CHG.data.canEdit), ro = !canEdit, dis = ro ? ' disabled' : '';
+  const canEdit = !!(CHG.data && CHG.data.canEdit), rq = !!(f && canEdit && may('chgRequest')), pend = f ? crqPending(f.no) : null;   // POD: changes go to HR Head (MANU 2026-11-18)
+  const ro = !canEdit || !!(rq && pend), dis = ro ? ' disabled' : '';
   const x = f ? f.items[0] || {} : {}, who = f ? (f.driver ? {name: f.driver, pos: 'driver'} : {name: f.helper1, pos: 'helper1'}) : {name: '', pos: 'driver'};
   const rel = f ? (f.rel || {})[who.pos] || {} : {};
   const people = [...new Set([...document.querySelectorAll('#dlDrivers option, #dlHelpers option')].map(o => o.value).filter(Boolean))];
   openPop(f ? `${CHG_TYPE_LBL[f.type] || f.type} ${f.no}` : 'Add damage or penalty', f ? `Saved by ${esc(f.by || '—')}${f.at ? ' · ' + esc(f.at) : ''}${ro ? ' · view only' : ''}` : 'Not connected to a trip: for one driver or helper',
-    `<div class="chg-grid">
+    `${crqBanner(f, rq, pend)}<div class="chg-grid">
       <label class="f">Type<select id="cmType"${dis}>${['DAMAGE', 'PENALTY'].map(t => `<option value="${t}" ${f && f.type===t ? 'selected' : ''}>${CHG_TYPE_LBL[t]}</option>`).join('')}</select></label>
       <label class="f">Date<input id="cmDate" type="date" value="${esc(f ? chgDateOf(f) : TODAY())}"${dis}></label>
       <label class="f full">Driver or helper<input id="cmWho" list="cmPeople" autocomplete="off" value="${esc(who.name || '')}" placeholder="Type the name"${dis}></label>
@@ -8560,12 +8756,19 @@ function chgManual(f){
       <label class="f full">Remarks<input id="cmRem" autocomplete="off" value="${esc(x.remarks || '')}"${dis}></label>
       <label class="f">Released / deducted date<input id="cmRel" autocomplete="off" value="${esc(rel.date || '')}" placeholder="e.g. 2026-11-20"${dis}></label>
       <label class="f">Endorsed date<input id="cmEnd" autocomplete="off" value="${esc(rel.endorsed || '')}" placeholder="e.g. 2026-11-20"${dis}></label>
-    </div>${f ? `<p class="hint">Aging: ${esc(chgAgeTxt(f))}</p>` : ''}`,
-    `${f && canEdit ? '<button class="btn alt danger" type="button" id="cmDel">Delete</button> ' : ''}<span style="flex:1"></span><button class="btn alt" type="button" id="cmClose">${ro ? 'Close' : 'Cancel'}</button>${ro ? '' : ' <button class="btn" type="button" id="cmSave">Save</button>'}`);
+    </div>${f ? `<p class="hint">Aging: ${esc(chgAgeTxt(f))}</p>` : ''}${rq && !pend ? '<label class="f full crq-why">Reason for the change (HR Head reads this)<textarea id="cmWhy" rows="2" maxlength="1000" placeholder="e.g. wrong amount typed, already deducted"></textarea></label>' : ''}`,
+    `${f && canEdit && !(rq && pend) ? `<button class="btn alt danger" type="button" id="cmDel">${rq ? 'Request deletion' : 'Delete'}</button> ` : ''}<span style="flex:1"></span><button class="btn alt" type="button" id="cmClose">${ro ? 'Close' : 'Cancel'}</button>${ro ? '' : ` <button class="btn" type="button" id="cmSave">${rq ? 'Send change request' : 'Save'}</button>`}`);
   $('pop').dataset.kind = 'chg';
   $('cmClose').onclick = () => closePop();
   const done = msg => { toast(msg); closePop(); CHG.data = null; CHG.k = ''; loadCharges(); };
+  const why = () => { const w = $('cmWhy') ? $('cmWhy').value.trim() : ''; if(!w){ toast('Type the reason for the change first.', true); if($('cmWhy')) $('cmWhy').focus(); } return w; };
+  const sendReq = async (btn, kind, d, label) => { const w = why(); if(!w) return;
+    if(kind==='DELETE' && !confirm(`Ask HR Head to delete ${f.no}? It stays until HR Head approves.`)) return;
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try{ const r = await call('chargeRequest', null, kind, d, w); crqGot(r); toast(`Sent to HR Head as ${r.id}. ${f.no} ${kind==='DELETE' ? 'is deleted' : 'changes'} only when HR Head approves.`); closePop(); }
+    catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = label; } };
   if($('cmDel')) $('cmDel').onclick = async () => {
+    if(rq) return sendReq($('cmDel'), 'DELETE', {no: f.no, cur: f.invoiceNo || f.no}, 'Request deletion');
     if(!confirm(`Delete ${CHG_TYPE_LBL[f.type] || f.type} ${f.no}?`)) return;
     const b = $('cmDel'); b.disabled = true; b.textContent = 'Deleting…';
     try{ await call('chargeDelete', null, '', f.no); done(`${f.no} deleted`); }catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Delete'; }
@@ -8577,8 +8780,123 @@ function chgManual(f){
     if(!desc) return toast('Type what it is for.', true);
     const d = {type: $('cmType').value, no: f ? f.no : '', rddDate: $('cmDate').value, truckNo: $('cmTruck').value.trim(), driver: pos==='driver' ? name : '', helper1: pos==='helper1' ? name : '',
       rel: {[pos]: {date: $('cmRel').value.trim(), items: '', endorsed: $('cmEnd').value.trim()}}, items: [{desc, total: amt, remarks: $('cmRem').value.trim()}]};
+    if(rq) return sendReq($('cmSave'), 'EDIT', d, 'Send change request');
     const b = $('cmSave'); b.disabled = true; b.textContent = 'Saving…';
     try{ const r = await call('chargeSave', null, d); done(`Saved ${r.form ? r.form.no + ' · ' + chgMoney(r.form.total) : ''}`); }catch(e){ toast(e.message, true); b.disabled = false; b.textContent = 'Save'; }
+  };
+}
+
+/* ===== Charge change requests (MANU 2026-11-18 "for the charges, POD only encodes the initial charges but all changes afterwards will be
+   requested by POD from HR head for authorization"). Code.gs chargeRequest / chargeReqList / chargeReqDecide / chargeReqCancel, sheet
+   CHARGE REQUESTS. POD and POD HEAD (may chgRequest) save a charge the first time; on a saved one Save is "Send change request" and
+   Delete is "Request deletion", with a reason. HR Head (and Admin, may chgApprove) approves or rejects from the bell or from
+   Charges and IR > Change requests. The chat check carries a changed mark (crqv). ===== */
+const CRQ = {list: [], pending: 0, v: '', at: 0, busy: false, canApprove: false};
+const mayCrq = () => may('chgRequest') || may('chgApprove');
+const mayCrqList = () => mayCrq() || may('chargeEdit') || may('viewAll');
+const CRQ_ST_COLOR = {PENDING:'#D97706', APPROVED:'#16A34A', REJECTED:'#D92D20', CANCELLED:'#64748B'};
+const CRQ_ST_LBL = {PENDING:'WAITING FOR HR HEAD', APPROVED:'APPROVED', REJECTED:'REJECTED', CANCELLED:'CANCELLED'};
+const crqPill = st => `<span class="ir-st" style="--c:${CRQ_ST_COLOR[st] || '#64748B'}">${esc(CRQ_ST_LBL[st] || st)}</span>`;
+const crqKind = x => x.kind==='DELETE' ? 'Delete' : 'Change';
+const crqPending = no => (CRQ.list || []).find(x => x.no===no && x.status==='PENDING') || null;
+const crqMe = () => String(S.me && S.me.username || '').toLowerCase();
+function loadCrq(){
+  if(!S.me || !mayCrqList() || CRQ.busy) return;
+  CRQ.busy = true;
+  call('chargeReqList').then(r => { Object.assign(CRQ, r); CRQ.v = String(r.v || ''); CRQ.at = Date.now(); renderLw(); if(S.tab==='charges') renderCharges(); })
+    .catch(() => {}).finally(() => { CRQ.busy = false; });
+}
+function crqMark(v){ if(v && v!==CRQ.v){ CRQ.v = v; loadCrq(); } }
+/** a request just sent from this phone */
+function crqGot(r){ if(!r || !r.id) return; CRQ.list = [r, ...(CRQ.list || []).filter(y => y.id!==r.id)]; renderLw(); if(S.tab==='charges') renderCharges(); }
+/** the bell: HR Head the waiting requests; the one who asked the answers they have not opened yet (14 days) */
+const crqSeen = () => new Set(lsGet('jmti_crq_seen') || []);
+function crqBell(){
+  if(may('chgApprove')) return (CRQ.list || []).filter(x => x.status==='PENDING');
+  if(!may('chgRequest')) return [];
+  const seen = crqSeen(), me = crqMe();
+  return (CRQ.list || []).filter(x => x.byU===me && (x.status==='APPROVED' || x.status==='REJECTED') && !seen.has(x.id)
+    && Date.now() - new Date(String(x.decAt || '').replace(' ', 'T')).getTime() < 14 * 864e5);
+}
+const crqBellTxt = n => may('chgApprove') ? `${n} charge change request${n===1 ? '' : 's'} to approve` : `${n} answer${n===1 ? '' : 's'} to your charge change requests`;
+function crqAll(){
+  closePop();
+  if(!can('charges')) return;
+  CHG.view = 'req'; showTab('charges');
+  const el = $('chView'); if(el) el.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.f==='req'));
+  CRQ.v = ''; loadCrq(); renderCharges();
+}
+/** the note at the top of a saved form */
+const crqBanner = (f, rq, pend) => !f ? '' : pend ? `<div class="crq-note">Change request <b>${esc(pend.id)}</b> (${crqKind(pend)==='Delete' ? 'delete' : 'change'}) is waiting for HR Head, sent by ${esc(pend.by)} · ${irAt(pend.at)}. This entry stays as it is until HR Head answers. <button class="btn alt sm" type="button" data-crqopen="${esc(pend.id)}">View request</button></div>`
+  : rq ? `<div class="crq-note">This entry is already saved. Changes need HR Head's approval: change what is needed, type the reason, then press <b>Send change request</b>. Nothing changes until HR Head approves.</div>` : '';
+const CRQ_FIELDS = [['type', 'Type'], ['rddDate', 'Date'], ['rddId', 'RDD ID'], ['truckNo', 'Truck no.'], ['plateNo', 'Plate no.'], ['shipmentNo', 'Shipment no. / DTTR'], ['invoiceNo', 'Invoice no.'],
+  ['origin', 'Origin'], ['destination', 'Destination'], ['driver', 'Driver'], ['helper1', 'Helper 1'], ['helper2', 'Helper 2'], ['pod', 'POD in charge'], ['bo', 'BO records controller']];
+const crqVal = (f, k) => k==='type' ? CHG_TYPE_LBL[f[k]] || f[k] || '' : k==='rddDate' ? chgDay(f[k]) : f[k] || '';
+const crqItemTxt = it => [it.desc, it.qtyCase && it.qtyCase + ' case', it.qtyPcs && it.qtyPcs + ' pcs', it.price ? '@ ₱' + chgPrice(it.price) : '', chgMoney(it.total), it.exp && 'expiry ' + chgDay(it.exp),
+  it.loc, it.itemId && 'item ID ' + it.itemId, it.invId && 'inventory ID ' + it.invId, it.remarks].filter(Boolean).join(' · ')
+  + (CHG_CREW.some(c => String((it.relQ || {})[c[0]] || '').trim()) ? ' · released: ' + CHG_CREW.filter(c => String((it.relQ || {})[c[0]] || '').trim()).map(c => c[1] + ' ' + it.relQ[c[0]] + ' pcs').join(', ') : '');
+const crqRelTxt = r => r ? [r.date && 'released ' + chgDay(r.date), r.items && r.items + ' items', r.endorsed && 'endorsed ' + chgDay(r.endorsed)].filter(Boolean).join(' · ') : '';
+function crqFormSum(f){
+  const r = CRQ_FIELDS.filter(([k]) => crqVal(f, k)).map(([k, l]) => `<tr><td>${esc(l)}</td><td>${esc(crqVal(f, k))}</td></tr>`)
+    .concat((f.items || []).map((it, i) => `<tr><td>Item ${i + 1}</td><td>${esc(crqItemTxt(it))}</td></tr>`))
+    .concat(CHG_CREW.map(([k, l]) => { const t = crqRelTxt((f.rel || {})[k]); return t && f[k] ? `<tr><td>Released to ${esc(l)}</td><td>${esc(t)}</td></tr>` : ''; }))
+    .concat([`<tr><td>Total charge</td><td><b>${chgMoney(f.total)}</b></td></tr>`]);
+  return `<div class="tbl-wrap" style="max-height:none"><table class="poptbl ir-tbl"><tbody>${r.join('')}</tbody></table></div>`;
+}
+/** now and requested side by side, only the parts that change */
+function crqDiff(b, a){
+  const rows = [], same = [];
+  const add = (label, x, y) => { x = String(x ?? ''); y = String(y ?? ''); if(x===y){ if(x) same.push(label); return; }
+    rows.push(`<tr><td>${esc(label)}</td><td class="crq-old">${x ? esc(x) : '<i>blank</i>'}</td><td class="crq-new">${y ? esc(y) : '<i>blank</i>'}</td></tr>`); };
+  CRQ_FIELDS.forEach(([k, l]) => add(l, crqVal(b, k), crqVal(a, k)));
+  const n = Math.max((b.items || []).length, (a.items || []).length);
+  for(let i = 0; i < n; i++) add('Item ' + (i + 1), (b.items || [])[i] ? crqItemTxt(b.items[i]) : '', (a.items || [])[i] ? crqItemTxt(a.items[i]) : '');
+  CHG_CREW.forEach(([k, l]) => add('Released to ' + l, b[k] ? crqRelTxt((b.rel || {})[k]) : '', a[k] ? crqRelTxt((a.rel || {})[k]) : ''));
+  add('Total charge', chgMoney(b.total), chgMoney(a.total));
+  return `<h4 class="chg-sub">What changes</h4><div class="tbl-wrap" style="max-height:none"><table class="poptbl crq-tbl"><thead><tr><th></th><th>Now</th><th>Requested</th></tr></thead><tbody>${rows.join('') || '<tr><td colspan="3" class="empty-cell">No difference.</td></tr>'}</tbody></table></div>`
+    + (same.length ? `<p class="hint">Not changed: ${esc(same.join(', '))}.</p>` : '');
+}
+/** one request: what changes, who asked and why, and (HR Head) Approve / Reject; (the one who asked) Cancel while it waits */
+function crqOpen(id){
+  const x = (CRQ.list || []).find(y => y.id===id); if(!x) return toast('That request is not on this phone yet. Refresh.', true);
+  const wait = x.status==='PENDING', canDo = wait && may('chgApprove'), mine = wait && x.byU===crqMe();
+  if(!wait && x.byU===crqMe()){ const sn = crqSeen(); if(!sn.has(x.id)){ lsSet('jmti_crq_seen', [...sn, x.id].slice(-300)); renderLw(); } }
+  const b = x.before || {}, a = x.after || {}, row = (k, v) => v ? `<tr><td>${k}</td><td>${v}</td></tr>` : '';
+  const what = [`${esc(CHG_TYPE_LBL[b.type] || 'Charge')} <b>${esc(x.no)}</b>`, b.truckNo && 'Truck ' + esc(b.truckNo), b.invoiceNo && 'Inv ' + esc(b.invoiceNo), esc([b.driver, b.helper1, b.helper2].filter(Boolean).join(', '))].filter(Boolean).join(' · ');
+  const info = `<div class="tbl-wrap" style="max-height:none"><table class="poptbl ir-tbl"><tbody>
+    ${row('Request', `<b>${esc(x.id)}</b> · ${x.kind==='DELETE' ? 'delete the whole entry' : 'change the entry'}`)}
+    ${row('Charge', what + (b.rddDate || b.tripDate ? `<small>${esc(chgDay(b.rddDate || b.tripDate))} · ${chgMoney(b.total)}</small>` : ''))}
+    ${row('Requested by', `<b>${esc(x.by)}</b>${x.byRole ? ' · ' + esc(x.byRole) : ''} · ${irAt(x.at)}`)}
+    ${row('Reason', `<div class="ir-txt">${esc(x.reason)}</div>`)}
+    ${row('Status', crqPill(x.status) + (x.decBy ? `<small>${x.status==='CANCELLED' ? 'cancelled' : x.status.toLowerCase()} by ${esc(x.decBy)} · ${irAt(x.decAt)}</small>` : ''))}
+    ${row('HR Head note', x.note ? `<div class="ir-txt">${esc(x.note)}</div>` : '')}
+  </tbody></table></div>`;
+  const warn = x.gone && wait ? `<p class="crq-warn">${esc(x.no)} is no longer in the CHARGES sheet. Reject this request.</p>`
+    : x.stale ? `<p class="crq-warn">${esc(x.no)} was saved again after this request was sent. "Now" below is how it was when the request was sent; approving saves the requested form as a whole.</p>` : '';
+  const body = info + warn + (x.kind==='DELETE' ? `<h4 class="chg-sub">Entry to delete</h4>${crqFormSum(b)}` : crqDiff(b, a))
+    + (canDo ? `<label class="f full" style="margin-top:10px">Note to ${esc(x.by)} (optional)<textarea id="crqNote" rows="2" maxlength="1000" placeholder="e.g. Checked with the BO records"></textarea></label>` : '');
+  openPop(`${x.kind==='DELETE' ? 'Delete' : 'Change'} request ${x.id}`, `${esc(x.no)} · ${crqPill(x.status)}`, body,
+    (canDo ? '<button class="btn alt danger" type="button" id="crqNo">Reject</button> ' : '') + (mine ? '<button class="btn alt" type="button" id="crqCancel">Cancel request</button> ' : '')
+    + '<span style="flex:1"></span><button class="btn alt" type="button" id="crqClose">Close</button>' + (canDo ? ' <button class="btn" type="button" id="crqOk">Approve</button>' : ''));
+  $('crqClose').onclick = () => closePop();
+  const after = () => { CHG.data = null; CHG.k = ''; if(S.tab==='charges') loadCharges(); CRQ.v = ''; CRQ.busy = false; loadCrq();
+    if(S.tab==='pod' && typeof renderPod==='function') renderPod(); if(S.tab==='billing' && typeof renderBilling==='function') renderBilling(); };
+  const decide = async ok => {
+    const btn = $(ok ? 'crqOk' : 'crqNo'), note = $('crqNote') ? $('crqNote').value.trim() : '';
+    if(ok && x.kind==='DELETE' && !confirm(`Approve deleting ${x.no}? It is removed from the CHARGES sheet.`)) return;
+    btn.disabled = true; btn.textContent = ok ? 'Approving…' : 'Rejecting…';
+    try{ const r = await call('chargeReqDecide', x.id, ok, note);
+      if(r.trip){ try{ const old = chgTripOf(b); applyLocal(r.trip, old ? old.key : r.trip.key); }catch(e){} }
+      if(r.req) crqGot(r.req);
+      toast(ok ? `${x.id} approved: ${x.no} ${x.kind==='DELETE' ? 'deleted' : 'changed'}` : `${x.id} rejected: ${x.no} stays as it is`); closePop(); after(); }
+    catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = ok ? 'Approve' : 'Reject'; }
+  };
+  if($('crqOk')) $('crqOk').onclick = () => decide(true);
+  if($('crqNo')) $('crqNo').onclick = () => decide(false);
+  if($('crqCancel')) $('crqCancel').onclick = async () => {
+    if(!confirm(`Cancel change request ${x.id}? ${x.no} stays as it is.`)) return;
+    const btn = $('crqCancel'); btn.disabled = true;
+    try{ await call('chargeReqCancel', x.id); toast(`${x.id} cancelled`); closePop(); after(); }catch(e){ toast(e.message, true); btn.disabled = false; }
   };
 }
 
@@ -9236,44 +9554,50 @@ const lwAtTxt = since => fmtDay(String(since).slice(0, 10)) + ' ' + clock12(sinc
 // helpers name with their contact numbers") and the issue the sender types ("ask for the escalator to type the issue")
 const escCrew = x => [['DRIVER', x.driver], ['HELPER', x.helper1], ['HELPER', x.helper2 && x.helper2!==x.helper1 ? x.helper2 : '']].filter(c => c[1])
   .map(([r, n]) => `${r}: ${n} · ${(x.tel && x.tel[nameKey(n)]) || 'NO CONTACT NUMBER'}`);
-const escText = (x, issue) => ['ESCALATION', 'PLATE: ' + (x.plateNo || '—'), 'DESTINATION: ' + (x.place || '—'),
+const escText = (x, issue) => ['ESCALATION', 'PLATE: ' + (x.plateNo || '—'), shipLbl(x) + ': ' + (x.shipmentNo || '—'), 'DESTINATION: ' + (x.place || '—'),   // shipment no. / DTTR: MANU 2026-11-18
   'TIME OF ARRIVAL: ' + lwAtTxt(x.since), 'STATUS: ' + lwDur(x.since) + ' (' + lwWait(x.status) + ')', ...escCrew(x),
   ...(issue ? ['ISSUE: ' + String(issue).replace(/\s+/g, ' ').trim()] : []),
   '', 'THANK YOU', (S.me && S.me.name) || ''].map(l => l.toUpperCase()).join('\n').trim();
 function renderLw(){
-  const lwn = mayLw() ? (S.lw || []).length : 0, irn = may('irView') ? irNew().length : 0, n = lwn + irn, b = $('lwBtn');
+  const lwn = mayLw() ? (S.lw || []).length : 0, irn = may('irView') ? irNew().length : 0, crn = mayCrq() ? crqBell().length : 0, n = lwn + irn + crn, b = $('lwBtn');
   if(!b) return;
   // Notification bell (MANU 2026-10-13): red count of trips waiting too long; it rings when one appears that hasn't been seen.
   // Since 2026-11-06 also new incident reports (HR, Admin, Boss; the sender when HR changes the status) until opened.
-  b.hidden = !mayLw() && !may('irView'); $('lwN').textContent = n > 99 ? '99+' : n; $('lwN').hidden = !n;
+  b.hidden = !mayLw() && !may('irView') && !mayCrq(); $('lwN').textContent = n > 99 ? '99+' : n; $('lwN').hidden = !n;
   S.lwN = n; updateAppBadge();
   const seen = new Set(lsGet('jmti_lw_seen') || []);
-  b.classList.toggle('ring', !!irn || (mayLw() && (S.lw || []).some(x => !seen.has(x.key))));
-  const parts = [irn && `${irn} new incident report${irn===1 ? '' : 's'}`, lwn && `${lwn} trip${lwn===1 ? '' : 's'} waiting too long`].filter(Boolean);
+  b.classList.toggle('ring', !!irn || !!crn || (mayLw() && (S.lw || []).some(x => !seen.has(x.key))));
+  const parts = [crn && crqBellTxt(crn), irn && `${irn} new incident report${irn===1 ? '' : 's'}`, lwn && `${lwn} trip${lwn===1 ? '' : 's'} waiting too long`].filter(Boolean);
   b.title = parts.length ? parts.join(' · ') + '. Tap to see them.' : 'No notifications';
   b.setAttribute('aria-label', parts.length ? 'Notifications: ' + parts.join(', ') : 'Notifications: none');
   const xn = $('xIrN'); if(xn){ xn.textContent = irn; xn.hidden = !irn; }
   if(!$('pop').hidden && $('pop').classList.contains('lwpop')) renderLwPop();
 }
 function renderLwPop(){
-  const l = mayLw() ? S.lw || [] : [], ir = may('irView') ? irNew() : [];
-  $('popSub').textContent = [ir.length && `${ir.length} new incident report${ir.length===1 ? '' : 's'}`, mayLw() && `${l.length} trip${l.length===1 ? '' : 's'} need${l.length===1 ? 's' : ''} an update`].filter(Boolean).join(' · ') || 'Nothing new';
+  const l = mayLw() ? S.lw || [] : [], ir = may('irView') ? irNew() : [], cr = mayCrq() ? crqBell() : [];
+  $('popSub').textContent = [cr.length && crqBellTxt(cr.length), ir.length && `${ir.length} new incident report${ir.length===1 ? '' : 's'}`, mayLw() && `${l.length} trip${l.length===1 ? '' : 's'} need${l.length===1 ? 's' : ''} an update`].filter(Boolean).join(' · ') || 'Nothing new';
   const irHtml = !may('irView') ? '' : `<h4 class="ir-h">Incident reports</h4>` + (ir.length ? ir.map(x => `<div class="lw-item ir-item rowbtn" data-iropen="${esc(x.id)}" role="button" tabindex="0" title="Open ${esc(x.id)}">
       <div class="lw-top"><span><b>${esc(x.id)}</b> · ${esc(x.type)}</span>${irPill(x.status)}</div>
       <div class="ir-clip">${esc(x.details)}</div>
       <small>${x.truckNo ? 'Truck ' + esc(x.truckNo) + (x.plateNo ? ' · ' + esc(x.plateNo) : '') + ' · ' : ''}${irWhen(x)}</small>
       <small class="ir-sub">Submitted by ${irBy(x)}${x.statusBy && x.byU===(S.me && S.me.username || '').toLowerCase() ? ` · status changed by ${esc(x.statusBy)}` : ''}</small>${x.replies ? `<small class="ir-rep">💬 ${x.replies} response${x.replies===1 ? '' : 's'}${x.replyBy && x.replyByU!==irMe() ? ' · newest from ' + esc(x.replyBy) : ''}</small>` : ''}</div>`).join('')
       : '<p class="hint">No new incident reports.</p>') + `<p style="margin:0 0 12px"><button class="btn alt" type="button" data-irall>All incident reports</button></p>`;
-  if(!mayLw()){ $('popBody').innerHTML = irHtml; return; }
-  $('popBody').innerHTML = irHtml + (ir.length || may('irView') ? '<h4 class="ir-h">Waiting too long</h4>' : '') + (l.length ? `<p class="hint" style="margin:0 0 10px">No status change for more than 6 hours at a site, 12 hours on the way, or 24 hours at Clip Board. Update the trip in Truck Plan, or tap ESCALATION to send it.</p>`
+  const crHtml = !mayCrq() ? '' : `<h4 class="ir-h">Charge change requests</h4>` + (cr.length ? cr.map(x => `<div class="lw-item ir-item rowbtn" data-crqopen="${esc(x.id)}" role="button" tabindex="0" title="Open ${esc(x.id)}">
+      <div class="lw-top"><span><b>${esc(x.id)}</b> · ${crqKind(x)} ${esc(x.no)}</span>${crqPill(x.status)}</div>
+      <div class="ir-clip">${esc(x.reason)}</div>
+      <small>Requested by <b>${esc(x.by)}</b> · ${irAt(x.at)}${x.decBy && x.status!=='PENDING' ? ' · ' + esc(x.status.toLowerCase()) + ' by ' + esc(x.decBy) : ''}</small></div>`).join('')
+      : `<p class="hint">${may('chgApprove') ? 'No change requests waiting.' : 'No new answers to your change requests.'}</p>`) + `<p style="margin:0 0 12px"><button class="btn alt" type="button" data-crqall>All change requests</button></p>`;
+  if(!mayLw()){ $('popBody').innerHTML = crHtml + irHtml; return; }
+  $('popBody').innerHTML = crHtml + irHtml + (ir.length || may('irView') ? '<h4 class="ir-h">Waiting too long</h4>' : '') + (l.length ? `<p class="hint" style="margin:0 0 10px">No status change for more than 6 hours at a site, 12 hours on the way, or 24 hours at Clip Board. Update the trip in Truck Plan, or tap ESCALATION to send it.</p>`
     + l.map((x, i) => `<div class="lw-item"><div class="lw-top"><span>${tLink(x.truckNo, 'Truck ' + (x.truckNo || '—'))} · ${plLink(x.plateNo)}</span><span class="lw-wait">${esc(lwDur(x.since))}</span></div>
       <div><b>${esc(x.client || '—')}</b> → ${esc(x.place || '—')}</div>
+      <div><small>${esc(shipLbl(x))}: <b>${esc(x.shipmentNo || '—')}</b></small></div>
       <small>${esc(x.status)}${lwWait(x.status)!==x.status ? ' (' + esc(lwWait(x.status).toLowerCase()) + ')' : ''} since ${esc(lwAtTxt(x.since))} · limit ${x.limitH} h${x.driver ? ' · ' + pLink(x.driver) : ''}${x.tripId ? ' · ' + esc(x.tripId) : ''}</small>
       <div class="lw-esc"><button class="btn" type="button" data-esc="${i}">ESCALATION</button><span class="dim" data-escnote="${i}"></span></div></div>`).join('')
     : '<p class="hint">No trips are waiting too long right now.</p>');
 }
 function openLw(){
-  openPop(may('irView') ? 'Notifications' : 'Waiting too long', '', '', `<button class="btn alt" type="button" onclick="loadLw(); loadIr()">Refresh</button><button class="btn" type="button" onclick="closePop()">Close</button>`);
+  openPop(may('irView') ? 'Notifications' : 'Waiting too long', '', '', `<button class="btn alt" type="button" onclick="loadLw(); loadIr(); loadCrq()">Refresh</button><button class="btn" type="button" onclick="closePop()">Close</button>`);
   $('pop').classList.add('lwpop');
   lsSet('jmti_lw_seen', (S.lw || []).map(x => x.key).slice(-500));   // opened: stop ringing for these
   $('lwBtn').classList.remove('ring');
@@ -9308,6 +9632,8 @@ document.addEventListener('click', e => {
   if(e.target.closest('#lwBtn')) openLw();
   const io = e.target.closest('[data-iropen]'); if(io && $('pop').classList.contains('lwpop') && !e.target.closest('.plink')) openIr(io.dataset.iropen, 'bell');
   if(e.target.closest('[data-irall]') && $('pop').classList.contains('lwpop')) openIrList();
+  const cq = e.target.closest('[data-crqopen]'); if(cq) crqOpen(cq.dataset.crqopen);
+  if(e.target.closest('[data-crqall]')) crqAll();
   if(e.target.closest('#chatBtn') && !FAB.moved){ if(dockShown()) hideDock(); else openChat(); }
   if(e.target.closest('#chdHide')) hideDock();
   if(e.target.closest('#obBtn')) openOutbox();
@@ -9476,7 +9802,7 @@ function irPicShow(x, back, fresh){
  * who sent the IR respond; everyone who sees IRs reads them. Files go one by one (irUpload, photos made small on the phone like the
  * chat), then irReply sends the text with them. A new response comes to the bell (Code.gs irUnread_). */
 const IRT = {id:'', list:[], canReply:false, loaded:false, busy:false, err:'', files:[], sending:false, ref:'', draft:''};
-const IR_REPLY_ROLES = ['ADMIN', 'HR', 'SUPERVISOR', 'TEAM LEADER', 'DISPATCHER'];
+const IR_REPLY_ROLES = ['ADMIN', 'HR', 'HR HEAD', 'HR ASSISTANT 1', 'HR ASSISTANT 2', 'SUPERVISOR', 'TEAM LEADER', 'DISPATCHER'];
 const irMe = () => String(S.me && S.me.username || '').toLowerCase();
 const irCanReply = x => !!S.me && (IR_REPLY_ROLES.includes(S.me.role) || (x.byU===irMe() && may('irAdd')));
 const irFIco = m => /^image\//.test(m) ? '🖼️' : m==='application/pdf' ? '📄' : /sheet|excel|csv/.test(m) ? '📊' : /word/.test(m) ? '📝' : /presentation|powerpoint/.test(m) ? '📽️' : /zip/.test(m) ? '🗜️' : '📎';
@@ -10298,11 +10624,11 @@ document.addEventListener('click', e => {
 }, true);
 document.addEventListener('keydown', e => { if(e.key==='Enter' && e.target.matches && e.target.matches('[data-person],[data-truckpop],[data-platepop]')) e.target.click(); });
 
-const ALL_ROLES = ['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','POD HEAD','BILLING','BILLING HEAD','ACCOUNTING','PAYROLL','HR','MAINTENANCE'];
+const ALL_ROLES = ['ADMIN','BOSS','SUPERVISOR','TEAM LEADER','DISPATCHER','POD','POD HEAD','BILLING','BILLING HEAD','ACCOUNTING','PAYROLL','HR','HR HEAD','HR ASSISTANT 1','HR ASSISTANT 2','MAINTENANCE'];
 const ROLE_NOTE = {'ADMIN':'Everything, including users.','BOSS':'Sees everything Admin sees, changes nothing (view only).',
   'SUPERVISOR':'Dashboard, Truck assignment and Truck Plan; in Truck Plan changes only source and destination, and adds trips.','TEAM LEADER':'Dashboard, Fleet (view only), Truck assignment and Truck Plan.',
   'DISPATCHER':'Truck Plan only.','POD':'Checks completed trips, uploads scanned documents, endorses to billing.','POD HEAD':'Everything POD does, plus the POD analytics tab.','BILLING HEAD':'Checks trips POD sent, invoice numbers; source, destination, distance and clients.','BILLING':'View only: sees Billing and Clients, changes nothing.',
-  'HR':'Drivers and helpers (Manpower) and users, except Admin and Boss accounts; Truck Plan view only.','MAINTENANCE':'Maintenance dashboard only.',
+  'HR':'Drivers and helpers (Manpower) and users, except Admin and Boss accounts; Truck Plan view only.','HR HEAD':'Everything HR does, plus the HR analytics tab.','HR ASSISTANT 1':'Everything HR does except Charges.','HR ASSISTANT 2':'The same as HR.','MAINTENANCE':'Maintenance dashboard only.',
   'ACCOUNTING':'Disbursement (trip budgets sent) and Accounting (inventory purchases with receipts, money summary).','PAYROLL':'Payroll and Disbursement (trip budgets sent); Truck Plan and POD view only.'};
 const ADMIN_ONLY_ROLES = ['ADMIN','BOSS'];   // only an admin creates, changes or gives these (HR manages the rest; same check on the server)
 function fillRoleOptions(){
@@ -11197,6 +11523,7 @@ function chatPoll(){
   // riding along (Faster, 2026-11-02): who is online, the trips of the "trip completed" pop-up, the speed notes
   opt.tv = 1;   // ask for the trips changed mark (real time Truck Plan)
   if(may('irView')) opt.ir = 1;   // incident reports changed mark (the bell)
+  if(mayCrq()) opt.crq = 1;   // charge change requests changed mark (the bell of HR Head and POD)
   const ride = {on: !!(ON.want && mayOnline()), done: DN.want};
   if(ride.on) opt.on = 1;
   if(ride.done) opt.done = ride.done;
@@ -11210,6 +11537,7 @@ function chatPoll(){
       if(d.tv!==undefined) tripsMark(String(d.tv));
       if(d.dv!==undefined) mdMark(String(d.dv));   // My day
       if(d.irv!==undefined) irMark(String(d.irv));
+      if(d.crqv!==undefined) crqMark(String(d.crqv));
       if(CH.user===u){ if(full) CH.full = true; if(d.v) CH.v = String(d.v); chatMerge(d); if(d.rv!==undefined) CH.rv = Number(d.rv) || 0; } })
     .catch(() => { CH.fail = Math.min(3, CH.fail + 1); }).finally(() => { CH.busy = false; });
 }
@@ -12986,6 +13314,66 @@ async function fuelPdf(){
     setTimeout(() => URL.revokeObjectURL(url), 60000);
   }catch(e){ toast('PDF not made: ' + (e && e.message || e), true); }
   btn.disabled = false; btn.textContent = was;
+}
+/** Manpower contacts tab (MANU 2026-11-18 "add new tab for supervisors, team leaders and dispatchers, manpower list to add the contact
+ *  number of manpower"): every driver and helper from MANPOWER (Code.gs mpContactList); Supervisor, Team leader, Dispatcher, HR, Admin
+ *  tap a person to add or change the number (mpContactSave, the same CONTACT NUMBER column HR edits in Manpower); Boss views. */
+const CT = {data:null, rows:[], filter:'act'};
+const CT_CHIPS = [['act','Active'],['none','No number yet'],['Driver','Drivers'],['Helper','Helpers'],['all','All']];
+const ctPass = {act:p => p.status==='ACTIVE', none:p => p.status==='ACTIVE' && !p.contact, Driver:p => p.status==='ACTIVE' && p.position==='Driver', Helper:p => p.status==='ACTIVE' && p.position==='Helper', all:() => true};
+function initContacts(){
+  if(!$('ctBody')) return;
+  $('ctFind').oninput = renderContacts;
+  filterChips($('ctChips'), CT_CHIPS, CT.filter, f => { CT.filter = f; renderContacts(); });
+  $('ctRefresh').onclick = () => loadContacts(true);
+  $('ctBody').onclick = e => { if(e.target.closest('a')) return; const tr = e.target.closest('tr[data-ct]'); if(tr && CT.data && CT.data.canEdit) openContactEdit(CT.rows[tr.dataset.ct]); };
+  $('ctBody').onkeydown = e => { if(e.key==='Enter' && !e.target.closest('a')) $('ctBody').onclick(e); };
+}
+function loadContacts(manual){
+  if(!CT.data){ const c = lsGet('jmti_contacts'); if(c && Array.isArray(c.people)) CT.data = c; }
+  renderContacts();
+  $('ctPanel').classList.add('loading');
+  return call('mpContactList').then(d => { if(!d || !Array.isArray(d.people)) throw new Error('The server code is out of date. Paste the latest Code.gs, save it, then deploy a New version.'); CT.data = d; lsSet('jmti_contacts', d); renderContacts(); if(manual===true) toast('Manpower contacts refreshed'); })
+    .catch(e => { toast(e.message, true); if(!CT.data) $('ctNote').textContent = e.message; })
+    .finally(() => $('ctPanel').classList.remove('loading'));
+}
+function renderContacts(){
+  if(!$('ctBody')) return;
+  const all = (CT.data && CT.data.people) || [], ed = !!(CT.data && CT.data.canEdit), q = $('ctFind').value.toLowerCase().trim();
+  $('ctChips').querySelectorAll('.chip').forEach(b => { const c = CT_CHIPS.find(x => x[0]===b.dataset.f); if(c) b.textContent = `${c[1]} ${all.filter(ctPass[c[0]]).length}`; });
+  CT.rows = all.filter(ctPass[CT.filter] || ctPass.all).filter(p => findHit('ctFind', q, {name:p.full, truck:p.truck, number:p.contact}, [p.full, p.id, p.truck, p.contact, p.position]))
+    .sort((a, b) => (a.status==='ACTIVE' ? 0 : 1) - (b.status==='ACTIVE' ? 0 : 1) || a.full.localeCompare(b.full));
+  const act = all.filter(ctPass.act), none = all.filter(ctPass.none).length;
+  $('ctNote').innerHTML = CT.data ? `${act.length} active drivers and helpers · <b>${none}</b> with no contact number yet. ${ed ? 'Tap a person to add or change the number. Tap a number to call.' : 'Tap a number to call. Supervisor, Team leader and Dispatcher add the numbers.'}` : 'Loading…';
+  $('ctBody').innerHTML = CT.rows.length ? CT.rows.map((p, i) => `<tr${ed ? ` class="rowbtn" data-ct="${i}" tabindex="0"` : ''}><td><b>${esc(p.full)}</b>${p.id ? `<small>ID ${esc(p.id)}</small>` : ''}${p.status!=='ACTIVE' ? `<small class="dim">${esc(p.status)}</small>` : ''}</td><td>${esc(p.position)}</td><td>${p.truck ? esc('Truck ' + p.truck) : '<span class="dim">—</span>'}</td><td>${p.contact ? `<a class="ct-tel" href="${esc(telHref(p.contact))}">\ud83d\udcde ${esc(p.contact)}</a>` : '<span class="mp-idle">No number yet</span>'}${ed ? `<small class="cl-hset">${p.contact ? 'Tap the row to change' : 'Tap to add'}</small>` : ''}</td></tr>`).join('')
+    : `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">${CT.data ? (all.length ? 'Nothing matches.' : 'No drivers or helpers in MANPOWER yet.') : 'Loading…'}</td></tr>`;
+}
+function openContactEdit(p){
+  if(!p) return;
+  openPop(`Contact number · ${p.full}`, `${p.position}${p.truck ? ' · Truck ' + p.truck : ''}${p.status!=='ACTIVE' ? ' · ' + p.status : ''}`, `
+    <label class="f full">Contact number<input id="ctTel" type="tel" inputmode="tel" maxlength="60" autocomplete="off" placeholder="09XX XXX XXXX" value="${esc(p.contact || '')}"></label>
+    <p class="hint" style="margin:8px 0 0">Digits, + or - only. Two numbers: put a comma between them. HR sees the same number in Manpower, and it goes into the escalation text.</p>`,
+    `<button class="btn alt" type="button" id="ctBack">Back</button>${p.contact ? ' <button class="btn alt" type="button" id="ctClear">Remove number</button>' : ''} <button class="btn road" type="button" id="ctSave">Save</button>`);
+  const inp = $('ctTel'); setTimeout(() => { try{ inp.focus(); }catch(e){} }, 50);
+  const save = async clear => {
+    const v = clear ? '' : inp.value.replace(/\s+/g, ' ').trim();
+    if(!clear && !v) return toast('Type the contact number, or tap Back.', true);
+    if(v && (!/^[0-9+()\-\/ ,;]+$/.test(v) || v.replace(/\D/g, '').length < 7)) return toast('Contact number: type the number only (digits, + or -), at least 7 digits.', true);
+    if(v === (p.contact || '')) return closePop();
+    const btn = $('ctSave'); btn.disabled = true; btn.textContent = 'Saving…';
+    try{
+      const d = await call('mpContactSave', {row:p.row, was:p.full, contact:v});
+      if(!d || !Array.isArray(d.people)) throw new Error('The server code is out of date. Paste the latest Code.gs, save it, then deploy a New version.');
+      CT.data = d; lsSet('jmti_contacts', d);
+      if(S.people){ const x = S.people.find(y => y.row===p.row && y.full===p.full); if(x){ x.contact = v; lsSet('jmti_people', S.people); } }
+      closePop(); renderContacts();
+      toast(v ? `Contact number saved for ${p.full}` : `Contact number removed for ${p.full}`);
+    }catch(e){ toast(e.message, true); btn.disabled = false; btn.textContent = 'Save'; }
+  };
+  $('ctBack').onclick = () => closePop();
+  $('ctSave').onclick = () => save(false);
+  if($('ctClear')) $('ctClear').onclick = () => save(true);
+  inp.onkeydown = e => { if(e.key==='Enter'){ e.preventDefault(); save(false); } };
 }
 /** Trip hardship tab (MANU 2026-10-20): every CLIENT LIST route with its rating; Admin, Supervisor and Team leader tap one to set it, Boss views. */
 const HT = {data:null, rows:[], canEdit:false, trips:[]};
@@ -15782,7 +16170,7 @@ function tourSteps(){
   if(can('billing')) steps.push({sel: null, t: 'Billing', s: 'Trips POD endorsed show here. Check them and type the invoice number.'});
   if(can('payroll')) steps.push({sel: null, t: 'Payroll', s: 'Pick the pay period. The Today screen shows trips with missing crew before you pay.'});
   steps.push({sel: '#srchBtn', t: 'Search', s: 'Type a plate, driver, shipment number or TRIP ID to find any trip and see its whole story.'});
-  if(r !== 'HR') steps.push({sel: '#lwBtn', t: 'Bell', s: 'Trucks waiting too long and incident reports show here.'});
+  if(!/^HR/.test(r)) steps.push({sel: '#lwBtn', t: 'Bell', s: 'Trucks waiting too long and incident reports show here.'});
   if(['TEAM LEADER', 'DISPATCHER'].includes(r)) steps.push({sel: '#shBtn', t: 'Shift endorsement', s: 'Write your end-of-shift notes here for the next shift.'});
   steps.push({sel: '#chatBtn', t: 'Chat', s: 'Message the team or one person.'});
   steps.push({sel: '#setBtn', t: 'Settings', s: 'Your profile, password, text size, theme, and this tour again ("Show me around").'});
