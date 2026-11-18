@@ -3252,7 +3252,7 @@ function dateMoveErr(t, v){
   const F = feedOf(); if(F && F.cutoff && v < F.cutoff) return `Trips before ${fmtDay(F.cutoff)} come from GENERAL DATABASE 2.0, so a trip can't be moved there.`;
   const gap = Math.round((new Date(v + 'T00:00:00') - new Date(t.date + 'T00:00:00')) / 864e5);
   if(Math.abs(gap) > DATE_MOVE_DAYS) return `A trip date can move up to ${DATE_MOVE_DAYS} days earlier or later (this move is ${Math.abs(gap)} days). For a bigger move, cancel this trip and add it on the new date.`;
-  if(t.truckNo && isTrip(t) && !DONE_ST.includes(stageOf(t))){ const other = openTripOf(v, t.truckNo); if(other && other.key!==t.key) return `Truck ${t.truckNo} already has an open trip on ${fmtDay(v)} (${other.tripId || statusText(other)}).`; }
+  if(t.truckNo && isTrip(t) && !DONE_ST.includes(stageOf(t))){ const other = openTripOf(v, t.truckNo, t.customer); if(other && other.key!==t.key) return `Truck ${t.truckNo} already has an open trip on ${fmtDay(v)} (${other.tripId || statusText(other)}).`; }
   return '';
 }
 /** "Saved" message after a trip save: says where the trip went when its date is outside the dates Truck Plan is showing. */
@@ -3444,7 +3444,7 @@ const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 /* Save buttons (MANU 2026-11-06 pick 13): the button pressed just before a save gets a spinner, then a green check,
    and can't be pressed again while it saves; the Submitting box ends with a green "Saved" check. */
-const SV = {btn:null, at:0, okShow:false, lastWrite:0}, SV_QUIET = ['markShiftRead','acctReadPhoto'];
+const SV = {btn:null, at:0, okShow:false, lastWrite:0}, SV_QUIET = ['markShiftRead','markShiftReadMany','acctReadPhoto'];
 const SV_WORD = /save|submit|send|add|update|confirm|endorse|delete|cancel|yes|post|put back|check|apply|upload|generate|restore|remove/i;
 document.addEventListener('click', e => {
   const b = e.target && e.target.closest && e.target.closest('button'); if(!b) return;
@@ -4553,7 +4553,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.83, APP_VERSION_DATE = '2026-11-16';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.85, APP_VERSION_DATE = '2026-11-18';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4584,6 +4584,16 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-18 "in shift endorsements, mark as read should be when a user opens the endorsement side panel"
+  {v:14.85, d:'2026-11-18', items:[
+    'Shift endorsements: opening the endorsement panel now marks the endorsements you see there as read by you. No more Mark as read button.',
+    'Older endorsements are marked read when you tap Show older. Your own endorsements are never marked, and the red dot clears once you open the panel.'
+  ]},
+  // MANU 2026-11-18 "T1 coca cola meycauayan to mega manila … the return trip from mega manila to meycauayan the system is not allowing on same date"
+  {v:14.84, d:'2026-11-18', items:[
+    'Add trip: a truck can now get its next leg on the same date while its trip is still open, when the new trip starts where that trip goes. Example: a T1 Meycauayan to Mega Manila, then Mega Manila back to Meycauayan, both dated the same day.',
+    'The same works when moving a trip to another date or giving it another truck. A garage or hold row, or two open trips, still block it.'
+  ]},
   // MANU 2026-11-16 "salary rate matrix" (the Drive file KM DISTANCE MATRIX.xlsx), "ok"
   {v:14.83, d:'2026-11-16', items:[
     'Estimated income of drivers and helpers now follows the salary rate matrix: pay per trip by distance, from 1 to 15 km up to 501 to 550 km. Helper pay is now ₱800 for 1 to 15 km and ₱950 for 51 to 100 km.',
@@ -6358,14 +6368,14 @@ function openDispatchAdd(truckNo, opt){
   };
   $('naSt').onchange = () => { stWant = stKey(); showRoute(); fill(); };
   const fill = () => {
-    const d = day(), no = $('naTruck').value.trim(), pl = plateFor(no), c = pl ? crewFor(d, no) : null, open = pl ? openTripOf(d, no) : null;
+    const d = day(), no = $('naTruck').value.trim(), pl = plateFor(no), c = pl ? crewFor(d, no) : null, open = pl ? openTripOf(d, no, NO_ROUTE_ST.includes(stKey()) ? '' : $('naSrc').value.trim()) : null;
     fillSt();
     $('drSub').textContent = `${fmtDay(d)} · ${pl || 'pick a truck'} · new trip`; $('drTno').textContent = pl ? no : '+';
     $('naPlate').value = pl || '';
     $('naDrv').value = c ? c.driver || '' : ''; $('naH1').value = c ? c.helper1 || '' : ''; $('naH2').value = c ? c.helper2 || '' : '';
     const hold = pl ? holdOf(pl) : null;
     $('naInfo').textContent = !no ? '' : !pl ? `Truck ${no} is not in PLATE. Pick one from the list.`
-      : open ? `Truck ${no} already has an open trip on ${fmtDay(d)}. Open that one instead.`
+      : open ? `Truck ${no} already has an open trip on ${fmtDay(d)}. Open that one instead, or add its next leg: pick the source where that trip goes.`
       : hold && !GARAGE_KEYS.includes(stKey()) ? `Truck ${no} is under maintenance: ${repairText(hold)}. Only roadworthy trucks and trucks with a Minor (roadworthy) job order can be dispatched.`
       : !S.assign[d] ? 'Getting the crew for this date…' : c && c.driver ? '' : 'No crew assigned to this truck for this date.';
   };
@@ -6376,7 +6386,7 @@ function openDispatchAdd(truckNo, opt){
   loadDay();
   // Source and destination are find boxes (MANU 2026-11-02 "source and destination should be search/find")
   const setDests = () => { $('naDst').innerHTML = destOptions($('naSrc').value.trim(), ''); $('naDstQ').value = '';
-    $('naDstQ').placeholder = destsOf($('naSrc').value.trim()).length ? 'Type to find the destination' : ($('naSrc').value.trim() ? 'No destinations for this source in CLIENT LIST' : 'Pick the source first'); };
+    $('naDstQ').placeholder = destsOf($('naSrc').value.trim()).length ? 'Type to find the destination' : ($('naSrc').value.trim() ? 'No destinations for this source in CLIENT LIST' : 'Pick the source first'); fill(); };
   findBox($('naSrc'), $('naSrcL'), () => S.boot.customers || [], v => { $('naSrc').value = v; setDests(); $('naDstQ').focus(); }, setDests);
   findBox($('naDstQ'), $('naDstL'), () => destsOf($('naSrc').value.trim()), v => { $('naDstQ').value = v; $('naDst').value = v; }, () => {
     const q = $('naDstQ').value.trim(), hit = destsOf($('naSrc').value.trim()).find(v => nameKey(v)===nameKey(q)); $('naDst').value = hit || ''; });
@@ -6385,7 +6395,7 @@ function openDispatchAdd(truckNo, opt){
     const d = day(), no = $('naTruck').value.trim().toUpperCase();
     if(!d) return toast('Pick the trip date.', true);
     if(!no || !plateFor(no)) return toast('Pick a truck from the list.', true);
-    { const o = openTripOf(d, no); if(o){ toast(isHoldRow(o) ? `Truck ${no} is in ${statusText(o)} on ${fmtDay(d)}. Change that row's status instead.` : `Truck ${no} already has an open trip on ${fmtDay(d)}. It is open now.`, true); closeDrawer(); return setTimeout(() => openDispatch(o), 250); } }
+    { const o = openTripOf(d, no, NO_ROUTE_ST.includes(stKey()) ? '' : $('naSrc').value.trim()); if(o){ toast(isHoldRow(o) ? `Truck ${no} is in ${statusText(o)} on ${fmtDay(d)}. Change that row's status instead.` : `Truck ${no} already has an open trip on ${fmtDay(d)}. It is open now.`, true); closeDrawer(); return setTimeout(() => openDispatch(o), 250); } }
     const k = stKey(), noRoute = NO_ROUTE_ST.includes(k), hold = holdOf(plateFor(no));
     if(hold && !NO_ROUTE_ST.includes(k) && k!=='waiting for shipment') return toast(`Truck ${no} is under maintenance (${hold.jo}, ${joClassText(hold)}). Only roadworthy trucks and Minor (roadworthy) job orders can be dispatched.`, true);
     let route = {customer:'', destination:''};
@@ -6516,10 +6526,18 @@ function refreshPod(){
     .finally(() => { b.disabled = false; b.textContent = '↻ Refresh'; });
 }
 /** An open trip (planned or on the road) of a truck on a date, from the trips already loaded. */
-function openTripOf(d, no){
+function openTripOf(d, no, src){
   const list = TC[rk(d,d)] || S.xCtx || S.xTrips;
-  return list.find(t => String(t.truckNo).trim().toUpperCase()===String(no).trim().toUpperCase() && t.date===d && ((isTrip(t) && !DONE_ST.includes(stageOf(t))) || isHoldRow(t))) || null;   // a truck in a garage blocks Add trip too (MANU 2026-11-02)
+  const hits = list.filter(t => String(t.truckNo).trim().toUpperCase()===String(no).trim().toUpperCase() && t.date===d && ((isTrip(t) && !DONE_ST.includes(stageOf(t))) || isHoldRow(t)));   // a truck in a garage blocks Add trip too (MANU 2026-11-02)
+  const o = hits.find(isHoldRow) || hits[0] || null;
+  // src = the new trip's source: a trip that starts where the truck's one open trip goes is its next leg, not blocked (MANU 2026-11-18, Code.gs nextLeg_)
+  return o && src && hits.length===1 && !isHoldRow(o) && nextLeg(o, src) ? null : o;
 }
+/* Next leg on the same date (MANU 2026-11-18 "T1 coca cola meycauayan to mega manila … the return trip from mega manila to meycauayan the system is
+   not allowing on same date"): places compared without the "CCBPI |" part; one name inside the other matches ("Coca Cola Mega Manila" = "… Mega Manila DC"). */
+const placeKey = v => { v = String(v || ''); const i = v.lastIndexOf('|'); return nameKey(i >= 0 ? v.slice(i + 1) : v); };
+const samePlace = (a, b) => { a = placeKey(a); b = placeKey(b); return !!a && !!b && (a===b || (a.length >= 8 && b.includes(a)) || (b.length >= 8 && a.includes(b))); };
+const nextLeg = (open, src) => !!open && samePlace(open.destination, src);
 /** Destinations of a source in CLIENT LIST, for a destination picker. */
 const destsOf = customer => { const k = nameKey(customer); if(!k) return []; const seen = {};   // every spelling of the source, one per destination (MANU 2026-11-06)
   return S.boot.customers.filter(x => nameKey(x)===k).flatMap(c => S.boot.destinations[c] || []).filter(d => !seen[nameKey(d)] && (seen[nameKey(d)] = 1)).sort(); };
@@ -7560,7 +7578,7 @@ function openCellEditor(t, k, td){
     let extra = {};
     if(k==='truckNo'){
       const pl = plateFor(v); if(!pl) return toast(`Truck ${v} is not in PLATE. Pick one from the list.`, true);
-      const other = openTripOf(t.date, v); if(other && other.key!==t.key && isTrip(t) && !DONE_ST.includes(stageOf(t))) return toast(`Truck ${v} already has an open trip on this date.`, true);
+      const other = openTripOf(t.date, v, t.customer); if(other && other.key!==t.key && isTrip(t) && !DONE_ST.includes(stageOf(t))) return toast(`Truck ${v} already has an open trip on this date.`, true);
       const c = crewFor(t.date, v) || {};
       extra = {plateNo: pl, driver: c.driver || '', helper1: c.helper1 || '', helper2: c.helper2 || ''};   // shown at once; the server sets the same
     }
@@ -7826,7 +7844,6 @@ function shiftRender(){
   const card = (n, act) => { const read = n.read || [], mine = n.user===S.me.username, iRead = read.some(x => x.u===S.me.username);
     return `<div class="sh-note"><div class="m"></div><div class="sh-who"><span><span class="fx-av">${chatAv(n.user || n.name, 'xs', n.name)}</span>Added by <b>${esc(n.name)}</b> (${esc(titleCase(n.role))})</span><span>🕒 <b>${esc(podWhen(n.at))}</b>${n.edited ? ` · edited ${esc(String(n.edited).slice(11))}` : ''}</span></div><div class="t">${esc(n.text)}</div>`
     + `<div class="sh-read">${read.length ? `✓ Read by ${read.map(x => `<b>${esc(x.n)}</b> <small>${esc(String(x.at).slice(5))}</small>`).join(', ')}` : '<span class="dim">Not read yet</span>'}`
-    + (act && !mine && !iRead && n.row ? ` <button class="btn alt sh-rd" type="button" data-shread="${n.row}" data-u="${esc(n.user)}" data-d="${esc(n.date)}">Mark as read</button>` : '')
     + (act && mine && n.row && r.canAdd && left(n) > 0 ? ` <button class="btn alt sh-rd" type="button" data-shedit="${n.row}" data-d="${esc(n.date)}">Edit (${Math.max(1, Math.ceil(left(n) / 60000))} min left)</button>` : '')
     + `</div></div>`; };
   const of = (d, sh) => notes.filter(n => n.date===d && n.shift===sh);
@@ -7841,7 +7858,7 @@ function shiftRender(){
   const form = !r.canAdd ? '' : r.mine ? '<p class="hint">You already submitted your endorsement for this shift.</p>'
     : `<label class="f">Your endorsement to the next shift<textarea id="shText" placeholder="Pending trucks, issues, instructions for the next shift">${esc(draft)}</textarea></label>
        <div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn road" type="button" id="shSubmit">Submit endorsement</button></div>
-       <p class="hint">You can fix it for 30 minutes after submitting. The next shift reads it here and taps Mark as read.</p>`;
+       <p class="hint">You can fix it for 30 minutes after submitting. The next shift sees it here; opening this panel marks it read.</p>`;
   $('shBody').innerHTML = `<div class="sh-find">
       <input id="shQ" placeholder="Search endorsements (truck, name, words)" value="${esc(SH.q || '')}">
       <div class="sh-find-row"><label class="f">From<input type="date" id="shFrom" value="${esc(SH.from || '')}"></label><label class="f">To<input type="date" id="shTo" value="${esc(SH.to || '')}"></label>
@@ -7860,14 +7877,21 @@ function shiftRender(){
   const latest = prev.concat(cur).reduce((a, n) => n.at > a ? n.at : a, '');
   if(latest) lsSet(shSeenKey(), latest);
   $('shDot').hidden = true;
+  // Opening the panel marks what it shows as read by me (MANU 2026-11-18): the 3 newest, this shift and the shift before; older ones once "Show older" is open
+  const markSeen = list => {
+    const todo = list.filter(n => n.row && n.user!==S.me.username && !(n.read || []).some(x => x.u===S.me.username))
+      .filter((n, i, a) => a.findIndex(y => y.row===n.row)===i).map(n => ({row:n.row, user:n.user, date:n.date}));
+    if(!todo.length || SH.marking || $('shPanel').hidden || may('viewAll')) return;
+    SH.marking = true;
+    call('markShiftReadMany', todo).then(x => { SH.marking = false; SH.data = x; SH.got = Date.now(); if(!$('shPanel').hidden && !$('shBody').querySelector('textarea.sh-edit')) shiftRender(); })
+      .catch(() => { setTimeout(() => { SH.marking = false; }, 60000); });   // try again on a later open, not in a loop
+  };
+  markSeen(top.concat(prev, cur, SH.more ? rest : []));
   $('shMain').onclick = e => {
     const mo = e.target.closest('#shMore');
     if(mo){ SH.more = !SH.more; $('shOld').hidden = !SH.more; mo.setAttribute('aria-expanded', SH.more ? 'true' : 'false');
-      mo.innerHTML = `<span>${SH.more ? 'Hide older' : 'Show older'} (${rest.length})</span><b>${SH.more ? '▲' : '▼'}</b>`; return; }
-    const rd = e.target.closest('[data-shread]'), ed = e.target.closest('[data-shedit]');
-    if(rd){ rd.disabled = true; rd.textContent = 'Saving…';
-      call('markShiftRead', +rd.dataset.shread, rd.dataset.u, rd.dataset.d).then(x => { SH.data = x; SH.got = Date.now(); shiftRender(); toast('Marked as read.'); })
-        .catch(err => { toast(err.message, true); rd.disabled = false; rd.textContent = 'Mark as read'; }); }
+      mo.innerHTML = `<span>${SH.more ? 'Hide older' : 'Show older'} (${rest.length})</span><b>${SH.more ? '▲' : '▼'}</b>`; if(SH.more) markSeen(rest); return; }
+    const ed = e.target.closest('[data-shedit]');
     if(ed){ const n = notes.find(x => x.row===+ed.dataset.shedit); if(!n) return;
       const box = ed.closest('.sh-note'); if(box.querySelector('textarea')) return;
       box.insertAdjacentHTML('beforeend', `<textarea class="sh-edit">${esc(n.text)}</textarea><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button class="btn alt" type="button" data-shx>Cancel</button><button class="btn road" type="button" data-shok>Save change</button></div>`);
