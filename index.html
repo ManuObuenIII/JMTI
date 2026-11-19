@@ -2387,6 +2387,37 @@ table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
 .pr-route input,.pr-route textarea{width:100%;min-width:0;min-height:40px;font-size:16px;box-sizing:border-box}
 .pr-route textarea{font-family:inherit;resize:vertical;overflow-wrap:anywhere}
 @media (max-width:560px){ .pr-route .pr-w{grid-column:1 / -1} }
+.vb .vb-st{padding:10px 12px;border-radius:10px;border:1px solid var(--line);margin:0 0 10px;line-height:1.45;overflow-wrap:anywhere}
+.vb .vb-st.ok{border-color:#1E9E5A;background:rgba(30,158,90,.10)}
+.vb .vb-st.bad{border-color:#D93636;background:rgba(217,54,54,.10)}
+.vb .vb-how{margin:0 0 12px}
+.vb .vb-how summary{cursor:pointer;font-weight:700;padding:6px 0}
+.vb .vb-how ol{margin:6px 0 6px 20px;padding:0;line-height:1.5}
+.vb input:not([type=checkbox]),.vb select{width:100%;min-height:44px;font-size:16px;box-sizing:border-box}
+.vb .vb-sw{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}
+.vb .vb-sw input{width:22px;height:22px;margin-top:2px;flex:none}
+.vb .vb-sw small{display:block;opacity:.8;font-weight:400}
+.vb .vb-sel{max-width:420px;margin:0 0 6px 32px}
+.vb .vb-btns{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.vb .vb-prev{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.45 inherit;font-family:inherit;padding:10px;border:1px solid var(--line);border-radius:10px;max-height:50vh;overflow:auto}
+/* CREW LEAVE + IDLE SIGN-OUT (MANU 2026-11-19) */
+.lv-warn{background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;border-radius:var(--radius-s);padding:8px 10px;font-size:12.5px;line-height:1.45}
+.lv-warn.lv-flash{animation:lvFlash .9s ease 2}
+@keyframes lvFlash{50%{background:#FECACA;box-shadow:0 0 0 3px rgba(220,38,38,.35)}}
+input.onleave,.atxt.onleave{color:#B91C1C!important;font-weight:700}
+input.onleave{border-color:#F87171!important;background:#FEF2F2!important}
+.lv-tag{display:block;color:#B91C1C;font-weight:700;font-size:11.5px}
+.lv-tag.soon{color:#B45309}
+.lv-form{background:rgba(10,39,181,.05);border:1px solid rgba(10,39,181,.15);border-radius:12px;padding:10px 12px}
+.lv-form h4,.lv-h{margin:0 0 8px}
+.lv-h{margin-top:12px}.lv-h small{color:var(--muted);font-weight:600}
+.lv-row{display:flex;gap:10px;justify-content:space-between;align-items:flex-start;padding:8px 10px;border:1px solid rgba(0,0,0,.08);border-radius:10px;margin-bottom:6px;font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+.lv-row.now{border-color:#FCA5A5;background:#FEF2F2}
+.lv-act{display:flex;gap:6px;flex-wrap:wrap;flex:none}
+.lv-act .btn{padding:6px 10px;min-height:0;font-size:12px}
+.lv-act .btn.danger{color:#B91C1C;border-color:#F87171}
+.idle-warn{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:100000;max-width:min(560px,calc(100vw - 24px));background:#7A1010;color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:14px;line-height:1.45;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.idle-warn .btn{background:#fff;color:#7A1010}
 </style>
 </head>
 <body>
@@ -2882,7 +2913,7 @@ table.xl tr.routehd i.pl-tag.no{background:#F1F5F9;color:#475569}
     <div class="cols2">
       <div>
         <!-- incident reports summary removed from Manpower (MANU 2026-11-13 "remove incident report summary from manpower"): it is on the Charges and IR tab -->
-        <div class="bar"><label class="f grow">Find<input id="mpFind" placeholder="Name or ID"></label><button class="btn alt" type="button" id="mpRefresh" style="align-self:flex-end" hidden title="Set drivers and helpers with no trip for 30 days to INACTIVE">↻ Refresh status</button></div>
+        <div class="bar"><label class="f grow">Find<input id="mpFind" placeholder="Name or ID"></label><button class="btn alt" type="button" id="mpLeave" style="align-self:flex-end" title="Drivers and helpers on leave, day off or absent">🌴 Leave</button><button class="btn alt" type="button" id="mpRefresh" style="align-self:flex-end" hidden title="Set drivers and helpers with no trip for 30 days to INACTIVE">↻ Refresh status</button></div>
         <div class="chips" id="mpChips" style="margin-bottom:10px"></div>
         <div class="hint-line" id="mpNote" style="margin:0 0 10px"></div>
         <div class="panel rem" id="mpRem" hidden></div>
@@ -3407,6 +3438,18 @@ function shipDttr(t){
 }
 const shipNoOf = t => shipDttr(t) ? '' : (t.shipmentNo || ''), dttrOf = t => shipDttr(t) ? (t.shipmentNo || '') : '';
 const shipLbl = t => shipDttr(t) ? 'DTTR' : 'Shipment no.';
+/** Client section (MANU 2026-11-19 "remove other accounts, make it clients like CPFI, CJ smart, etc"): trips that are not Coca Cola
+ *  Canlubang / San Fernando show under their client, the part of the destination before "|" ("CPFI | Calamba" → CPFI), else of the
+ *  source; Coca Cola / CCBPI names are skipped. No client written: the destination (else source) name. '' = nothing to go by. */
+function clientSec(t){
+  if(!t) return '';
+  const coke = v => /COCACOLA|CCBPI/.test(nameKey(v));
+  const c = [clientOf(t.destination), clientOf(t.customer)].find(v => v && !coke(v));
+  if(c) return c.toUpperCase();
+  const p = [t.destination, t.customer].map(v => String(v || '')).find(v => v.trim() && !v.includes('|') && !coke(v));   // "CCBPI | …" is Coca Cola's own: no fallback
+  return p ? p.trim().toUpperCase() : '';
+}
+const NO_CLIENT = 'NO CLIENT YET';
 /** The trip counts under another account than its route alone would give, because of its truck's assignment. */
 const movedByTruck = t => { const acc = assignedAcct(t.truckNo, t.date), w = acctWeights(t), ks = Object.keys(w); return !!acc && ks.length > 0 && !(ks.length===1 && ks[0]===acc); };
 let TRIP_W = {};
@@ -3482,7 +3525,7 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['mpContactSave','chargeSave','chargeDelete','chargeRequest','chargeReqDecide','chargeReqCancel','savePlannedTrips','deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','savePayRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave'];
+const WRITES = ['leaveSave','leaveDelete','mpContactSave','chargeSave','chargeDelete','chargeRequest','chargeReqDecide','chargeReqCancel','savePlannedTrips','deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','savePayRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave','vbSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 /* Save buttons (MANU 2026-11-06 pick 13): the button pressed just before a save gets a spinner, then a green check,
@@ -3709,7 +3752,7 @@ $('loginForm').onsubmit = async e => {
   const f = e.target; $('loginBtn').disabled = true; $('loginErr').textContent = '';
   try{
     const r = await call('login', f.username.value, f.password.value, {v: APP_VERSION, dev: devLabel()});   // SIGN-IN LOG (System analytics)
-    TOKEN = r.token; store('jmti_token', TOKEN); store('jmti_me', JSON.stringify(r.me));
+    TOKEN = r.token; store('jmti_token', TOKEN); store('jmti_me', JSON.stringify(r.me)); idleMark(true);   // idle sign-out counts from here
     if(r.mustChange){ pendingPw = f.password.value; f.password.value = ''; showPwForm(true); }
     else { f.password.value = ''; enterApp(r.me); }
     if(r.warn) setTimeout(() => toast(r.warn, true, 10000), 2500);   // ADMIN: wrong-password alerts or background time (review 2026-11-04)
@@ -3792,7 +3835,8 @@ function openSettings(){
     ])}
     ${g('People', [ row('online', '🟢', 'Who is signed in', '') ])}
     ${g('Admin', [ may('restoreTrip') ? row('deleted', '🗑', 'Deleted trips', 'Put back a trip deleted from Truck Plan') : '', may('targets') ? row('video', '🎬', 'Sign-in video', 'The video Supervisors, Team leaders and Dispatchers watch at sign-in, and who finished it') : '',
-      S.me && S.me.role==='ADMIN' ? row('pay', '💵', 'Salary rates', 'Pay per trip of drivers and helpers, by distance') : '' ])}
+      S.me && S.me.role==='ADMIN' ? row('pay', '💵', 'Salary rates', 'Pay per trip of drivers and helpers, by distance') : '',
+      S.me && S.me.role==='ADMIN' ? row('viber', '📣', 'Viber channel', 'Truck Plan changes, incident reports, charges and a daily summary posted to Viber') : '' ])}
     ${g('', [ row('out', '⎋', 'Sign out', esc(S.me ? S.me.name + ' · ' + (S.me.role || '') : '')) ])}
   </div>`;
   openPop('Settings', '', body);
@@ -3813,7 +3857,7 @@ function openSettings(){
     if(k === 'reload'){ closePop(); updSystem(); return; }
     closePop();
     ({prof: () => openProfile(), pw: () => showPwForm(false), ver: vchgShow, tab: () => { showTab(S.tab); toast('Refreshing ' + (TAB_NAME[S.tab] || 'this tab') + '…'); },
-      online: openOnline, deleted: openDeletedTrips, tour: () => tourStart(), video: openVideoAdmin, pay: openPayRates, out: () => $('logoutBtn').click()})[k]?.();
+      online: openOnline, deleted: openDeletedTrips, tour: () => tourStart(), video: openVideoAdmin, pay: openPayRates, viber: openViber, out: () => $('logoutBtn').click()})[k]?.();
   };
 }
 $('setBtn').onclick = openSettings;
@@ -3835,6 +3879,41 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('click', e => { if(e.target.closest && e.target.closest('#setBtn') && themeNow() === 'color') setTimeout(() => cmykApply(cmykGet()), 0); });
 $('logoutBtn').onclick = () => { call('logout').catch(()=>{}); signOut(''); };
+/* ===== IDLE SIGN-OUT (MANU 2026-11-19 "Sign out idle office PCs. Shared PCs sign out after about 2 hours unused") =====
+ * On a PC (not a phone or tablet), 2 hours with no click, key, mouse move or wheel signs this person out, so the next person at a
+ * shared office PC doesn't save under their name. The last use is kept in localStorage (jmti_act), so every open JMTI tab
+ * on that PC counts, and the Maintenance frame reports its clicks too (jmtiAct). A notice shows 5 minutes before. */
+const IDLE = {ms: 2 * 36e5, warnMs: 5 * 6e4, last: 0};
+const idlePc = () => !/Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle/i.test(navigator.userAgent) && !(/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1) && !matchMedia('(max-width:700px)').matches;
+function idleMark(force){
+  const now = Date.now(); if(!force && now - IDLE.last < 15000){ return; }
+  IDLE.last = now; store('jmti_act', String(now));
+  const w = $('idleWarn'); if(w) w.remove();
+}
+window.jmtiAct = () => idleMark();
+['pointerdown', 'keydown', 'wheel', 'mousemove', 'touchstart'].forEach(ev => addEventListener(ev, () => idleMark(), {passive:true, capture:true}));
+const idleLast = () => Math.max(IDLE.last, Number(store('jmti_act')) || 0);
+function idleStale(){ const a = idleLast(); return !!a && idlePc() && Date.now() - a >= IDLE.ms; }
+function idleOut(){
+  const w = $('idleWarn'); if(w) w.remove();
+  if(!TOKEN) return;
+  call('logout').catch(() => {});
+  signOut('Signed out: this PC was not used for 2 hours. Sign in again to go on.');
+}
+function idleCheck(){
+  if(!TOKEN || !S.me || !idlePc()) return;
+  const gone = Date.now() - idleLast();
+  if(!idleLast()) return idleMark(true);
+  if(gone >= IDLE.ms) return idleOut();
+  if(gone >= IDLE.ms - IDLE.warnMs && !$('idleWarn')){
+    const w = document.createElement('div'); w.id = 'idleWarn'; w.className = 'idle-warn'; w.setAttribute('role', 'alert');
+    w.innerHTML = `<b>Still there?</b> This PC has not been used for almost 2 hours. You will be signed out in 5 minutes. <button class="btn" type="button">Stay signed in</button>`;
+    w.querySelector('button').onclick = () => idleMark(true);
+    document.body.appendChild(w);
+  }
+}
+setInterval(idleCheck, 30000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) idleCheck(); });
 /* ===== Ask JMTI (MANU 2026-10-14 "integrate ai question and answer inside but only to get information inside the system") =====
  * Questions go to askJmti (Code.gs), which lets the AI read the app's data with this person's sign-in: it sees only what the role's
  * tabs show and can't change anything. The conversation lives on this page only and is forgotten on New, Sign out or reload. */
@@ -4162,6 +4241,8 @@ async function start(){
   if(!TOKEN) return showLogin();
   let me = null; try{ me = JSON.parse(store('jmti_me')||'null'); }catch(e){}
   if(!me) return showLogin();
+  if(idleStale()){ call('logout').catch(() => {}); return signOut('Signed out: this PC was not used for 2 hours. Sign in again to go on.'); }   // idle PC (MANU 2026-11-19)
+  idleMark(true);
   SPD.direct = 1;   // opened already signed in: the open times below mean something
   enterApp(me);
   requestAnimationFrame(() => setTimeout(() => spdAdd('(app open, saved data shown)', performance.now()), 0));   // speed log: page start to first screen
@@ -4429,7 +4510,7 @@ function loadMaintenance(){
   pgTop();
   if(!$('mntFrame') && !MNT.busy){
     const SC = '<' + '/script>';
-    const shim = '<' + 'script>window.google = parent.google; window.__EMBED = true; window.__LOGO = parent.document.getElementById("logoMain").src; document.documentElement.className = "embed";' + SC;
+    const shim = '<' + 'script>window.google = parent.google; window.__EMBED = true; window.__LOGO = parent.document.getElementById("logoMain").src; document.documentElement.className = "embed"; addEventListener("pointerdown", function(){ try{ parent.jmtiAct(); }catch(x){} }, true); addEventListener("keydown", function(){ try{ parent.jmtiAct(); }catch(x){} }, true);' + SC;
     mntFrame('mntFrame', 'Maintenance', shim, $('mntHost'), sizeMaintenance);
   }
   sizeMaintenance();
@@ -4482,7 +4563,7 @@ function fillLists(){
   const isAct = p => !/INACTIVE|RESIGN|TERMINAT|AWOL|END OF CONTRACT|EOC|SEPARATED/.test(p[2]);
   const crewOpts = first => { const seen = {}; const rank = p => (isAct(p) ? 0 : 2) + (new RegExp(first, 'i').test(p[1]) ? 0 : 1);
     return ppl.slice().sort((x,y) => rank(x) - rank(y) || x[0].localeCompare(y[0])).filter(p => !seen[p[0]] && (seen[p[0]] = 1))
-      .map(p => `<option value="${esc(p[0])}">${esc([p[1] || 'No position', p[2]].join(' · '))}</option>`).join(''); };
+      .map(p => `<option value="${esc(p[0])}">${esc([p[1] || 'No position', p[2], lvLabel(p[0])].filter(Boolean).join(' · '))}</option>`).join(''); };
   $('dlDrivers').innerHTML = crewOpts('driver');
   $('dlHelpers').innerHTML = crewOpts('helper');
   $('dlDoc').innerHTML = opt(b.docStatuses||[]);
@@ -4596,7 +4677,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.91, APP_VERSION_DATE = '2026-11-18';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.95, APP_VERSION_DATE = '2026-11-19';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4627,6 +4708,32 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-19 "include escalations to jmti updates" + "crew change"
+  {v:14.95, d:'2026-11-19', items:[
+    'Viber channel: escalations now go to the channel. Copy escalation (Truck Plan ⚠ Escalation, or the bell\'s Waiting too long list) also posts the escalation there right away, with the shipment no. or DTTR. Trips waiting too long or overdue found by JMTI ALERTS are posted there too.',
+    'Viber channel: crew changes have their own part: a driver or helper changed on a trip, or in Truck assignment, with the old and new name.',
+    'Both can be switched off in Settings > Viber channel.'
+  ]},
+  // MANU 2026-11-19 "Crew attendance and leave. HR marks who is on leave, and Add trip warns before you pick them." + "Sign out idle office PCs. Shared PCs sign out after about 2 hours unused."
+  {v:14.94, d:'2026-11-19', items:[
+    'Crew leave: HR (HR, HR HEAD, HR ASSISTANT 1 and 2) and Admin mark a driver or helper on leave in Manpower > Leave: the person, the kind (vacation, sick, emergency, day off, absent, suspended, other), the first and last day and a reason. Change or remove it there too.',
+    'Add trip shows a red warning when the driver or a helper of the truck is on leave on the trip date, and asks once more ("Add trip anyway") before it adds the trip.',
+    'Truck assignment marks a person on leave today in red with the leave and its dates, and the driver and helper lists say "ON LEAVE until …". Manpower has an "On leave today" chip.',
+    'Office PCs sign out by themselves after 2 hours with no use (no click, typing or mouse move), so nobody saves under another person\'s name. A notice shows 5 minutes before; any click keeps you signed in. Phones and tablets are not signed out.'
+  ]},
+  // MANU 2026-11-19 "add a JMTI Viber channel for truckplan changes, incidents and charges, send daily whole day summary on viber channel"
+  {v:14.93, d:'2026-11-19', items:[
+    'Viber channel: Admin, Settings (the gear) > Viber channel. Paste the Authentication Token of your JMTI Viber channel and press Save: the app connects and posts a hello in the channel.',
+    'The channel gets Truck Plan changes (new trips, status, truck, crew, date, route, deleted trips), incident reports (new and HR status changes) and charges (new, changed, deleted, change requests and HR Head answers), gathered into one post about a minute after they are saved.',
+    'A whole-day summary is posted every day at the hour picked there (10 PM at first): trips counted per account, status counts, trucks with no trip, overdue and long waiting, incident reports, charges and money sent. Preview it or send it now from the same screen.',
+    'Each part can be switched off, Truck Plan can post only new, completed, cancelled and deleted trips, and Turn off stops everything.'
+  ]},
+  // MANU 2026-11-19 "remove other accounts, make it clients like CPFI, CJ smart, etc"
+  {v:14.92, d:'2026-11-19', items:[
+    'Truck Plan: the "Other accounts" section is gone. Each client now has its own section, named after the client (CPFI, CJ Smart and so on), after Coca Cola Canlubang and Coca Cola San Fernando, clients A to Z.',
+    'The client is the name before "|" in the destination (CPFI | Calamba = CPFI). A truck with no trip on the date sits under the client of its latest trip; a truck with no client to go by shows under NO CLIENT YET.',
+    'Same client sections in the Truck Plan Generate report picture and in the Planned trips list. Trip counts do not change.'
+  ]},
   // MANU 2026-11-18 11:56 UTC "for the charges, POD only encodes the initial charges but all changes afterwards will be requested by POD from HR head for authorization"
   {v:14.91, d:'2026-11-18', items:[
     'Charges: POD and POD HEAD encode a charge, damage or penalty the first time only. After that, any change (amount, items, released or endorsed dates, crew, deletion, anything) is a change request to HR HEAD with a reason; the charge stays as it is until HR HEAD approves.',
@@ -6086,6 +6193,7 @@ function noteAssignAcct(d, saved){
   TRIP_W = {}; lsSet('jmti_boot', S.boot);
 }
 function loadAssign(){
+  lvLoad().then(() => { if(S.tab==='assign' && S.boot) markClashes(); });   // crew leave (MANU 2026-11-19)
   $('aDate').value = TODAY();   // always today's (current) crew
   const d = $('aDate').value; $('aDate')._last = d;
   if(S.assign[d]) renderAssign();
@@ -6192,6 +6300,10 @@ function markClashes(){
   const clash = Object.entries(who).filter(([,v]) => v.length > 1);
   $('aTbl').querySelectorAll('input[data-k], .atxt[data-k]').forEach(i => { if(i.dataset.k==='remarks') return; const n = (i.tagName==='INPUT' ? i.value : i.textContent).trim().toUpperCase(); i.classList.toggle('clash', !!n && (who[n]||[]).length > 1); });
   $('aWarn').innerHTML = clash.length ? `<div class="warn" style="margin-bottom:12px">${clash.map(([n,v]) => `${esc(n)} is on trucks ${v.map(esc).join(', ')}.`).join('<br>')}</div>` : '';
+  { const lvs = [];   // crew on leave on this date (MANU 2026-11-19): marked red and listed, saving is not blocked
+    S.boot.trucks.filter(t => t.truckNo && truckActive(t)).forEach(t => { const c = S.aEdits[t.truckNo] || crewFor(d, t.truckNo) || {}; ['driver','helper1','helper2'].forEach(k => { const l = c[k] && leaveOn(c[k], d); if(l) lvs.push([c[k], t.truckNo, l]); }); });
+    $('aTbl').querySelectorAll('input[data-k], .atxt[data-k]').forEach(i => { if(i.dataset.k==='remarks') return; const n = (i.tagName==='INPUT' ? i.value : i.textContent).trim(); i.classList.toggle('onleave', !!n && !!leaveOn(n, d)); });
+    if(lvs.length) $('aWarn').insertAdjacentHTML('beforeend', `<div class="lv-warn" style="margin-bottom:12px">\u26a0\ufe0f <b>On leave on ${esc(fmtDay(d))}:</b><br>${lvs.map(([n, no, l]) => `Truck ${esc(no)}: <b>${esc(n)}</b> · ${esc(lvTxt(l))}`).join('<br>')}</div>`); }
   return clash.length;
 }
 async function saveAssign(){
@@ -6423,6 +6535,7 @@ function openDispatchAdd(truckNo, opt){
       <label class="f full naRoute">Source<input id="naSrc" autocomplete="off" placeholder="Type to find the source" value="${esc(opt.source || '')}"><div class="fbox" id="naSrcL" hidden></div></label>
       <label class="f full naRoute"><span id="naDstLbl">Destination</span><input id="naDstQ" autocomplete="off" placeholder="Type to find the destination"><div class="fbox" id="naDstL" hidden></div><select id="naDst" hidden>${destOptions(opt.source || '', '')}</select></label>
       <label class="f full">Remarks<textarea id="naRem"></textarea></label>
+      <div class="full lv-warn" id="naLeave" hidden></div>
       <div class="full hint" id="naInfo"></div>
     </div>`, `<button class="btn" id="naSave" type="button">Add trip</button>`);
   $('drTitle').textContent = 'Add trip'; $('drTno').textContent = '+';
@@ -6446,6 +6559,10 @@ function openDispatchAdd(truckNo, opt){
     $('drSub').textContent = `${fmtDay(d)} · ${pl || 'pick a truck'} · new trip`; $('drTno').textContent = pl ? no : '+';
     $('naPlate').value = pl || '';
     $('naDrv').value = c ? c.driver || '' : ''; $('naH1').value = c ? c.helper1 || '' : ''; $('naH2').value = c ? c.helper2 || '' : '';
+    { const lv = c ? crewLeave(d, c) : [], sig = lvSig(d, no, lv);   // crew leave (MANU 2026-11-19): warn, then ask once more on Add trip
+      $('naLeave').hidden = !lv.length; $('naLeave').innerHTML = lv.length ? lvWarnHtml(d, lv) : '';
+      ['naDrv','naH1','naH2'].forEach((id, i) => $(id).classList.toggle('onleave', lv.some(x => x.k===['driver','helper1','helper2'][i])));
+      if($('naSave').dataset.lvok && $('naSave').dataset.lvok !== sig){ delete $('naSave').dataset.lvok; $('naSave').textContent = 'Add trip'; } }
     const hold = pl ? holdOf(pl) : null;
     $('naInfo').textContent = !no ? '' : !pl ? `Truck ${no} is not in PLATE. Pick one from the list.`
       : open ? `Truck ${no} already has an open trip on ${fmtDay(d)}. Open that one instead, or add its next leg: pick the source where that trip goes.`
@@ -6457,6 +6574,7 @@ function openDispatchAdd(truckNo, opt){
   $('naTruck').oninput = fill;
   if(truckNo) $('naTruck').value = truckNo;
   loadDay();
+  lvLoad().then(() => { if($('naLeave') && $('naDate')) fill(); });   // newest leave list (MANU 2026-11-19)
   // Source and destination are find boxes (MANU 2026-11-02 "source and destination should be search/find")
   const setDests = () => { $('naDst').innerHTML = destOptions($('naSrc').value.trim(), ''); $('naDstQ').value = '';
     $('naDstQ').placeholder = destsOf($('naSrc').value.trim()).length ? 'Type to find the destination' : ($('naSrc').value.trim() ? 'No destinations for this source in CLIENT LIST' : 'Pick the source first'); fill(); };
@@ -6478,6 +6596,9 @@ function openDispatchAdd(truckNo, opt){
       route = pickRoute($('naSrc').value, $('naDst').value);
       if(route.err) return toast(route.err, true);
     }
+    { const lv = crewLeave(d, crewFor(d, no) || {}), sig = lvSig(d, no, lv);   // crew on leave: the first press warns, the second ("Add trip anyway") adds
+      if(lv.length && $('naSave').dataset.lvok !== sig){ $('naSave').dataset.lvok = sig; $('naSave').textContent = 'Add trip anyway'; const w = $('naLeave'); w.hidden = false; w.innerHTML = lvWarnHtml(d, lv); w.classList.remove('lv-flash'); void w.offsetWidth; w.classList.add('lv-flash');
+        return toast(`${lv.map(x => x.n).join(' and ')} ${lv.length > 1 ? 'are' : 'is'} on leave on ${fmtDay(d)}. Change the crew in Truck assignment, or press Add trip anyway.`, true, 8000); } }
     const data = {date:d, truckNo:no, status:k, customer:route.customer, destination:route.destination, shipmentNo:noRoute ? '' : $('naShip').value.trim().toUpperCase(), remarks:$('naRem').value.trim()};
     const c = crewFor(d, no) || {};
     const temp = {...emptyMs(), ...data, plateNo:plateFor(no), kms:noRoute ? '' : kmFor(route.customer, route.destination), driver:c.driver||'', helper1:c.helper1||'', helper2:c.helper2||'', status:stName(k), tripId:'', row:0, key:`tmp-${Date.now()}`, _pending:true};
@@ -6521,6 +6642,7 @@ function openEscPop(i){
     const t = escInfoText({...i, tel}, issue), box = $('tpEscBox'); if(!box) return;
     let pre = box.querySelector('pre'); if(!pre){ pre = document.createElement('pre'); box.appendChild(pre); } pre.textContent = t;
     const ok = await (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => true, () => false);
+    vbEscPost(t, note, ok ? 'Copied. ' : 'Press copy to paste it anywhere. ');
     if(ok){ note('Copied. Paste it in Viber or any chat.'); toast('Escalation copied.'); return; }
     const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
     note('Press copy, then paste it in Viber or any chat.');
@@ -6882,7 +7004,10 @@ function renderPlanPanel(){
       + `<div class="pl-num"><b>${fmtN(l.added)}</b> of ${fmtN(l.trips)} added${l.done ? `<small>${fmtN(l.done)} completed</small>` : ''}</div>`
       + `<span class="pl-bar"><i style="width:${pct}%"></i></span><span class="pl-go">${l.toGo ? fmtN(l.toGo) + ' to go' : l.over ? '+' + fmtN(l.over) + ' over plan' : '✓ All added'}</span></div>`; };
   let html = '';
-  [0, 1, 2, 3].forEach(s => { const g = ls.filter(l => l.sec === s).sort((a, b) => b.toGo - a.toGo || String(a.destination).localeCompare(String(b.destination))); if(g.length) html += (want === null ? `<div class="pl-sec">${esc(PL_SEC[s])}</div>` : '') + g.map(row).join(''); });
+  // one part per client instead of "Other accounts" (MANU 2026-11-19)
+  const plCl = l => clientSec({customer: l.source, destination: l.destination}) || NO_CLIENT;
+  const cls = [...new Set(ls.filter(l => l.sec === 2).map(plCl))].sort((a, b) => (a===NO_CLIENT) - (b===NO_CLIENT) || a.localeCompare(b));
+  [[0], [1]].concat(cls.map(c => [2, c]), [[3]]).forEach(([s, cl]) => { const g = ls.filter(l => l.sec === s && (cl === undefined || plCl(l) === cl)).sort((a, b) => b.toGo - a.toGo || String(a.destination).localeCompare(String(b.destination))); if(g.length) html += (want === null || cl !== undefined ? `<div class="pl-sec">${esc(cl !== undefined ? cl : PL_SEC[s])}</div>` : '') + g.map(row).join(''); });
   const by = ls.map(l => l.by && l.at ? l : null).filter(Boolean).sort((a, b) => String(b.at).localeCompare(String(a.at)))[0];
   if(by) html += `<p class="hint-line pl-by">Last changed by ${esc(by.by)} · ${esc(by.at)}. Tap a route to see its trips or add one. A guide only: trips are still added the usual way.</p>`;
   $('xPlanBody').innerHTML = html;
@@ -7241,6 +7366,7 @@ function truckPlanReportRows(acc, assign, trips){
     r._wait = wait ? ms : -1;
     r._ahead = ahead && (open || hd);
     r._sec = acctSec(a.account);
+    r._client = clientSec(t) || NO_CLIENT;   // client section for non Coca Cola trucks (MANU 2026-11-19)
     r._grp = gl ? 'garage' : hd ? hgrp : open ? (TP_GROUPS.find(g => g.stages.includes(st)) || {}).key || 'road' : mnt ? 'mnt' : 'ship';
     r._st = gl || hd ? STAGES.length : open ? STAGES.indexOf(st) : 99;
     r._route = open ? (t.customer || '') + ' → ' + (t.destination || '(no destination)') : '';
@@ -7270,10 +7396,12 @@ function truckPlanLayout(rows, acc){
   const byWait = (p, q) => (q._wait - p._wait) || p._st - q._st || String(p[1]).localeCompare(String(q[1]), undefined, {numeric:true});
   const n = k => `${k} truck${k===1?'':'s'}`;
   const out = [];
-  [0, 1, 2].forEach(sec => {
-    const rs = rows.filter(r => r._sec === sec);
+  // one part per client instead of "Other accounts" (MANU 2026-11-19), clients A to Z, NO CLIENT YET last
+  const cls = [...new Set(rows.filter(r => r._sec === 2).map(r => r._client || NO_CLIENT))].sort((a, b) => (a===NO_CLIENT) - (b===NO_CLIENT) || a.localeCompare(b));
+  [[0], [1]].concat(cls.map(c => [2, c])).forEach(([sec, cl]) => {
+    const rs = rows.filter(r => r._sec === sec && (cl === undefined || (r._client || NO_CLIENT) === cl));
     if(!rs.length) return;
-    if(!acc) out.push({_head:true, level:0, text: titleCase(TP_SEC[sec]), sub: n(rs.length)});
+    if(!acc || cl !== undefined) out.push({_head:true, level:0, text: cl !== undefined ? cl : titleCase(TP_SEC[sec]), sub: n(rs.length)});
     if(sec < 2){
       TP_GROUPS.forEach(g => { const gs = rs.filter(r => r._grp === g.key).sort(byWait); if(gs.length) out.push({_head:true, level:1, text: g.label.toUpperCase(), sub: n(gs.length)}, ...gs); });
     } else {
@@ -7438,7 +7566,7 @@ function renderDispatcherNow(){
   const now = Date.now();
   const waitOf = t => { const x = lastTime(t), dt = x ? toDate(x.v) : null; return dt ? Math.max(0, now - dt) : -1; };
   const byTrip = (a,b) => order(stageOf(a)) - order(stageOf(b)) || waitOf(b) - waitOf(a) || String(a.truckNo).localeCompare(String(b.truckNo),undefined,{numeric:true});
-  // All accounts: sections Coca Cola Canlubang, then San Fernando, then Other accounts, then trips not counted in an account (MANU)
+  // All accounts: sections Coca Cola Canlubang, then San Fernando, then one per client (CPFI, CJ Smart…), then trips not counted in an account (MANU)
   const assignAcct = no => ((S.assign[d] || []).find(a => String(a.truckNo)===String(no).trim()) || {}).account || '';
   const secOf = t => { const w = acctWeights(t), top = Object.keys(w).sort((x,y) => w[y] - w[x])[0]; return top || assignAcct(t.truckNo); };
   const SECS = ['COCA COLA CANLUBANG','COCA COLA SAN FERNANDO','OTHER ACCOUNTS',''];   // trip rules say "COCA COLA CANLUBANG", Truck assignment "... PLANT": match by name
@@ -7464,15 +7592,28 @@ function renderDispatcherNow(){
   const idleBlock = (items, start) => items.map((x, i) => (i===0 || (items[i-1].a.account||'') !== (x.a.account||'') || !!items[i-1].rp !== !!x.rp ? idleHead(x.a.account, items.filter(y => (y.a.account||'')===(x.a.account||'') && !!y.rp === !!x.rp).length, !!x.rp) : '') + (x.rp ? mntRow(x, start + i + 1) : idleRow(x, start + i + 1))).join('');
   const tripRow = (t, i) => { const st = stageOf(t), rp = repairOf(t.plateNo);
       return (head[t.key] || '') + `<tr data-key="${esc(t.key)}" class="${t._pending ? 'pending' : ''}" style="--c:${colorOf(st)}"><td class="nx">${(k => k ? `<button class="nextbtn" type="button" data-next="${k}" title="Save ${esc(MS_LABEL[k])} as now">▶ ${esc(MS_LABEL[k])}</button>` : '')(nextStep(t))}${mayEsc() && !t._pending && isTrip(t) && !DONE_ST.includes(st) ? ESC_BTN : ''}</td><td class="c rn">${i+1}</td><td class="ed" data-f="date" title="Tap to move this trip to another date">${esc(fmtDay(t.date))}${t.date > xEnd ? ` <span class="tag-ahead">${esc(aheadText(t))}</span>` : ''}</td><td class="tk ed" data-f="truckNo"><b>${!t.truckNo ? '—' : locked('truckNo') ? tLink(t.truckNo) : esc(t.truckNo)}</b></td><td data-f="plateNo">${plLink(t.plateNo)}${rp ? ` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>` : ''}</td><td class="ed" data-f="customer" title="${esc(t.customer)}">${esc(t.customer)}</td><td class="ed" data-f="destination" title="${esc(t.destination)}">${esc(t.destination || '—')}</td><td class="ed" data-f="shipmentNo">${esc(t.shipmentNo || '')}</td><td class="n" data-f="kms">${esc(tripKm(t))}</td>${(fk => `<td class="n ed${fk.bad ? ' fuel-bad' : ''}" data-f="mano"${fk.kml ? ` title="${fk.kml} km/L on the ${fk.rt} km round trip${fk.bad ? ' (under 2 km/L)' : ''}"` : ''}>${esc(fuelText(t.mano))}</td>`)(fuelCheck(t))}<td class="n ed" data-f="budget">${esc(budgetText(t.budget))}</td><td class="n" data-f="manoAmt" title="MANO given out for this trip (Disbursement, purpose MANO)">${t.manoAmt ? esc(pesoTxt(t.manoAmt)) : ''}</td><td class="ed" data-f="driver">${pLink(t.driver)}${RF[t.key] ? ` <span class="tag-rest" title="${esc(RF[t.key])}">⚠ rest</span>` : ''}</td><td class="ed" data-f="helper1">${pLink(t.helper1)}</td><td class="ed" data-f="helper2">${pLink(t.helper2)}</td><td class="st ed" data-f="status"><span class="dot"></span>${t._pending ? 'Saving…' : esc(statusText(t))}</td>${MS_KEYS.map(k => `<td class="tm ed${t[k] ? '' : ' e'}" data-f="${k}">${tm(t[k])}</td>`).join('')}<td class="ed xrem" data-f="remarks">${esc(t.remarks || '')}</td></tr>`; };   // Remarks last (MANU 2026-11-04 "in truckplan, add remarks at the last column")
-  const accHead = (a, nt, ni, nm) => `<tr class="acchd"><td colspan="${17 + MS_KEYS.length}"><div><b>${esc(a ? titleCase(a) : 'Not counted in an account')}</b> <span>· ${tripsTxt(nt)}${ni ? ` · ${ni} waiting shipment` : ''}${nm ? ` · ${nm} under maintenance` : ''}</span></div></td></tr>`;
+  const accHead = (a, nt, ni, nm, label) => `<tr class="acchd"><td colspan="${17 + MS_KEYS.length}"><div><b>${esc(label || (a ? titleCase(a) : 'Not counted in an account'))}</b> <span>· ${tripsTxt(nt)}${ni ? ` · ${ni} waiting shipment` : ''}${nm ? ` · ${nm} under maintenance` : ''}</span></div></td></tr>`;
   const restHead = (cls, label, k, note) => `<tr class="${cls}"><td colspan="${17 + MS_KEYS.length}"><div><b>${label}</b> <span>· ${k} row${k===1?'':'s'} · ${note}</span></div></td></tr>`;
   let body = '', n = 0;
   if(acc){ body = routeL.map(t => tripRow(t, n++)).join('') + idleBlock(idleTrucks, n); n += idleTrucks.length; }
-  else SECS.forEach(sec => {
-    const ts = routeL.filter(t => secRank(secOf(t))===secRank(sec)), is = idleTrucks.filter(x => secRank(x.a.account||'')===secRank(sec));
-    if(!ts.length && !is.length) return;
-    body += accHead(sec, xw(ts), is.filter(x => !x.rp).length, is.filter(x => x.rp).length) + ts.map(t => tripRow(t, n++)).join('') + idleBlock(is, n); n += is.length;
-  });
+  else {
+    // one section per client instead of "Other accounts" (MANU 2026-11-19): a trip by its client, a truck with no trip by the
+    // client of its latest trip in the loaded days, else NO CLIENT YET; clients A to Z after Canlubang and San Fernando
+    const ctx = S.xCtx || S.xTrips || [];
+    const lastClient = no => { const t = ctx.filter(x => String(x.truckNo).trim()===no && isTrip(x)).reduce((b, x) => !b || rowNewer(x, b) ? x : b, null); return clientSec(t) || NO_CLIENT; };
+    const cKey = v => nameKey(v) || nameKey(NO_CLIENT);
+    routeL.forEach(t => { t._cl = secRank(secOf(t))===2 ? (clientSec(t) || NO_CLIENT) : ''; });
+    idleTrucks.forEach(x => { x._cl = secRank(x.a.account||'')===2 ? lastClient(x.no) : ''; });
+    const names = {}; routeL.concat(idleTrucks).forEach(x => { if(x._cl && !names[cKey(x._cl)]) names[cKey(x._cl)] = x._cl; });
+    const clients = Object.keys(names).sort((a, b) => (a===nameKey(NO_CLIENT)) - (b===nameKey(NO_CLIENT)) || names[a].localeCompare(names[b]));
+    const parts = [[SECS[0], null], [SECS[1], null]].concat(clients.map(k => [SECS[2], k]), [[SECS[3], null]]);
+    parts.forEach(([sec, ck]) => {
+      const inSec = (r, cl) => r===secRank(sec) && (ck===null || cKey(cl)===ck);
+      const ts = routeL.filter(t => inSec(secRank(secOf(t)), t._cl)), is = idleTrucks.filter(x => inSec(secRank(x.a.account||''), x._cl));
+      if(!ts.length && !is.length) return;
+      body += accHead(sec, xw(ts), is.filter(x => !x.rp).length, is.filter(x => x.rp).length, ck===null ? '' : names[ck]) + ts.map(t => tripRow(t, n++)).join('') + idleBlock(is, n); n += is.length;
+    });
+  }
   if(aheadL.length) body += restHead('acchd aheadhd', 'PRELOADED / DATED AHEAD', aheadL.length, `trips dated after ${fmtDay(xEnd)}, loaded or planned already; they count on their own date`) + aheadL.map(t => tripRow(t, n++)).join('');
   if(garL.length) body += restHead('acchd garhd', 'GARAGE', garL.length, 'every garage status, all accounts, not counted as trips; garage loaded stays on its route') + garL.map(t => tripRow(t, n++)).join('');
   if(notL.length) body += restHead('acchd nothd', 'NOT A TRIP', notL.length, 'no-trip reasons and other statuses, not counted as trips') + notL.map(t => tripRow(t, n++)).join('');
@@ -9396,7 +9537,7 @@ async function saveTruckForm(e){
 
 let mpFilter = 'ACTIVE';
 const MP_IDLE_DAYS = 7;
-const MP_CHIPS = [['ACTIVE','Active'],['Driver','Drivers'],['Helper','Helpers'],['idle','Active · no trip or no truck'],['noTruck','No truck today'],['noTrip',`No trip ${MP_IDLE_DAYS}+ days`],['INACTIVE','Inactive'],['all','All']];
+const MP_CHIPS = [['ACTIVE','Active'],['onLeave','On leave today'],['Driver','Drivers'],['Helper','Helpers'],['idle','Active · no trip or no truck'],['noTruck','No truck today'],['noTrip',`No trip ${MP_IDLE_DAYS}+ days`],['INACTIVE','Inactive'],['all','All']];
 function tenure(ymd){
   if(!/^\d{4}-\d{2}-\d{2}/.test(ymd||'')) return '';
   const [y,m,d] = ymd.split('-').map(Number), now = new Date();
@@ -9409,6 +9550,7 @@ function tenure(ymd){
 const idleDays = p => p.lastTrip ? daysSince(p.lastTrip) : null;
 const mpPass = {
   ACTIVE: p => p.status==='ACTIVE', INACTIVE: p => p.status!=='ACTIVE', all: () => true,
+  onLeave: p => p.status==='ACTIVE' && !!leaveOn(p.full, TODAY()),   // crew leave (MANU 2026-11-19)
   Driver: p => p.status==='ACTIVE' && p.position==='Driver', Helper: p => p.status==='ACTIVE' && p.position==='Helper',
   noTruck: p => p.status==='ACTIVE' && !p.truck,
   idle: p => p.status==='ACTIVE' && (!p.truck || idleDays(p)===null || idleDays(p) >= MP_IDLE_DAYS),
@@ -9420,6 +9562,7 @@ function initManpower(){
   $('mpTbl').onclick = e => { const tr = e.target.closest('tr[data-row]'); if(tr) showPersonHistory(S.people.find(p => String(p.row)===tr.dataset.row)); };   // record + stats; Edit inside
   $('mpForm').onsubmit = savePerson;
   $('mpRefresh').onclick = refreshInactive;
+  $('mpLeave').onclick = () => openLeave();
   $('mrFrom').value = addDays(TODAY(), -29); $('mrTo').value = TODAY();
   $('mrFrom').onchange = $('mrTo').onchange = loadMpRange;
   $('mrRole').onchange = $('mrNone').onchange = renderMpRange;
@@ -9433,7 +9576,7 @@ function initManpower(){
   $('mpPhDel').onclick = () => { MPH.set = ''; mpPhShow(); };
 }
 function loadManpower(){
-  loadMpRange(); loadScores(); irSumLoad();
+  loadMpRange(); loadScores(); irSumLoad(); lvLoad(true).then(() => { if(S.tab==='manpower' && S.people) renderManpower(); });
   if(!S.people) S.people = lsGet('jmti_people');
   if(S.people) renderManpower(); else $('mpTbl').classList.add('loading');
   call('listManpower').then(p => { S.people = p; S.peopleFresh = 1; lsSet('jmti_people', p); renderManpower(); }).catch(e => toast(e.message, true)).finally(() => $('mpTbl').classList.remove('loading'));
@@ -9495,7 +9638,8 @@ const ageOn = ymd => { const t = TODAY(); if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd || 
 function bdayTxt(ymd){ const a = ageOn(ymd); return a===null ? '' : `${fmtDay(ymd)} (${a} years old)${/^\d{4}-/.test(ymd) && bdayToday(ymd.slice(5)) ? ' ' + BDAY + ' today' : ''}`; }
 function mpExtra(p){
   const bits = [p.contact ? '\ud83d\udcde ' + esc(p.contact) : '', p.birthday ? BDAY + ' ' + esc(bdayTxt(p.birthday)) : ''].filter(Boolean);
-  return bits.length ? `<small class="mp-extra">${bits.join(' · ')}</small>` : '';
+  const lv = p.status==='ACTIVE' ? leaveOn(p.full, TODAY()) || leaveNext(p.full) : null;   // crew leave (MANU 2026-11-19)
+  return (lv ? `<small class="lv-tag${lv.from <= TODAY() ? '' : ' soon'}">${lv.from <= TODAY() ? 'ON LEAVE' : 'LEAVE SOON'} · ${esc(lvTxt(lv))}</small>` : '') + (bits.length ? `<small class="mp-extra">${bits.join(' · ')}</small>` : '');
 }
 function editPerson(p){
   if(!p) return; const f = $('mpForm'); f._edit = p;
@@ -9531,6 +9675,97 @@ async function savePerson(e){
   catch(err){ toast(err.message, true); }
   $('mpSave').disabled = false;
 }
+
+/* ===== CREW LEAVE (MANU 2026-11-19 "Crew attendance and leave. HR marks who is on leave, and Add trip warns before you pick them") =====
+ * Leave list from S.boot.leave (at sign-in) and leaveList (fresh when Add trip, Truck assignment or Manpower opens, at most once a minute).
+ * HR roles and Admin add / change / remove in Manpower > Leave. Nothing is blocked: Add trip asks once more, Truck assignment marks the person. */
+const LV = {list:null, at:0, types:null, canEdit:false, p:null, past:false};
+const LV_TYPES = ['VACATION LEAVE','SICK LEAVE','EMERGENCY LEAVE','DAY OFF','ABSENT','SUSPENDED','OTHER'];
+const lvAll = () => LV.list || (S.boot && S.boot.leave) || [];
+function leaveOn(name, d){ const k = nameKey(name); if(!k || !d) return null; return lvAll().find(l => nameKey(l.name)===k && l.from <= d && d <= l.to) || null; }
+function leaveNext(name){ const k = nameKey(name), t = TODAY(), soon = addDays(t, 7); return lvAll().find(l => nameKey(l.name)===k && l.from > t && l.from <= soon) || null; }
+const lvDays = l => l.from===l.to ? fmtDay(l.from) : `${fmtDay(l.from)} to ${fmtDay(l.to)}`;
+const lvTxt = l => `${titleCase(l.type || 'leave')} ${lvDays(l)}`;
+const lvLabel = n => { const l = leaveOn(n, TODAY()); return l ? `ON LEAVE until ${fmtDay(l.to)}` : ''; };
+const crewLeave = (d, c) => [['Driver','driver'],['Helper','helper1'],['Helper 2','helper2']].map(([r, k]) => { const l = c && c[k] && leaveOn(c[k], d); return l ? {r, k, n:c[k], l} : null; }).filter(Boolean);
+const lvSig = (d, no, lv) => [d, String(no || '').trim().toUpperCase()].concat(lv.map(x => x.n)).join('|');
+const lvWarnHtml = (d, lv) => `⚠️ <b>On leave on ${esc(fmtDay(d))}:</b> ${lv.map(x => `${esc(x.r)} <b>${esc(x.n)}</b> (${esc(lvTxt(x.l))})`).join(' · ')}. Change the crew in Truck assignment, or add the trip anyway.`;
+function lvSet(r){
+  if(!r || !Array.isArray(r.list)) throw new Error('The server code is out of date. Paste the latest Code.gs, save it, then deploy a New version.');
+  LV.list = r.list; LV.at = Date.now(); LV.types = r.types || LV_TYPES; LV.canEdit = !!r.canEdit;
+  if(S.boot){ S.boot.leave = r.list.filter(l => l.to >= TODAY()); try{ fillLists(); }catch(e){} }
+}
+function lvLoad(force){
+  if(!S.me) return Promise.resolve();
+  if(!force && Date.now() - LV.at < 60000) return Promise.resolve();
+  if(LV.p) return LV.p;
+  return LV.p = call('leaveList').then(lvSet).catch(() => {}).finally(() => { LV.p = null; });
+}
+function openLeave(name){
+  const t = TODAY(), canEdit = () => LV.canEdit || may('manpower');
+  const people = (S.people || []).filter(p => p.status==='ACTIVE').map(p => p.full).sort();
+  openPop('Crew leave', 'Drivers and helpers on leave, day off or absent. Add trip and Truck assignment warn when one of them is on the truck on those dates.', `
+    <form id="lvForm" class="lv-form" ${canEdit() ? '' : 'hidden'}>
+      <h4 id="lvFormT">Mark on leave</h4>
+      <div class="form">
+        <label class="f full">Driver or helper<input name="name" list="lvPeople" autocomplete="off" placeholder="Type the name" required><datalist id="lvPeople">${people.map(n => `<option value="${esc(n)}">`).join('')}</datalist></label>
+        <label class="f">Kind<select name="type">${(LV.types || LV_TYPES).map(x => `<option value="${esc(x)}">${esc(titleCase(x))}</option>`).join('')}</select></label>
+        <label class="f">First day<input name="from" type="date" required value="${esc(t)}"></label>
+        <label class="f">Last day<input name="to" type="date" required value="${esc(t)}"></label>
+        <label class="f full">Reason<input name="reason" maxlength="300" placeholder="Optional"></label>
+      </div>
+      <div class="bar" style="margin-top:8px"><button class="btn" type="submit" id="lvSave">Save leave</button><button class="btn alt" type="button" id="lvNew" hidden>Cancel change</button></div>
+    </form>
+    <div class="chips" id="lvChips" style="margin:12px 0 8px"><button type="button" class="chip" data-lvp="0" aria-pressed="true">Now and coming</button><button type="button" class="chip" data-lvp="1" aria-pressed="false">Ended (last 60 days)</button></div>
+    <div id="lvList"><p class="hint">Loading…</p></div>`, `<button class="btn alt" type="button" onclick="closePop()">Close</button>`);
+  const f = $('lvForm');
+  const reset = () => { f.reset(); f._id = ''; f.from.value = f.to.value = TODAY(); $('lvFormT').textContent = 'Mark on leave'; $('lvSave').textContent = 'Save leave'; $('lvNew').hidden = true; };
+  if(name){ f.name.value = name; }
+  f.from.onchange = () => { if(!f.to.value || f.to.value < f.from.value) f.to.value = f.from.value; };
+  $('lvNew').onclick = reset;
+  const draw = () => {
+    if($('lvForm') !== f) return;
+    f.hidden = !canEdit();
+    const all = lvAll(), now = all.filter(l => l.from <= t && l.to >= t), soon = all.filter(l => l.from > t), past = all.filter(l => l.to < t).reverse();
+    const mine = l => !name || nameKey(l.name)===nameKey(name);
+    const row = l => `<div class="lv-row${l.from <= t && l.to >= t ? ' now' : ''}"><div><b>${esc(l.name)}</b> <small>${esc(l.position || '')}</small><br>${esc(titleCase(l.type))} · ${esc(lvDays(l))}${l.from !== l.to ? ` · ${Math.round((new Date(l.to + 'T00:00') - new Date(l.from + 'T00:00')) / 864e5) + 1} days` : ''}${l.reason ? `<br><small>${esc(l.reason)}</small>` : ''}${l.by ? `<br><small class="dim">By ${esc(l.by)}${l.at ? ' · ' + esc(l.at) : ''}</small>` : ''}</div>${canEdit() ? `<div class="lv-act"><button class="btn alt" type="button" data-lvedit="${esc(l.id)}">Change</button><button class="btn alt" type="button" data-lvdel="${esc(l.id)}">Remove</button></div>` : ''}</div>`;
+    const sec = (h, l, none) => `<h4 class="lv-h">${h} <small>${l.length}</small></h4>` + (l.length ? l.map(row).join('') : `<p class="hint-line">${none}</p>`);
+    $('lvChips').querySelectorAll('[data-lvp]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.lvp==='1')===LV.past)));
+    $('lvList').innerHTML = !LV.list && !all.length && LV.p ? '<p class="hint">Loading…</p>' : LV.past ? sec('Ended in the last 60 days', past.filter(mine), 'None.')
+      : sec('On leave today', now.filter(mine), 'Nobody is on leave today.') + sec('Coming', soon.filter(mine), 'No leave coming.');
+  };
+  draw();
+  lvLoad(true).then(draw);
+  $('popBody').onclick = async e => {
+    const c = e.target.closest('[data-lvp]'); if(c){ LV.past = c.dataset.lvp==='1'; return draw(); }
+    const ed = e.target.closest('[data-lvedit]');
+    if(ed){ const l = lvAll().find(x => x.id===ed.dataset.lvedit); if(!l) return; f._id = l.id; f.name.value = l.name; f.type.value = l.type; f.from.value = l.from; f.to.value = l.to; f.reason.value = l.reason || '';
+      $('lvFormT').textContent = 'Change ' + l.name; $('lvSave').textContent = 'Save change'; $('lvNew').hidden = false; f.scrollIntoView({block:'nearest', behavior:'smooth'}); return; }
+    const del = e.target.closest('[data-lvdel]');
+    if(del){ const l = lvAll().find(x => x.id===del.dataset.lvdel); if(!l) return;
+      if(del.dataset.sure !== '1'){ del.dataset.sure = '1'; del.textContent = 'Remove: sure?'; del.classList.add('danger'); return; }
+      del.disabled = true;
+      try{ lvSet(await call('leaveDelete', l.id)); toast(`Removed: ${l.name} · ${lvTxt(l)}`); if(f._id===l.id) reset(); draw(); if(S.tab==='manpower' && S.people) renderManpower(); }
+      catch(err){ toast(err.message, true); del.disabled = false; } }
+  };
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const p = {id:f._id || '', name:f.name.value.trim(), type:f.type.value, from:f.from.value, to:f.to.value || f.from.value, reason:f.reason.value.trim()};
+    if(!people.some(n => nameKey(n)===nameKey(p.name)) && !(S.people || []).some(x => nameKey(x.full)===nameKey(p.name))) return toast('Pick a driver or helper from the list.', true);
+    if(p.to < p.from) return toast('The last day is before the first day.', true);
+    $('lvSave').disabled = true;
+    try{ lvSet(await call('leaveSave', p)); toast(`Saved: ${p.name.toUpperCase()} · ${titleCase(p.type)} ${lvDays(p)}`); reset(); if(name) f.name.value = name; draw(); if(S.tab==='manpower' && S.people) renderManpower(); }
+    catch(err){ toast(err.message, true); }
+    $('lvSave').disabled = false;
+  };
+}
+/* crew typed by hand (Truck Plan trip, Truck assignment): a toast when that person is on leave on the trip's date */
+document.addEventListener('change', e => {
+  const i = e.target;
+  if(!(i instanceof HTMLInputElement) || !['dlDrivers','dlHelpers'].includes(i.getAttribute('list')) || !i.value || !S.me) return;
+  const d = i.closest('#aTbl') ? ($('aDate').value || TODAY()) : (i.closest('#drawer') && S.drawerTrip && S.drawerTrip.date) || TODAY();
+  const l = leaveOn(i.value, d); if(l) toast(`${i.value.toUpperCase()} is on leave on ${fmtDay(d)}: ${lvTxt(l)}.`, true, 7000);
+});
 
 /* ===== Long waiting trips + ESCALATION text (MANU 2026-10-13) =====
  * The server lists trips of the last 14 days whose status hasn't changed for longer than its limit (at a site 6 h, on the
@@ -9603,6 +9838,10 @@ function openLw(){
   $('lwBtn').classList.remove('ring');
   renderLwPop();
 }
+/* Copy escalation also posts it to the JMTI Viber channel (MANU 2026-11-19 "include escalations to jmti updates"), when Admin connected one */
+function vbEscPost(t, note, pre){
+  call('vbEscalate', t).then(r => { if(r && r.posted && note) note((pre || '') + 'Also posted to the JMTI Viber channel.'); }).catch(() => {});
+}
 /** ESCALATION tapped: first a box for the issue, then Copy escalation puts the full text on the clipboard. */
 function askEsc(i){
   const b = document.querySelector(`[data-esc="${i}"]`); if(!b) return;
@@ -9622,6 +9861,7 @@ async function sendEsc(i){
   // Copied only (MANU 2026-10-28 "do not automatically connects escalation to viber"; it used to open Viber's forward screen):
   // the person pastes it in Viber or any chat themselves.
   const ok = await (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => true, () => false);
+  vbEscPost(t, note, ok ? 'Copied. ' : 'Press copy to paste it anywhere. ');
   if(ok){ note('Copied. Paste it in Viber or any chat.'); return; }
   const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
   note('Press copy, then paste it in Viber or any chat.');
@@ -10204,6 +10444,59 @@ const payBandsHtml = () => { const R = payR(), d = R.bands.driver, h = R.bands.h
     + row('Coca Cola San Fernando and Central San Fernando<small>any km, per round trip (half per leg)</small>', R.sf.driver, R.sf.helper)
     + (R.routes || []).map(r => row(`${esc(r.name)}<small>route pay, any km</small>`, r.driver, r.helper)).join('') + `</tbody></table>`
     + (S.me && S.me.role==='ADMIN' ? `<p class="pr-add"><button class="btn alt" type="button" data-payedit>Change the rates</button></p>` : ''); };
+/* ===== Viber channel (MANU 2026-11-19 "add a JMTI Viber channel for truckplan changes, incidents and charges, send daily whole day
+   summary on viber channel"): Admin, Settings (gear) > Viber channel. The token stays on the server; the page shows its last 4 letters. ===== */
+async function openViber(){
+  if(!S.me || S.me.role !== 'ADMIN') return;
+  openPop('Viber channel', 'Loading…', '<p class="hint">Reading the Viber settings…</p>');
+  let v;
+  try{ v = await call('vbGet'); }catch(err){ closePop(); return toast(err.message, true); }
+  const sw = (id, on, t, sub) => `<label class="vb-sw"><input type="checkbox" id="${id}"${on ? ' checked' : ''}><span><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</span></label>`;
+  const hours = Array.from({length: 24}, (_, h) => `<option value="${h}"${h === v.hour ? ' selected' : ''}>${(h % 12 || 12) + ':00 ' + (h < 12 ? 'AM' : 'PM')}${h < 6 ? ' (about the day before)' : ''}</option>`).join('');
+  const state = v.connected ? `<div class="vb-st ok">✅ Connected to <b>${esc(v.channel || 'the channel')}</b>, posting as ${esc(v.admin || 'the super admin')} (token …${esc(v.tokenEnd)}).<br>Set by ${esc(v.by || '—')} · ${esc(v.at || '')}${v.lastAt ? `<br>Last post: ${esc(v.lastAt)}` : ''}${v.dailyAt ? ` · last daily summary: ${esc(v.dailyAt)}` : ''}${v.waiting ? `<br>${v.waiting} update${v.waiting === 1 ? '' : 's'} waiting to be posted` : ''}</div>`
+    : v.off && v.has ? `<div class="vb-st">⏸ Turned off. Press Save to turn it on again with the same token.</div>`
+    : `<div class="vb-st">Not connected yet. Follow the steps below, then paste the token and press Save.</div>`;
+  openPop('Viber channel', 'Truck Plan changes, incident reports, charges and a daily summary, posted to your JMTI Viber channel', `<div class="vb">
+    ${state}
+    ${v.lastErr ? `<div class="vb-st bad">⚠️ Last problem: ${esc(v.lastErr)}</div>` : ''}
+    <details class="vb-how"${v.connected ? '' : ' open'}><summary>How to get the token (once, on the phone of the channel's super admin)</summary><ol>
+      <li>In Viber, make the channel: Chats › the pencil (new) › New channel. Name it, for example JMTI OPERATIONS, and add the people.</li>
+      <li>Open the channel › tap its name (Info) › Developer tools.</li>
+      <li>Copy the Authentication Token (only a super admin sees it) and send it to yourself, then paste it here.</li>
+      <li>Press Save. The app connects the channel and posts "The JMTI app is now connected" there.</li></ol>
+      <p class="hint">Keep the token private: anyone with it can post in the channel. To stop the app, press Turn off; to block the old token, make a new one in Developer tools and paste it here.</p></details>
+    <label class="f">Authentication Token${v.has ? ` <small>saved, ends with …${esc(v.tokenEnd)}; leave blank to keep it</small>` : ''}<input id="vbTok" type="password" autocomplete="off" spellcheck="false" placeholder="${v.has ? 'Leave blank to keep the saved token' : 'Paste the token from Developer tools'}"></label>
+    <label class="f">Web app address <small>Viber is pointed here. Change it only if Save says the address is wrong: paste the /exec address from Deploy › Manage deployments.</small><input id="vbUrl" autocomplete="off" spellcheck="false" value="${esc(v.url || '')}"></label>
+    <div class="hs-sec">What to post</div>
+    ${sw('vbEsc', v.on.esc, '⚠️ Escalations', 'Every Copy escalation (Truck Plan, Waiting too long list) right away, and trips waiting too long or overdue found by JMTI ALERTS')}
+    ${sw('vbCrew', v.on.crew, '👥 Crew changes', 'Driver or helper changed on a trip, or in Truck assignment')}
+    ${sw('vbTrip', v.on.trip, '🚚 Truck Plan changes', 'New trips, status, truck, date and route changes, deleted trips')}
+    <label class="f vb-sel">Truck Plan changes to post<select id="vbTripAll"><option value="1"${v.on.tripAll ? ' selected' : ''}>Every change</option><option value=""${v.on.tripAll ? '' : ' selected'}>Only new, completed, cancelled and deleted trips</option></select></label>
+    ${sw('vbIr', v.on.ir, '🚨 Incident reports', 'New reports and status changes by HR')}
+    ${sw('vbChg', v.on.chg, '💸 Charges', 'New, changed and deleted charges, damages and penalties, change requests')}
+    ${sw('vbDaily', v.on.daily, '📊 Daily whole-day summary', 'Trips, status counts, overdue, incident reports, charges and money sent')}
+    <label class="f vb-sel">Send the summary at<select id="vbHour">${hours}</select></label>
+    <p class="hint">Changes are gathered and posted together about a minute after they are saved, so a busy hour is a few posts, not hundreds.${v.connected ? (v.trigger ? ' The daily summary is scheduled.' : v.on.daily ? ' The daily summary is not scheduled yet: press Save.' : '') : ''}</p>
+    <div class="vb-btns"><button class="btn alt" type="button" id="vbPrev">Preview the summary</button> ${v.connected ? '<button class="btn alt" type="button" id="vbNow">Send the summary now</button> <button class="btn alt" type="button" id="vbTest">Send a test</button> <button class="btn alt" type="button" id="vbOff">Turn off</button>' : ''}</div>
+    <pre class="vb-prev" id="vbPrevBox" hidden></pre></div>`,
+    `<button class="btn alt" type="button" onclick="closePop()">Close</button> <button class="btn road" type="button" id="vbSave">Save</button>`);
+  $('popBody').scrollTop = 0;
+  const read = extra => Object.assign({ token: $('vbTok').value.trim(), url: $('vbUrl').value.trim(), hour: $('vbHour').value,
+    on: { esc: $('vbEsc').checked, crew: $('vbCrew').checked, trip: $('vbTrip').checked, tripAll: $('vbTripAll').value === '1', ir: $('vbIr').checked, chg: $('vbChg').checked, daily: $('vbDaily').checked } }, extra || {});
+  const busy = (b, on, txt) => { if(!$(b)) return; $(b).disabled = on; if(txt) $(b).textContent = txt; };
+  $('vbSave').onclick = async () => { busy('vbSave', true, 'Saving…');
+    try{ await call('vbSave', read()); toast('Viber channel saved'); openViber(); }catch(err){ toast(err.message, true); busy('vbSave', false, 'Save'); } };
+  if($('vbTest')) $('vbTest').onclick = async () => { busy('vbTest', true, 'Sending…');
+    try{ await call('vbSave', read({test: true})); toast('Test sent: look in the Viber channel'); openViber(); }catch(err){ toast(err.message, true); busy('vbTest', false, 'Send a test'); } };
+  if($('vbOff')) $('vbOff').onclick = async () => { if(!confirm('Stop posting to the Viber channel? The daily summary stops too.')) return; busy('vbOff', true);
+    try{ await call('vbSave', {off: true}); toast('Viber channel turned off'); openViber(); }catch(err){ toast(err.message, true); busy('vbOff', false); } };
+  $('vbPrev').onclick = async () => { busy('vbPrev', true, 'Reading…');
+    try{ const r = await call('vbSummaryNow', false); $('vbPrevBox').textContent = r.text; $('vbPrevBox').hidden = false; $('vbPrevBox').scrollIntoView({block: 'nearest'}); }catch(err){ toast(err.message, true); }
+    busy('vbPrev', false, 'Preview the summary'); };
+  if($('vbNow')) $('vbNow').onclick = async () => { busy('vbNow', true, 'Sending…');
+    try{ const r = await call('vbSummaryNow', true); $('vbPrevBox').textContent = r.text; $('vbPrevBox').hidden = false; toast('Summary sent to the Viber channel'); }catch(err){ toast(err.message, true); }
+    busy('vbNow', false, 'Send the summary now'); };
+}
 /* ===== Salary rates (MANU 2026-11-16 "salary rate matrix"): Admin changes the pay per trip used for the estimated income, in
    Settings (gear) > Salary rates, or with "Change the rates" under the rate table of a person's estimated income. ===== */
 function openPayRates(){
@@ -14864,7 +15157,7 @@ function acctCsv(){
 function loadAcctInv(){
   if(!$('acInvFrame') && !MNT.busy){
     const SC = '<' + '/script>';
-    const shim = '<' + 'script>window.google = parent.google; window.__EMBED = true; window.__MODE = "acct"; window.__LOGO = parent.document.getElementById("logoMain").src; document.documentElement.className = "embed";' + SC;
+    const shim = '<' + 'script>window.google = parent.google; window.__EMBED = true; window.__MODE = "acct"; window.__LOGO = parent.document.getElementById("logoMain").src; document.documentElement.className = "embed"; addEventListener("pointerdown", function(){ try{ parent.jmtiAct(); }catch(x){} }, true); addEventListener("keydown", function(){ try{ parent.jmtiAct(); }catch(x){} }, true);' + SC;
     mntFrame('acInvFrame', 'Inventory and receipts', shim, $('acInvHost'), sizeAcctInv);
   }
   sizeAcctInv();
