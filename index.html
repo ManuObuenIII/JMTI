@@ -27,6 +27,27 @@ html.inframe{height:100%;overflow:hidden}
 .crq-tbl td:first-child{font-weight:700;white-space:normal}
 .crq-tbl .crq-old{color:#991B1B;text-decoration:line-through;text-decoration-color:rgba(153,27,27,.45)}
 .crq-tbl .crq-new{color:#166534;font-weight:700}
+/* Tasks (MANU 2026-11-19) */
+#v-tasks .bar{flex-wrap:wrap}
+.tk-card{background:#fff;border:1px solid var(--line);border-left:5px solid var(--c,#2E5BFF);border-radius:12px;padding:10px 12px;margin:0 0 10px;cursor:pointer;font-size:13.5px;line-height:1.45}
+.tk-card:hover{box-shadow:0 6px 18px -10px rgba(10,31,143,.45)}
+.tk-card.new{background:#EEF3FF}
+.tk-card.late{border-color:#F4B4AE}
+.tk-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;align-items:flex-start}
+.tk-top b{font-size:14.5px;word-break:break-word}
+.tk-card small{display:block;color:var(--muted);margin-top:4px}
+.tk-det{margin-top:4px;color:#1f2937}
+.tk-note{color:#334155 !important}
+.tk-late{color:#B42318;font-weight:800}
+.tk-newtag{color:#2E5BFF}
+.tk-grp h3{margin:14px 0 8px;font-size:15px;color:var(--ink)}
+.tk-grp h3 small{font-weight:600;color:var(--muted)}
+.tk-users{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;max-height:260px;overflow:auto;padding:2px}
+.tk-u{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:7px 9px;cursor:pointer;background:#fff;font-size:13px}
+.tk-u.on{border-color:#2E5BFF;background:#EEF3FF}
+.tk-u small{display:block;color:var(--muted);font-size:11.5px}
+.tk-u input[type=checkbox]{width:18px !important;height:18px !important;min-height:0 !important;min-width:18px;padding:0 !important;margin:2px 0 0 !important;flex:0 0 18px;box-shadow:none !important;accent-color:#2E5BFF}
+.lw-item.tk-item{border-left-color:#2E5BFF}
 </style>
 <title>JMTI Operations</title>
 <link rel="manifest" href="manifest.json">
@@ -2825,6 +2846,18 @@ input.onleave{border-color:#F87171!important;background:#FEF2F2!important}
     <div id="psBody"><div class="empty">Loading…</div></div>
   </section>
 
+  <!-- ================= TASKS (every user; Admin, Boss, HR Head give tasks; MANU 2026-11-19) ================= -->
+  <section class="view" id="v-tasks">
+    <div class="bar">
+      <div class="chips" id="tkWho"></div>
+      <div class="chips" id="tkSt"></div>
+      <label class="f grow">Find<input id="tkFind" placeholder="Task, person or note"></label>
+      <button class="btn alt" type="button" id="tkRefresh" title="Ask the server again">↻ Refresh</button>
+      <button class="btn" type="button" id="tkNew" hidden>+ New task</button>
+    </div>
+    <div id="tkBody"><div class="empty">Loading…</div></div>
+  </section>
+
   <!-- ================= HR ANALYTICS (HR HEAD, Admin, Boss view only; MANU 2026-11-18 "add new analytics dashboard tab for HR head") ================= -->
   <section class="view" id="v-hrstats">
     <div class="bar">
@@ -3245,7 +3278,7 @@ const MS_KEYS = ['srcArrive','loadStart','loadEnd','srcDepart','destArrive','unl
 const MS_COL = {srcArrive:12,loadStart:13,loadEnd:14,srcDepart:15,destArrive:16,unloadStart:17,unloadEnd:18,destDepart:19};
 const MS_LABEL = {srcArrive:'Source time in',loadStart:'Loading start',loadEnd:'Loading end',srcDepart:'Source time out',
   destArrive:'Destination time in',unloadStart:'Unloading start',unloadEnd:'Unloading end',destDepart:'Destination time out'};
-const TAB_NAME = {home:'Today',dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',hrstats:'HR analytics',charges:'Charges and IR',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',contacts:'Manpower contacts',maintenance:'Maintenance',users:'Users',analytics:'System analytics'};
+const TAB_NAME = {home:'Today',dashboard:'Dashboard',trips:'Trip analytics',fleet:'Fleet',assign:'Truck assignment',planner:'Supervisor',dispatcher:'Truck Plan',hardship:'Trip hardship',fuel:'Fuel monitoring',pod:'POD',podstats:'POD analytics',hrstats:'HR analytics',charges:'Charges and IR',billing:'Billing',disbursement:'Disbursement',accounting:'Accounting',payroll:'Payroll',clients:'Clients',manpower:'Manpower',contacts:'Manpower contacts',maintenance:'Maintenance',users:'Users',analytics:'System analytics',tasks:'Tasks'};
 const NO_AUTH = ['login','getAppUrl','appVersion'];
 
 const S = { sum:null, sumAt:0, sumView:'week', sumMeasure:'trips', topView:'p7', me:null, boot:null, trips:[], range:{}, tab:'', stageFilter:'', shown:150,
@@ -3525,12 +3558,12 @@ function toast(msg, err, ms){
   if(/^No signal\. Showing/.test(msg)){ if(Date.now() - (toast._ns || 0) < 60000) return; toast._ns = Date.now(); err = false; ms = 4000; }
   const t=$('toast'); t.textContent=msg; t.className='toast'+(err?' err':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none', ms || (err?6000:2600)); }
 
-const WRITES = ['leaveSave','leaveDelete','mpContactSave','chargeSave','chargeDelete','chargeRequest','chargeReqDecide','chargeReqCancel','savePlannedTrips','deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','savePayRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave','vbSave'];
+const WRITES = ['taskSave','taskStatus','taskSeen','leaveSave','leaveDelete','mpContactSave','chargeSave','chargeDelete','chargeRequest','chargeReqDecide','chargeReqCancel','savePlannedTrips','deleteTrip','restoreTrip','saveAppRules','markShiftRead','editShiftNote','saveClient','setIdleReason','applyInactive','addTrips','editTrip','cancelTrip','encodeTrip','podSave','uploadPod','billingSave','saveRoute','saveAssignments','saveManpower','saveUser','saveTruck','changePassword','podCheckMany','billingCheckMany','dispatchAddTrip','acctSave','acctCancel','acctReadPhoto','payrollSave','savePayrollRates','savePayRates','saveClientInfo','saveClientDetails','saveRates','routeHardshipSave','saveRouteKm','savePayment','cancelPayment','opsSave','truckDocSave','socialSave','vbSave'];
 const SUBMIT_MS = 5000;
 let submitting = 0, submitUntil = 0, submitTimer = null;
 /* Save buttons (MANU 2026-11-06 pick 13): the button pressed just before a save gets a spinner, then a green check,
    and can't be pressed again while it saves; the Submitting box ends with a green "Saved" check. */
-const SV = {btn:null, at:0, okShow:false, lastWrite:0}, SV_QUIET = ['markShiftRead','markShiftReadMany','acctReadPhoto'];
+const SV = {btn:null, at:0, okShow:false, lastWrite:0}, SV_QUIET = ['taskSeen','markShiftRead','markShiftReadMany','acctReadPhoto'];
 const SV_WORD = /save|submit|send|add|update|confirm|endorse|delete|cancel|yes|post|put back|check|apply|upload|generate|restore|remove/i;
 document.addEventListener('click', e => {
   const b = e.target && e.target.closest && e.target.closest('button'); if(!b) return;
@@ -4250,6 +4283,7 @@ async function start(){
 
 function enterApp(me){
   S.me = me; S.bootOk = false;
+  Object.assign(TK, {mine: [], made: [], users: [], canMake: false, v: '', at: 0, known: null, who: 'mine', st: 'open', q: ''});   // Tasks: nothing from the last person who signed in on this phone
   document.body.classList.toggle('viewonly', may('viewAll'));   // BOSS: every tab, no edit buttons
   document.body.classList.toggle('planview', !may('dispatch'));   // POD in Truck Plan: view only (MANU 2026-11-04)
   $('loginScreen').hidden = true; $('app').hidden = false; $('loadErr').hidden = true;
@@ -4495,8 +4529,8 @@ function showTab(t){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id==='v-'+view));
   { const v = $('v-'+view); if(v){ v.classList.remove('anim-in'); void v.offsetWidth; v.classList.add('anim-in'); clearTimeout(showTab._a); showTab._a = setTimeout(() => v.classList.remove('anim-in'), 1500); } }   // animations on tab open only (MANU 2026-11-06)
   if(t==='maintenance') return loadMaintenance();
-  if(!S.boot && !['home','manpower','contacts','users','analytics','charges','hrstats'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
-  ({home:loadHome, dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, hrstats:loadHrStats, charges:loadCharges, analytics:loadAnalytics, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, contacts:loadContacts, users:loadUsers})[t]();
+  if(!S.boot && !['home','manpower','contacts','users','analytics','charges','hrstats','tasks'].includes(t) && !(t==='fleet' && !may('fleet'))) return;   // Maintenance has no trip data: Fleet shows only its Units part
+  ({home:loadHome, dashboard:loadDashboard, trips:loadDashboard, fleet:loadFleetTab, assign:loadAssign, planner:loadPlanner, dispatcher:loadDispatcher, hardship:loadHardTab, fuel:loadFuelTab, pod:loadPod, podstats:loadPodStats, hrstats:loadHrStats, charges:loadCharges, analytics:loadAnalytics, billing:loadBilling, clients:loadBook, disbursement:loadDisb, accounting:loadAcct, payroll:loadPayroll, manpower:loadManpower, contacts:loadContacts, users:loadUsers, tasks:loadTasksTab})[t]();
   if(['dashboard','manpower'].includes(t) || (t==='fleet' && may('fleet'))) loadReminders();
 }
 
@@ -4677,7 +4711,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.95, APP_VERSION_DATE = '2026-11-19';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.96, APP_VERSION_DATE = '2026-11-19';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4708,6 +4742,13 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-19 "add task maker for each user from admin, from boss, from HR head"
+  {v:14.96, d:'2026-11-19', items:[
+    'Tasks: Admin, Boss and HR Head give a task to any user (or to several, or everyone in a role) with + New task in the new Tasks tab: the task, details, a due date and a priority (normal, high, urgent).',
+    'Every user has the Tasks tab. A new task rings the bell and shows on Today until opened. Open it to mark it In progress or Done, with a note.',
+    'The one who gave the task sees who opened it, the status and the note, and the bell tells them when it is done. They can change, cancel or reopen it. Admin and Boss see every task given.',
+    'Tasks are kept in the new TASKS sheet in GENERAL DATABASE.'
+  ]},
   // MANU 2026-11-19 "include escalations to jmti updates" + "crew change"
   {v:14.95, d:'2026-11-19', items:[
     'Viber channel: escalations now go to the channel. Copy escalation (Truck Plan ⚠ Escalation, or the bell\'s Waiting too long list) also posts the escalation there right away, with the shipment no. or DTTR. Trips waiting too long or overdue found by JMTI ALERTS are posted there too.',
@@ -9793,24 +9834,213 @@ const escText = (x, issue) => ['ESCALATION', 'PLATE: ' + (x.plateNo || '—'), s
   'TIME OF ARRIVAL: ' + lwAtTxt(x.since), 'STATUS: ' + lwDur(x.since) + ' (' + lwWait(x.status) + ')', ...escCrew(x),
   ...(issue ? ['ISSUE: ' + String(issue).replace(/\s+/g, ' ').trim()] : []),
   '', 'THANK YOU', (S.me && S.me.name) || ''].map(l => l.toUpperCase()).join('\n').trim();
+/* ===== Tasks (MANU 2026-11-19 "add task maker for each user from admin, from boss, from HR head"). Code.gs taskList / taskSave /
+   taskStatus / taskSeen, sheet TASKS. Admin, Boss and HR Head (may taskMake) give a task to one or more users; the person sees it in
+   the Tasks tab, on the bell until opened and on Today, and marks it In progress or Done with a note. The maker sees the status and
+   the bell says when one is done. The chat check carries a changed mark (taskv). ===== */
+const TK = {mine: [], made: [], users: [], canMake: false, v: '', at: 0, busy: false, who: 'mine', st: 'open', q: '', known: null};
+const TK_ST_COLOR = {OPEN:'#2E5BFF', 'IN PROGRESS':'#D97706', DONE:'#16A34A', CANCELLED:'#64748B'};
+const TK_PR_COLOR = {NORMAL:'#64748B', HIGH:'#D97706', URGENT:'#D92D20'};
+const tkPill = st => `<span class="ir-st" style="--c:${TK_ST_COLOR[st] || '#64748B'}">${esc(st)}</span>`;
+const tkPr = p => p && p!=='NORMAL' ? `<span class="ir-st" style="--c:${TK_PR_COLOR[p]}">${esc(p)}</span>` : '';
+const tkLive = t => t.status==='OPEN' || t.status==='IN PROGRESS';
+const tkLate = t => tkLive(t) && t.due && t.due < TODAY();
+const tkDue = t => !t.due ? '' : `<span class="${tkLate(t) ? 'tk-late' : ''}">Due ${esc(fmtDay(t.due))}${tkLate(t) ? ' · overdue' : t.due===TODAY() && tkLive(t) ? ' · today' : ''}</span>`;
+const tkAll = () => [...(TK.mine || []), ...(TK.made || [])];
+const tkMe = () => String(S.me && S.me.username || '').toLowerCase();
+const tkDoneSeen = () => new Set(lsGet('jmti_task_seen') || []);
+function loadTasks(force){
+  if(!S.me || !may('taskView') || TK.busy) return;
+  if(!force && Date.now() - TK.at < 3000) return;
+  TK.busy = true;
+  if(S.tab==='tasks' && !TK.at) renderTasks();
+  call('taskList').then(tkSet).catch(e => { if(S.tab==='tasks' && !TK.at) $('tkBody').innerHTML = `<div class="empty">${esc(e.message)}</div>`; })
+    .finally(() => { TK.busy = false; });
+}
+function tkSet(r){
+  if(!r) return;
+  const before = TK.known;
+  TK.mine = r.mine || []; TK.made = r.made || []; TK.canMake = !!r.canMake; if(r.users) TK.users = r.users; TK.v = String(r.v || TK.v || ''); TK.at = Date.now();
+  TK.known = new Set(TK.mine.map(t => t.id));
+  if(before){   // a new task for me while the app is open: a short notice
+    const fresh = TK.mine.filter(t => !before.has(t.id) && tkLive(t) && !t.seen);
+    if(fresh.length) toast(fresh.length > 1 ? `📋 ${fresh.length} new tasks for you` : `📋 New task from ${fresh[0].by}: ${fresh[0].title}`.slice(0, 160), false, 6000);
+  }
+  renderLw(); if(S.tab==='tasks') renderTasks(); if(S.tab==='home' && typeof renderHome==='function') renderHome();
+}
+function taskMark(v){ if(v && v!==TK.v){ TK.v = v; loadTasks(true); } }
+/** the bell: tasks given to me that I have not opened; for the maker, their tasks done in the last 14 days that they have not opened */
+function taskBell(){
+  if(!may('taskView')) return [];
+  const me = tkMe(), seen = tkDoneSeen();
+  return (TK.mine || []).filter(t => tkLive(t) && !t.seen)
+    .concat((TK.made || []).filter(t => t.byU===me && t.status==='DONE' && !seen.has(t.id + '|' + t.doneAt)
+      && Date.now() - new Date(String(t.doneAt || '').replace(' ', 'T')).getTime() < 14 * 864e5));
+}
+const taskBellTxt = n => `${n} task${n===1 ? '' : 's'} to see`;
+function taskBellHtml(l){
+  return `<h4 class="ir-h">Tasks</h4>` + (l.length ? l.map(t => `<div class="lw-item ir-item tk-item rowbtn" data-tkopen="${esc(t.id)}" role="button" tabindex="0" title="Open ${esc(t.id)}">
+      <div class="lw-top"><span><b>${esc(t.title)}</b> ${tkPr(t.priority)}</span>${tkPill(t.status)}</div>
+      ${t.details ? `<div class="ir-clip">${esc(t.details.slice(0, 200))}</div>` : ''}
+      <small>${t.toU===tkMe() ? 'From <b>' + esc(t.by) + '</b>' : 'Done by <b>' + esc(t.to) + '</b>'} · ${irAt(t.toU===tkMe() ? t.at : t.doneAt)}${t.due ? ' · ' + tkDue(t) : ''}</small></div>`).join('')
+    : '<p class="hint">No new tasks.</p>') + `<p style="margin:0 0 12px"><button class="btn alt" type="button" data-tkall>All tasks</button></p>`;
+}
+function tkFilter(list){
+  const q = TK.q.trim().toLowerCase();
+  return list.filter(t => TK.st==='all' || (TK.st==='open' ? tkLive(t) : TK.st==='done' ? t.status==='DONE' : t.status==='CANCELLED'))
+    .filter(t => !q || [t.id, t.title, t.details, t.to, t.toRole, t.by, t.note].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => (tkLive(b) - tkLive(a)) || ((a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0) || (b.at > a.at ? 1 : b.at < a.at ? -1 : 0));
+}
+function tkCard(t){
+  const mine = t.toU===tkMe();
+  return `<div class="tk-card${tkLate(t) ? ' late' : ''}${mine && !t.seen && tkLive(t) ? ' new' : ''}" data-tkopen="${esc(t.id)}" role="button" tabindex="0" style="--c:${TK_ST_COLOR[t.status]}">
+    <div class="tk-top"><b>${esc(t.title)}</b><span>${tkPr(t.priority)} ${tkPill(t.status)}</span></div>
+    ${t.details ? `<div class="ir-clip tk-det">${esc(t.details)}</div>` : ''}
+    <small>${mine ? 'From <b>' + esc(t.by) + '</b>' : 'To <b>' + esc(t.to) + '</b>' + (t.toRole ? ' · ' + esc(t.toRole) : '') + (TK.who==='made' && t.byU!==tkMe() ? ' · from ' + esc(t.by) : '')} · ${irAt(t.at)}${t.due ? ' · ' + tkDue(t) : ''}${mine && !t.seen && tkLive(t) ? ' · <b class="tk-newtag">NEW</b>' : ''}${!mine && tkLive(t) ? (t.seen ? ' · seen ' + irAt(t.seen) : ' · not opened yet') : ''}</small>
+    ${t.note ? `<small class="tk-note">📝 ${esc(t.note)}${t.updBy ? ' · ' + esc(t.updBy) : ''}</small>` : ''}</div>`;
+}
+function renderTasks(){
+  const body = $('tkBody'); if(!body || !S.me) return;
+  $('tkNew').hidden = !TK.canMake && !may('taskMake');
+  const madeLbl = may('taskAll') ? 'All tasks given' : 'Tasks I gave';
+  if(!TK.canMake && TK.who==='made' && !(TK.made || []).length) TK.who = 'mine';
+  const n = l => l.filter(tkLive).length;
+  $('tkWho').innerHTML = [['mine', `My tasks (${n(TK.mine || [])})`], ...((TK.canMake || (TK.made || []).length) ? [['made', `${madeLbl} (${n(TK.made || [])})`]] : [])]
+    .map(([k, l]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${TK.who===k}">${esc(l)}</button>`).join('');
+  $('tkSt').innerHTML = [['open', 'Open'], ['done', 'Done'], ['cancelled', 'Cancelled'], ['all', 'All']]
+    .map(([k, l]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${TK.st===k}">${l}</button>`).join('');
+  if(!TK.at){ body.innerHTML = '<div class="empty">Loading…</div>'; return; }
+  const src = TK.who==='made' ? TK.made || [] : TK.mine || [], list = tkFilter(src);
+  if(TK.who==='made'){   // grouped by person
+    const by = {}; list.forEach(t => (by[t.to] = by[t.to] || []).push(t));
+    const names = Object.keys(by).sort();
+    body.innerHTML = names.length ? names.map(nm => `<section class="tk-grp"><h3>${esc(nm)} <small>${esc(by[nm][0].toRole || '')} · ${by[nm].filter(tkLive).length} open</small></h3>${by[nm].map(tkCard).join('')}</section>`).join('')
+      : `<div class="empty">No ${TK.st==='all' ? '' : TK.st + ' '}tasks.${TK.canMake ? ' Press + New task to give one.' : ''}</div>`;
+  } else body.innerHTML = list.length ? list.map(tkCard).join('') : `<div class="empty">${TK.st==='open' ? '✓ No open tasks for you.' : 'No tasks here.'}</div>`;
+}
+function initTasks(){
+  if(initTasks.done) return; initTasks.done = true;
+  $('tkWho').onclick = e => { const c = e.target.closest('.chip'); if(c){ TK.who = c.dataset.f; renderTasks(); } };
+  $('tkSt').onclick = e => { const c = e.target.closest('.chip'); if(c){ TK.st = c.dataset.f; renderTasks(); } };
+  $('tkFind').oninput = e => { TK.q = e.target.value; renderTasks(); };
+  $('tkNew').onclick = () => taskForm(null);
+  $('tkRefresh').onclick = () => loadTasks(true);
+}
+function loadTasksTab(){ initTasks(); renderTasks(); loadTasks(true); }
+/** one task: what, who, status; the person given it: In progress / Done (+ note); the maker / Admin: Change, Cancel, Reopen */
+function taskOpen(id){
+  const t = tkAll().find(x => x.id===id); if(!t) return toast('That task is not on this phone yet. Refresh.', true);
+  const me = tkMe(), doer = t.toU===me, owner = t.byU===me || (S.me && S.me.role==='ADMIN');
+  if(doer && !t.seen){ t.seen = 'now'; call('taskSeen', [t.id]).catch(() => {}); renderLw(); }
+  if(!doer && t.status==='DONE'){ const sn = tkDoneSeen(), k = t.id + '|' + t.doneAt; if(!sn.has(k)){ lsSet('jmti_task_seen', [...sn, k].slice(-300)); renderLw(); } }
+  const row = (k, v) => v ? `<tr><td>${k}</td><td>${v}</td></tr>` : '';
+  const info = `<div class="tbl-wrap" style="max-height:none"><table class="poptbl ir-tbl"><tbody>
+    ${row('Task', `<b>${esc(t.title)}</b> ${tkPr(t.priority)}`)}
+    ${row('Details', t.details ? `<div class="ir-txt">${esc(t.details)}</div>` : '')}
+    ${row('Given to', `<b>${esc(t.to)}</b>${t.toRole ? ' · ' + esc(t.toRole) : ''}${t.seen && t.seen!=='now' ? `<small>opened ${irAt(t.seen)}</small>` : !doer ? '<small>not opened yet</small>' : ''}`)}
+    ${row('Given by', `<b>${esc(t.by)}</b>${t.byRole ? ' · ' + esc(t.byRole) : ''} · ${irAt(t.at)}`)}
+    ${row('Due', t.due ? tkDue(t) : '')}
+    ${row('Status', tkPill(t.status) + (t.updBy ? `<small>by ${esc(t.updBy)} · ${irAt(t.updAt)}</small>` : ''))}
+    ${row('Note', t.note ? `<div class="ir-txt">${esc(t.note)}</div>` : '')}
+    ${row('Task no.', esc(t.id))}
+  </tbody></table></div>`;
+  const canNote = (doer && t.status!=='CANCELLED') || owner;
+  const body = info + (canNote ? `<label class="f full" style="margin-top:10px">${doer ? 'Note (what you did, or what you need)' : 'Note'}<textarea id="tkNote" rows="2" maxlength="1000" placeholder="${doer ? 'e.g. Done, sent the report to Boss' : 'Optional'}"></textarea></label>` : '');
+  const b = [];
+  if(doer && t.status==='OPEN') b.push('<button class="btn alt" type="button" data-tkst="IN PROGRESS">Start: in progress</button>');
+  if(doer && tkLive(t)) b.push('<button class="btn" type="button" data-tkst="DONE">✓ Mark done</button>');
+  if((doer || owner) && t.status==='DONE') b.push('<button class="btn alt" type="button" data-tkst="OPEN">Reopen</button>');
+  if(owner && t.status==='CANCELLED') b.push('<button class="btn alt" type="button" data-tkst="OPEN">Reopen</button>');
+  if(owner && tkLive(t)) b.push('<button class="btn alt" type="button" id="tkEdit">Change</button>', '<button class="btn alt danger" type="button" data-tkst="CANCELLED">Cancel task</button>');
+  openPop(t.title, `${esc(t.id)} · ${tkPill(t.status)}`, body, '<button class="btn alt" type="button" id="tkClose">Close</button><span style="flex:1"></span>' + b.join(' '));
+  $('tkClose').onclick = () => closePop();
+  if($('tkEdit')) $('tkEdit').onclick = () => taskForm(t);
+  $('popFoot').querySelectorAll('[data-tkst]').forEach(btn => btn.onclick = async () => {
+    const st = btn.dataset.tkst, note = $('tkNote') ? $('tkNote').value.trim() : '';
+    if(st==='CANCELLED' && !confirm(`Cancel the task "${t.title}" for ${t.to}?`)) return;
+    btn.disabled = true;
+    try{ tkSet(await call('taskStatus', t.id, st, note)); closePop(); toast(st==='DONE' ? '✓ Task done. ' + t.by + ' will see it.' : st==='CANCELLED' ? 'Task cancelled.' : st==='OPEN' ? 'Task reopened.' : 'Task marked in progress.'); }
+    catch(e){ btn.disabled = false; toast(e.message, true); }
+  });
+}
+/** Admin, Boss, HR Head: give a task (t = null) to one or more users, or change one (t). */
+function taskForm(t){
+  if(!may('taskMake')) return toast('Only Admin, Boss and HR Head give tasks.', true);
+  const users = TK.users || [], pick = new Set(t ? [t.toU] : []);
+  const roles = [...new Set(users.map(u => u.role))].sort();
+  const who = t ? `<p class="hint">For <b>${esc(t.to)}</b>${t.toRole ? ' · ' + esc(t.toRole) : ''}. To give it to someone else, cancel it and give a new task.</p>`
+    : `<div class="full"><b>Give to</b> <small class="dim" id="tkPickN"></small>
+      <div class="bar" style="margin:6px 0"><label class="f grow" style="flex:1 1 220px">Find<input id="tkUFind" placeholder="Name, username or role"></label>
+      <label class="f">Everyone in a role<select id="tkURole"><option value="">Pick a role…</option>${roles.map(r => `<option>${esc(r)}</option>`).join('')}</select></label>
+      <button class="btn alt sm" type="button" id="tkUNone">Clear</button></div>
+      <div class="tk-users" id="tkUsers"></div></div>`;
+  const body = `<form class="form" id="tkForm" onsubmit="return false" autocomplete="off">${who}
+    <label class="f full">Task<input name="title" maxlength="200" required placeholder="e.g. Submit the November fuel report" value="${t ? esc(t.title) : ''}"></label>
+    <label class="f full">Details (optional)<textarea name="details" rows="3" maxlength="2000" placeholder="What exactly to do">${t ? esc(t.details) : ''}</textarea></label>
+    <label class="f">Due date (optional)<input type="date" name="due" value="${t ? esc(t.due) : ''}"></label>
+    <label class="f">Priority<select name="priority">${['NORMAL', 'HIGH', 'URGENT'].map(p => `<option${t && t.priority===p ? ' selected' : ''}>${p}</option>`).join('')}</select></label>
+  </form>`;
+  openPop(t ? 'Change task' : 'New task', t ? esc(t.id) : 'Admin, Boss and HR Head give tasks to any user', body,
+    `<button class="btn alt" type="button" id="tkFClose">Close</button><span style="flex:1"></span><button class="btn" type="button" id="tkFSave">${t ? 'Save changes' : 'Give task'}</button>`);
+  $('tkFClose').onclick = () => closePop();
+  const draw = () => {
+    if(!$('tkUsers')) return;
+    const q = $('tkUFind').value.trim().toLowerCase();
+    const l = users.filter(u => !q || [u.name, u.username, u.role].join(' ').toLowerCase().includes(q));
+    $('tkUsers').innerHTML = l.length ? l.map(u => `<label class="tk-u${pick.has(u.username) ? ' on' : ''}"><input type="checkbox" data-u="${esc(u.username)}"${pick.has(u.username) ? ' checked' : ''}><span><b>${esc(u.name)}</b><small>${esc(u.role)} · ${esc(u.username)}</small></span></label>`).join('')
+      : `<p class="hint">${users.length ? 'No user matches.' : 'Loading the users… press Refresh in the Tasks tab if this stays empty.'}</p>`;
+    $('tkPickN').textContent = pick.size ? `${pick.size} picked: ${users.filter(u => pick.has(u.username)).map(u => u.name).join(', ')}` : 'nobody picked yet';
+  };
+  if(!t){
+    draw();
+    $('tkUFind').oninput = draw;
+    $('tkUsers').onchange = e => { const c = e.target.closest('[data-u]'); if(!c) return; c.checked ? pick.add(c.dataset.u) : pick.delete(c.dataset.u); draw(); };
+    $('tkURole').onchange = e => { const r = e.target.value; if(r) users.filter(u => u.role===r).forEach(u => pick.add(u.username)); e.target.value = ''; draw(); };
+    $('tkUNone').onclick = () => { pick.clear(); draw(); };
+    if(!users.length) loadTasks(true);
+  }
+  $('tkFSave').onclick = async () => {
+    const f = $('tkForm'), p = {title: f.title.value.trim(), details: f.details.value.trim(), due: f.due.value, priority: f.priority.value};
+    if(t) p.id = t.id; else p.to = [...pick];
+    if(!t && !p.to.length) return toast('Pick who will do the task.', true);
+    if(!p.title){ f.title.focus(); return toast('Type the task.', true); }
+    const btn = $('tkFSave'); btn.disabled = true;
+    try{ tkSet(await call('taskSave', p)); closePop(); TK.who = 'made'; TK.st = 'open';
+      toast(t ? 'Task changed.' : `📋 Task given to ${p.to.length===1 ? (users.find(u => u.username===p.to[0]) || {}).name || p.to[0] : p.to.length + ' people'}.`);
+      if(S.tab!=='tasks' && can('tasks')) showTab('tasks'); else renderTasks(); }
+    catch(e){ btn.disabled = false; toast(e.message, true); }
+  };
+}
+/** Today: my open tasks at the top */
+function taskHomeHtml(){
+  const l = (TK.mine || []).filter(tkLive).sort((a, b) => (a.due || '9999') < (b.due || '9999') ? -1 : 1);
+  if(!l.length || !can('tasks')) return '';
+  return `<section class="hm-sec"><h3><span class="hm-ic">📋</span><span>My tasks<small>Given by Admin, Boss or HR Head</small></span><b class="hm-n">${l.length}</b><button type="button" class="btn alt hm-go" data-go="tasks">Open Tasks ›</button></h3>
+    ${l.slice(0, 6).map(tkCard).join('')}</section>`;
+}
+document.addEventListener('click', e => {
+  const o = e.target.closest && e.target.closest('[data-tkopen]'); if(o){ e.stopPropagation(); taskOpen(o.dataset.tkopen); return; }
+  if(e.target.closest && e.target.closest('[data-tkall]')){ closePop(); if(can('tasks')){ TK.who = 'mine'; TK.st = 'open'; showTab('tasks'); } }
+});
+document.addEventListener('keydown', e => { if(e.key==='Enter' && e.target.closest && e.target.closest('[data-tkopen]')) taskOpen(e.target.closest('[data-tkopen]').dataset.tkopen); });
 function renderLw(){
-  const lwn = mayLw() ? (S.lw || []).length : 0, irn = may('irView') ? irNew().length : 0, crn = mayCrq() ? crqBell().length : 0, n = lwn + irn + crn, b = $('lwBtn');
+  const lwn = mayLw() ? (S.lw || []).length : 0, irn = may('irView') ? irNew().length : 0, crn = mayCrq() ? crqBell().length : 0, tkn = may('taskView') ? taskBell().length : 0, n = lwn + irn + crn + tkn, b = $('lwBtn');
   if(!b) return;
   // Notification bell (MANU 2026-10-13): red count of trips waiting too long; it rings when one appears that hasn't been seen.
   // Since 2026-11-06 also new incident reports (HR, Admin, Boss; the sender when HR changes the status) until opened.
-  b.hidden = !mayLw() && !may('irView') && !mayCrq(); $('lwN').textContent = n > 99 ? '99+' : n; $('lwN').hidden = !n;
+  b.hidden = !mayLw() && !may('irView') && !mayCrq() && !may('taskView'); $('lwN').textContent = n > 99 ? '99+' : n; $('lwN').hidden = !n;
   S.lwN = n; updateAppBadge();
   const seen = new Set(lsGet('jmti_lw_seen') || []);
-  b.classList.toggle('ring', !!irn || !!crn || (mayLw() && (S.lw || []).some(x => !seen.has(x.key))));
-  const parts = [crn && crqBellTxt(crn), irn && `${irn} new incident report${irn===1 ? '' : 's'}`, lwn && `${lwn} trip${lwn===1 ? '' : 's'} waiting too long`].filter(Boolean);
+  b.classList.toggle('ring', !!irn || !!crn || !!tkn || (mayLw() && (S.lw || []).some(x => !seen.has(x.key))));
+  const parts = [tkn && taskBellTxt(tkn), crn && crqBellTxt(crn), irn && `${irn} new incident report${irn===1 ? '' : 's'}`, lwn && `${lwn} trip${lwn===1 ? '' : 's'} waiting too long`].filter(Boolean);
   b.title = parts.length ? parts.join(' · ') + '. Tap to see them.' : 'No notifications';
   b.setAttribute('aria-label', parts.length ? 'Notifications: ' + parts.join(', ') : 'Notifications: none');
   const xn = $('xIrN'); if(xn){ xn.textContent = irn; xn.hidden = !irn; }
   if(!$('pop').hidden && $('pop').classList.contains('lwpop')) renderLwPop();
 }
 function renderLwPop(){
-  const l = mayLw() ? S.lw || [] : [], ir = may('irView') ? irNew() : [], cr = mayCrq() ? crqBell() : [];
-  $('popSub').textContent = [cr.length && crqBellTxt(cr.length), ir.length && `${ir.length} new incident report${ir.length===1 ? '' : 's'}`, mayLw() && `${l.length} trip${l.length===1 ? '' : 's'} need${l.length===1 ? 's' : ''} an update`].filter(Boolean).join(' · ') || 'Nothing new';
+  const l = mayLw() ? S.lw || [] : [], ir = may('irView') ? irNew() : [], cr = mayCrq() ? crqBell() : [], tk = may('taskView') ? taskBell() : [];
+  $('popSub').textContent = [tk.length && taskBellTxt(tk.length), cr.length && crqBellTxt(cr.length), ir.length && `${ir.length} new incident report${ir.length===1 ? '' : 's'}`, mayLw() && `${l.length} trip${l.length===1 ? '' : 's'} need${l.length===1 ? 's' : ''} an update`].filter(Boolean).join(' · ') || 'Nothing new';
   const irHtml = !may('irView') ? '' : `<h4 class="ir-h">Incident reports</h4>` + (ir.length ? ir.map(x => `<div class="lw-item ir-item rowbtn" data-iropen="${esc(x.id)}" role="button" tabindex="0" title="Open ${esc(x.id)}">
       <div class="lw-top"><span><b>${esc(x.id)}</b> · ${esc(x.type)}</span>${irPill(x.status)}</div>
       <div class="ir-clip">${esc(x.details)}</div>
@@ -9822,8 +10052,9 @@ function renderLwPop(){
       <div class="ir-clip">${esc(x.reason)}</div>
       <small>Requested by <b>${esc(x.by)}</b> · ${irAt(x.at)}${x.decBy && x.status!=='PENDING' ? ' · ' + esc(x.status.toLowerCase()) + ' by ' + esc(x.decBy) : ''}</small></div>`).join('')
       : `<p class="hint">${may('chgApprove') ? 'No change requests waiting.' : 'No new answers to your change requests.'}</p>`) + `<p style="margin:0 0 12px"><button class="btn alt" type="button" data-crqall>All change requests</button></p>`;
-  if(!mayLw()){ $('popBody').innerHTML = crHtml + irHtml; return; }
-  $('popBody').innerHTML = crHtml + irHtml + (ir.length || may('irView') ? '<h4 class="ir-h">Waiting too long</h4>' : '') + (l.length ? `<p class="hint" style="margin:0 0 10px">No status change for more than 6 hours at a site, 12 hours on the way, or 24 hours at Clip Board. Update the trip in Truck Plan, or tap ESCALATION to send it.</p>`
+  const tkHtml = may('taskView') && (tk.length || may('taskMake')) ? taskBellHtml(tk) : '';
+  if(!mayLw()){ $('popBody').innerHTML = (tkHtml + crHtml + irHtml) || '<p class="hint">Nothing new.</p>'; return; }
+  $('popBody').innerHTML = tkHtml + crHtml + irHtml + (ir.length || may('irView') ? '<h4 class="ir-h">Waiting too long</h4>' : '') + (l.length ? `<p class="hint" style="margin:0 0 10px">No status change for more than 6 hours at a site, 12 hours on the way, or 24 hours at Clip Board. Update the trip in Truck Plan, or tap ESCALATION to send it.</p>`
     + l.map((x, i) => `<div class="lw-item"><div class="lw-top"><span>${tLink(x.truckNo, 'Truck ' + (x.truckNo || '—'))} · ${plLink(x.plateNo)}</span><span class="lw-wait">${esc(lwDur(x.since))}</span></div>
       <div><b>${esc(x.client || '—')}</b> → ${esc(x.place || '—')}</div>
       <div><small>${esc(shipLbl(x))}: <b>${esc(x.shipmentNo || '—')}</b></small></div>
@@ -9832,7 +10063,7 @@ function renderLwPop(){
     : '<p class="hint">No trips are waiting too long right now.</p>');
 }
 function openLw(){
-  openPop(may('irView') ? 'Notifications' : 'Waiting too long', '', '', `<button class="btn alt" type="button" onclick="loadLw(); loadIr(); loadCrq()">Refresh</button><button class="btn" type="button" onclick="closePop()">Close</button>`);
+  openPop(may('irView') || may('taskView') ? 'Notifications' : 'Waiting too long', '', '', `<button class="btn alt" type="button" onclick="loadLw(); loadIr(); loadCrq(); loadTasks(true)">Refresh</button><button class="btn" type="button" onclick="closePop()">Close</button>`);
   $('pop').classList.add('lwpop');
   lsSet('jmti_lw_seen', (S.lw || []).map(x => x.key).slice(-500));   // opened: stop ringing for these
   $('lwBtn').classList.remove('ring');
@@ -11816,6 +12047,7 @@ function chatPoll(){
   // riding along (Faster, 2026-11-02): who is online, the trips of the "trip completed" pop-up, the speed notes
   opt.tv = 1;   // ask for the trips changed mark (real time Truck Plan)
   if(may('irView')) opt.ir = 1;   // incident reports changed mark (the bell)
+  if(may('taskView')) opt.task = 1;   // tasks changed mark (Tasks tab, bell, Today)
   if(mayCrq()) opt.crq = 1;   // charge change requests changed mark (the bell of HR Head and POD)
   const ride = {on: !!(ON.want && mayOnline()), done: DN.want};
   if(ride.on) opt.on = 1;
@@ -11831,6 +12063,7 @@ function chatPoll(){
       if(d.dv!==undefined) mdMark(String(d.dv));   // My day
       if(d.irv!==undefined) irMark(String(d.irv));
       if(d.crqv!==undefined) crqMark(String(d.crqv));
+      if(d.taskv!==undefined) taskMark(String(d.taskv));
       if(CH.user===u){ if(full) CH.full = true; if(d.v) CH.v = String(d.v); chatMerge(d); if(d.rv!==undefined) CH.rv = Number(d.rv) || 0; } })
     .catch(() => { CH.fail = Math.min(3, CH.fail + 1); }).finally(() => { CH.busy = false; });
 }
@@ -16266,7 +16499,7 @@ function renderHome(){
     const btn = s.go && can(s.go) ? `<button type="button" class="btn alt hm-go" data-go="${s.go}">Open ${esc(TAB_NAME[s.go])} ›</button>` : s.act ? `<button type="button" class="btn alt hm-go" data-act="${s.act}">${s.act === 'idle' ? 'Set reasons ›' : s.act === 'pl' ? 'Copy the list ›' : 'Open ›'}</button>` : '';
     return `<section class="hm-sec" data-sec="${s.k}" ${s.story ? 'data-story="1"' : ''}><h3><span class="hm-ic">${s.ic}</span><span>${esc(s.t)}${s.hint ? `<small>${esc(s.hint)}</small>` : ''}</span><b class="hm-n">${n(s)}</b>${btn}</h3>${rows}${more}</section>`;
   };
-  body.innerHTML = strip + (todo.length ? todo.map(secHtml).join('') : `<div class="hm-clear-all"><b>✓ All clear</b><span>Nothing needs you right now.</span></div>`)
+  body.innerHTML = taskHomeHtml() + strip + (todo.length ? todo.map(secHtml).join('') : `<div class="hm-clear-all"><b>✓ All clear</b><span>Nothing needs you right now.</span></div>`)
     + (clear.length ? `<div class="hm-ok">${clear.map(s => `<span>✓ ${esc(s.t.replace(/ \(.*\)$/, '').replace(/^(.)/, c => c))}: none</span>`).join('')}</div>` : '')
     + (HM.at ? `<p class="hint hm-at">Updated ${new Date(HM.at).toLocaleTimeString('en-PH', {hour: 'numeric', minute: '2-digit'})}. Pull down or tap ↻ Refresh for the newest.</p>` : '');
 }
