@@ -2787,7 +2787,7 @@ input.onleave{border-color:#F87171!important;background:#FEF2F2!important}
       <label class="f">From<input type="date" id="fmFrom"></label>
       <label class="f">To<input type="date" id="fmTo"></label>
       <label class="f grow">Find<input id="fmFind" placeholder="Truck, plate, driver"></label>
-      <label class="f">Account<select id="fmAcct"><option value="">All accounts</option><option value="0">Coca Cola Canlubang</option><option value="1">Coca Cola San Fernando</option><option value="2">Other accounts</option><option value="3">Not counted in an account</option></select></label>
+      <label class="f">Account<select id="fmAcct"><option value="">All accounts</option><option value="Coca Cola Canlubang">Coca Cola Canlubang</option><option value="Coca Cola San Fernando">Coca Cola San Fernando</option><option value="Not counted in an account">Not counted in an account</option></select></label>
       <button class="btn alt" type="button" id="fmPdf" title="Save what this tab shows now as a PDF">Generate PDF report</button>
       <div class="chips" id="fmView"></div>
       <div class="chips" id="fmChips"></div>
@@ -3453,6 +3453,20 @@ function assignedAcct(truck, day){
   if(h) for(const [d, a] of h){ if(d > day) break; acc = a; }
   return acc;
 }
+/** The client a truck is assigned to on a day in Truck assignment ('' = Coca Cola or none), from boot.assignClient. */
+function assignedClient(truck, day){
+  const h = S.boot && S.boot.assignClient && S.boot.assignClient[String(truck || '').trim()];
+  let c = '';
+  if(h) for(const [d, a] of h){ if(d > day) break; c = a; }
+  return c && c !== 'OTHER ACCOUNTS' ? c : '';
+}
+/** The client a trip's Other accounts count goes to, as on the Dashboard (server clientSplitter_): the client before "|" in the
+ *  destination, else the source (Coca Cola / CCBPI skipped), else the client its truck is assigned to that day, else NO CLIENT YET. */
+function tripClientAcct(t){
+  const coke = v => /COCACOLA|CCBPI/.test(nameKey(v));
+  const c = [clientOf(t.destination), clientOf(t.customer)].find(v => v && !coke(v));
+  return (c ? c.toUpperCase() : '') || assignedClient(t.truckNo, t.date) || 'NO CLIENT YET';
+}
 /** Trip counters follow Truck assignment (MANU 2026-10-08): a trip counts under the account its truck is assigned to on the trip date,
  *  as much as the rules count it (1, 0.5 …; not at all if no rule counts it). A truck with no account that day: the client/route rules. */
 function tripAcctW(t){
@@ -3540,13 +3554,19 @@ let XW = {};
 const xw = l => wsum(l, t => (XW[t.key] ? 0.5 : 1) * tkH(t));
 function setLegW(list){ const rw = roundTrips(list), by = {}; list.forEach(t => { by[t.key] = t; }); list.forEach(t => { const r = rw[t.key]; t._w = (r ? 0.5 : 1) * tkH(t); t._mate = r ? by[r.other] || null : null; }); return list; }   // _mate: the round trip's other leg
 const inAcct = (t, a) => {
+  if(a && a!==NO_ACCT && !acctNames().includes(a)) return inAcct(t, 'OTHER ACCOUNTS') && nameKey(tripClientAcct(t)) === nameKey(a);   // a client (MANU 2026-11-19)
   const e = TRIP_W[t.key];
   if(e) return a===NO_ACCT ? !e.pairAcc : e.pairAcc===a;
   return a===NO_ACCT ? !Object.keys(tripW(t)).length : (tripW(t)[a]||0) > 0;
 };
 const acctNames = () => ((S.boot && S.boot.tripAccounts) || []).map(a => a.account);
 const fmtN = n => Number.isInteger(n) ? String(n) : n.toFixed(1);
-const titleCase = v => String(v||'').toLowerCase().replace(/(^|[ (])([a-z])/g, (m,a,b) => a + b.toUpperCase());
+const titleCase0 = v => String(v||'').toLowerCase().replace(/(^|[ (])([a-z])/g, (m,a,b) => a + b.toUpperCase());
+/** A client account (CPFI, CJ SMART…, MANU 2026-11-19) keeps its own spelling; everything else in title case. */
+let CLIENT_SET = null, CLIENT_SET_SRC = null;
+const isClientName = v => { const src = typeof S !== 'undefined' && S && S.boot; if(!src) return false;
+  if(CLIENT_SET_SRC !== src){ CLIENT_SET = new Set(clientNames().map(nameKey).concat(['NOCLIENTYET'])); CLIENT_SET_SRC = src; } return CLIENT_SET.has(nameKey(v)); };
+const titleCase = v => isClientName(v) ? String(v) : titleCase0(v);
 const truckActive = t => !t.status || t.status==='ACTIVE';
 const activeTrucks = () => S.boot.trucks.filter(truckActive);
 const daysSince = d => { if(!d) return null; const [y,m,dd] = d.split('-').map(Number); return Math.round((new Date(TODAY()+'T00:00') - new Date(y,m-1,dd)) / 864e5); };
@@ -4419,7 +4439,7 @@ function checkIdle(){
     if(!r.trucks.length || !$('pop').hidden) return;
     // a truck held by a job order opened by that day comes with UNDER MAINTENANCE already picked (job orders link to truck status, MANU)
     const holdOn = a => { const h = holdOf(a.plateNo || plateFor(a.truckNo)); return h && (!h.since || h.since <= r.date) ? h : null; };
-    const rowHtml = a => `<div class="idr" data-no="${esc(a.truckNo)}"><div class="idt"><b>Truck ${esc(a.truckNo)}</b> · ${esc(a.plateNo || '')}<small>${esc(titleCase(a.account))}${a.driver ? ' · ' + esc(a.driver) : ''}</small>${holdOn(a) ? `<small><span class="tag-repair">UNDER MAINTENANCE</span> ${esc(repairText(holdOn(a)))}</small>` : ''}</div>${pick ? `<div class="idf"><select aria-label="Reason for truck ${esc(a.truckNo)}"><option value="">Pick a reason…</option>${IDLE_REASONS.map(x => `<option ${x==='UNDER MAINTENANCE' && holdOn(a) ? 'selected' : ''}>${x}</option>`).join('')}</select><input placeholder="Type the issue" hidden><button class="btn" type="button">Save</button></div>` : ''}</div>`;
+    const rowHtml = a => `<div class="idr" data-no="${esc(a.truckNo)}"><div class="idt"><b>Truck ${esc(a.truckNo)}</b> · ${esc(a.plateNo || '')}<small>${esc(asgLabel(a.account))}${a.driver ? ' · ' + esc(a.driver) : ''}</small>${holdOn(a) ? `<small><span class="tag-repair">UNDER MAINTENANCE</span> ${esc(repairText(holdOn(a)))}</small>` : ''}</div>${pick ? `<div class="idf"><select aria-label="Reason for truck ${esc(a.truckNo)}"><option value="">Pick a reason…</option>${IDLE_REASONS.map(x => `<option ${x==='UNDER MAINTENANCE' && holdOn(a) ? 'selected' : ''}>${x}</option>`).join('')}</select><input placeholder="Type the issue" hidden><button class="btn" type="button">Save</button></div>` : ''}</div>`;
     openPop(`⚠ No trip yesterday · ${r.trucks.length} truck${r.trucks.length===1?'':'s'}`,
       `${esc(fmtDay(r.date))}: these trucks had no trip.${pick ? ' Set a reason for each one.' : ' A dispatcher or team leader sets the reason.'}`,
       `<div class="idl">${r.trucks.map(rowHtml).join('')}</div>`, `<button class="btn alt" type="button" onclick="closePop()">${pick ? 'Later' : 'OK'}</button>`, !pick);
@@ -4603,8 +4623,7 @@ function fillLists(){
   $('dlDoc').innerHTML = opt(b.docStatuses||[]);
   $('dlFinal').innerHTML = opt([...new Set([POD_DONE,'PENDING'].concat((b.finalStatuses||[]).filter(v => !/^(COMPLETED?|ENDORSED TO BILLING)$/i.test(v))))]);
   const ca = $('dAcct').value;
-  $('dAcct').innerHTML = '<option value="">All accounts</option>' + acctNames().map(a => `<option value="${esc(a)}" ${a===ca?'selected':''}>${esc(titleCase(a))}</option>`).join('')
-    + `<option value="${NO_ACCT}" ${ca===NO_ACCT?'selected':''}>Not counted in an account</option>`;
+  fillAcctSelect($('dAcct'));   // Canlubang, San Fernando, each client, Not counted (MANU 2026-11-19)
   fillCustSelect();
 }
 function fillCustSelect(){
@@ -4711,7 +4730,7 @@ function dayRolled(old, now){
 /* Version count (MANU 2026-11-04 "ADD VERSION COUNT TO CHECK IF VERSION IS UPDATED"): this page's number and the server's (Code.gs),
    in the top bar and on the sign-in card. Red when they differ: server lower = Code.gs not pasted / no New version; page lower = old page,
    reload. Add 1 to APP_VERSION here AND in Code.gs with every release. */
-const APP_VERSION = 14.96, APP_VERSION_DATE = '2026-11-19';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
+const APP_VERSION = 14.98, APP_VERSION_DATE = '2026-11-20';   // MANU 2026-11-06: versions go 14.1 … 14.9, then 15, 15.1 … (a number, so the page compares it as before)
 /* Three-part versions (MANU 2026-11-07 "make this version 14.4.1"): the number stays a plain number so every compare and older
    phones still work; a second decimal is the third part: 14.41 = 14.4.1, 14.42 = 14.4.2 (always below 14.5). vName() shows it. */
 function vName(n){ const m = /^(\d+)\.(\d)(\d)$/.exec(String(n)); return m ? m[1] + '.' + m[2] + '.' + m[3] : String(n); }
@@ -4742,6 +4761,23 @@ function verCheck(){
    EVERY RELEASE: raise APP_VERSION here and in Code.gs AND add its entry at the TOP of APP_CHANGES below (v = the same number,
    d = date, items = plain-words list of what users will notice). */
 const APP_CHANGES = [
+  // MANU 2026-11-19 "YES" (split the Dashboard, targets, Fuel monitoring and RDD by client too), "EVEN IF TRUCKPLAN GENERATE REPORT"
+  {v:14.98, d:'2026-11-20', items:[
+    'Dashboard: Other accounts is gone from the Account summary, the chart, targets and Driver ranking. Each client has its own column (CPFI, CJ SMART and so on) after Coca Cola Canlubang and Coca Cola San Fernando, which stay the same. Totals are the same as before.',
+    'A trip counts for the client before "|" in its destination (else its source), else the client its truck is assigned to that day, else NO CLIENT YET.',
+    'Targets: set a target for each client in Set monthly targets. The old Other accounts target is no longer shown.',
+    'POD, Billing, POD analytics and the other Account filters list each client in place of Other accounts.',
+    'Fuel monitoring: one section per client, and the Account filter and PDF report follow it.',
+    'Generate RDD and the RDD payroll CSV: one section per client, and you can pick a single client.',
+    'Truck Plan Generate report: the Account list shows Canlubang, San Fernando and the clients only, never Other accounts.'
+  ]},
+  // MANU 2026-11-19 "CHANGE THE OTHER ACCOUNTS TO CLIENT LIST INSTEAD OF OTHER ACCOUNTS", "DONT CHANGE THE COCA COLA CANLUBANG AND COCA COLA SAN FERNANDO"
+  {v:14.97, d:'2026-11-20', items:[
+    'Truck assignment: the Account list now has Coca Cola Canlubang Plant, Coca Cola San Fernando, then every client by name (CPFI, CJ SMART and so on) in place of Other accounts. Coca Cola Canlubang and San Fernando are unchanged.',
+    'Trucks saved as Other accounts before show "Other accounts (pick a client)" until someone picks their client. The account counters, the Account filter and the Truck assignment report list each client on its own.',
+    'Truck Plan: the Account filter lists the clients too; picking one shows only the trucks assigned to that client. In the client sections, a truck with no trip sits under the client it is assigned to.',
+    'Trip totals do not change: a client still adds up into the same Other accounts total on the Dashboard and in targets.'
+  ]},
   // MANU 2026-11-19 "add task maker for each user from admin, from boss, from HR head"
   {v:14.96, d:'2026-11-19', items:[
     'Tasks: Admin, Boss and HR Head give a task to any user (or to several, or everyone in a role) with + New task in the new Tasks tab: the task, details, a due date and a priority (normal, high, urgent).',
@@ -5563,7 +5599,7 @@ function renderNoDriver(){
   const rows = (S.boot.trucks || []).filter(t => t.truckNo && truckActive(t) && aNoDrv(of(t.truckNo)))
     .sort((a, b) => (Number(a.truckNo) || 1e9) - (Number(b.truckNo) || 1e9) || String(a.truckNo).localeCompare(String(b.truckNo)));
   $('noDrvSub').textContent = `${rows.length} truck${rows.length===1 ? '' : 's'} · saved crew as of ${fmtDay(TODAY())}`;
-  box.innerHTML = A_GROUPS.map(([k, name]) => {
+  box.innerHTML = aGroups().map(([k, name]) => {
     const l = rows.filter(t => aGroupOf(of(t.truckNo))===k);
     if(k==='none' && !l.length) return '';
     return `<div class="gar-box${l.length ? '' : ' zero'}"><div class="gar-h"><b>${l.length}</b><span>${esc(name)}</span></div>`
@@ -5640,14 +5676,18 @@ function renderDashboard(){
   renderAlerts(all);
 
   const acctSel = $('dAcct').value, ab = {};
-  acctNames().forEach(a => ab[a] = {total:0, cust:{}});
+  acctNames().filter(a => a !== 'OTHER ACCOUNTS').forEach(a => ab[a] = {total:0, cust:{}});   // clients are added as their trips come (MANU 2026-11-19)
   ab[NO_ACCT] = {total:0, cust:{}};
+  const clA = (a, t) => a === 'OTHER ACCOUNTS' ? tripClientAcct(t) : a;
   const allTrips = S.trips.filter(isTrip), allN = wsum(allTrips, legW);
   const addTo = (a, t, n) => { const v = ab[a] = ab[a] || {total:0, cust:{}}; v.total += n; const st = stageOf(t); v[st] = (v[st]||0) + n; const c = t.customer || '(no customer)'; v.cust[c] = (v.cust[c]||0) + n; };
   let pairs = 0, moved = 0;
-  allTrips.forEach(t => { const e = TRIP_W[t.key]; if(e) pairs++; if(movedByTruck(t)) moved++; const w = tripW(t), ks = Object.keys(w); if(ks.length) ks.forEach(a => addTo(a, t, w[a])); else addTo(NO_ACCT, t, (e ? 0.5 : 1) * tkH(t)); });
+  allTrips.forEach(t => { const e = TRIP_W[t.key]; if(e) pairs++; if(movedByTruck(t)) moved++; const w = tripW(t), ks = Object.keys(w); if(ks.length) ks.forEach(a => addTo(clA(a, t), t, w[a])); else addTo(NO_ACCT, t, (e ? 0.5 : 1) * tkH(t)); });
+  { const nc = ab[NO_ACCT]; delete ab[NO_ACCT]; const fx = acctNames().filter(a => a !== 'OTHER ACCOUNTS'), ks = Object.keys(ab), o = {};   // order: Canlubang, San Fernando, clients A to Z, NO CLIENT YET, Not counted
+    fx.forEach(a => { o[a] = ab[a]; }); ks.filter(a => !fx.includes(a)).sort((a, b) => (a==='NO CLIENT YET') - (b==='NO CLIENT YET') || a.localeCompare(b)).forEach(a => { o[a] = ab[a]; });
+    o[NO_ACCT] = nc; Object.keys(ab).forEach(k => delete ab[k]); Object.assign(ab, o); }
   const lyAb = {};
-  if(lyOk) LY.trips.filter(isTrip).forEach(t => { const w = tripW(t), ks = Object.keys(w); if(ks.length) ks.forEach(a => lyAb[a] = (lyAb[a]||0) + w[a]); else lyAb[NO_ACCT] = (lyAb[NO_ACCT]||0) + (TRIP_W[t.key] ? 0.5 : 1) * tkH(t); });
+  if(lyOk) LY.trips.filter(isTrip).forEach(t => { const w = tripW(t), ks = Object.keys(w); if(ks.length) ks.forEach(a => lyAb[clA(a, t)] = (lyAb[clA(a, t)]||0) + w[a]); else lyAb[NO_ACCT] = (lyAb[NO_ACCT]||0) + (TRIP_W[t.key] ? 0.5 : 1) * tkH(t); });
   if(!ab[NO_ACCT].total && !lyAb[NO_ACCT]) delete ab[NO_ACCT];
   S.dashRep = {ab, lyAb: lyOk ? lyAb : null, allN, trips: nTrips, moving: moving.length, cancelled, other, lane: STAGES.concat(LANE_EXTRA).map(st => [st, LANE_EXTRA.includes(st) ? all.filter(t => laneOf(t)===st).length : count(st)])};   // Generate report (MANU 2026-10-13)
   const amax = Math.max(1, ...Object.values(ab).map(v => v.total));
@@ -5666,7 +5706,20 @@ function renderDashboard(){
 
 const ACC_COLORS = ['#D9372B','#1C9AD6','#7C8AA0','#C3CCD8','#9A6BD1','#E39A1B'];   // 4th: Not counted in an account (light grey)
 const NOT_COUNTED_ACC = 'NOT COUNTED IN AN ACCOUNT';
-const accColor = i => ACC_COLORS[i % ACC_COLORS.length];
+/** Account colour by name (clients come and go, MANU 2026-11-19): Canlubang red, San Fernando blue, Not counted light grey,
+ *  NO CLIENT YET grey, each client its own steady colour. */
+const ACC_CL_PAL = ['#9A6BD1','#E39A1B','#16A34A','#DB2777','#0891B2','#65A30D','#EA580C','#4F46E5','#0D9488','#B45309','#7C3AED','#BE123C'];
+const accColor = (i, a) => {
+  if(a === undefined) a = (S.sum && S.sum.accounts || [])[i];
+  if(a === undefined) return ACC_COLORS[i % ACC_COLORS.length];
+  const k = nameKey(a);
+  if(k.includes('CANLUBANG')) return ACC_COLORS[0];
+  if(k.includes('SANFERNANDO')) return ACC_COLORS[1];
+  if(k.includes('NOTCOUNTED')) return ACC_COLORS[3];
+  if(k === 'NOCLIENTYET' || k === 'OTHERACCOUNTS') return ACC_COLORS[2];
+  let h = 0; for(const c of k) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return ACC_CL_PAL[h % ACC_CL_PAL.length];
+};
 const fmtH = h => h===null || h===undefined ? '—' : h < 1 ? `${Math.round(h*60)} min` : `${h.toFixed(1)} h`;
 const fmt1 = n => n===null || n===undefined || !isFinite(n) ? '—' : (Math.round(n*10)/10).toLocaleString('en-PH');
 const shortDay = memo1(d => { const [y,m,dd] = d.split('-').map(Number); return new Date(y,m-1,dd).toLocaleDateString('en-PH',{weekday:'short', month:'short', day:'numeric'}); });
@@ -6030,7 +6083,7 @@ function openKpiPop(k){
       const my = onTrip[String(t.truckNo)] || [], last = my.reduce((b, x) => !b || rowNewer(x, b) ? x : b, null);
       const rp = repairOf(t.plateNo), crew = (S.assign[TODAY()] || []).find(a => String(a.truckNo)===String(t.truckNo));
       const state = !truckActive(t) ? `<span class="docstate">INACTIVE</span><small>${esc(t.remarks || '')}</small>` : last ? `<span class="pill" style="--c:${colorOf(stageOf(last))}">${esc(statusText(last))}</span><small>${tripsTxt(wsum(my, legW))} · ${esc(last.customer)} → ${esc(last.destination || '—')}</small>` : rp ? `${mntTag(rp, 1)}<small>${esc(repairText(rp))}</small>` : '<span class="dim">No trip</span>';
-      return `<tr><td><b>${tLink(t.truckNo)}</b><small>${esc(t.plateNo)}</small></td><td>${state}</td><td>${crew && crew.driver ? pLink(crew.driver) : '<span class="dim">No crew</span>'}<small>${esc(crew && crew.account ? titleCase(crew.account) : '')}</small></td><td>${esc(sinceText((S.boot.lastTrip || {})[t.truckNo] || ''))}</td></tr>`;
+      return `<tr><td><b>${tLink(t.truckNo)}</b><small>${esc(t.plateNo)}</small></td><td>${state}</td><td>${crew && crew.driver ? pLink(crew.driver) : '<span class="dim">No crew</span>'}<small>${esc(crew && crew.account ? asgLabel(crew.account) : '')}</small></td><td>${esc(sinceText((S.boot.lastTrip || {})[t.truckNo] || ''))}</td></tr>`;
     }).join('');
     const withT = act.filter(t => onTrip[String(t.truckNo)]).length;
     openPop(k==='trucks' ? `Active trucks · ${withT} of ${act.length} with trips` : `Inactive trucks · ${list.length}`, dashSub(),
@@ -6195,8 +6248,41 @@ const aNoDrv = c => !String((c && c.driver) || '').trim();
 const aMnt = t => !!holdOf(t.plateNo);
 const aChipOk = (f, t, c) => f==='all' || (f==='assigned' ? hasCrew(c) : f==='open' ? !hasCrew(c) : f==='nodrv' ? aNoDrv(c) : f==='mnt' ? aMnt(t) : true);
 const aAcctOk = (acc, c) => !acc || (acc==='none' ? !c.account : c.account===acc);
-const A_GROUPS = [...A_ACCOUNTS.map((a, i) => [a, titleCase(a), ['#DC2626','#0EA5E9','#7C3AED'][i]]), ['none', 'No account yet', '#94A3B8']];
-const aGroupOf = c => A_ACCOUNTS.includes(c.account) ? c.account : 'none';
+/* Clients in place of Other accounts (MANU 2026-11-19 "CHANGE THE OTHER ACCOUNTS TO CLIENT LIST", "DONT CHANGE THE COCA COLA CANLUBANG AND
+ * COCA COLA SAN FERNANDO"): a truck is assigned to Canlubang, San Fernando or a client (CPFI, CJ SMART…). A client still counts under
+ * Other accounts in the trip totals (A_TRIP_ACCT / server assignAcctHist_), so no total moves. Old OTHER ACCOUNTS rows stay until changed. */
+const A_COKE = ['COCA COLA CANLUBANG PLANT','COCA COLA SAN FERNANDO'], LEGACY_OTHER = 'OTHER ACCOUNTS';
+const A_PAL = ['#7C3AED','#059669','#D97706','#DB2777','#0891B2','#65A30D','#9333EA','#EA580C','#4F46E5','#0D9488'];
+/** Client names to pick: boot.clientNames (CLIENTS tab, not Canlubang / San Fernando), else the clients in CLIENT LIST destinations. */
+function clientNames(){
+  const b = S.boot || {}; if(b.clientNames && b.clientNames.length) return b.clientNames;
+  const seen = {}, out = [];
+  Object.values(b.destinations || {}).forEach(l => (l || []).forEach(d => { const c = clientOf(d).toUpperCase(), k = nameKey(c); if(c && !seen[k] && !/COCACOLA|CCBPI/.test(k)){ seen[k] = 1; out.push(c); } }));
+  return out.sort();
+}
+const isClientAcct = a => !!a && a !== LEGACY_OTHER && !/CANLUBANG|SANFERNANDO/.test(nameKey(a));
+/** How an assignment account reads: Coca Cola names in title case, a client as written (CPFI), the old bucket as "Other accounts (pick a client)". */
+const asgLabel = a => !a ? '' : a === LEGACY_OTHER ? 'Other accounts (pick a client)' : isClientAcct(a) ? String(a) : titleCase(a);
+/** Accounts trucks are assigned to (every loaded date + unsaved edits): Canlubang, San Fernando, then clients A to Z, the old bucket last. */
+function acctsInUse(){
+  const used = {}; Object.values(S.assign || {}).forEach(l => (l || []).forEach(a => { if(a && a.account) used[a.account] = 1; }));
+  Object.values(S.aEdits || {}).forEach(a => { if(a && a.account) used[a.account] = 1; });
+  return Object.keys(used).filter(a => !A_COKE.includes(a)).sort((a, b) => (a === LEGACY_OTHER) - (b === LEGACY_OTHER) || a.localeCompare(b));
+}
+function aGroups(){
+  return [...A_COKE.map((a, i) => [a, titleCase(a), ['#DC2626','#0EA5E9'][i]]), ...acctsInUse().map((a, i) => [a, asgLabel(a), A_PAL[i % A_PAL.length]]), ['none', 'No account yet', '#94A3B8']];
+}
+/** Fill an Account filter: All, Canlubang, San Fernando, the clients trucks are assigned to; keeps the picked value. */
+function fillAsgAcct(sel, withNone){
+  if(!sel) return;
+  // Truck assignment (withNone) still lists the old Other accounts rows so they can be found and changed; Truck Plan lists clients only (MANU 2026-11-19)
+  const cur = sel.value, list = [['', 'All accounts'], ...A_COKE.map(a => [a, titleCase(a)]), ...acctsInUse().filter(a => withNone || a !== LEGACY_OTHER).map(a => [a, asgLabel(a)])].concat(withNone ? [['none', 'No account yet']] : []);
+  if(cur && cur !== LEGACY_OTHER && !list.some(x => x[0] === cur)) list.push([cur, asgLabel(cur)]);
+  const html = list.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join('');
+  if(sel._html !== html){ sel.innerHTML = html; sel._html = html; }
+  sel.value = list.some(x => x[0] === cur) ? cur : '';
+}
+const aGroupOf = c => c.account || 'none';
 const hasCrew = c => !!(c && (c.driver || c.helper1 || c.helper2));
 function autoFillAssign(d, trucks){
   return;   // OFF (MANU 2026-11-03 "assignment is manually changed"): no crew filled in from the last trip
@@ -6228,7 +6314,7 @@ function noteAssignAcct(d, saved){
   const H = S.boot.assignAcct = S.boot.assignAcct || {};
   saved.forEach(a => {
     const no = String(a.truckNo).trim(), h = (H[no] || []).filter(x => x[0] !== d);
-    h.push([d, A_TRIP_ACCT[a.account] || '']); h.sort((x,y) => x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0);
+    h.push([d, A_TRIP_ACCT[a.account] || (a.account ? 'OTHER ACCOUNTS' : '')]);   // a client counts under Other accounts h.sort((x,y) => x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0);
     H[no] = h.filter((x,i) => i ? x[1] !== h[i-1][1] : x[1]);
   });
   TRIP_W = {}; lsSet('jmti_boot', S.boot);
@@ -6249,6 +6335,7 @@ function renderAssign(){
   autoFillAssign(d, trucks);
   const crewOf = t => S.aEdits[t.truckNo] || crewFor(d, t.truckNo) || {};
   S.aFilter = S.aFilter || 'all';
+  fillAsgAcct($('aAcct'), true);   // clients in place of Other accounts (MANU 2026-11-19)
   const acc = $('aAcct').value;
   // chip counts follow the Account filter, like the table
   const inAcc = trucks.filter(t => aAcctOk(acc, crewOf(t)));
@@ -6261,8 +6348,8 @@ function renderAssign(){
     const open = may('assign') && S.aOpen===t.truckNo;
     const inp = (k, list) => open ? `<input data-k="${k}" ${list?`list="${list}"`:''} value="${esc(c[k]||'')}" aria-label="${k} for truck ${esc(t.truckNo)}">`
       : ['driver','helper1','helper2'].includes(k) && c[k] && mayHist() ? `<span class="atxt plink" data-k="${k}" data-person="${esc(c[k])}" role="button" tabindex="0" title="See the trips of ${esc(c[k])}">${esc(c[k])}</span>` : `<span class="atxt" data-k="${k}">${esc(c[k]||'')}</span>`;
-    const accCell = open ? `<select data-k="account" aria-label="account for truck ${esc(t.truckNo)}"><option value="">—</option>${A_ACCOUNTS.map(a => `<option ${c.account===a?'selected':''}>${a}</option>`).join('')}</select>`
-      : `<span class="atxt">${esc(c.account ? titleCase(c.account) : '')}</span>`;
+    const accCell = open ? `<select data-k="account" aria-label="account for truck ${esc(t.truckNo)}"><option value="">—</option>${A_COKE.map(a => `<option value="${esc(a)}" ${c.account===a?'selected':''}>${esc(titleCase(a))}</option>`).join('')}<optgroup label="Clients">${(c.account && !A_COKE.includes(c.account) && !clientNames().includes(c.account) ? [c.account] : []).concat(clientNames()).map(a => `<option value="${esc(a)}" ${c.account===a?'selected':''}>${esc(asgLabel(a))}</option>`).join('')}</optgroup></select>`
+      : `<span class="atxt">${esc(asgLabel(c.account))}</span>`;
     return `<tr data-truck="${esc(t.truckNo)}" class="${S.aEdits[t.truckNo]?'dirty':''}${open?' aopen':''}${may('assign') && !open ? ' rowbtn' : ''}" ${may('assign') && !open ? 'title="Tap to change the crew"' : ''}><td><b>${open ? esc(t.truckNo) : tLink(t.truckNo)}</b></td><td>${open ? esc(t.plateNo) : plLink(t.plateNo)}${rp?` <span class="${holdOfR(rp) ? 'tag-repair' : 'tag-rw'}" title="${esc(repairText(rp))}">· ${holdOfR(rp) ? 'under maintenance' : 'roadworthy JO'}</span>`:''}</td>
       <td>${inp('driver','dlDrivers')}</td><td>${inp('helper1','dlHelpers')}</td><td>${inp('helper2','dlHelpers')}</td><td>${accCell}</td><td>${inp('remarks')}</td>
       <td style="color:var(--muted);font-size:12.5px">${S.aEdits[t.truckNo] && S.aEdits[t.truckNo].remarks==='Removed' && !hasCrew(S.aEdits[t.truckNo]) ? '<span style="color:var(--cancel);font-weight:600">Crew removed — press Save</span>' : S.aEdits[t.truckNo] && S.aEdits[t.truckNo]._auto ? `<span style="color:var(--road);font-weight:600">From last trip ${esc(fmtDay(S.aEdits[t.truckNo]._auto))} — press Save</span>` : base.fromDate ? esc(fmtDay(base.fromDate)) + (base.by?` · ${esc(base.by)}`:'') : 'Not assigned'}</td><td>${open ? `<button class="icon-btn" type="button" data-done="1">Done</button> ` : ''}${hasCrew(c) && may('assign') ? `<button class="icon-btn" type="button" data-remove="${esc(t.truckNo)}" title="Remove the crew of truck ${esc(t.truckNo)}">Remove</button>` : ''}</td></tr>`;
@@ -6273,15 +6360,15 @@ function renderAssign(){
 /** Counters per account and the lists of plates with no driver and trucks under maintenance (MANU 2026-10-14). */
 function renderAssignCounts(trucks, crewOf, acc){
   const n = x => x.toLocaleString('en-PH');
-  $('aCnt').innerHTML = A_GROUPS.map(([k, name, col]) => {
+  $('aCnt').innerHTML = aGroups().map(([k, name, col]) => {
     const ts = trucks.filter(t => aGroupOf(crewOf(t))===k), nd = ts.filter(t => aNoDrv(crewOf(t))).length, mn = ts.filter(aMnt).length;
     return `<button class="kpi" type="button" data-acc="${esc(k)}" aria-pressed="${acc===k}" style="--c:${col}" title="Show only ${esc(name)}"><div class="l">${esc(name)}</div><div class="v">${n(ts.length)}</div><div class="s">truck${ts.length===1?'':'s'} · <b>${n(ts.length - nd)}</b> with driver${nd ? ` · <span class="bad"><b>${n(nd)}</b> no driver</span>` : ''}${mn ? ` · <span class="mnt"><b>${n(mn)}</b> under maintenance</span>` : ''}</div></button>`;
   }).join('');
   const inAcc = trucks.filter(t => aAcctOk(acc, crewOf(t)));
-  const where = acc ? (acc==='none' ? 'No account yet' : titleCase(acc)) : 'all accounts';
+  const where = acc ? (acc==='none' ? 'No account yet' : asgLabel(acc)) : 'all accounts';
   const nod = inAcc.filter(t => aNoDrv(crewOf(t))), mnt = inAcc.filter(aMnt);
   const pill = (t, f, cls, sub) => `<button type="button" class="apill ${cls}" data-atruck="${esc(t.truckNo)}" data-f="${f}"><b>${esc(t.truckNo)}</b> · ${esc(t.plateNo || 'No plate')}<small>${esc(sub)}</small></button>`;
-  const accTxt = c => c.account ? titleCase(c.account) : 'No account yet';
+  const accTxt = c => c.account ? asgLabel(c.account) : 'No account yet';
   $('aLists').innerHTML = `<div class="panel"><h3><span>Plates with no driver assigned</span><span class="hint-line" style="margin:0">${n(nod.length)} · ${esc(where)}</span></h3>${nod.length ? `<div class="apills">${nod.map(t => { const c = crewOf(t); return pill(t, 'nodrv', 'nod', [accTxt(c), c.helper1 || c.helper2 ? 'Helper: ' + [c.helper1, c.helper2].filter(Boolean).join(', ') : 'No crew', aMnt(t) ? 'Under maintenance' : ''].filter(Boolean).join(' · ')); }).join('')}</div>` : '<p class="hint-line" style="margin:0">Every truck here has a driver.</p>'}</div>
     <div class="panel"><h3><span>Trucks under maintenance</span><span class="hint-line" style="margin:0">${n(mnt.length)} · ${esc(where)}</span></h3>${mnt.length ? `<div class="apills">${mnt.map(t => pill(t, 'mnt', 'mnt', repairText(holdOf(t.plateNo)) + ' · ' + accTxt(crewOf(t)))).join('')}</div>` : '<p class="hint-line" style="margin:0">No truck here has an open job order that holds it.</p>'}</div>`;
 }
@@ -6292,7 +6379,7 @@ function renderAssignCounts(trucks, crewOf, acc){
 function openAssignReport(){
   const d = $('aDate').value || TODAY();
   if(!S.assign[d]) return toast('The crew list is still loading. Try again in a moment.', true);
-  const opts = [['', 'All accounts'], ...A_GROUPS.map(g => [g[0], g[1]])];
+  const opts = [['', 'All accounts'], ...aGroups().map(g => [g[0], g[1]])];
   const shows = [['all', 'All trucks'], ['nodrv', 'Only plates with no driver'], ['mnt', 'Only trucks under maintenance'], ['assigned', 'Only assigned trucks']];
   const unsaved = Object.values(S.aEdits).length;
   openPop('Generate report · Truck assignment', `The saved crew as of ${fmtDay(d)}, grouped by account.${unsaved ? ' Changes not saved yet are left out.' : ''}`,
@@ -6307,7 +6394,7 @@ function openAssignReport(){
     if(!pick.length) return toast('No trucks match. Pick another account or show.', true);
     const n = x => x.toLocaleString('en-PH');
     const rows = [];
-    A_GROUPS.forEach(([k, name, col]) => {
+    aGroups().forEach(([k, name, col]) => {
       const ts = pick.filter(t => aGroupOf(crewOf(t))===k).sort((a, b) => (aNoDrv(crewOf(a)) - aNoDrv(crewOf(b))) || String(a.truckNo).localeCompare(String(b.truckNo), undefined, {numeric:true}));
       if(!ts.length) return;
       const nd = ts.filter(t => aNoDrv(crewOf(t))).length, mn = ts.filter(aMnt).length;
@@ -6325,7 +6412,7 @@ function openAssignReport(){
     const cols = [{label:'Truck #', w:70, bold:true}, {label:'Plate', w:110, bold:true}, {label:'Driver', w:200, wcolor:true}, {label:'Helper', w:180}, {label:'Helper 2', w:180},
       {label:'Status', w:260, wcolor:true}, {label:'Remarks', w:200}, {label:'Crew since', w:170}];
     const all = trucks.filter(t => aAcctOk(acc, crewOf(t)));
-    const chips = acc ? [] : A_GROUPS.map(([k, name, col]) => ({label:name, n: n(all.filter(t => aGroupOf(crewOf(t))===k).length), color:col}));
+    const chips = acc ? [] : aGroups().map(([k, name, col]) => ({label:name, n: n(all.filter(t => aGroupOf(crewOf(t))===k).length), color:col}));
     const nd = all.filter(t => aNoDrv(crewOf(t))).length, mn = all.filter(aMnt).length;
     chips.push({label:'with driver', n: n(all.length - nd), color:'#15803D'}, {label:'no driver', n: n(nd), color:'#B45309'}, {label:'under maintenance', n: n(mn), color:'#DC2626'});
     const accName = acc ? opts.find(o => o[0]===acc)[1] : 'All accounts', showName = shows.find(x => x[0]===show)[1];
@@ -6859,7 +6946,7 @@ function renderAccountBoard(acc, d, trucks){
   const pool = xRange()[0] !== xRange()[1] ? latestTrips(S.xTrips) : S.xTrips;   // a date range: each truck's latest trip (MANU)
   $('xBoardPanel').hidden = !acc;
   if(!acc) return;
-  $('xBoardTitle').textContent = titleCase(acc) + ' · latest status';
+  $('xBoardTitle').textContent = asgLabel(acc) + ' · latest status';
   if(!S.assign[d]){ $('xBoard').innerHTML = '<div class="empty">Loading the trucks assigned to this account…</div>'; return; }
   const now = Date.now();
   const cards = trucks.map(no => {
@@ -6884,7 +6971,7 @@ function renderAccountBoard(acc, d, trucks){
   $('xStages').innerHTML = `<button class="xstage" type="button" data-st="All" style="--c:var(--ink)"><b>${trucks.length}</b><span>All trucks</span></button>` + groups.map(([st, l, c]) => `<button class="xstage ${l.length ? '' : 'zero'}" type="button" data-st="${esc(st)}" style="--c:${c}"><b>${st==='No trip' ? l.length : fmtN(xw(l))}</b><span>${esc(st==='No trip' ? 'Trucks with no trip' : st)}</span></button>`).join('');
   $('xStages').onclick = e => {
     const b = e.target.closest('[data-st]'); if(!b) return;
-    const st = b.dataset.st, sub = `${titleCase(acc)} · ${xRangeText()}`;
+    const st = b.dataset.st, sub = `${asgLabel(acc)} · ${xRangeText()}`;
     if(st==='All'){
       const rows = trucks.map(no => {
         const a = (S.assign[d] || []).find(x => String(x.truckNo)===no) || {};
@@ -6915,11 +7002,17 @@ const isOtherAcct = t => (acctWeights(t)['OTHER ACCOUNTS'] || 0) > 0;
 /** Account <select> by trip account (POD, Billing): keeps the current choice. */
 function fillAcctSelect(sel){
   const cur = sel.value;
-  sel.innerHTML = '<option value="">All accounts</option>' + acctNames().map(a => `<option value="${esc(a)}" ${a===cur?'selected':''}>${esc(titleCase(a))}</option>`).join('')
+  // Other accounts → one option per client (MANU 2026-11-19)
+  const cl = (typeof clientNames === 'function' ? clientNames() : []).concat(['NO CLIENT YET']);
+  sel.innerHTML = '<option value="">All accounts</option>' + acctNames().filter(a => a !== 'OTHER ACCOUNTS').map(a => `<option value="${esc(a)}" ${a===cur?'selected':''}>${esc(titleCase(a))}</option>`).join('')
+    + `<optgroup label="Clients">${cl.map(a => `<option value="${esc(a)}" ${a===cur?'selected':''}>${esc(a)}</option>`).join('')}</optgroup>`
     + `<option value="${NO_ACCT}" ${cur===NO_ACCT?'selected':''}>Not counted in an account</option>`;
+  if(cur && sel.value !== cur) sel.value = '';
   return cur;
 }
-const tripInAcct = (t, acc) => { if(!acc) return true; const w = acctWeights(t); return acc===NO_ACCT ? !Object.keys(w).length : (w[acc]||0) > 0; };
+const tripInAcct = (t, acc) => { if(!acc) return true; const w = acctWeights(t); if(acc===NO_ACCT) return !Object.keys(w).length;
+  if(!acctNames().includes(acc)) return (w['OTHER ACCOUNTS']||0) > 0 && nameKey(tripClientAcct(t)) === nameKey(acc);   // a client (MANU 2026-11-19)
+  return (w[acc]||0) > 0; };
 /**
  * Truck Plan / POD / Billing tables: columns # to Destination (0–5) stay in place when the table scrolls sideways.
  * On a phone those six columns would fill the screen, so there only # and Truck stay.
@@ -7030,14 +7123,14 @@ function renderPlanPanel(){
   $('xPlanToggle').onclick = () => { lsSet('jmti_plan_hide', hide ? 0 : 1); renderPlanPanel(); };
   if(!lines){ $('xPlanNote').textContent = ''; $('xPlanBody').innerHTML = `<p class="hint-line" style="margin:0">${PL.err ? 'Could not load the plan: ' + esc(PL.err) : 'Loading the plan…'}</p>`; return; }
   const pr = PL.cur = planRows(date, S.xCtx || S.xTrips);
-  const want = acc ? acctSec(acc) : null, mine = l => want === null || l.sec === want;
+  const want = acc ? acctSec(acc) : null, mine = l => want === null || (l.sec === want && (!isClientAcct(acc) || nameKey(clientSec({customer: l.source, destination: l.destination})) === nameKey(acc)));
   const ls = pr.lines.filter(mine), ex = pr.extra.filter(mine);
   const sum = {planned: 0, added: 0, toGo: 0}; ls.forEach(l => { sum.planned += l.trips; sum.added += Math.min(l.added, l.trips); sum.toGo += l.toGo; });
   $('xPlanNote').textContent = ls.length ? `${tripsTxt(sum.planned)} planned · ${fmtN(sum.added)} added · ${sum.toGo ? fmtN(sum.toGo) + ' to go' : 'all added ✓'}${f !== t ? ' · for the To date' : ''}` : '';
   box.classList.toggle('pl-hide', hide);
   if(hide){ $('xPlanBody').innerHTML = ''; return; }
   if(!ls.length){
-    $('xPlanBody').innerHTML = `<p class="hint-line" style="margin:0">No trips planned for ${esc(fmtDay(date))}${acc ? ' in ' + esc(titleCase(acc)) : ''} yet.${PL.canEdit ? ' Tap <b>+ Plan trips</b> to set how many trips each route needs.' : ' The Supervisor or Team leader sets it.'}</p>`;
+    $('xPlanBody').innerHTML = `<p class="hint-line" style="margin:0">No trips planned for ${esc(fmtDay(date))}${acc ? ' in ' + esc(asgLabel(acc)) : ''} yet.${PL.canEdit ? ' Tap <b>+ Plan trips</b> to set how many trips each route needs.' : ' The Supervisor or Team leader sets it.'}</p>`;
     return;
   }
   const row = l => { const pct = l.trips ? Math.min(100, l.added / l.trips * 100) : 0, st = l.toGo ? 'due' : l.over ? 'over' : 'ok';
@@ -7338,10 +7431,10 @@ const repFile = (what, extra, ext) => `JMTI ${what}${extra ? ' ' + extra : ''} $
 const REP_LOOKBACK = 7;    // latest status from the past 7 days only (MANU); older trips show the last trip date only
 const acctSec = a => { const k = nameKey(a); return !k ? -1 : k.includes('CANLUBANG') ? 0 : k.includes('SANFERNANDO') ? 1 : 2; };
 function openTruckPlanReport(){
-  const opts = [['', 'All accounts'], ['COCA COLA CANLUBANG', 'Coca Cola Canlubang'], ['COCA COLA SAN FERNANDO', 'Coca Cola San Fernando'], ['OTHER ACCOUNTS', 'Other accounts']];
-  const cur = acctSec($('xAcct').value);
+  const opts = [['', 'All accounts'], ['COCA COLA CANLUBANG', 'Coca Cola Canlubang'], ['COCA COLA SAN FERNANDO', 'Coca Cola San Fernando'], ...acctsInUse().filter(a => a !== LEGACY_OTHER).map(a => [a, asgLabel(a)])];   // clients in place of Other accounts, the old bucket not offered (MANU 2026-11-19 "EVEN IF TRUCKPLAN GENERATE REPORT")
+  const xa = $('xAcct').value, cur = isClientAcct(xa) || xa === LEGACY_OTHER ? -9 : acctSec(xa);
   openPop('Generate report · Truck Plan', 'The latest status of every truck assigned to the account, from each truck\'s most recent trip.',
-    `<div class="repform"><label class="f">Account<select id="repAcct">${opts.map(([v, t]) => `<option value="${esc(v)}" ${$('xAcct').value && acctSec(v)===cur ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label></div>`,
+    `<div class="repform"><label class="f">Account<select id="repAcct">${opts.map(([v, t]) => `<option value="${esc(v)}" ${xa && (v===xa || (v && !isClientAcct(v) && v!==LEGACY_OTHER && acctSec(v)===cur)) ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label></div>`,
     `<button class="btn alt" type="button" onclick="closePop()">Cancel</button> <button class="btn road" type="button" id="repGo">Generate</button>`);
   $('repGo').onclick = () => {
     const acc = $('repAcct').value, today = TODAY(), from = addDays(today, -(REP_LOOKBACK - 1));
@@ -7353,7 +7446,7 @@ function openTruckPlanReport(){
         if(!rows.length) return toast('No trucks are assigned to this account.', true);
         const cols = [{label:'Trip date', w:150}, {label:'Truck', w:70, bold:true}, {label:'Plate', w:110}, {label:'Customer', w:230},
           {label:'Destination', w:260}, {label:'Status', w:160, pill:true}, {label:'Waiting for', w:200, wcolor:true}, {label:'Timelapse', w:110, wcolor:true}];
-        const name = acc ? titleCase(acc) : 'All accounts';
+        const name = acc ? asgLabel(acc) : 'All accounts';
         const chips = TP_GROUPS.map(g => ({label: g.label, n: rows.filter(r => r._grp===g.key).length, color: g.color}))
           .concat([{label: 'Preloaded / dated ahead', n: rows.filter(r => r._ahead).length, color: '#7C3AED'}]);
         repShow('Truck Plan report', repFile('Truck Plan', name, 'jpg'),
@@ -7377,7 +7470,7 @@ function truckPlanReportRows(acc, assign, trips){
     const c = cur[k], n = next[k];
     latest[k] = n && (stageOf(n) !== 'Planned' || !c || DONE_ST.includes(stageOf(c))) ? n : (c || n);
   });
-  return (assign || []).filter(a => a.account && (want===null || acctSec(a.account)===want)).map(a => {
+  return (assign || []).filter(a => a.account && (want===null || (isClientAcct(acc) ? a.account===acc : acctSec(a.account)===want))).map(a => {
     const no = String(a.truckNo).trim(), t = latest[tkey(no)] || null, gl = !!t && isGarageLoaded(t), hd = !!t && isHoldRow(t), st = t ? (gl ? 'Garage loaded' : hd ? 'Hold' : stageOf(t)) : '';
     const hk = hd ? statusText(t).toLowerCase() : '', hgrp = !hd ? '' : hk==='under maintenance' ? 'mnt' : hk==='waiting crew' ? 'crew' : 'gar';
     let wait = '', since = '', ms = -1;
@@ -7407,7 +7500,7 @@ function truckPlanReportRows(acc, assign, trips){
     r._wait = wait ? ms : -1;
     r._ahead = ahead && (open || hd);
     r._sec = acctSec(a.account);
-    r._client = clientSec(t) || NO_CLIENT;   // client section for non Coca Cola trucks (MANU 2026-11-19)
+    r._client = (isClientAcct(a.account) ? a.account : clientSec(t)) || NO_CLIENT;   // client section for non Coca Cola trucks (MANU 2026-11-19)
     r._grp = gl ? 'garage' : hd ? hgrp : open ? (TP_GROUPS.find(g => g.stages.includes(st)) || {}).key || 'road' : mnt ? 'mnt' : 'ship';
     r._st = gl || hd ? STAGES.length : open ? STAGES.indexOf(st) : 99;
     r._route = open ? (t.customer || '') + ' → ' + (t.destination || '(no destination)') : '';
@@ -7533,7 +7626,7 @@ function openDashReport(){
     const ly = R.lyAb ? ` · Compared: ${fmtN(R.lyAb[a] || 0)}` : '';
     const r = [a===NO_ACCT ? 'Not counted in an account' : titleCase(a), fmtN(v.total),
       v.total ? `${pct}% of trips · ${by}${ly} · ` + top.slice(0, 5).map(([c, n]) => `${c} ${fmtN(n)}`).join(' · ') + (top.length > 5 ? ` · +${top.length - 5} more` : '') : 'No trips for these dates' + ly];
-    r._color = cssColor(a===NO_ACCT ? '#94A3B8' : accColor(i)); rows.push(r);
+    r._color = cssColor(a===NO_ACCT ? '#94A3B8' : accColor(i, a)); rows.push(r);
   });
   const cols = [{label:'Item', w:240, bold:true}, {label:'Count', w:120, align:'right', bold:true}, {label:'Details', w:620}];
   const chips = R.lane.map(([st, n]) => ({label: st, n: n ? fmtN(n) : 0, color: colorOf(st)}));
@@ -7571,6 +7664,7 @@ function renderDispatcherNow(){
   $('xFeedNote').hidden = !feedOf();
   if(feedOf() && feedOf().end) $('xFeedNote').innerHTML = 'October trips come from <b>GENERAL DATABASE 2.0</b>: change their status, truck, route and crew there (it shows here within a minute). Trips from November on are added and changed here.';   // GENERAL gets its newest trips from 2.0 (Code.gs feed_)
   const q = $('xFind').value.toLowerCase().trim(), f = S.xFilter;
+  fillAsgAcct($('xAcct'), false);   // clients in place of Other accounts (MANU 2026-11-19)
   const acc = $('xAcct').value, d = xRange()[1];
   const accTrucks = acc ? (S.assign[d] || []).filter(a => a.account===acc).map(a => String(a.truckNo)) : null;
   XW = roundTrips(S.xCtx || S.xTrips || []);   // a round trip's legs count 0.5 each in the counters (MANU 2026-10-13)
@@ -7611,7 +7705,7 @@ function renderDispatcherNow(){
   const assignAcct = no => ((S.assign[d] || []).find(a => String(a.truckNo)===String(no).trim()) || {}).account || '';
   const secOf = t => { const w = acctWeights(t), top = Object.keys(w).sort((x,y) => w[y] - w[x])[0]; return top || assignAcct(t.truckNo); };
   const SECS = ['COCA COLA CANLUBANG','COCA COLA SAN FERNANDO','OTHER ACCOUNTS',''];   // trip rules say "COCA COLA CANLUBANG", Truck assignment "... PLANT": match by name
-  const secRank = a => { const k = nameKey(a); return k.includes('CANLUBANG') ? 0 : k.includes('SANFERNANDO') ? 1 : k.includes('OTHER') ? 2 : 3; };
+  const secRank = a => { const k = nameKey(a); return k.includes('CANLUBANG') ? 0 : k.includes('SANFERNANDO') ? 1 : k ? 2 : 3; };   // a client (CPFI…) is in the clients part too
   // rows that are not trips leave the routes (MANU 2026-10-21 "WHY ARE THERE MIXED", "ALL WITH GARAGE STATUS SHOULD BE TOGETHER"): every garage
   // status together in one GARAGE section, the rest (no-trip reasons, other statuses) in NOT A TRIP, both after the accounts. Cancelled stays on its route.
   const onRoute = t => isTrip(t) || stageOf(t)==='Cancelled', isGar = t => LANE_EXTRA.includes(laneOf(t));
@@ -7643,8 +7737,9 @@ function renderDispatcherNow(){
     const ctx = S.xCtx || S.xTrips || [];
     const lastClient = no => { const t = ctx.filter(x => String(x.truckNo).trim()===no && isTrip(x)).reduce((b, x) => !b || rowNewer(x, b) ? x : b, null); return clientSec(t) || NO_CLIENT; };
     const cKey = v => nameKey(v) || nameKey(NO_CLIENT);
-    routeL.forEach(t => { t._cl = secRank(secOf(t))===2 ? (clientSec(t) || NO_CLIENT) : ''; });
-    idleTrucks.forEach(x => { x._cl = secRank(x.a.account||'')===2 ? lastClient(x.no) : ''; });
+    const asgCl = no => { const a = assignAcct(no); return isClientAcct(a) ? a : ''; };   // the client the truck is assigned to in Truck assignment
+    routeL.forEach(t => { t._cl = secRank(secOf(t))===2 ? (clientSec(t) || asgCl(t.truckNo) || NO_CLIENT) : ''; });
+    idleTrucks.forEach(x => { x._cl = secRank(x.a.account||'')===2 ? (isClientAcct(x.a.account) ? x.a.account : lastClient(x.no)) : ''; });
     const names = {}; routeL.concat(idleTrucks).forEach(x => { if(x._cl && !names[cKey(x._cl)]) names[cKey(x._cl)] = x._cl; });
     const clients = Object.keys(names).sort((a, b) => (a===nameKey(NO_CLIENT)) - (b===nameKey(NO_CLIENT)) || names[a].localeCompare(names[b]));
     const parts = [[SECS[0], null], [SECS[1], null]].concat(clients.map(k => [SECS[2], k]), [[SECS[3], null]]);
@@ -11348,15 +11443,20 @@ function rddSections(trips, day, pick){   // pick: '' all accounts, or 0 Canluba
     if(p && isCokePlace(p.destination) && isCokePlace(t.customer) && pl(p.destination) !== pl(g.legs[0].customer) && pl(p.destination) !== RDD_HOME[g.sec]) return g.legs.push(t);
     const ng = {legs: [t], sec: secOf(t)}; groups.push(ng); if(u) last[u] = ng;
   });
-  const secs = [{name: 'CANLUBANG', groups: []}, {name: 'SAN FERNANDO', groups: []}, {name: 'OTHER ACCOUNTS', groups: []}];
-  groups.forEach(g => secs[g.sec].groups.push(g.legs));
-  return secs.filter((s, i) => s.groups.length && (pick === '' || pick === undefined || Number(pick) === i));
+  // one section per client in place of OTHER ACCOUNTS (MANU 2026-11-19), clients A to Z, NO CLIENT YET last
+  const secs = [{name: 'CANLUBANG', groups: [], k: '0'}, {name: 'SAN FERNANDO', groups: [], k: '1'}], byCl = {};
+  groups.forEach(g => { if(g.sec < 2) return secs[g.sec].groups.push(g.legs); const c = tripClientAcct(g.legs[0]); (byCl[c] = byCl[c] || {name: c, groups: [], k: c}).groups.push(g.legs); });
+  Object.values(byCl).sort((a, b) => (a.name==='NO CLIENT YET') - (b.name==='NO CLIENT YET') || a.name.localeCompare(b.name)).forEach(x => secs.push(x));
+  const pk = String(pick ?? '');
+  return secs.filter(s => s.groups.length && (pk === '' || pk === s.k || (pk === '2' && s.k.length > 1)));
 }
 // MANO in pesos (MANU 2026-11-06 "add that mano in pesos to the RDD"): the trip's MANO disbursements, e.g. 1,200 (Helvetica has no peso sign)
 const rddMano = t => { const n = Number(String(t.manoAmt ?? '').replace(/[^0-9.]/g, '')); return n > 0 ? n.toLocaleString('en-US', {maximumFractionDigits: 2}) : ''; };
 const rddTitle = day => { const [y, m, d] = day.split('-').map(Number); return `RDD ${new Date(y, m - 1, d).toLocaleDateString('en-US', {month: 'long'}).toUpperCase()} ${String(d).padStart(2, '0')}, ${y}`; };
-const RDD_ACCTS = [['', 'All accounts'], ['0', 'Coca Cola Canlubang'], ['1', 'Coca Cola San Fernando'], ['2', 'Other accounts']];
-const rddFile = (day, pick) => { const [y, m, d] = day.split('-'), a = RDD_ACCTS.find(x => x[0] === String(pick ?? '')); return `RDD ${m}-${d}-${y}${a && a[0] !== '' ? ' ' + a[1] : ''}.pdf`; };
+/** Account choices: Canlubang, San Fernando, then each client in place of Other accounts (MANU 2026-11-19). */
+const rddAccts = () => [['', 'All accounts'], ['0', 'Coca Cola Canlubang'], ['1', 'Coca Cola San Fernando']].concat(clientNames().concat(['NO CLIENT YET']).map(c => [c, c]));
+const rddS0 = v => !v || v === 'OTHER ACCOUNTS' ? '' : isClientAcct(v) ? v : String(acctSec(v));
+const rddFile = (day, pick) => { const [y, m, d] = day.split('-'), a = rddAccts().find(x => x[0] === String(pick ?? '')); return `RDD ${m}-${d}-${y}${a && a[0] !== '' ? ' ' + a[1] : ''}.pdf`; };
 
 /** The PDF (a Blob). Bands are the pieces a page break may not cut: title + header, a section title with its first trip, each
  *  trip with its linked legs, and the sign-off. Units: sheet points (column pixels × 0.75), printed at the fit-to-width scale. */
@@ -11436,12 +11536,12 @@ function rddPdf(day, secs, preparedBy){
 /** Truck Plan › Generate RDD: pick one date, get its trips from the server, save the PDF. */
 function openRdd(){
   const d0 = ($('xDate') && $('xDate').value) || TODAY();
-  const s0 = $('xAcct') && $('xAcct').value ? String(acctSec($('xAcct').value)) : '';
+  const s0 = $('xAcct') ? rddS0($('xAcct').value) : '';
   openPop('Generate RDD', 'Pick the date and the account. The PDF lists that date\'s trips, Canlubang then San Fernando then Other accounts, in the RDD layout (landscape).',
-    `<div class="repform"><label class="f">Date<input type="date" id="rddDate" value="${esc(d0)}"></label><label class="f">Account<select id="rddAcct">${RDD_ACCTS.map(([v, t]) => `<option value="${v}" ${v === s0 ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label></div><p class="hint-line" id="rddNote" style="margin:8px 0 0"></p>`,
+    `<div class="repform"><label class="f">Date<input type="date" id="rddDate" value="${esc(d0)}"></label><label class="f">Account<select id="rddAcct">${rddAccts().map(([v, t]) => `<option value="${esc(v)}" ${v === s0 ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label></div><p class="hint-line" id="rddNote" style="margin:8px 0 0"></p>`,
     `<button class="btn alt" type="button" onclick="closePop()">Close</button> <button class="btn road" type="button" id="rddGo">Generate PDF</button>`);
   $('rddGo').onclick = () => {
-    const day = $('rddDate').value, pick = $('rddAcct').value, btn = $('rddGo'), accName = (RDD_ACCTS.find(x => x[0] === pick) || RDD_ACCTS[0])[1];
+    const day = $('rddDate').value, pick = $('rddAcct').value, btn = $('rddGo'), accName = (rddAccts().find(x => x[0] === pick) || rddAccts()[0])[1];
     if(!day) return toast('Pick a date first.', true);
     btn.disabled = true; btn.textContent = 'Getting the trips…'; $('rddNote').textContent = '';
     fetchTrips(day, day).then(trips => {
@@ -11474,12 +11574,12 @@ function rddCsvRows(trips, from, to, pick){
 function openRddCsv(from){   // from 'payroll': the Payroll tab's From–To and All accounts; else Truck Plan's dates and account
   const pr = from === 'payroll', fv = id => ($(id) && $(id).value) || '';
   const d0 = fv(pr ? 'payrollFrom' : 'xDate') || TODAY(), d1 = fv(pr ? 'payrollTo' : 'xTo') || d0;
-  const s0 = !pr && fv('xAcct') ? String(acctSec(fv('xAcct'))) : '';
+  const s0 = !pr ? rddS0(fv('xAcct')) : '';
   openPop('Generate RDD (CSV, payroll)', 'Pick the dates (for example one payroll week) and the account. The CSV has one row per trip in the RDD order, with the trip count, km, driver, helpers and MANO, and opens in Excel.',
-    `<div class="repform"><label class="f">From<input type="date" id="rdcFrom" value="${esc(d0)}"></label><label class="f">To<input type="date" id="rdcTo" value="${esc(d1 < d0 ? d0 : d1)}"></label><label class="f">Account<select id="rdcAcct">${RDD_ACCTS.map(([v, t]) => `<option value="${v}" ${v === s0 ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label></div><p class="hint-line" id="rdcNote" style="margin:8px 0 0"></p>`,
+    `<div class="repform"><label class="f">From<input type="date" id="rdcFrom" value="${esc(d0)}"></label><label class="f">To<input type="date" id="rdcTo" value="${esc(d1 < d0 ? d0 : d1)}"></label><label class="f">Account<select id="rdcAcct">${rddAccts().map(([v, t]) => `<option value="${esc(v)}" ${v === s0 ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label></div><p class="hint-line" id="rdcNote" style="margin:8px 0 0"></p>`,
     `<button class="btn alt" type="button" onclick="closePop()">Close</button> <button class="btn road" type="button" id="rdcGo">Download CSV</button>`);
   $('rdcGo').onclick = () => {
-    const from = $('rdcFrom').value, to = $('rdcTo').value || from, pick = $('rdcAcct').value, btn = $('rdcGo'), accName = (RDD_ACCTS.find(x => x[0] === pick) || RDD_ACCTS[0])[1];
+    const from = $('rdcFrom').value, to = $('rdcTo').value || from, pick = $('rdcAcct').value, btn = $('rdcGo'), accName = (rddAccts().find(x => x[0] === pick) || rddAccts()[0])[1];
     if(!from) return toast('Pick the From date first.', true);
     if(to < from) return toast('To cannot be before From.', true);
     if((new Date(to) - new Date(from)) / 864e5 > 62) return toast('Pick at most 2 months at a time.', true);
@@ -13591,8 +13691,20 @@ function openUnitEdit(u){
    view (each truck's average km/L per destination: total km ÷ total liters of its refuels there), and Low is now under FUEL_MIN km/L. */
 const FUEL_MIN = 2;
 /** Account sections (MANU 2026-10-21 "refuel can be sorted by account"), in the Truck Plan order. */
-const FM_SECS = ['Coca Cola Canlubang', 'Coca Cola San Fernando', 'Other accounts', 'Not counted in an account'];
-const fmSec = a => { const k = nameKey(a); return k.includes('CANLUBANG') ? 0 : k.includes('SANFERNANDO') ? 1 : k ? 2 : 3; };
+/* Sections: Canlubang, San Fernando, then one per client in place of Other accounts (MANU 2026-11-19; the server sends the
+ * client as the refuel's account), then Not counted. FM_SECS is rebuilt from the loaded refuels (fmSetSecs). */
+const FM_FIXED = ['Coca Cola Canlubang', 'Coca Cola San Fernando'], FM_NC = 'Not counted in an account';
+let FM_SECS = FM_FIXED.concat([FM_NC]);
+const fmCl = a => { const k = nameKey(a); return k.includes('CANLUBANG') ? FM_FIXED[0] : k.includes('SANFERNANDO') ? FM_FIXED[1] : !k ? FM_NC : k === 'OTHERACCOUNTS' ? 'NO CLIENT YET' : String(a).toUpperCase(); };
+const fmSec = a => FM_SECS.indexOf(fmCl(a));
+function fmSetSecs(rows){
+  const cl = [...new Set(rows.map(r => fmCl(r.acct)))].filter(x => !FM_FIXED.includes(x) && x !== FM_NC).sort((a, b) => (a==='NO CLIENT YET') - (b==='NO CLIENT YET') || a.localeCompare(b));
+  FM_SECS = FM_FIXED.concat(cl, [FM_NC]);
+  const sel = $('fmAcct'); if(!sel) return;
+  const cur = sel.value, html = '<option value="">All accounts</option>' + FM_SECS.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  if(sel._html !== html){ sel.innerHTML = html; sel._html = html; }
+  sel.value = FM_SECS.includes(cur) ? cur : '';
+}
 const FM = {data:null, filter:'all', view:'refuel'};
 const FUEL_OVER = 0.10;   // a refuel more than 10% over its route's average liters is red
 const fmKey = () => $('fmFrom').value + '|' + $('fmTo').value;
@@ -13638,8 +13750,9 @@ function renderFuel(){
   if(!$('fmBody')) return;
   const d = FM.data, f = $('fmFrom').value, t = $('fmTo').value;
   if(!d){ FM.rep = null; $('fmNote').textContent = 'Loading the refuels…'; $('fmKpis').innerHTML = ''; $('fmBody').innerHTML = '<tr><td colspan="5" class="empty-cell">Loading…</td></tr>'; return; }
-  const fa = $('fmAcct').value, rows0 = fuelRows(d);
-  const all = rows0.all.filter(r => fa==='' || String(fmSec(r.acct))===fa);   // the Account box narrows everything below, the numbers too
+  const rows0 = fuelRows(d); fmSetSecs(rows0.all);   // client sections (MANU 2026-11-19)
+  const fa = $('fmAcct').value;
+  const all = rows0.all.filter(r => fa==='' || fmCl(r.acct)===fa);   // the Account box narrows everything below, the numbers too
   const withKm = all.filter(r => r.kmPerL !== null), km = withKm.reduce((a, r) => a + r.km, 0), L = withKm.reduce((a, r) => a + r.liters, 0), fleet = L ? km / L : null;
   const q = $('fmFind').value.toLowerCase().trim();
   const nLow = all.filter(r => r.low).length, nNo = all.filter(r => r.kmPerL === null).length;
@@ -13656,7 +13769,7 @@ function renderFuel(){
   const dLow = dl.filter(g => g.low).length;
   $('fmNote').textContent = FM.view==='dest' ? `${fmtDay(f)} to ${fmtDay(t)}: each truck's average km/L per destination = the km of its refuels to that place ÷ their liters (Coca Cola km × 2), by account. Under ${FUEL_MIN} km/L is a warning. Refuels with no km are left out.`
     : `Refuels from ${fmtDay(f)} to ${fmtDay(t)}, by account. Each refuel is its trip: km/L = the trip's km (KMS, else the route km in Clients) ÷ the liters. A Coca Cola trip is a round trip, so its km × 2. Under ${FUEL_MIN} km/L is a warning. Tap a refuel for its details.`;
-  $('fmKpis').innerHTML = `<div class="kpi"><div class="v">${n2(fleet)}</div><div class="l">${fa==='' ? 'Fleet' : esc(FM_SECS[fa])} km/L</div><div class="s">${fmtN(Math.round(km))} km ÷ ${lit(Math.round(L))} L</div></div>`
+  $('fmKpis').innerHTML = `<div class="kpi"><div class="v">${n2(fleet)}</div><div class="l">${fa==='' ? 'Fleet' : esc(fa)} km/L</div><div class="s">${fmtN(Math.round(km))} km ÷ ${lit(Math.round(L))} L</div></div>`
     + `<div class="kpi"><div class="v">${fmtN(all.length)}</div><div class="l">Refuels</div><div class="s">${new Set(all.map(r => r.truck)).size} trucks · ${lit(Math.round(all.reduce((a, r) => a + r.liters, 0)))} L</div></div>`
     + `<div class="kpi"><div class="v">${fmtN(nLow)}</div><div class="l">Low km/L</div><div class="s">refuels under ${FUEL_MIN} km/L · ${dLow} truck-destination average${dLow===1 ? '' : 's'}</div></div>`
     + `<div class="kpi"><div class="v">${fmtN(nNo)}</div><div class="l">No km</div><div class="s">not a trip, or the route has no km yet</div></div>`
@@ -13690,7 +13803,7 @@ function renderFuel(){
   }
   if(FM.view==='dest'){
     const dq = dl.filter(g => (FM.filter!=='low' || g.low) && findHit('fmFind', q, {truck:g.truck, destination:g.dest}, [g.truck, g.dest]));
-    [0, 1, 2, 3].forEach(i => {
+    FM_SECS.forEach((_, i) => {
       const sl = dq.filter(g => g.sec===i); if(!sl.length) return;
       const sa = avgOf(withKm.filter(r => fmSec(r.acct)===i));
       body += secHead(i, `${n2(sa.kmpl)} km/L · ${sl.length} truck-destination${sl.length===1 ? '' : 's'}`) + fmRepSec(i, sa, sl.length, byTruckSorted(sl, k => avgOf(withKm.filter(r => r.truck===k && fmSec(r.acct)===i)))).map(x =>
@@ -13703,7 +13816,7 @@ function renderFuel(){
   const show = all.filter(r => (FM.filter!=='low' || r.low) && (FM.filter!=='over' || r.over) && (FM.filter!=='nokm' || r.kmPerL === null)
     && findHit('fmFind', q, {truck:r.truck, plate:r.plate, driver:r.driver, source:r.source, destination:r.destination}, [r.truck, r.plate, r.truckPlate, r.driver, r.source, r.destination]));
   show.forEach(r => { FM.rows[r.id] = r; });
-  [0, 1, 2, 3].forEach(i => {
+  FM_SECS.forEach((_, i) => {
     const sl = show.filter(r => fmSec(r.acct)===i); if(!sl.length) return;
     const sa = avgOf(all.filter(r => fmSec(r.acct)===i));
     body += secHead(i, `${n2(sa.kmpl)} km/L · ${sl.length} refuel${sl.length===1 ? '' : 's'}`) + fmRepSec(i, sa, sl.length, byTruckSorted(sl, k => avgOf(all.filter(r => r.truck===k && fmSec(r.acct)===i)))).map(tk => {
@@ -13784,7 +13897,7 @@ async function fuelPdf(){
   }
   const nData = rows.filter(r => !r._head).length;
   if(!nData) return toast('Nothing to put in the report: no refuel matches what the tab shows.', true);
-  const VIEW = {refuel:'Each refuel', route:'Same trip average', dest:'Per destination'}, acct = R.fa==='' ? 'All accounts' : FM_SECS[R.fa];
+  const VIEW = {refuel:'Each refuel', route:'Same trip average', dest:'Per destination'}, acct = R.fa==='' ? 'All accounts' : R.fa;
   const FIL = {low:`Under ${FUEL_MIN} km/L`, over:'Over trip average', nokm:'No km'};
   const showing = [R.filter!=='all' && FIL[R.filter] && (R.view!=='dest' || R.filter==='low') ? FIL[R.filter] : '', R.q ? `Find "${R.q}"` : ''].filter(Boolean);
   const subs = [`${R.f===R.t ? fmtDay(R.f) : fmtDay(R.f) + ' to ' + fmtDay(R.t)} · ${acct} · ${VIEW[R.view] || ''}`,
